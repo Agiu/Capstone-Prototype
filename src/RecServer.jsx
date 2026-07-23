@@ -9,11 +9,6 @@ import {
   voiceMembers,
   jumpFortnite,
   jumpTwo,
-  card1Img,
-  card1Video,
-  card2Img,
-  card3Img,
-  card4Img,
   heroAc,
   heroMinecraft,
   heroGangBeasts,
@@ -397,6 +392,8 @@ function RecCard({ avatars, label, image, players, details, video, featured, fre
           <img
             alt=""
             src={image}
+            loading="lazy"
+            decoding="async"
             className={
               'absolute inset-0 size-full object-cover transition-opacity delay-[0ms] duration-300' +
               (video ? ' group-hover:opacity-0 group-hover:delay-[500ms]' : '')
@@ -488,7 +485,7 @@ function RecCard({ avatars, label, image, players, details, video, featured, fre
 function JumpCard({ image }) {
   return (
     <div className="relative h-[118px] w-[210px] shrink-0">
-      <img alt="" src={image} className="h-[118px] w-[210px] rounded-[16px] object-cover" />
+      <img alt="" src={image} loading="lazy" decoding="async" className="h-[118px] w-[210px] rounded-[16px] object-cover" />
       <div className="absolute bottom-0 left-0 flex w-full items-center justify-end p-[8px]">
         <img alt="Play" src={playGreen} className="size-[50px]" />
       </div>

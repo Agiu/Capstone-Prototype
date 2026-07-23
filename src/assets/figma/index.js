@@ -2,35 +2,32 @@
 // Downloaded from the Dev Mode asset server and committed locally so they
 // don't expire. Names are semantic; originals are content-hash filenames.
 
-// Backgrounds / photos
-export { default as bgDiscord } from './00b911c244927734d4fd0bd53f402b8e2889f4b2.png'
+// Backgrounds / photos — resized to the frame width and WebP-compressed (the
+// original 4096px PNGs were ~1.2MB each; these are ~90KB).
+export { default as bgDiscord } from './store_bg.webp'
 // Call-screen background — Discord "Lobby" with the baked single call tile removed.
-export { default as bgCall } from './7276fcd302aa07977666bcab6025a16fc59927b9.png'
+export { default as bgCall } from './call_bg.webp'
 export { default as voiceMembers } from './309c469f0551f8c62029d4974878f2832c31943a.png'
-export { default as jumpFortnite } from './7c6dae0ea9ff88f3ed94e1444cb43303cac04154.png'
-export { default as jumpTwo } from './520d64d7326d15c784c7f8a8f0aa34e6d936eaf5.png'
-export { default as card1Img } from './048beb8a1c60985d86e817180a7866b325bf85f7.png'
-export { default as card2Img } from './dd478974ef62e58b8b6b19b0caa102834587f2ce.png'
-export { default as card3Img } from './48e67d57b57e5a1c7cc0a4fe14b65d05d5166401.png'
-export { default as card4Img } from './ecc5270bdfb9df4edd5135f7926166ce2650f5e8.png'
+export { default as jumpFortnite } from './jump_fortnite.webp'
+export { default as jumpTwo } from './jump_two.webp'
 
 // Xbox logo sprite (rendered cropped inside a small square)
 export { default as xboxSprite } from './4d70385b6e55f1f4384056eaa187a6f1f3fa5c03.png'
 
 // Official landscape hero art pulled from the Xbox store catalog (SuperHeroArt),
 // plus League of Legends from Riot's CDN (not on Xbox).
-export { default as heroAc } from './store_ac.jpg'
-export { default as heroMinecraft } from './store_minecraft.jpg'
-export { default as heroGangBeasts } from './store_gangbeasts.jpg'
-export { default as heroSeaOfThieves } from './store_seaofthieves.jpg'
-export { default as heroMinecraftDungeons } from './store_minecraftdungeons.jpg'
-export { default as heroWildHearts } from './store_wildhearts.jpg'
-export { default as heroHumanFallFlat } from './store_humanfallflat.jpg'
-export { default as heroOvercooked } from './store_overcooked2.jpg'
-export { default as heroMonsterHunter } from './store_monsterhunterrise.jpg'
-export { default as heroGrounded } from './store_grounded.jpg'
-export { default as heroForHonor } from './store_forhonor.jpg'
-export { default as heroLol } from './store_lol.jpg'
+export { default as heroAc } from './store_ac.webp'
+export { default as heroMinecraft } from './store_minecraft.webp'
+export { default as heroGangBeasts } from './store_gangbeasts.webp'
+export { default as heroSeaOfThieves } from './store_seaofthieves.webp'
+export { default as heroMinecraftDungeons } from './store_minecraftdungeons.webp'
+export { default as heroWildHearts } from './store_wildhearts.webp'
+export { default as heroHumanFallFlat } from './store_humanfallflat.webp'
+export { default as heroOvercooked } from './store_overcooked2.webp'
+export { default as heroMonsterHunter } from './store_monsterhunterrise.webp'
+export { default as heroGrounded } from './store_grounded.webp'
+export { default as heroForHonor } from './store_forhonor.webp'
+export { default as heroLol } from './store_lol.webp'
 
 // Suggested Activities menu (call screen)
 export { default as activityGridIcon } from './94ae544539343969db2931548dcbf1b6fd9bd055.png'
@@ -64,7 +61,6 @@ export { default as xboxBadge } from './5625561e4b7287ff213d62160e616c42303b662e
 export { default as xboxPriceIcon } from './eb8ce15137f1672969c658bcd70ff9838c23a61b.png'
 
 // Expanded (hover) card image — gameplay still used behind the "trailer"
-export { default as card1Video } from './b305eacd59b55a2354587dd9f4dc64f93382c543.png'
 
 // SVGs
 export { default as searchIcon } from './ac7ed91c21614a981ffca4debd5d002652fcc7a5.svg'
