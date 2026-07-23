@@ -53,6 +53,6 @@ export { default as playOwned } from './d431ecce8b65b28fdd43b89678a890d00e24e0fd
 
 // SVGs — expanded card detail panel
 export { default as thumbsUp } from './1c545d12fd9e1155af3347a5357065da8479a3c6.svg'
-export { default as appleLogo } from './23977e6416144fd6c17dd87246c85825c72c24cc.svg'
+export { default as appleLogo } from './0b717278a1d1040f7a328275a8599da178047734.svg'
 export { default as iosShare } from './4c6a80a23d3336c088e71ec09c0f0e8fecb247eb.svg'
 export { default as bookmarkSmall } from './29280779e380ee9157174e0d769565e2e7e06459.svg'
