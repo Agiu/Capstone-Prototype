@@ -1,0 +1,45 @@
+@import "tailwindcss";
+
+/* Discord's "gg sans" — mapped to standard weights so font-normal (400),
+   font-medium (500), font-semibold (600) and font-bold (700) all render. */
+@font-face {
+  font-family: "gg sans";
+  src: url("./assets/fonts/gg-sans-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "gg sans";
+  src: url("./assets/fonts/gg-sans-Medium.ttf") format("truetype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "gg sans";
+  src: url("./assets/fonts/gg-sans-Semibold.ttf") format("truetype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "gg sans";
+  src: url("./assets/fonts/gg-sans-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  font-family: "gg sans", "ABC Ginto Normal", "Noto Sans", "Helvetica Neue",
+    Helvetica, Arial, sans-serif;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+  background: #000;
+}
