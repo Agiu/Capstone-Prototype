@@ -4,6 +4,8 @@
 
 // Backgrounds / photos
 export { default as bgDiscord } from './00b911c244927734d4fd0bd53f402b8e2889f4b2.png'
+// Call-screen background — Discord "Lobby" with the baked single call tile removed.
+export { default as bgCall } from './7276fcd302aa07977666bcab6025a16fc59927b9.png'
 export { default as voiceMembers } from './309c469f0551f8c62029d4974878f2832c31943a.png'
 export { default as jumpFortnite } from './7c6dae0ea9ff88f3ed94e1444cb43303cac04154.png'
 export { default as jumpTwo } from './520d64d7326d15c784c7f8a8f0aa34e6d936eaf5.png'
@@ -14,6 +16,28 @@ export { default as card4Img } from './ecc5270bdfb9df4edd5135f7926166ce2650f5e8.
 
 // Xbox logo sprite (rendered cropped inside a small square)
 export { default as xboxSprite } from './4d70385b6e55f1f4384056eaa187a6f1f3fa5c03.png'
+
+// Official landscape hero art pulled from the Xbox store catalog (SuperHeroArt),
+// plus League of Legends from Riot's CDN (not on Xbox).
+export { default as heroAc } from './store_ac.jpg'
+export { default as heroMinecraft } from './store_minecraft.jpg'
+export { default as heroGangBeasts } from './store_gangbeasts.jpg'
+export { default as heroSeaOfThieves } from './store_seaofthieves.jpg'
+export { default as heroMinecraftDungeons } from './store_minecraftdungeons.jpg'
+export { default as heroWildHearts } from './store_wildhearts.jpg'
+export { default as heroHumanFallFlat } from './store_humanfallflat.jpg'
+export { default as heroOvercooked } from './store_overcooked2.jpg'
+export { default as heroMonsterHunter } from './store_monsterhunterrise.jpg'
+export { default as heroGrounded } from './store_grounded.jpg'
+export { default as heroForHonor } from './store_forhonor.jpg'
+export { default as heroLol } from './store_lol.jpg'
+
+// Suggested Activities menu (call screen)
+export { default as activityGridIcon } from './94ae544539343969db2931548dcbf1b6fd9bd055.png'
+// Control-bar activities button in its hovered/active state (rounded highlight).
+export { default as activityBtnHover } from './4a3d4dc96f9ef93cd20a7c6e3d2d7f3776314ab7.png'
+export { default as activityTile } from './6d78168b16b2a814f2b2c4ebc38c2efc5d1e92fd.png'
+export { default as seeAllChevron } from './8c59d6750bfbeb40c55eaedede9502c2ecbcfaeb.svg'
 
 // Avatars / dots
 export { default as profileBlue } from './868ecd11bdd8777ad47888855a697edd305fb90b.png'
@@ -56,3 +80,5 @@ export { default as thumbsUp } from './1c545d12fd9e1155af3347a5357065da8479a3c6.
 export { default as appleLogo } from './0b717278a1d1040f7a328275a8599da178047734.svg'
 export { default as iosShare } from './4c6a80a23d3336c088e71ec09c0f0e8fecb247eb.svg'
 export { default as bookmarkSmall } from './29280779e380ee9157174e0d769565e2e7e06459.svg'
+export { default as bookmark01 } from './824637c33fee59084c66810a4f41d8853efadc4d.svg'
+export { default as chatAdd } from './a1e3a17abb69f170cb96b3db41d66e916ae50bee.svg'
