@@ -1,5 +1,5 @@
-import RecServer from './RecServer.jsx'
+import Landing from './Landing.jsx'
 
 export default function App() {
-  return <RecServer />
+  return <Landing />
 }
