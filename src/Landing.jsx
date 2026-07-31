@@ -357,6 +357,51 @@ const BLENDS = [
     games: ['humanFallFlat', 'overcooked', 'minecraft', 'minecraftDungeons', 'grounded', 'seaOfThieves'] },
 ]
 
+// Preference tags per game — the decision page matches the group's stated
+// preferences against these to rank and filter the blend's games.
+const GAME_TAGS = {
+  seaOfThieves: ['co-op', 'chill', 'adventure'],
+  minecraft: ['cartoonish', 'chill', 'co-op', 'building'],
+  overcooked: ['co-op', 'cartoonish', 'short', 'party', 'small-group'],
+  humanFallFlat: ['co-op', 'cartoonish', 'party', 'short'],
+  grounded: ['co-op', 'survival', 'chill', 'building', 'small-group'],
+  monsterHunter: ['co-op', 'competitive', 'small-group'],
+  gangBeasts: ['cartoonish', 'party', 'short'],
+  wildHearts: ['co-op', 'competitive', 'survival', 'small-group'],
+  minecraftDungeons: ['cartoonish', 'co-op', 'chill', 'short', 'small-group'],
+  lol: ['competitive', 'free'],
+  ac: ['chill', 'adventure'],
+  forHonor: ['competitive', 'small-group'],
+}
+
+// Tappable preference suggestions shown in the modal. `tag` is what a pick
+// matches against GAME_TAGS; `label` is the human phrasing.
+const PREF_SUGGESTIONS = [
+  { label: 'only 1-3 players', tag: 'small-group' },
+  { label: 'friendslop game', tag: 'co-op' },
+  { label: 'cartoonish', tag: 'cartoonish' },
+  { label: 'party game', tag: 'party' },
+  { label: 'short session', tag: 'short' },
+  { label: 'chill vibes', tag: 'chill' },
+  { label: 'competitive', tag: 'competitive' },
+  { label: 'survival', tag: 'survival' },
+  { label: 'free to play', tag: 'free' },
+]
+
+// Best-effort map a free-typed preference to a matchable tag.
+function guessTag(label) {
+  const s = label.toLowerCase()
+  const hit = PREF_SUGGESTIONS.find((p) => s.includes(p.tag) || s.includes(p.label.toLowerCase()))
+  if (hit) return hit.tag
+  if (/\b1-3|three|small|solo|duo\b/.test(s)) return 'small-group'
+  if (/co.?op|friend|together/.test(s)) return 'co-op'
+  if (/cartoon|cute|silly/.test(s)) return 'cartoonish'
+  if (/quick|fast|short/.test(s)) return 'short'
+  if (/chill|cozy|relax/.test(s)) return 'chill'
+  if (/free/.test(s)) return 'free'
+  return null
+}
+
 function PortraitTile({ title, image }) {
   return (
     <button className="group flex w-[184px] shrink-0 flex-col text-left">
@@ -503,7 +548,120 @@ function FeedRow({ who, text, when }) {
   )
 }
 
-function BlendPage({ blend, onBack }) {
+// Xbox-green pill that kicks off the "decide a game" flow — sits to the right
+// of a blend's title.
+function XboxDecideButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="group/dec flex shrink-0 items-center gap-[10px] rounded-[12px] bg-[#107C10] px-[20px] py-[12px] text-[15px] font-semibold text-white shadow-[0_4px_18px_rgba(16,124,16,0.45)] transition hover:-translate-y-[1px] hover:bg-[#0e8f0e]"
+    >
+      <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 7v5l3 2" />
+      </svg>
+      Decide a game
+    </button>
+  )
+}
+
+// Solid green circular play button — launches a game.
+function PlayButton({ onClick, size = 48, title = 'Launch game' }) {
+  return (
+    <button
+      onClick={onClick}
+      title={title}
+      aria-label={title}
+      className="flex shrink-0 items-center justify-center rounded-full bg-[#107C10] text-white shadow-[0_2px_10px_rgba(16,124,16,0.45)] transition hover:scale-105 hover:bg-[#0e8f0e]"
+      style={{ width: size, height: size }}
+    >
+      <svg viewBox="0 0 24 24" className="size-[44%] translate-x-[1px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+    </button>
+  )
+}
+
+// A right-click menu anchored at the cursor. Closes on any outside press
+// (mousedown fires for both buttons, before contextmenu — so it never races the
+// open), scroll, or Escape.
+function ContextMenu({ x, y, items, onClose }) {
+  useEffect(() => {
+    const close = () => onClose()
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    // Defer registration one tick so the mousedown that opened us doesn't close us.
+    const id = setTimeout(() => {
+      window.addEventListener('mousedown', close)
+      window.addEventListener('scroll', close, true)
+      window.addEventListener('keydown', onKey)
+      window.addEventListener('blur', close)
+    }, 0)
+    return () => {
+      clearTimeout(id)
+      window.removeEventListener('mousedown', close)
+      window.removeEventListener('scroll', close, true)
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('blur', close)
+    }
+  }, [onClose])
+  const left = Math.min(x, (typeof window !== 'undefined' ? window.innerWidth : 9999) - 220)
+  const topY = Math.min(y, (typeof window !== 'undefined' ? window.innerHeight : 9999) - (items.length * 40 + 16))
+  return (
+    <div
+      className="fixed z-[70] w-[204px] overflow-hidden rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
+      style={{ top: Math.max(8, topY), left: Math.max(8, left) }}
+      onMouseDown={(e) => e.stopPropagation()}
+      onContextMenu={(e) => { e.preventDefault(); e.stopPropagation() }}
+    >
+      {items.map((it, i) =>
+        it.divider ? (
+          <div key={i} className="my-[6px] h-px bg-[#1c1d21]" />
+        ) : (
+          <button
+            key={i}
+            onClick={it.onClick}
+            className={
+              'flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] transition ' +
+              (it.primary ? 'font-semibold text-[#3fbf3f] hover:bg-[#107C10]/15' : 'text-[#dbdee1] hover:bg-white/5')
+            }
+          >
+            <span className="flex size-[18px] items-center justify-center">{it.icon}</span>
+            {it.label}
+          </button>
+        )
+      )}
+    </div>
+  )
+}
+
+// Transient "Launching…" toast; auto-dismisses.
+function LaunchToast({ title, onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2600)
+    return () => clearTimeout(t)
+  }, [onDone, title])
+  return (
+    <div className="fixed bottom-[24px] left-1/2 z-[80] flex -translate-x-1/2 items-center gap-[12px] rounded-[12px] border border-[#1c1d21] bg-[#111214] px-[20px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+      <span className="flex size-[24px] items-center justify-center rounded-full bg-[#107C10]">
+        <svg viewBox="0 0 24 24" className="size-[12px] text-white" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+      </span>
+      <span className="text-[15px] text-white">Launching <span className="font-semibold">{title}</span>…</span>
+    </div>
+  )
+}
+
+const PLAY_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+const BOOKMARK_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+const LINK_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
+
+function BlendPage({ blend, onBack, onDecide }) {
+  const [menu, setMenu] = useState(null) // { x, y, title }
+  const [launching, setLaunching] = useState(null)
+  function openMenu(e, title) {
+    e.preventDefault()
+    setMenu({ x: e.clientX, y: e.clientY, title })
+  }
+  function launch(title) {
+    setMenu(null)
+    setLaunching(title)
+  }
   const games = blend.games.map((k) => CATALOG[k])
   const m = blend.members
   // Activity feed — includes you (green/sauhee) alongside the other members.
@@ -561,6 +719,11 @@ function BlendPage({ blend, onBack }) {
               </div>
               <p className="mt-[10px] text-[15px] font-semibold text-white">Refreshes daily.</p>
             </div>
+
+            {/* Decide-a-game entry point — off to the right of the title */}
+            <div className="ml-auto self-start pt-[6px]">
+              <XboxDecideButton onClick={onDecide} />
+            </div>
           </div>
 
           <div className="my-[28px] h-px bg-[#1c1d21]" />
@@ -582,6 +745,7 @@ function BlendPage({ blend, onBack }) {
                   onDragLeave={() => setOverIdx((v) => (v === i ? null : v))}
                   onDrop={() => dropAt(i)}
                   onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                  onContextMenu={(e) => openMenu(e, g.title)}
                   className={
                     'w-[320px] shrink-0 cursor-grab select-none rounded-[14px] p-[6px] ring-2 transition active:cursor-grabbing ' +
                     (dragIdx === i ? 'opacity-40 ' : '') +
@@ -607,7 +771,11 @@ function BlendPage({ blend, onBack }) {
               <h2 className="mb-[20px] text-[28px] font-semibold text-white">Daily Recommended Games</h2>
               <div className="flex flex-col gap-[12px]">
                 {games.map((g, i) => (
-                  <button key={i} className="group flex items-center gap-[20px] rounded-[14px] p-[10px] text-left transition hover:bg-[#151517]">
+                  <button
+                    key={i}
+                    onContextMenu={(e) => openMenu(e, g.title)}
+                    className="group flex items-center gap-[20px] rounded-[14px] p-[10px] text-left transition hover:bg-[#151517]"
+                  >
                     <div className="h-[120px] w-[214px] shrink-0 overflow-hidden rounded-[12px] bg-[#1a1a1d]">
                       <img alt="" src={g.image} className="size-full object-cover" />
                     </div>
@@ -634,6 +802,22 @@ function BlendPage({ blend, onBack }) {
           </section>
         </div>
       </div>
+
+      {/* Right-click game menu */}
+      {menu && (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          onClose={() => setMenu(null)}
+          items={[
+            { label: 'Launch game', icon: PLAY_GLYPH, primary: true, onClick: () => launch(menu.title) },
+            { divider: true },
+            { label: 'Add to wishlist', icon: BOOKMARK_MENU_GLYPH, onClick: () => setMenu(null) },
+            { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setMenu(null) },
+          ]}
+        />
+      )}
+      {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
     </main>
   )
 }
@@ -792,21 +976,465 @@ function WishlistModal({ game, onClose }) {
   )
 }
 
+// ── "Add Your Preferences" modal (Figma node 561:2666) ─────────────────────
+// Each member tells the group what they're in the mood for; picks flow into the
+// decision page. Styled to match CreateBlendModal.
+function PrefRow({ who, label, onRemove }) {
+  return (
+    <div className="flex items-center gap-[12px] rounded-[8px] py-[8px] pl-[4px] pr-[6px]">
+      <Avatar color={who} size={34} />
+      <span className="min-w-0 flex-1 truncate text-[15px] text-white">{label}</span>
+      <span className="shrink-0 text-[12px] font-medium" style={{ color: D.mute }}>{NAME[who] || 'you'}</span>
+      {onRemove && (
+        <button onClick={onRemove} aria-label="Remove" className="shrink-0 text-[#b5bac1] transition hover:text-white">
+          <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      )}
+    </div>
+  )
+}
+
+function PreferenceModal({ blend, onClose, onContinue }) {
+  const others = blend.members.filter((c) => c !== AVATAR.green)
+  // Seed a couple of preferences from the other members so it feels collaborative.
+  const seeded = [
+    { label: 'only 1-3 players', tag: 'small-group', who: others[0] || AVATAR.blue },
+    { label: 'cartoonish', tag: 'cartoonish', who: others[1] || others[0] || AVATAR.purple },
+  ]
+  const [mine, setMine] = useState([]) // your picks — max 3
+  const [input, setInput] = useState('')
+  const MAX = 3
+  const full = mine.length >= MAX
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const has = (label) => mine.some((p) => p.label === label) || seeded.some((p) => p.label === label)
+  function add(pref) {
+    if (full || has(pref.label)) return
+    setMine((m) => [...m, pref])
+  }
+  function addTyped() {
+    const label = input.trim()
+    if (!label || full || has(label)) { setInput(''); return }
+    setMine((m) => [...m, { label, tag: guessTag(label) }])
+    setInput('')
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="w-[520px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
+      >
+        <div className="p-[24px]">
+          <div className="flex items-start justify-between gap-[12px]">
+            <div>
+              <h3 className="text-[22px] font-bold italic text-white">Add Your Preferences</h3>
+              <p className="mt-[4px] text-[15px]" style={{ color: D.dim }}>What are you in the mood for tonight?</p>
+            </div>
+            <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+              <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+
+          {/* Input + n/3 counter */}
+          <div className="mt-[18px] flex items-stretch gap-[10px]">
+            <div className="flex min-w-0 flex-1 items-center rounded-[8px] bg-[#1e1f22] px-[14px]">
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter') addTyped() }}
+                disabled={full}
+                placeholder={full ? "That's 3 — you're set" : 'Type a preference and press Enter'}
+                className="min-w-0 flex-1 bg-transparent py-[12px] text-[14px] text-white outline-none placeholder:text-[#87898c] disabled:cursor-not-allowed"
+              />
+            </div>
+            <div className="flex w-[54px] shrink-0 items-center justify-center rounded-[8px] bg-[#1e1f22] text-[15px] font-semibold" style={{ color: full ? D.green : D.dim }}>
+              {mine.length}/{MAX}
+            </div>
+          </div>
+
+          {/* Suggested picks */}
+          <div className="mt-[14px] flex flex-wrap gap-[8px]">
+            {PREF_SUGGESTIONS.map((p) => {
+              const on = has(p.label)
+              return (
+                <button
+                  key={p.label}
+                  onClick={() => add(p)}
+                  disabled={on || full}
+                  className={
+                    'rounded-full border px-[12px] py-[6px] text-[13px] transition ' +
+                    (on
+                      ? 'cursor-default border-[#107C10] bg-[#107C10]/15 text-[#3fbf3f]'
+                      : full
+                        ? 'cursor-not-allowed border-[#3a3c41] text-[#5f616a]'
+                        : 'border-[#4e5058] text-[#dbdee1] hover:border-white hover:text-white')
+                  }
+                >
+                  + {p.label}
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Everyone's preferences so far */}
+          <p className="mt-[20px] text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.dim }}>
+            The group so far
+          </p>
+          <div className="no-scrollbar mt-[6px] flex max-h-[220px] flex-col overflow-y-auto">
+            {seeded.map((p) => <PrefRow key={p.label} who={p.who} label={p.label} />)}
+            {mine.map((p) => (
+              <PrefRow
+                key={p.label}
+                who={AVATAR.green}
+                label={p.label}
+                onRemove={() => setMine((m) => m.filter((x) => x.label !== p.label))}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-[12px] bg-[#232428] p-[24px]">
+          <p className="text-[13px]" style={{ color: D.mute }}>We&rsquo;ll spin up games that fit everyone.</p>
+          <button
+            onClick={() => onContinue([...seeded, ...mine.map((p) => ({ ...p, who: AVATAR.green }))])}
+            className="flex items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[22px] py-[11px] text-[15px] font-semibold text-white transition hover:bg-[#0e8f0e]"
+          >
+            Find our game
+            <span className="text-[18px] leading-none">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Decision wheel — spin-to-pick a game ───────────────────────────────────
+const WHEEL_COLORS = ['#5765f2', '#23a55a', '#eb459e', '#f0b232', '#9A45F7', '#5165F6', '#FF3737', '#3ba55d']
+
+function DecisionWheel({ games, onResult }) {
+  const [rotation, setRotation] = useState(0)
+  const [spinning, setSpinning] = useState(false)
+  const [winner, setWinner] = useState(null)
+  const pending = useRef(null)
+
+  const n = games.length
+  const R = 168
+  const C = 176
+  const seg = 360 / n
+  // Point on the wheel at `deg` measured clockwise from the top (12 o'clock).
+  const pt = (deg, rad = R) => {
+    const a = (deg * Math.PI) / 180
+    return [C + rad * Math.sin(a), C - rad * Math.cos(a)]
+  }
+
+  function spin() {
+    if (spinning || n === 0) return
+    const target = Math.floor(Math.random() * n)
+    pending.current = target
+    const center = target * seg + seg / 2 // clockwise from top
+    const rest = (360 - (center % 360)) % 360 // land the target under the top pointer
+    const currentMod = ((rotation % 360) + 360) % 360
+    const delta = (rest - currentMod + 360) % 360
+    setWinner(null)
+    setSpinning(true)
+    setRotation(rotation + 5 * 360 + delta)
+  }
+
+  function onEnd() {
+    setSpinning(false)
+    const w = pending.current
+    setWinner(w)
+    if (w != null && onResult) onResult(games[w])
+  }
+
+  return (
+    <div className="flex flex-col items-center">
+      <div className="relative" style={{ width: C * 2, height: C * 2 }}>
+        {/* Pointer */}
+        <div className="absolute left-1/2 top-[-6px] z-10 -translate-x-1/2">
+          <svg viewBox="0 0 24 28" className="h-[28px] w-[24px] drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
+            <path d="M12 26 L2 4 A14 14 0 0 1 22 4 Z" fill="#ffffff" />
+          </svg>
+        </div>
+
+        <svg
+          viewBox={`0 0 ${C * 2} ${C * 2}`}
+          className="size-full"
+          style={{
+            transform: `rotate(${rotation}deg)`,
+            transition: spinning ? 'transform 4.2s cubic-bezier(0.15,0.85,0.25,1)' : 'none',
+          }}
+          onTransitionEnd={onEnd}
+        >
+          <circle cx={C} cy={C} r={R + 6} fill="#0c0c0e" stroke="#26272b" strokeWidth="2" />
+          {games.map((g, i) => {
+            const a0 = i * seg
+            const a1 = (i + 1) * seg
+            const [x0, y0] = pt(a0)
+            const [x1, y1] = pt(a1)
+            const large = seg > 180 ? 1 : 0
+            const center = a0 + seg / 2
+            const [lx, ly] = pt(center, R * 0.6)
+            const flip = center > 90 && center < 270
+            const title = g.title.length > 18 ? g.title.slice(0, 17) + '…' : g.title
+            return (
+              <g key={i}>
+                <path
+                  d={`M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`}
+                  fill={WHEEL_COLORS[i % WHEEL_COLORS.length]}
+                  stroke="#0c0c0e"
+                  strokeWidth="2"
+                />
+                <g transform={`rotate(${center} ${C} ${C})`}>
+                  <text
+                    x={C}
+                    y={C - R * 0.6}
+                    transform={flip ? `rotate(180 ${C} ${C - R * 0.6})` : undefined}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="pointer-events-none select-none"
+                    fontSize="13"
+                    fontWeight="700"
+                    fill="#ffffff"
+                  >
+                    {title}
+                  </text>
+                </g>
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* Center hub — click to spin */}
+        <button
+          onClick={spin}
+          disabled={spinning}
+          className="absolute left-1/2 top-1/2 flex size-[76px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[15px] font-bold text-[#107C10] shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition hover:scale-105 disabled:opacity-70"
+        >
+          {spinning ? '…' : 'SPIN'}
+        </button>
+      </div>
+
+      {/* Result banner */}
+      <div className="mt-[22px] h-[52px]">
+        {winner != null ? (
+          <div className="flex items-center gap-[12px] rounded-[12px] bg-[#121214] px-[20px] py-[12px]">
+            <span className="size-[14px] rounded-full" style={{ backgroundColor: WHEEL_COLORS[winner % WHEEL_COLORS.length] }} />
+            <span className="text-[16px] text-[#9a9ba3]">Tonight you&rsquo;re playing</span>
+            <span className="text-[20px] font-bold text-white">{games[winner].title}</span>
+          </div>
+        ) : (
+          <p className="text-[15px]" style={{ color: D.mute }}>{spinning ? 'Spinning…' : 'Tap SPIN to let fate decide.'}</p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Decision page — wheel + preference-matched game list ────────────────────
+function DecidePage({ blend, prefs, onBack }) {
+  const [launching, setLaunching] = useState(null)
+  const selectedTags = [...new Set(prefs.map((p) => p.tag).filter(Boolean))]
+
+  // Annotate each blend game with which of the group's preferences it matches.
+  const ranked = blend.games
+    .map((key) => {
+      const tags = GAME_TAGS[key] || []
+      const matched = prefs.filter((p) => p.tag && tags.includes(p.tag))
+      const matchedLabels = [...new Set(matched.map((p) => p.label))]
+      return { key, ...CATALOG[key], matched, matchedLabels, score: matchedLabels.length }
+    })
+    .sort((a, b) => b.score - a.score)
+
+  // The game meeting the most preferences gets the spotlight; the rest list below.
+  const top = ranked[0]
+  const rest = ranked.slice(1)
+  const selectedLabels = [...new Set(prefs.map((p) => p.label))]
+
+  // The wheel spins over games that fit the group; fall back to all if none match.
+  const fitting = ranked.filter((g) => g.score > 0)
+  const wheelGames = fitting.length >= 2 ? fitting : ranked
+
+  return (
+    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+      <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[28px]">
+        <div className="mx-auto w-full max-w-[1200px]">
+          <button
+            onClick={onBack}
+            className="mb-[24px] flex items-center gap-[8px] text-[15px] font-semibold text-[#9a9ba3] transition hover:text-white"
+          >
+            <span className="text-[18px] leading-none">←</span> Back to {blend.name}
+          </button>
+
+          {/* Header */}
+          <div>
+            <h1 className="text-[40px] font-semibold leading-none tracking-tight text-white">Let&rsquo;s decide a game</h1>
+            <div className="mt-[10px] flex items-center gap-[8px] text-[15px] text-[#9a9ba3]">
+              Matched to
+              <span className="flex items-center">
+                {blend.members.map((c, i) => (
+                  <Avatar key={i} color={c} size={24} style={{ marginRight: i < blend.members.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                ))}
+              </span>
+              in {blend.name}
+            </div>
+          </div>
+
+          {/* Selected preferences summary */}
+          {selectedTags.length > 0 && (
+            <div className="mt-[18px] flex flex-wrap items-center gap-[8px]">
+              <span className="text-[13px]" style={{ color: D.mute }}>Preferences:</span>
+              {[...new Set(prefs.map((p) => p.label))].map((label) => (
+                <span key={label} className="rounded-full bg-[#107C10]/15 px-[12px] py-[5px] text-[13px] text-[#3fbf3f]">{label}</span>
+              ))}
+            </div>
+          )}
+
+          <div className="my-[28px] h-px bg-[#1c1d21]" />
+
+          {/* Games that fit everyone — the primary section */}
+          <section>
+            <h2 className="mb-[6px] text-[30px] font-semibold text-white">Games that fit everyone</h2>
+            <p className="mb-[24px] text-[14px]" style={{ color: D.mute }}>Ranked by how many of the group&rsquo;s preferences each game hits.</p>
+
+            {/* Spotlight — the game meeting the most preferences gets top billing */}
+            {top && (
+              <div className="mb-[28px] overflow-hidden rounded-[20px] bg-[#121214] ring-1 ring-[#107C10]/30">
+                <div className="flex flex-col lg:flex-row">
+                  <div className="relative aspect-video w-full shrink-0 overflow-hidden bg-[#1a1a1d] lg:w-[58%]">
+                    <img alt="" src={top.image} className="size-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <span className="absolute left-[16px] top-[16px] rounded-[10px] bg-[#107C10] px-[12px] py-[6px] text-[12px] font-bold uppercase tracking-wide text-white shadow-[0_2px_10px_rgba(16,124,16,0.5)]">
+                      {top.score > 0 ? 'Best match' : 'Top pick'}
+                    </span>
+                  </div>
+                  <div className="flex flex-1 flex-col justify-center gap-[16px] p-[28px]">
+                    <div>
+                      <div className="flex items-center gap-[10px]">
+                        <p className="text-[34px] font-bold leading-tight text-white">{top.title}</p>
+                        {top.score > 0 && (
+                          <span className="rounded-full bg-[#107C10]/15 px-[10px] py-[3px] text-[13px] font-semibold text-[#3fbf3f]">
+                            {top.score}/{selectedLabels.length || top.score} prefs
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-[4px] text-[14px] text-[#7e7f87]">{top.players} players · {top.playtime} · {top.genre}</p>
+                    </div>
+                    <p className="max-w-[52ch] text-[16px] leading-snug text-[#c7c8ce]">{top.caption}</p>
+                    {top.matchedLabels.length > 0 && (
+                      <div>
+                        <p className="mb-[8px] text-[12px] font-semibold uppercase tracking-wide text-[#7e7f87]">Why it fits</p>
+                        <div className="flex flex-wrap gap-[8px]">
+                          {top.matchedLabels.map((label) => (
+                            <span key={label} className="rounded-full bg-[#107C10]/15 px-[12px] py-[5px] text-[13px] text-[#3fbf3f]">✓ {label}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-[4px] flex items-center gap-[10px]">
+                      <button onClick={() => setLaunching(top.title)} className="flex items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[24px] py-[10px] text-[15px] font-semibold text-white transition hover:bg-[#0e8f0e]">
+                        <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                        Play now
+                      </button>
+                      <button className="rounded-[10px] bg-[#2b2d31] px-[24px] py-[10px] text-[15px] font-semibold text-white transition hover:bg-[#35373c]">Add to chat</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* The rest, ranked */}
+            <div className="flex flex-col gap-[12px]">
+              {rest.map((g) => (
+                <div
+                  key={g.key}
+                  className="group flex items-center gap-[20px] rounded-[14px] p-[10px] transition hover:bg-[#151517]"
+                >
+                  <div className="relative h-[110px] w-[196px] shrink-0 overflow-hidden rounded-[12px] bg-[#1a1a1d]">
+                    <img alt="" src={g.image} className="size-full object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-[10px]">
+                      <p className="text-[20px] font-semibold text-white">{g.title}</p>
+                      {g.score > 0 && (
+                        <span className="rounded-full bg-[#107C10]/15 px-[8px] py-[2px] text-[12px] font-semibold text-[#3fbf3f]">
+                          {g.score} match{g.score > 1 ? 'es' : ''}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-[2px] text-[13px] text-[#7e7f87]">{g.players} players · {g.playtime} · {g.genre}</p>
+                    <p className="mt-[8px] max-w-[60ch] text-[14px] leading-snug text-[#9a9ba3]">{g.caption}</p>
+                    {g.matchedLabels.length > 0 && (
+                      <div className="mt-[10px] flex flex-wrap gap-[6px]">
+                        {g.matchedLabels.map((label) => (
+                          <span key={label} className="rounded-full border border-[#107C10]/50 px-[10px] py-[3px] text-[12px] text-[#3fbf3f]">
+                            ✓ {label}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <PlayButton onClick={() => setLaunching(g.title)} size={52} title={`Launch ${g.title}`} />
+                  <div className="w-[6px] shrink-0" />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="my-[40px] h-px bg-[#1c1d21]" />
+
+          {/* Still stuck? Spin the wheel — secondary */}
+          <section className="flex flex-col items-center">
+            <h2 className="mb-[6px] text-[22px] font-semibold text-white">Still can&rsquo;t decide? Spin for it</h2>
+            <p className="mb-[24px] text-[14px]" style={{ color: D.mute }}>
+              {fitting.length >= 2
+                ? `Spinning the ${wheelGames.length} games that fit the group.`
+                : 'Add preferences to narrow the wheel — spinning all games for now.'}
+            </p>
+            <DecisionWheel key={wheelGames.map((g) => g.key).join()} games={wheelGames} />
+          </section>
+        </div>
+      </div>
+      {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
+    </main>
+  )
+}
+
 export default function Landing() {
   const [blend, setBlend] = useState(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [wishlistGame, setWishlistGame] = useState(null)
+  const [prefsFor, setPrefsFor] = useState(null) // blend whose preferences modal is open
+  const [decide, setDecide] = useState(null) // { blend, prefs }
   return (
-    <div className="group/rail flex h-screen w-screen overflow-hidden bg-black text-white">
+    <div
+      className="group/rail flex h-screen w-screen overflow-hidden bg-black text-white"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       <ServerRail />
       <Sidebar />
-      {blend ? (
-        <BlendPage key={blend.name} blend={blend} onBack={() => setBlend(null)} />
+      {decide ? (
+        <DecidePage key={decide.blend.name} blend={decide.blend} prefs={decide.prefs} onBack={() => setDecide(null)} />
+      ) : blend ? (
+        <BlendPage key={blend.name} blend={blend} onBack={() => setBlend(null)} onDecide={() => setPrefsFor(blend)} />
       ) : (
         <Content onOpenBlend={setBlend} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} />
       )}
       {createOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} />}
       {wishlistGame && <WishlistModal game={wishlistGame} onClose={() => setWishlistGame(null)} />}
+      {prefsFor && (
+        <PreferenceModal
+          blend={prefsFor}
+          onClose={() => setPrefsFor(null)}
+          onContinue={(prefs) => { setDecide({ blend: prefsFor, prefs }); setPrefsFor(null) }}
+        />
+      )}
     </div>
   )
 }
