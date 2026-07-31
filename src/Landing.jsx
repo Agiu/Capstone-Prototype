@@ -302,6 +302,14 @@ const shelfFriends = [
   { avatars: [AVATAR.red], label: 'recommends this game', players: '1-4', image: heroMinecraftDungeons, video: { youTubeId: 'TxNH6bapa3A', poster: heroMinecraftDungeons }, details: details.minecraftDungeons, owners: [AVATAR.red, AVATAR.purple] },
 ]
 
+const shelfMore = [
+  { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves },
+  { avatars: [AVATAR.purple], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft },
+  { avatars: [AVATAR.green], label: 'wishlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol },
+  { avatars: [AVATAR.red], label: 'wishlisted this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat },
+  { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded },
+]
+
 // "For you" portrait tiles (landscape hero art cropped into portrait covers).
 const FORYOU = [
   { title: 'Minecraft', image: heroMinecraft },
@@ -396,69 +404,17 @@ function SectionHeading({ children, size = 34 }) {
 }
 
 // ── Xbox content area ───────────────────────────────────────────────────────
-// Steam-style store row — cover + price badge, with a detail flyout on hover.
+// Steam-style row — the original game cards with a Steam detail flyout on hover.
 const STEAM_ROW = [
-  { image: heroMinecraft, title: 'Minecraft', released: 'Nov 18, 2011', pct: 20, orig: '29.99', now: '23.99', desc: 'Build, explore and survive in an infinite world of blocks — solo or with friends. Mine deep, craft anything, and make the world your own.', review: 'Overwhelmingly Positive', reviews: '2.4M', tags: ['Sandbox', 'Survival', 'Building', 'Multiplayer'] },
-  { image: heroSeaOfThieves, title: 'Sea of Thieves', released: 'Jun 3, 2020', pct: 50, orig: '39.99', now: '19.99', desc: 'A shared-world pirate adventure — sail, fight and hunt treasure with your crew across an open ocean full of other real players.', review: 'Very Positive', reviews: '312K', tags: ['Adventure', 'Open World', 'Pirates', 'Co-op'] },
-  { image: heroOvercooked, title: 'Overcooked! 2', released: 'Aug 7, 2018', pct: 60, orig: '24.99', now: '9.99', desc: 'Chaotic co-op cooking across wobbling, falling-apart kitchens. Chop, cook and serve before the timer — and your friendships — run out.', review: 'Very Positive', reviews: '58K', tags: ['Co-op', 'Party', 'Casual', 'Local Multiplayer'] },
-  { image: heroHumanFallFlat, title: 'Human: Fall Flat', released: 'Jul 22, 2016', pct: 66, orig: '19.99', now: '6.79', desc: 'Floppy physics puzzles in surreal dreamscapes. No skill floor at all, endless slapstick, and better with friends.', review: 'Overwhelmingly Positive', reviews: '180K', tags: ['Puzzle', 'Physics', 'Co-op', 'Funny'] },
-  { image: heroGrounded, title: 'Grounded', released: 'Sep 27, 2022', pct: 40, orig: '39.99', now: '23.99', desc: 'Shrunk to the size of an ant, survive the backyard: build bases, brew gear and fight off giant bugs with up to three friends.', review: 'Very Positive', reviews: '96K', tags: ['Survival', 'Co-op', 'Crafting', 'Adventure'] },
-  { image: heroMonsterHunter, title: 'Monster Hunter Rise', released: 'Jan 12, 2022', pct: 50, orig: '29.99', now: '14.99', desc: 'Hunt colossal monsters, craft mighty gear, and chain fluid aerial combat with the new Wirebug across a vivid feudal world.', review: 'Very Positive', reviews: '110K', tags: ['Action RPG', 'Co-op', 'Hunting', 'Multiplayer'] },
+  { avatars: [AVATAR.green], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, steam: { released: 'Nov 18, 2011', desc: 'Build, explore and survive in an infinite world of blocks — solo or with friends. Mine deep, craft anything, and make the world your own.', review: 'Overwhelmingly Positive', reviews: '2.4M', tags: ['Sandbox', 'Survival', 'Building', 'Multiplayer'] } },
+  { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, steam: { released: 'Jun 3, 2020', desc: 'A shared-world pirate adventure — sail, fight and hunt treasure with your crew across an open ocean full of other real players.', review: 'Very Positive', reviews: '312K', tags: ['Adventure', 'Open World', 'Pirates', 'Co-op'] } },
+  { avatars: [AVATAR.red], label: 'wishlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, steam: { released: 'Aug 7, 2018', desc: 'Chaotic co-op cooking across wobbling, falling-apart kitchens. Chop, cook and serve before the timer runs out.', review: 'Very Positive', reviews: '58K', tags: ['Co-op', 'Party', 'Casual', 'Local Multiplayer'] } },
+  { avatars: [AVATAR.purple], label: 'recommends this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, steam: { released: 'Jul 22, 2016', desc: 'Floppy physics puzzles in surreal dreamscapes. No skill floor at all, endless slapstick, and better with friends.', review: 'Overwhelmingly Positive', reviews: '180K', tags: ['Puzzle', 'Physics', 'Co-op', 'Funny'] } },
+  { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, steam: { released: 'Sep 27, 2022', desc: 'Shrunk to the size of an ant, survive the backyard: build bases, brew gear and fight off giant bugs with friends.', review: 'Very Positive', reviews: '96K', tags: ['Survival', 'Co-op', 'Crafting', 'Adventure'] } },
+  { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, steam: { released: 'Jan 12, 2022', desc: 'Hunt colossal monsters, craft mighty gear, and chain fluid aerial combat with the new Wirebug.', review: 'Very Positive', reviews: '110K', tags: ['Action RPG', 'Co-op', 'Hunting', 'Multiplayer'] } },
 ]
 
-function SteamCard({ game }) {
-  const ref = useRef(null)
-  const [flip, setFlip] = useState(false) // open the flyout to the left near the screen edge
-  function onEnter() {
-    const r = ref.current?.getBoundingClientRect()
-    if (r) setFlip(window.innerWidth - r.right < 420)
-  }
-  return (
-    <div ref={ref} onMouseEnter={onEnter} className="group relative w-[280px]">
-      <div className="relative aspect-video overflow-hidden rounded-[8px] bg-[#1a1a1d] ring-1 ring-white/5 transition group-hover:ring-white/20">
-        <img alt="" src={game.image} loading="lazy" className="size-full object-cover" />
-        <button className="absolute right-[8px] top-[8px] flex size-[26px] items-center justify-center rounded-full bg-black/60 text-white/80 opacity-0 transition group-hover:opacity-100">···</button>
-        <div className="absolute bottom-0 right-0 flex overflow-hidden rounded-tl-[6px]">
-          <div className="flex items-center bg-[#4c6b22] px-[10px] text-[18px] font-bold text-[#beee11]">-{game.pct}%</div>
-          <div className="flex items-center gap-[8px] bg-black/85 px-[10px] py-[6px]">
-            <span className="text-[12px] text-[#7a8b99] line-through">${game.orig}</span>
-            <span className="text-[14px] text-[#beee11]">${game.now}</span>
-          </div>
-        </div>
-      </div>
-      <p className="mt-[8px] truncate text-[14px] text-white">{game.title}</p>
-
-      {/* Hover flyout — Steam-style detail pop-out (flips side near screen edge) */}
-      <div
-        className={
-          'pointer-events-none absolute top-0 z-50 w-[380px] translate-y-0 opacity-0 transition-opacity duration-150 group-hover:opacity-100 ' +
-          (flip ? 'right-full mr-[12px]' : 'left-full ml-[12px]')
-        }
-      >
-        <div className="rounded-[6px] bg-[#12141a] p-[18px] shadow-[0_12px_40px_rgba(0,0,0,0.7)] ring-1 ring-black/60">
-          <h4 className="text-[22px] font-semibold leading-tight text-white">{game.title}</h4>
-          <p className="mt-[6px] text-[13px] text-[#8f98a0]">Released: {game.released}</p>
-          <p className="mt-[14px] text-[14px] leading-relaxed text-[#c7d5e0]">{game.desc}</p>
-          <div className="mt-[16px] rounded-[4px] bg-white/[0.04] p-[12px]">
-            <p className="text-[14px] text-white">English Reviews:</p>
-            <p className="mt-[2px] text-[14px]">
-              <span className="font-semibold text-[#66c0f4]">{game.review}</span>{' '}
-              <span className="text-[#8f98a0]">({game.reviews} reviews)</span>
-            </p>
-          </div>
-          <p className="mt-[16px] text-[13px] text-[#8f98a0]">User tags:</p>
-          <div className="mt-[8px] flex flex-wrap gap-[6px]">
-            {game.tags.map((t) => (
-              <span key={t} className="rounded-[3px] bg-white/[0.08] px-[10px] py-[4px] text-[12px] text-[#c7d5e0]">{t}</span>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function Content({ onOpenBlend, onCreateBlend }) {
+function Content({ onOpenBlend, onCreateBlend, onWishlist }) {
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav */}
@@ -520,16 +476,14 @@ function Content({ onOpenBlend, onCreateBlend }) {
 
           {/* Recommendation rows — personal to you (group-curated lists live on
               each blend's page). */}
-          <CardRow title="Your Friday-night taste" subtitle="Short, loud co-op — the kind of session you actually finish." cards={shelfToday} />
-          <CardRow title="Because you can't put down Monster Hunter" subtitle="More action-RPG and survival picks matched to the hours you play." cards={shelfFriends} overlay />
+          <CardRow title="Your Friday-night taste" subtitle="Short, loud co-op — the kind of session you actually finish." cards={shelfToday} onWishlist={onWishlist} />
+          <CardRow title="Because you can't put down Monster Hunter" subtitle="More action-RPG and survival picks matched to the hours you play." cards={shelfFriends} overlay onWishlist={onWishlist} />
 
-          {/* Steam-style store row with hover flyout */}
-          <section className="mt-[56px]">
-            <p className="text-[24px] font-bold text-white">Recommended based on what you play</p>
-            <div className="mt-[20px] flex flex-wrap gap-[18px]">
-              {STEAM_ROW.map((g, i) => <SteamCard key={i} game={g} />)}
-            </div>
-          </section>
+          {/* Steam-style horizontal row — detail flyout on hover */}
+          <CardRow title="Recommended based on what you play" subtitle="Hover a card for the full read." cards={STEAM_ROW} onWishlist={onWishlist} />
+
+          {/* Always-expanded cards */}
+          <CardRow title="More to jump into" subtitle="The full read, up front." cards={shelfMore} expanded onWishlist={onWishlist} />
         </div>
       </div>
     </main>
@@ -694,6 +648,10 @@ function CreateBlendModal({ onClose }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+  const [nameOverride, setNameOverride] = useState(null)
+  const selectedNames = friends.filter((f) => sel[f.name]).map((f) => cap(f.name))
+  const anySelected = selectedNames.length > 0
+  const blendName = nameOverride !== null ? nameOverride : selectedNames.join(', ')
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
@@ -744,12 +702,90 @@ function CreateBlendModal({ onClose }) {
           </div>
         </div>
 
-        <div className="bg-[#232428] p-[24px]">
-          <p className="text-[14px] font-semibold text-white">Or, send an invite link</p>
-          <div className="mt-[10px] truncate rounded-[8px] bg-[#1e1f22] px-[14px] py-[11px] text-[14px] text-[#b5bac1]">
-            https://discord.gg/sfsdkjsjfjs
+        {anySelected ? (
+          // Selected state — name the blend + create/cancel (Figma 564:1209)
+          <div className="bg-[#232428] p-[24px]">
+            <div className="flex items-center gap-[16px]">
+              <div className="relative size-[56px] shrink-0">
+                <div className="flex size-[56px] items-center justify-center rounded-full bg-[#1e1f22]">
+                  <svg viewBox="0 0 24 24" className="size-[28px] text-[#6a6d73]" fill="currentColor"><path d="M9 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm6 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM3 19c0-2.7 2.7-4.5 6-4.5s6 1.8 6 4.5v1H3v-1Zm13.5-4.3c2 .6 3.5 2 3.5 4.3v1h-3v-1c0-1.6-.6-2.9-1.6-3.8.4-.3.7-.4 1.1-.5Z" /></svg>
+                </div>
+                <span className="absolute -right-[1px] -top-[1px] flex size-[22px] items-center justify-center rounded-full border-[3px] border-[#232428] bg-[#5765f2]">
+                  <svg viewBox="0 0 24 24" className="size-[11px] text-white" fill="currentColor"><path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25ZM20.7 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" /></svg>
+                </span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <label className="text-[13px] text-[#b5bac1]">Blend Name (optional)</label>
+                <input
+                  value={blendName}
+                  onChange={(e) => setNameOverride(e.target.value)}
+                  placeholder="Blend name"
+                  className="mt-[4px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px] text-[14px] text-white outline-none placeholder:text-[#87898c]"
+                />
+              </div>
+            </div>
+            <div className="mt-[18px] flex justify-end gap-[10px]">
+              <button onClick={onClose} className="rounded-[8px] bg-[#2b2d31] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]">Cancel</button>
+              <button onClick={onClose} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Create a new &ldquo;Blend&rdquo;</button>
+            </div>
           </div>
-          <p className="mt-[8px] text-[12px] text-[#7e7f87]">Your invite link expires in 24 hours.</p>
+        ) : (
+          // Default state — invite link (Figma 531:2105)
+          <div className="bg-[#232428] p-[24px]">
+            <p className="text-[14px] font-semibold text-white">Or, send an invite link</p>
+            <div className="mt-[10px] truncate rounded-[8px] bg-[#1e1f22] px-[14px] py-[11px] text-[14px] text-[#b5bac1]">
+              https://discord.gg/sfsdkjsjfjs
+            </div>
+            <p className="mt-[8px] text-[12px] text-[#7e7f87]">Your invite link expires in 24 hours.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Add a game to a Blend's wishlist (opened from a card's bookmark) ────────
+function WishlistModal({ game, onClose }) {
+  const [added, setAdded] = useState({})
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="p-[24px]">
+          <div className="flex items-start justify-between gap-[12px]">
+            <div>
+              <h3 className="text-[20px] font-bold text-white">Add to a &ldquo;Blend&rdquo;</h3>
+              <p className="mt-[4px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a Blend&rsquo;s wishlist.</p>
+            </div>
+            <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+              <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+          <div className="no-scrollbar mt-[16px] flex max-h-[320px] flex-col gap-[2px] overflow-y-auto">
+            {BLENDS.map((b) => {
+              const on = !!added[b.name]
+              return (
+                <button
+                  key={b.name}
+                  onClick={() => setAdded((s) => ({ ...s, [b.name]: !s[b.name] }))}
+                  className="flex items-center gap-[12px] rounded-[8px] p-[8px] text-left transition hover:bg-white/5"
+                >
+                  <span className="size-[40px] shrink-0 rounded-[10px]" style={{ backgroundColor: b.color }} />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[15px] font-semibold text-white">{b.name}</p>
+                    <p className="text-[12px] text-[#80848e]">{b.members.length} members</p>
+                  </div>
+                  <span className={'flex shrink-0 items-center rounded-[6px] px-[14px] py-[7px] text-[13px] font-semibold text-white transition ' + (on ? 'bg-[#248046]' : 'bg-[#4e5058]')}>
+                    {on ? '✓ Added' : '+ Add'}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
     </div>
@@ -759,6 +795,7 @@ function CreateBlendModal({ onClose }) {
 export default function Landing() {
   const [blend, setBlend] = useState(null)
   const [createOpen, setCreateOpen] = useState(false)
+  const [wishlistGame, setWishlistGame] = useState(null)
   return (
     <div className="group/rail flex h-screen w-screen overflow-hidden bg-black text-white">
       <ServerRail />
@@ -766,9 +803,10 @@ export default function Landing() {
       {blend ? (
         <BlendPage key={blend.name} blend={blend} onBack={() => setBlend(null)} />
       ) : (
-        <Content onOpenBlend={setBlend} onCreateBlend={() => setCreateOpen(true)} />
+        <Content onOpenBlend={setBlend} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} />
       )}
       {createOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} />}
+      {wishlistGame && <WishlistModal game={wishlistGame} onClose={() => setWishlistGame(null)} />}
     </div>
   )
 }
