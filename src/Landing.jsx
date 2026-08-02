@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { RecCard, CardRow, AVATAR } from './RecCard.jsx'
+import { useRoom, RoomProvider, useRoomCtx } from './room.js'
 import {
   discordLogo,
   xboxSprite,
@@ -17,6 +18,13 @@ import {
   heroForHonor,
   searchIcon,
 } from './assets/figma/index.js'
+
+// ── Active tester profile, from the URL (?u=abby|blake|chloe|daniel) ────────
+// No login: each tester opens their own link and `SELF` is their identity.
+const COLOR_OF = { abby: AVATAR.green, blake: AVATAR.blue, chloe: AVATAR.purple, daniel: AVATAR.red }
+const _u = new URLSearchParams(window.location.search).get('u')
+const SELF_NAME = COLOR_OF[_u] ? _u : 'abby'
+const SELF = COLOR_OF[SELF_NAME]
 
 /* ── Discord dark palette (from the reference screenshot) ──────────────────
  * A darker-than-default Discord: near-black rail, very dark panel, raised
@@ -152,13 +160,12 @@ const NAV = [
   ) },
 ]
 
+// The four test profiles (a/b/c/d), one per tester. `self` is set from the URL.
 const DMS = [
-  { name: 'sauhee', color: AVATAR.green, call: true },
-  { name: 'clarisse', color: AVATAR.blue, status: 'Playing Sea of Thieves' },
-  { name: 'caleb', color: AVATAR.purple, status: 'Listening to Spotify' },
-  { name: 'meera', color: AVATAR.red, status: 'Streaming Minecraft' },
-  { name: 'wumpus', color: '#57a0ee' },
-  { name: 'clyde', color: '#faa61a', status: 'Playing Among Us' },
+  { name: 'abby', color: AVATAR.green },
+  { name: 'blake', color: AVATAR.blue, status: 'Playing Sea of Thieves' },
+  { name: 'chloe', color: AVATAR.purple, status: 'Listening to Spotify' },
+  { name: 'daniel', color: AVATAR.red, status: 'Streaming Minecraft' },
 ]
 
 function NavItem({ icon, label, active }) {
@@ -175,28 +182,25 @@ function NavItem({ icon, label, active }) {
   )
 }
 
-function DmRow({ name, color, status, call }) {
+function DmRow({ name, color, status, online }) {
   return (
     <button
       className="flex h-[44px] w-full items-center gap-[12px] rounded-[6px] px-[8px] transition-colors"
-      style={{ backgroundColor: call ? D.raised : 'transparent' }}
-      onMouseEnter={(e) => { if (!call) e.currentTarget.style.backgroundColor = D.hover }}
-      onMouseLeave={(e) => { if (!call) e.currentTarget.style.backgroundColor = 'transparent' }}
+      style={{ backgroundColor: 'transparent' }}
+      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = D.hover }}
+      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
     >
       <div className="relative shrink-0">
         <Avatar color={color} size={32} />
         <span
           className="absolute -bottom-[2px] -right-[2px] size-[12px] rounded-full"
-          style={{ backgroundColor: call ? D.green : '#43454b', border: `3px solid ${call ? D.raised : D.panel}` }}
+          style={{ backgroundColor: online ? D.green : '#43454b', border: `3px solid ${D.panel}` }}
         />
       </div>
       <div className="flex min-w-0 flex-col items-start leading-tight">
-        <span className="truncate text-[15px] font-semibold" style={{ color: call ? '#fff' : D.text }}>{name}</span>
-        {call ? (
-          <span className="flex items-center gap-[4px] text-[12px]" style={{ color: D.green }}>
-            <svg viewBox="0 0 24 24" className="size-[12px]" fill="currentColor"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11 11 0 0 0 3.5.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.3a1 1 0 0 1 1 1c0 1.2.2 2.4.56 3.5a1 1 0 0 1-.25 1l-2.2 2.3Z" /></svg>
-            In a call
-          </span>
+        <span className="truncate text-[15px] font-semibold" style={{ color: online ? '#fff' : D.text }}>{name}</span>
+        {online ? (
+          <span className="text-[12px]" style={{ color: D.mute }}>Online</span>
         ) : status ? (
           <span className="truncate text-[12px]" style={{ color: D.mute }}>{status}</span>
         ) : null}
@@ -205,7 +209,8 @@ function DmRow({ name, color, status, call }) {
   )
 }
 
-function Sidebar() {
+function Sidebar({ online = [], onReset }) {
+  const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1'
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col" style={{ backgroundColor: D.panel }}>
       {/* Search */}
@@ -228,12 +233,24 @@ function Sidebar() {
         <div className="my-[10px] h-px" style={{ backgroundColor: '#26272b' }} />
 
         <div className="flex items-center justify-between px-[8px] pb-[4px]">
-          <span className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>Direct Messages</span>
+          <span className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>
+            Direct Messages
+          </span>
           <span className="text-[18px] leading-none" style={{ color: D.mute }}>+</span>
         </div>
         <div className="flex flex-col gap-[2px]">
-          {DMS.map((d) => <DmRow key={d.name} {...d} />)}
+          {DMS.filter((d) => d.name !== SELF_NAME).map((d) => (
+            <DmRow key={d.name} {...d} online />
+          ))}
         </div>
+        {isAdmin && (
+          <button
+            onClick={() => { if (window.confirm('Reset the room to a fresh state for everyone?')) onReset?.() }}
+            className="mt-[10px] w-full rounded-[6px] border border-[#4e5058] px-[8px] py-[6px] text-[12px] font-semibold text-[#f0a0a0] transition hover:bg-[#4e5058]/30"
+          >
+            Reset room (moderator)
+          </button>
+        )}
       </div>
 
       {/* Voice connected bar */}
@@ -251,11 +268,11 @@ function Sidebar() {
       {/* User bar */}
       <div className="flex h-[52px] items-center gap-[8px] px-[8px]" style={{ backgroundColor: D.inset }}>
         <div className="relative">
-          <Avatar color={AVATAR.green} size={32} />
+          <Avatar color={SELF} size={32} />
           <span className="absolute -bottom-[1px] -right-[1px] size-[11px] rounded-full" style={{ backgroundColor: D.green, border: `3px solid ${D.inset}` }} />
         </div>
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-[14px] font-semibold text-white">sauhee</div>
+          <div className="truncate text-[14px] font-semibold text-white">{SELF_NAME}</div>
           <div className="truncate text-[12px]" style={{ color: D.mute }}>Online</div>
         </div>
         <div className="flex gap-[2px]" style={{ color: D.dim }}>
@@ -323,7 +340,7 @@ const FORYOU = [
 ]
 
 // Friend colors → display names (green is always the user).
-const NAME = { [AVATAR.green]: 'sauhee', [AVATAR.blue]: 'clarisse', [AVATAR.purple]: 'caleb', [AVATAR.red]: 'meera' }
+const NAME = { [AVATAR.green]: 'abby', [AVATAR.blue]: 'blake', [AVATAR.purple]: 'chloe', [AVATAR.red]: 'daniel' }
 
 // Game catalog for the blend pages — cover art + a short caption. Reuses the
 // card `details` above for title/developer/genre/playtime.
@@ -342,20 +359,28 @@ const CATALOG = {
   forHonor: { image: heroForHonor, title: 'For Honor', developer: 'Ubisoft', genre: 'fighting', playtime: '~2hrs', players: '1-4', caption: 'Melee dueling with a real skill ceiling.' },
 }
 
+// Game title → catalog key (the wishlist stores keys; cards pass titles).
+const KEY_OF_TITLE = Object.fromEntries(Object.entries(CATALOG).map(([k, v]) => [v.title, k]))
+// Colors cycled for newly created blends.
+const BLEND_COLORS = ['#5765f2', '#e67e22', '#16a085', '#c0392b', '#8e44ad', '#2980b9', '#d64b7e', '#27ae60']
+
 // "Your Blends" — colored playlist cards (palette from the Figma landing frame).
 // Green (the user, sauhee) is a member of every blend.
+// abby=green, blake=blue, chloe=purple, daniel=red. Each person is in exactly
+// two of these, so everyone sees two groups: the all-four group + their pair.
 const BLENDS = [
-  { name: 'Overwatch fridays', color: '#ab8e8e', when: 'Fri 8pm', members: [AVATAR.green, AVATAR.blue, AVATAR.red],
-    games: ['seaOfThieves', 'overcooked', 'humanFallFlat', 'gangBeasts', 'grounded', 'monsterHunter'] },
-  { name: 'Sunday cozy club', color: '#34a172', when: 'Sun 3pm', members: [AVATAR.green, AVATAR.purple, AVATAR.blue],
-    games: ['minecraft', 'grounded', 'humanFallFlat', 'minecraftDungeons', 'seaOfThieves', 'overcooked'] },
-  { name: 'Late shift', color: '#a40c67', when: 'Wed 11pm', members: [AVATAR.green, AVATAR.red, AVATAR.purple],
-    games: ['gangBeasts', 'monsterHunter', 'forHonor', 'wildHearts', 'lol', 'humanFallFlat'] },
-  { name: 'Weekend raid', color: '#b3d176', when: 'Sat 2pm', members: [AVATAR.green, AVATAR.blue, AVATAR.red],
-    games: ['monsterHunter', 'forHonor', 'wildHearts', 'seaOfThieves', 'grounded', 'ac'] },
-  { name: 'Just us two', color: '#d64b7e', when: 'whenever', members: [AVATAR.green, AVATAR.purple],
-    games: ['humanFallFlat', 'overcooked', 'minecraft', 'minecraftDungeons', 'grounded', 'seaOfThieves'] },
+  { name: 'The Squad', color: '#5765f2', when: 'Fri 8pm', members: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red],
+    games: ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'monsterHunter'] },
+  { name: 'Abby & Blake', color: '#34a172', when: 'weeknights', members: [AVATAR.green, AVATAR.blue],
+    games: ['seaOfThieves', 'grounded', 'monsterHunter', 'wildHearts', 'forHonor', 'minecraft'] },
+  { name: 'Chloe & Daniel', color: '#d64b7e', when: 'weekends', members: [AVATAR.purple, AVATAR.red],
+    games: ['overcooked', 'humanFallFlat', 'gangBeasts', 'minecraftDungeons', 'lol', 'ac'] },
 ]
+
+// The seed the shared room is initialized with — each blend gets a stable id and
+// an initial wishlist order (the shared, drag-rankable list).
+const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+const SEED_BLENDS = BLENDS.map((b) => ({ ...b, id: slug(b.name), wishlist: b.games.slice(0, 4) }))
 
 // Preference tags per game — the decision page matches the group's stated
 // preferences against these to rank and filter the blend's games.
@@ -460,6 +485,7 @@ const STEAM_ROW = [
 ]
 
 function Content({ onOpenBlend, onCreateBlend, onWishlist }) {
+  const { blends } = useRoomCtx()
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav */}
@@ -507,7 +533,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist }) {
             <SectionHeading size={24}>Your &ldquo;Blends&rdquo;</SectionHeading>
             <div className="mt-[24px] flex max-w-full flex-wrap justify-center gap-x-[16px] gap-y-[24px]">
               <CreateBlendCard onClick={onCreateBlend} />
-              {BLENDS.map((b) => <BlendCard key={b.name} {...b} onOpen={() => onOpenBlend(b)} />)}
+              {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => <BlendCard key={b.id} {...b} onOpen={() => onOpenBlend(b)} />)}
             </div>
           </section>
 
@@ -662,29 +688,30 @@ function BlendPage({ blend, onBack, onDecide }) {
     setMenu(null)
     setLaunching(title)
   }
+  const { blends, setBlends } = useRoomCtx()
   const games = blend.games.map((k) => CATALOG[k])
   const m = blend.members
   // Activity feed — includes you (green/sauhee) alongside the other members.
   const feed = [
-    { who: AVATAR.green, text: `wishlisted ${games[2].title}`, when: '1h' },
-    { who: m[1] || AVATAR.green, text: `finished ${games[0].title} and left it five stars`, when: '2h' },
-    { who: m[2] || m[1] || AVATAR.green, text: `is in a ${games[1].title} lobby — one seat open`, when: 'live' },
-    { who: AVATAR.green, text: `added ${games[3].title} to the group list`, when: 'yest' },
-    { who: m[1] || AVATAR.green, text: `pinned ${blend.when} as their free window`, when: '2d' },
+    { who: SELF, text: `wishlisted ${games[2].title}`, when: '1h' },
+    { who: m[1] || SELF, text: `finished ${games[0].title} and left it five stars`, when: '2h' },
+    { who: m[2] || m[1] || SELF, text: `is in a ${games[1].title} lobby — one seat open`, when: 'live' },
+    { who: SELF, text: `added ${games[3].title} to the group list`, when: 'yest' },
+    { who: m[1] || SELF, text: `pinned ${blend.when} as their free window`, when: '2d' },
   ]
 
-  // Rankable group wishlist — drag a card to reorder; the number is its rank.
-  const [wish, setWish] = useState(games.slice(0, 4))
+  // Rankable group wishlist — shared. Dragging reorders blend.wishlist for
+  // everyone in the room (writes the new order to the realtime DB).
+  const wishKeys = blend.wishlist || blend.games.slice(0, 4)
+  const wish = wishKeys.map((k) => CATALOG[k]).filter(Boolean)
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
   function dropAt(i) {
     if (dragIdx !== null && dragIdx !== i) {
-      setWish((prev) => {
-        const next = prev.slice()
-        const [moved] = next.splice(dragIdx, 1)
-        next.splice(i, 0, moved)
-        return next
-      })
+      const next = wishKeys.slice()
+      const [moved] = next.splice(dragIdx, 1)
+      next.splice(i, 0, moved)
+      setBlends(blends.map((b) => (b.id === blend.id ? { ...b, wishlist: next } : b)))
     }
     setDragIdx(null)
     setOverIdx(null)
@@ -823,8 +850,9 @@ function BlendPage({ blend, onBack, onDecide }) {
 }
 
 // ── Create a "Blend" modal (Figma node 531:2105) ───────────────────────────
-function CreateBlendModal({ onClose }) {
-  const friends = DMS.filter((d) => d.name !== 'sauhee')
+function CreateBlendModal({ onClose, onCreated }) {
+  const { blends, setBlends } = useRoomCtx()
+  const friends = DMS.filter((d) => d.name !== SELF_NAME)
   const [sel, setSel] = useState({})
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -833,9 +861,25 @@ function CreateBlendModal({ onClose }) {
   }, [onClose])
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
   const [nameOverride, setNameOverride] = useState(null)
-  const selectedNames = friends.filter((f) => sel[f.name]).map((f) => cap(f.name))
+  const selectedFriends = friends.filter((f) => sel[f.name])
+  const selectedNames = selectedFriends.map((f) => cap(f.name))
   const anySelected = selectedNames.length > 0
   const blendName = nameOverride !== null ? nameOverride : selectedNames.join(', ')
+  function createBlend() {
+    const name = (blendName || 'New Blend').trim()
+    const games = ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'monsterHunter']
+    const newBlend = {
+      id: slug(name) + '-' + Date.now().toString(36).slice(-4),
+      name,
+      color: BLEND_COLORS[blends.length % BLEND_COLORS.length],
+      when: 'just now',
+      members: [SELF, ...selectedFriends.map((f) => f.color)],
+      games,
+      wishlist: games.slice(0, 4),
+    }
+    setBlends([...blends, newBlend])
+    onCreated?.(newBlend.id)
+  }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
@@ -910,7 +954,7 @@ function CreateBlendModal({ onClose }) {
             </div>
             <div className="mt-[18px] flex justify-end gap-[10px]">
               <button onClick={onClose} className="rounded-[8px] bg-[#2b2d31] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]">Cancel</button>
-              <button onClick={onClose} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Create a new &ldquo;Blend&rdquo;</button>
+              <button onClick={createBlend} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Create a new &ldquo;Blend&rdquo;</button>
             </div>
           </div>
         ) : (
@@ -930,12 +974,18 @@ function CreateBlendModal({ onClose }) {
 
 // ── Add a game to a Blend's wishlist (opened from a card's bookmark) ────────
 function WishlistModal({ game, onClose }) {
-  const [added, setAdded] = useState({})
+  const { blends, setBlends } = useRoomCtx()
+  const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
+  function toggle(b) {
+    const has = (b.wishlist || []).includes(key)
+    const wishlist = has ? b.wishlist.filter((x) => x !== key) : [...(b.wishlist || []), key]
+    setBlends(blends.map((x) => (x.id === b.id ? { ...x, wishlist } : x)))
+  }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
@@ -950,12 +1000,12 @@ function WishlistModal({ game, onClose }) {
             </button>
           </div>
           <div className="no-scrollbar mt-[16px] flex max-h-[320px] flex-col gap-[2px] overflow-y-auto">
-            {BLENDS.map((b) => {
-              const on = !!added[b.name]
+            {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => {
+              const on = (b.wishlist || []).includes(key)
               return (
                 <button
-                  key={b.name}
-                  onClick={() => setAdded((s) => ({ ...s, [b.name]: !s[b.name] }))}
+                  key={b.id}
+                  onClick={() => toggle(b)}
                   className="flex items-center gap-[12px] rounded-[8px] p-[8px] text-left transition hover:bg-white/5"
                 >
                   <span className="size-[40px] shrink-0 rounded-[10px]" style={{ backgroundColor: b.color }} />
@@ -995,7 +1045,7 @@ function PrefRow({ who, label, onRemove }) {
 }
 
 function PreferenceModal({ blend, onClose, onContinue }) {
-  const others = blend.members.filter((c) => c !== AVATAR.green)
+  const others = blend.members.filter((c) => c !== SELF)
   // Seed a couple of preferences from the other members so it feels collaborative.
   const seeded = [
     { label: 'only 1-3 players', tag: 'small-group', who: others[0] || AVATAR.blue },
@@ -1091,7 +1141,7 @@ function PreferenceModal({ blend, onClose, onContinue }) {
             {mine.map((p) => (
               <PrefRow
                 key={p.label}
-                who={AVATAR.green}
+                who={SELF}
                 label={p.label}
                 onRemove={() => setMine((m) => m.filter((x) => x.label !== p.label))}
               />
@@ -1102,7 +1152,7 @@ function PreferenceModal({ blend, onClose, onContinue }) {
         <div className="flex items-center justify-between gap-[12px] bg-[#232428] p-[24px]">
           <p className="text-[13px]" style={{ color: D.mute }}>We&rsquo;ll spin up games that fit everyone.</p>
           <button
-            onClick={() => onContinue([...seeded, ...mine.map((p) => ({ ...p, who: AVATAR.green }))])}
+            onClick={() => onContinue([...seeded, ...mine.map((p) => ({ ...p, who: SELF }))])}
             className="flex items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[22px] py-[11px] text-[15px] font-semibold text-white transition hover:bg-[#0e8f0e]"
           >
             Find our game
@@ -1407,34 +1457,45 @@ function DecidePage({ blend, prefs, onBack }) {
 }
 
 export default function Landing() {
-  const [blend, setBlend] = useState(null)
+  const room = useRoom({ self: SELF_NAME, seedBlends: SEED_BLENDS })
+  const blends = room.blends || SEED_BLENDS
+  const byId = (id) => blends.find((b) => b.id === id) || null
+
+  const [blendId, setBlendId] = useState(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [wishlistGame, setWishlistGame] = useState(null)
-  const [prefsFor, setPrefsFor] = useState(null) // blend whose preferences modal is open
-  const [decide, setDecide] = useState(null) // { blend, prefs }
+  const [prefsForId, setPrefsForId] = useState(null)
+  const [decide, setDecide] = useState(null) // { blendId, prefs }
+
+  const blend = byId(blendId)
+  const prefsFor = byId(prefsForId)
+  const decideBlend = decide ? byId(decide.blendId) : null
+
   return (
-    <div
-      className="group/rail flex h-screen w-screen overflow-hidden bg-black text-white"
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <ServerRail />
-      <Sidebar />
-      {decide ? (
-        <DecidePage key={decide.blend.name} blend={decide.blend} prefs={decide.prefs} onBack={() => setDecide(null)} />
-      ) : blend ? (
-        <BlendPage key={blend.name} blend={blend} onBack={() => setBlend(null)} onDecide={() => setPrefsFor(blend)} />
-      ) : (
-        <Content onOpenBlend={setBlend} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} />
-      )}
-      {createOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} />}
-      {wishlistGame && <WishlistModal game={wishlistGame} onClose={() => setWishlistGame(null)} />}
-      {prefsFor && (
-        <PreferenceModal
-          blend={prefsFor}
-          onClose={() => setPrefsFor(null)}
-          onContinue={(prefs) => { setDecide({ blend: prefsFor, prefs }); setPrefsFor(null) }}
-        />
-      )}
-    </div>
+    <RoomProvider value={room}>
+      <div
+        className="group/rail flex h-screen w-screen overflow-hidden bg-black text-white"
+        onContextMenu={(e) => e.preventDefault()}
+      >
+        <ServerRail />
+        <Sidebar online={room.online} onReset={room.resetRoom} />
+        {decideBlend ? (
+          <DecidePage key={decideBlend.id} blend={decideBlend} prefs={decide.prefs} onBack={() => setDecide(null)} />
+        ) : blend ? (
+          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} />
+        ) : (
+          <Content onOpenBlend={(b) => setBlendId(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} />
+        )}
+        {createOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
+        {wishlistGame && <WishlistModal game={wishlistGame} onClose={() => setWishlistGame(null)} />}
+        {prefsFor && (
+          <PreferenceModal
+            blend={prefsFor}
+            onClose={() => setPrefsForId(null)}
+            onContinue={(prefs) => { setDecide({ blendId: prefsFor.id, prefs }); setPrefsForId(null) }}
+          />
+        )}
+      </div>
+    </RoomProvider>
   )
 }
