@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { RecCard, CardRow, AVATAR } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode } from './room.js'
 import {
@@ -620,27 +620,29 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
             </div>
           </section>
 
-          {/* For you — portrait tiles reflect this profile's taste */}
-          <section className="mt-[52px]">
-            <SectionHeading size={40}>For you</SectionHeading>
-            <div className="no-scrollbar mt-[24px] flex gap-[18px] overflow-x-auto pb-[8px]">
-              {recs.foryou.map((k) => <PortraitTile key={k} title={CATALOG[k].title} image={CATALOG[k].image} />)}
-            </div>
-          </section>
-
-          {/* Recommendation rows — personal to this profile (each tester has a
-              different taste, so different lists). */}
+          {/* Recommendation rows — personal to this profile. The "For you"
+              portrait tiles sit between "More to jump into" and "Recommended
+              based on what you play" (after the 2nd row). */}
           {orderedRows.map((row, ri) => (
-            <CardRow
-              key={ri}
-              title={row.title}
-              subtitle={row.subtitle}
-              cards={row.games.map((k, i) => mkCard(k, i, row.mode === 'steam' ? { steam: true } : undefined))}
-              overlay={row.mode === 'overlay'}
-              expanded={row.mode === 'expanded'}
-              onWishlist={onWishlist}
-              onShare={onShare}
-            />
+            <Fragment key={ri}>
+              <CardRow
+                title={row.title}
+                subtitle={row.subtitle}
+                cards={row.games.map((k, i) => mkCard(k, i, row.mode === 'steam' ? { steam: true } : undefined))}
+                overlay={row.mode === 'overlay'}
+                expanded={row.mode === 'expanded'}
+                onWishlist={onWishlist}
+                onShare={onShare}
+              />
+              {ri === 1 && (
+                <section className="mt-[52px]">
+                  <SectionHeading size={40}>For you</SectionHeading>
+                  <div className="no-scrollbar mt-[24px] flex gap-[18px] overflow-x-auto pb-[8px]">
+                    {recs.foryou.map((k) => <PortraitTile key={k} title={CATALOG[k].title} image={CATALOG[k].image} />)}
+                  </div>
+                </section>
+              )}
+            </Fragment>
           ))}
         </div>
       </div>
