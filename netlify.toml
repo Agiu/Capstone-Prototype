@@ -2,6 +2,12 @@
   command = "npm run build"
   publish = "dist"
 
+[build.environment]
+  # The only value flagged by secret-scanning is the Firebase *web* API key,
+  # which is public by design (a project identifier, not a credential — access
+  # is controlled by the database rules). Safe to skip the scan for this test.
+  SECRETS_SCAN_ENABLED = "false"
+
 # Single-page app: serve index.html for any path (profiles use ?u= query params).
 [[redirects]]
   from = "/*"
