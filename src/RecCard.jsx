@@ -363,18 +363,11 @@ export function RecCard({ avatars, label, image, players, details, video, shared
   // pop-up over the cover on hover (instead of the card expanding sideways).
   if (overlay) {
     return (
-      <div className="group relative flex h-[540px] w-[452px] shrink-0 flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
-        {/* header — label + hover actions (bookmark / add-to-chat) */}
+      <div className="group relative flex h-[380px] w-[452px] shrink-0 flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
         <div className="flex h-[30px] w-full items-center gap-[8px]">
           <AvatarStack colors={avatars} />
           <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
-          <div className="ml-auto flex items-center gap-[8px] opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
-            <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
-          </div>
         </div>
-
-        {/* cover + trailer — stays fully visible on hover (never covered) */}
         <div className="relative h-[236px] w-[420px] overflow-hidden rounded-[16px] bg-black">
           <img
             alt=""
@@ -392,9 +385,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             </div>
           )}
         </div>
-
-        {/* pills — same position in both default and hover states */}
-        <div className="flex h-[30px] w-full items-center gap-[8px]">
+        <div className="flex h-[50px] w-full items-center gap-[8px]">
           <div className="flex items-center gap-[4px]">
             <Pill>
               <span className="flex -scale-y-100 rotate-180 items-center justify-center">
@@ -407,10 +398,25 @@ export function RecCard({ avatars, label, image, players, details, video, shared
           </div>
         </div>
 
-        {/* detail — fades in BELOW the pills on hover (reserved space, so the
-            video above is never covered) */}
-        <div className="flex flex-1 flex-col justify-between pt-[2px] opacity-0 transition-opacity duration-300 ease-out group-hover:opacity-100">
-          <div className="flex flex-col gap-[16px]">
+        {/* Hover pop-up — info rises over a bottom gradient; the pills sit at the
+            top of the panel so the tags stay visible, and the trailer above
+            still shows through. */}
+        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
+          <div className="absolute right-[16px] top-[16px] flex gap-[8px]">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+            <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
+          </div>
+          <div className="absolute inset-x-0 bottom-0 flex flex-col gap-[10px] bg-gradient-to-t from-black via-black/95 to-transparent px-[16px] pb-[16px] pt-[48px]">
+            <div className="flex items-center gap-[4px]">
+              <Pill>
+                <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+                  <img alt="" src={userGroup} className="size-[16px]" />
+                </span>
+                <span className="text-[12px] text-[#7e7f87]">{players}</span>
+              </Pill>
+              <Pill><span className="text-[12px] text-[#7e7f87]">{details.playtime}</span></Pill>
+              <Pill><span className="text-[12px] text-[#7e7f87]">{details.genre}</span></Pill>
+            </div>
             <div className="flex flex-col gap-[4px] text-[#e7e7e7]">
               <p className="text-[22px] font-semibold leading-tight text-white">{details.title}</p>
               <p className="text-[13px]">by <span className="font-semibold">{details.developer}</span></p>
@@ -418,19 +424,19 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             <div className="flex flex-col gap-[8px]">
               {details.ratings.map((r, i) => <RatingRow key={i} {...r} />)}
             </div>
-          </div>
-          <div className="flex items-center justify-between gap-[10px]">
-            {details.age && (
-              <div className="flex min-w-0 items-center gap-[6px] text-[12px] text-[#e7e7e7]">
-                <span className="shrink-0 font-semibold">{details.age}</span>
-                <span className="truncate">{details.descriptors}</span>
+            <div className="flex items-center justify-between gap-[10px]">
+              {details.age && (
+                <div className="flex min-w-0 items-center gap-[6px] text-[12px] text-[#e7e7e7]">
+                  <span className="shrink-0 font-semibold">{details.age}</span>
+                  <span className="truncate">{details.descriptors}</span>
+                </div>
+              )}
+              <div className="flex shrink-0 items-center gap-[10px]">
+                <div className="grid size-[16px] grid-cols-2 grid-rows-2 gap-px">
+                  <span className="bg-white" /><span className="bg-white" /><span className="bg-white" /><span className="bg-white" />
+                </div>
+                <img alt="" src={appleLogo} className="h-[16px] w-[13px]" />
               </div>
-            )}
-            <div className="flex shrink-0 items-center gap-[10px]">
-              <div className="grid size-[16px] grid-cols-2 grid-rows-2 gap-px">
-                <span className="bg-white" /><span className="bg-white" /><span className="bg-white" /><span className="bg-white" />
-              </div>
-              <img alt="" src={appleLogo} className="h-[16px] w-[13px]" />
             </div>
           </div>
         </div>
