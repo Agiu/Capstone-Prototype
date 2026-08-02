@@ -187,7 +187,7 @@ function CardIconButton({ glyph: Glyph, initialMine = false, othersActive = fals
  * Collapsed → thumbnail column (420px); on hover → 718px and the 250px
  * hover_content fades in.
  */
-export function RecCard({ avatars, label, image, players, details, video, shared, overlay, steam, expanded, onWishlist }) {
+export function RecCard({ avatars, label, image, players, details, video, shared, overlay, steam, expanded, onWishlist, onShare }) {
   const wishlistedByMe = label === 'wishlisted this game' && (avatars || []).includes(AVATAR.green)
   const cardRef = useRef(null)
   const [fly, setFly] = useState(null)
@@ -249,7 +249,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             <div className="flex h-full flex-col gap-[16px]">
               <div className="flex items-center justify-end gap-[8px]">
                 <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
-                <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
+                <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
               </div>
               <div className="flex flex-1 flex-col justify-between pb-[5px]">
                 <div className="flex flex-col gap-[24px]">
@@ -327,7 +327,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
         <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px]">
           <div className="flex items-center justify-end gap-[8px]">
             <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
-            <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
+            <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
           </div>
           <div className="flex flex-1 flex-col justify-between pb-[5px]">
             <div className="flex flex-col gap-[24px]">
@@ -404,7 +404,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
           <div className="absolute right-[16px] top-[16px] flex gap-[8px]">
             <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
-            <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
+            <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
           </div>
           <div className="absolute inset-x-[16px] bottom-[82px] flex flex-col gap-[8px] rounded-b-[16px] bg-gradient-to-t from-black via-black/80 to-transparent px-[16px] pb-[14px] pt-[52px]">
             <div className="flex flex-col text-[#e7e7e7]">
@@ -520,7 +520,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
       <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px] opacity-0 transition-opacity delay-[0ms] duration-[400ms] ease-out group-hover:opacity-100 group-hover:delay-[550ms]">
         <div className="flex items-center justify-end gap-[8px]">
           <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
-          <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
+          <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
         </div>
 
         <div className="flex flex-1 flex-col justify-between pb-[5px]">
@@ -565,14 +565,14 @@ export function RecCard({ avatars, label, image, players, details, video, shared
 }
 
 /** A titled shelf: a heading over a horizontally-scrollable row of rec cards. */
-export function CardRow({ title, subtitle, cards, overlay, expanded, onWishlist }) {
+export function CardRow({ title, subtitle, cards, overlay, expanded, onWishlist, onShare }) {
   return (
     <div className="mt-[56px] flex w-full shrink-0 flex-col">
       <p className="text-[24px] font-bold text-white">{title}</p>
       {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
       <div className="rec-row no-scrollbar flex w-full items-start gap-[40px] overflow-x-auto py-[20px]">
         {cards.map((c, i) => (
-          <RecCard key={i} {...c} overlay={overlay} expanded={expanded} onWishlist={onWishlist} />
+          <RecCard key={i} {...c} overlay={overlay} expanded={expanded} onWishlist={onWishlist} onShare={onShare} />
         ))}
         {/* Trailing room so the last card can scroll fully into view on hover. */}
         <div aria-hidden className="w-[40px] shrink-0" />

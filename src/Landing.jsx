@@ -562,7 +562,7 @@ const STEAM_ROW = [
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, steam: { released: 'Jan 12, 2022', desc: 'Hunt colossal monsters, craft mighty gear, and chain fluid aerial combat with the new Wirebug.', review: 'Very Positive', reviews: '110K', tags: ['Action RPG', 'Co-op', 'Hunting', 'Multiplayer'] } },
 ]
 
-function Content({ onOpenBlend, onCreateBlend, onWishlist }) {
+function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
   const { blends } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.abby
   return (
@@ -635,6 +635,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist }) {
               overlay={row.mode === 'overlay'}
               expanded={row.mode === 'expanded'}
               onWishlist={onWishlist}
+              onShare={onShare}
             />
           ))}
         </div>
@@ -1544,6 +1545,132 @@ function DecidePage({ blend, prefs, onBack }) {
   )
 }
 
+// ── Forward a game to chat (opened from a card's chat button) ──────────────
+function ShareModal({ game, onClose }) {
+  const { blends, setBlends } = useRoomCtx()
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+  const friends = DMS.filter((d) => d.name !== SELF_NAME)
+  const myGroups = blends.filter((b) => (b.members || []).includes(SELF))
+  const [selF, setSelF] = useState({})
+  const [selG, setSelG] = useState({})
+  const [message, setMessage] = useState('')
+  const [mode, setMode] = useState('individual') // when 2+ friends and no group
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const chosenFriends = friends.filter((f) => selF[f.name])
+  const chosenGroups = myGroups.filter((g) => selG[g.id])
+  const anyChosen = chosenFriends.length + chosenGroups.length > 0
+  const setKey = (arr) => [...arr].sort().join(',')
+  const chosenSet = setKey([SELF, ...chosenFriends.map((f) => f.color)])
+  const existingGroup = myGroups.find((g) => setKey(g.members) === chosenSet)
+  const needsChoice = chosenFriends.length >= 2 && !existingGroup
+  const cover = CATALOG[KEY_OF_TITLE[game] || game]?.image
+  const Check = ({ on }) => (
+    <span className={'flex size-[22px] shrink-0 items-center justify-center rounded-[6px] border-2 transition ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4e5058]')}>
+      {on && <svg viewBox="0 0 24 24" className="size-[15px] text-white" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7" /></svg>}
+    </span>
+  )
+
+  function send() {
+    // Prototype: "create a group chat" spins up a new group (a blend) and syncs.
+    if (needsChoice && mode === 'group') {
+      const name = [SELF_NAME, ...chosenFriends.map((f) => f.name)].map(cap).join(', ')
+      setBlends([...blends, {
+        id: slug(name) + '-' + Date.now().toString(36).slice(-4),
+        name, color: BLEND_COLORS[blends.length % BLEND_COLORS.length], when: 'group chat',
+        members: [SELF, ...chosenFriends.map((f) => f.color)],
+        games: ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'monsterHunter'],
+        wishlist: ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat'],
+      }])
+    }
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="p-[24px] pb-[12px]">
+          <div className="flex items-start justify-between gap-[12px]">
+            <div>
+              <h3 className="text-[20px] font-bold text-white">Forward to</h3>
+              <p className="mt-[4px] text-[14px] text-[#b5bac1]">Select where you want to share this game.</p>
+            </div>
+            <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+              <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          </div>
+          <div className="mt-[16px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[10px]">
+            <svg viewBox="0 0 24 24" className="size-[18px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+            <input placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+          </div>
+        </div>
+
+        <div className="no-scrollbar flex-1 overflow-y-auto px-[24px]">
+          {myGroups.length > 0 && (
+            <>
+              <p className="pb-[4px] pt-[4px] text-[12px] font-semibold uppercase tracking-wide text-[#b5bac1]">Group chats</p>
+              {myGroups.map((g) => (
+                <button key={g.id} onClick={() => setSelG((s) => ({ ...s, [g.id]: !s[g.id] }))} className="flex w-full items-center gap-[12px] rounded-[8px] py-[8px] pl-[4px] pr-[6px] text-left transition hover:bg-white/5">
+                  <span className="size-[40px] shrink-0 rounded-[12px]" style={{ backgroundColor: g.color }} />
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[15px] font-semibold text-white">{g.name}</p>
+                    <p className="text-[12px] text-[#80848e]">{g.members.length} members</p>
+                  </div>
+                  <Check on={!!selG[g.id]} />
+                </button>
+              ))}
+            </>
+          )}
+          <p className="pb-[4px] pt-[10px] text-[12px] font-semibold uppercase tracking-wide text-[#b5bac1]">Friends</p>
+          {friends.map((f) => (
+            <button key={f.name} onClick={() => setSelF((s) => ({ ...s, [f.name]: !s[f.name] }))} className="flex w-full items-center gap-[12px] rounded-[8px] py-[8px] pl-[4px] pr-[6px] text-left transition hover:bg-white/5">
+              <Avatar color={f.color} size={40} />
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-semibold text-white">{cap(f.name)}</p>
+                <p className="text-[13px] text-[#b5bac1]">{f.name}</p>
+              </div>
+              <Check on={!!selF[f.name]} />
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-[#232428] p-[24px]">
+          {/* Preview of the game being forwarded */}
+          <div className="flex items-center gap-[10px] rounded-[8px] bg-[#1e1f22] p-[8px]">
+            {cover && <img alt="" src={cover} className="h-[38px] w-[68px] shrink-0 rounded-[6px] object-cover" />}
+            <div className="min-w-0">
+              <p className="text-[12px] text-[#80848e]">Sharing a game</p>
+              <p className="truncate text-[14px] font-semibold text-white">{game}</p>
+            </div>
+          </div>
+
+          {/* Multiple friends with no existing group → choose how to send */}
+          {needsChoice && (
+            <div className="mt-[12px] flex gap-[8px]">
+              {[['individual', 'Send individually'], ['group', 'Create a group chat']].map(([m, txt]) => (
+                <button key={m} onClick={() => setMode(m)} className={'flex-1 rounded-[8px] border px-[12px] py-[8px] text-[13px] font-semibold transition ' + (mode === m ? 'border-[#5765f2] bg-[#5765f2]/15 text-white' : 'border-[#4e5058] text-[#b5bac1] hover:text-white')}>
+                  {txt}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="mt-[12px] flex items-center gap-[10px]">
+            <input value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Add an optional message..." className="min-w-0 flex-1 rounded-[8px] bg-[#1e1f22] px-[14px] py-[10px] text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+            <button onClick={send} disabled={!anyChosen} className="flex shrink-0 items-center gap-[6px] rounded-[8px] bg-[#5765f2] px-[20px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">
+              Send <span className="text-[16px] leading-none">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
   const room = useRoom({ self: SELF_NAME, seedBlends: SEED_BLENDS })
   const blends = room.blends || SEED_BLENDS
@@ -1552,6 +1679,7 @@ export default function Landing() {
   const [blendId, setBlendId] = useState(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [wishlistGame, setWishlistGame] = useState(null)
+  const [shareGame, setShareGame] = useState(null)
   const [prefsForId, setPrefsForId] = useState(null)
   const [decide, setDecide] = useState(null) // { blendId, prefs }
 
@@ -1572,10 +1700,11 @@ export default function Landing() {
         ) : blend ? (
           <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} />
         ) : (
-          <Content onOpenBlend={(b) => setBlendId(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} />
+          <Content onOpenBlend={(b) => setBlendId(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} />
         )}
         {createOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
         {wishlistGame && <WishlistModal game={wishlistGame} onClose={() => setWishlistGame(null)} />}
+        {shareGame && <ShareModal game={shareGame} onClose={() => setShareGame(null)} />}
         {prefsFor && (
           <PreferenceModal
             blend={prefsFor}
