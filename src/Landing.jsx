@@ -564,11 +564,19 @@ const STEAM_ROW = [
 
 // Row display order (by hover style): overlay → expanded → steam → expand.
 const ROW_ORDER = { overlay: 0, expanded: 1, steam: 2, expand: 3 }
+// Title for the "For you" portrait-tile row, per profile.
+const PICK_TITLE = {
+  abby: 'Trending in co-op right now',
+  blake: 'New worlds to explore',
+  chloe: 'Big this week for the hunt',
+  daniel: 'Party picks blowing up',
+}
 
 function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
   const { blends } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.abby
   const orderedRows = [...recs.rows].sort((a, b) => (ROW_ORDER[a.mode] ?? 9) - (ROW_ORDER[b.mode] ?? 9))
+  const pickTitle = PICK_TITLE[SELF_NAME] || 'Top picks for you'
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav */}
@@ -620,9 +628,14 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
             </div>
           </section>
 
-          {/* Recommendation rows — personal to this profile. The "For you"
-              portrait tiles sit between "More to jump into" and "Recommended
-              based on what you play" (after the 2nd row). */}
+          {/* "For you" — section header for the recommendations below */}
+          <section className="mt-[52px]">
+            <SectionHeading size={40}>For you</SectionHeading>
+          </section>
+
+          {/* Recommendation rows — personal to this profile. The portrait-tile
+              row sits between "More to jump into" and "Recommended based on what
+              you play" (after the 2nd row), with its own title. */}
           {orderedRows.map((row, ri) => (
             <Fragment key={ri}>
               <CardRow
@@ -635,8 +648,8 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
                 onShare={onShare}
               />
               {ri === 1 && (
-                <section className="mt-[52px]">
-                  <SectionHeading size={40}>For you</SectionHeading>
+                <section className="mt-[56px]">
+                  <p className="text-[24px] font-bold text-white">{pickTitle}</p>
                   <div className="no-scrollbar mt-[24px] flex gap-[18px] overflow-x-auto pb-[8px]">
                     {recs.foryou.map((k) => <PortraitTile key={k} title={CATALOG[k].title} image={CATALOG[k].image} />)}
                   </div>
