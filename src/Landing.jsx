@@ -562,9 +562,13 @@ const STEAM_ROW = [
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, steam: { released: 'Jan 12, 2022', desc: 'Hunt colossal monsters, craft mighty gear, and chain fluid aerial combat with the new Wirebug.', review: 'Very Positive', reviews: '110K', tags: ['Action RPG', 'Co-op', 'Hunting', 'Multiplayer'] } },
 ]
 
+// Row display order (by hover style): overlay → expanded → steam → expand.
+const ROW_ORDER = { overlay: 0, expanded: 1, steam: 2, expand: 3 }
+
 function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
   const { blends } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.abby
+  const orderedRows = [...recs.rows].sort((a, b) => (ROW_ORDER[a.mode] ?? 9) - (ROW_ORDER[b.mode] ?? 9))
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav */}
@@ -626,7 +630,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
 
           {/* Recommendation rows — personal to this profile (each tester has a
               different taste, so different lists). */}
-          {recs.rows.map((row, ri) => (
+          {orderedRows.map((row, ri) => (
             <CardRow
               key={ri}
               title={row.title}

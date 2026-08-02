@@ -294,7 +294,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             <AvatarStack colors={avatars} />
             <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
           </div>
-          <div className="relative h-[236px] w-[420px] overflow-hidden rounded-[16px] bg-black">
+          <div className="relative w-[420px] flex-1 overflow-hidden rounded-[16px] bg-black">
             <img
               alt=""
               src={image}
@@ -311,18 +311,6 @@ export function RecCard({ avatars, label, image, players, details, video, shared
               </div>
             )}
           </div>
-          <div className="flex h-[50px] w-full items-center gap-[8px]">
-            <div className="flex items-center gap-[4px]">
-              <Pill>
-                <span className="flex -scale-y-100 rotate-180 items-center justify-center">
-                  <img alt="" src={userGroup} className="size-[16px]" />
-                </span>
-                <span className="text-[12px] text-[#7e7f87]">{players}</span>
-              </Pill>
-              <Pill><span className="text-[12px] text-[#7e7f87]">{details.playtime}</span></Pill>
-              <Pill><span className="text-[12px] text-[#7e7f87]">{details.genre}</span></Pill>
-            </div>
-          </div>
         </div>
         <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px]">
           <div className="flex items-center justify-end gap-[8px]">
@@ -330,10 +318,21 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
           </div>
           <div className="flex flex-1 flex-col justify-between pb-[5px]">
-            <div className="flex flex-col gap-[24px]">
+            <div className="flex flex-col gap-[20px]">
               <div className="flex flex-col gap-[8px] text-[#e7e7e7]">
                 <p className="text-[20px] font-semibold leading-tight">{details.title}</p>
                 <p className="whitespace-nowrap text-[12px]">by <span className="font-semibold">{details.developer}</span></p>
+              </div>
+              {/* tags sit between the developer and the reviews */}
+              <div className="flex flex-wrap items-center gap-[4px]">
+                <Pill>
+                  <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+                    <img alt="" src={userGroup} className="size-[16px]" />
+                  </span>
+                  <span className="text-[12px] text-[#7e7f87]">{players}</span>
+                </Pill>
+                <Pill><span className="text-[12px] text-[#7e7f87]">{details.playtime}</span></Pill>
+                <Pill><span className="text-[12px] text-[#7e7f87]">{details.genre}</span></Pill>
               </div>
               <div className="flex flex-col gap-[8px]">
                 {details.ratings.map((r, i) => <RatingRow key={i} {...r} />)}
