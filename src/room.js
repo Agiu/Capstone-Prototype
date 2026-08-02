@@ -74,6 +74,19 @@ export function useRoom({ self, seedBlends }) {
   return { blends, ready, online, setBlends, resetRoom }
 }
 
+// Sync an arbitrary sub-tree of the room (e.g. decide-a-game preferences).
+export function useRoomNode(path, fallback) {
+  const [val, setVal] = useState(fallback)
+  useEffect(() => {
+    const r = ref(db, `rooms/${ROOM_ID}/${path}`)
+    const unsub = onValue(r, (snap) => setVal(snap.val() ?? fallback))
+    return () => unsub()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [path])
+  const write = (next) => set(ref(db, `rooms/${ROOM_ID}/${path}`), next)
+  return [val, write]
+}
+
 const RoomContext = createContext(null)
 export const RoomProvider = RoomContext.Provider
 export function useRoomCtx() {

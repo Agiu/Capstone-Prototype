@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { RecCard, CardRow, AVATAR } from './RecCard.jsx'
-import { useRoom, RoomProvider, useRoomCtx } from './room.js'
+import { useRoom, RoomProvider, useRoomCtx, useRoomNode } from './room.js'
 import {
   discordLogo,
   xboxSprite,
@@ -370,13 +370,29 @@ const VIDEOS = {
   humanFallFlat: 'maiYKaZNG7Y', grounded: 'zBD-GS61Gto', monsterHunter: 'O0tc1ODHma8',
   gangBeasts: 'Lm3HDdLufmA', wildHearts: '8vw9PlFrrOk', minecraftDungeons: 'TxNH6bapa3A', lol: 'p4QG59y6FGE',
 }
-const REC_LABELS = ['recommends this game', 'popular with your friends', 'trending in your groups', 'a top pick for you']
+const ALL_COLORS = [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red]
+const capName = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+// Social proof from the OTHER testers (never the viewer), varied per card.
+function socialProof(i) {
+  const others = ALL_COLORS.filter((c) => c !== SELF)
+  const who = others[i % others.length]
+  const name = capName(NAME[who])
+  const variants = [
+    { avatars: [who], label: `${name} recommends this` },
+    { avatars: others.slice(0, 2), label: 'popular with your friends' },
+    { avatars: [who], label: `${name} plays this a lot` },
+    { avatars: [who], label: `wishlisted by ${name}` },
+    { avatars: others, label: 'a hit in your groups' },
+  ]
+  return variants[i % variants.length]
+}
 // Build a rec-card prop object from a catalog key (uses full `details` for the
-// expanded read). `i` rotates the social-proof label; `extra` adds e.g. steam.
+// expanded read). `i` varies the social proof; `extra` adds e.g. steam.
 function mkCard(key, i = 0, extra) {
+  const sp = socialProof(i)
   return {
-    avatars: [SELF],
-    label: REC_LABELS[i % REC_LABELS.length],
+    avatars: sp.avatars,
+    label: sp.label,
     players: CATALOG[key].players,
     image: CATALOG[key].image,
     video: VIDEOS[key] ? { youTubeId: VIDEOS[key], poster: CATALOG[key].image } : undefined,
@@ -1111,13 +1127,10 @@ function PrefRow({ who, label, onRemove }) {
 }
 
 function PreferenceModal({ blend, onClose, onContinue }) {
-  const others = blend.members.filter((c) => c !== SELF)
-  // Seed a couple of preferences from the other members so it feels collaborative.
-  const seeded = [
-    { label: 'only 1-3 players', tag: 'small-group', who: others[0] || AVATAR.blue },
-    { label: 'cartoonish', tag: 'cartoonish', who: others[1] || others[0] || AVATAR.purple },
-  ]
-  const [mine, setMine] = useState([]) // your picks — max 3
+  // Preferences are shared per blend, keyed by member name — every member's
+  // picks sync live into "the group so far".
+  const [groupPrefs, setGroupPrefs] = useRoomNode('prefs/' + blend.id, {})
+  const mine = groupPrefs[SELF_NAME] || []
   const [input, setInput] = useState('')
   const MAX = 3
   const full = mine.length >= MAX
@@ -1128,15 +1141,22 @@ function PreferenceModal({ blend, onClose, onContinue }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const has = (label) => mine.some((p) => p.label === label) || seeded.some((p) => p.label === label)
+  // Flatten all members' prefs (only this blend's members), newest members last.
+  const groupSoFar = blend.members
+    .map((c) => NAME[c])
+    .flatMap((n) => (groupPrefs[n] || []).map((p) => ({ ...p, name: n, who: COLOR_OF[n] })))
+  const has = (label) => groupSoFar.some((p) => p.label === label)
+  function setMinePrefs(list) {
+    setGroupPrefs({ ...groupPrefs, [SELF_NAME]: list })
+  }
   function add(pref) {
     if (full || has(pref.label)) return
-    setMine((m) => [...m, pref])
+    setMinePrefs([...mine, { label: pref.label, tag: pref.tag }])
   }
   function addTyped() {
     const label = input.trim()
     if (!label || full || has(label)) { setInput(''); return }
-    setMine((m) => [...m, { label, tag: guessTag(label) }])
+    setMinePrefs([...mine, { label, tag: guessTag(label) }])
     setInput('')
   }
 
@@ -1203,13 +1223,15 @@ function PreferenceModal({ blend, onClose, onContinue }) {
             The group so far
           </p>
           <div className="no-scrollbar mt-[6px] flex max-h-[220px] flex-col overflow-y-auto">
-            {seeded.map((p) => <PrefRow key={p.label} who={p.who} label={p.label} />)}
-            {mine.map((p) => (
+            {groupSoFar.length === 0 && (
+              <p className="py-[8px] text-[13px]" style={{ color: D.mute }}>No preferences yet — add yours above.</p>
+            )}
+            {groupSoFar.map((p) => (
               <PrefRow
-                key={p.label}
-                who={SELF}
+                key={p.name + ':' + p.label}
+                who={p.who}
                 label={p.label}
-                onRemove={() => setMine((m) => m.filter((x) => x.label !== p.label))}
+                onRemove={p.name === SELF_NAME ? () => setMinePrefs(mine.filter((x) => x.label !== p.label)) : undefined}
               />
             ))}
           </div>
@@ -1218,7 +1240,7 @@ function PreferenceModal({ blend, onClose, onContinue }) {
         <div className="flex items-center justify-between gap-[12px] bg-[#232428] p-[24px]">
           <p className="text-[13px]" style={{ color: D.mute }}>We&rsquo;ll spin up games that fit everyone.</p>
           <button
-            onClick={() => onContinue([...seeded, ...mine.map((p) => ({ ...p, who: SELF }))])}
+            onClick={() => onContinue(groupSoFar)}
             className="flex items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[22px] py-[11px] text-[15px] font-semibold text-white transition hover:bg-[#0e8f0e]"
           >
             Find our game
