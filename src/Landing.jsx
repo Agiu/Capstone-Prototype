@@ -364,6 +364,68 @@ const KEY_OF_TITLE = Object.fromEntries(Object.entries(CATALOG).map(([k, v]) => 
 // Colors cycled for newly created blends.
 const BLEND_COLORS = ['#5765f2', '#e67e22', '#16a085', '#c0392b', '#8e44ad', '#2980b9', '#d64b7e', '#27ae60']
 
+// Hover trailers per game.
+const VIDEOS = {
+  seaOfThieves: 'QntMfX3FkZQ', minecraft: '-1Sy6iz43vg', overcooked: 'uKLb8D36YKk',
+  humanFallFlat: 'maiYKaZNG7Y', grounded: 'zBD-GS61Gto', monsterHunter: 'O0tc1ODHma8',
+  gangBeasts: 'Lm3HDdLufmA', wildHearts: '8vw9PlFrrOk', minecraftDungeons: 'TxNH6bapa3A', lol: 'p4QG59y6FGE',
+}
+const REC_LABELS = ['recommends this game', 'popular with your friends', 'trending in your groups', 'a top pick for you']
+// Build a rec-card prop object from a catalog key (uses full `details` for the
+// expanded read). `i` rotates the social-proof label; `extra` adds e.g. steam.
+function mkCard(key, i = 0, extra) {
+  return {
+    avatars: [SELF],
+    label: REC_LABELS[i % REC_LABELS.length],
+    players: CATALOG[key].players,
+    image: CATALOG[key].image,
+    video: VIDEOS[key] ? { youTubeId: VIDEOS[key], poster: CATALOG[key].image } : undefined,
+    details: details[key],
+    ...extra,
+  }
+}
+
+// Per-profile taste → different recommendation lists for each tester. Rows keep
+// the four hover styles (expand / overlay / steam flyout / always-expanded).
+const RECS = {
+  abby: {
+    foryou: ['minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'minecraftDungeons', 'gangBeasts', 'seaOfThieves'],
+    rows: [
+      { mode: 'expand', title: 'Made for your co-op nights', subtitle: 'Chaotic, low-stakes games you can finish in a session.', games: ['overcooked', 'humanFallFlat', 'gangBeasts', 'minecraft', 'grounded'] },
+      { mode: 'overlay', title: 'Because you love to build', subtitle: 'Cozy building and survival, matched to your hours.', games: ['minecraft', 'grounded', 'minecraftDungeons', 'seaOfThieves', 'humanFallFlat'] },
+      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['overcooked', 'minecraft', 'grounded', 'humanFallFlat', 'gangBeasts', 'minecraftDungeons'] },
+      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['gangBeasts', 'overcooked', 'minecraft', 'grounded'] },
+    ],
+  },
+  blake: {
+    foryou: ['seaOfThieves', 'grounded', 'minecraft', 'monsterHunter', 'wildHearts', 'minecraftDungeons', 'overcooked'],
+    rows: [
+      { mode: 'expand', title: 'Set sail this week', subtitle: 'Big open worlds and survival crews, picked for you.', games: ['seaOfThieves', 'grounded', 'minecraft', 'monsterHunter', 'wildHearts'] },
+      { mode: 'overlay', title: 'Because you can’t put down survival', subtitle: 'More craft-and-survive loops matched to your hours.', games: ['grounded', 'minecraft', 'seaOfThieves', 'monsterHunter', 'minecraftDungeons'] },
+      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['seaOfThieves', 'monsterHunter', 'grounded', 'wildHearts', 'minecraft', 'overcooked'] },
+      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['monsterHunter', 'seaOfThieves', 'grounded', 'wildHearts'] },
+    ],
+  },
+  chloe: {
+    foryou: ['monsterHunter', 'wildHearts', 'lol', 'seaOfThieves', 'grounded', 'minecraft', 'overcooked'],
+    rows: [
+      { mode: 'expand', title: 'For the hunt', subtitle: 'Action-RPGs and boss fights that reward the grind.', games: ['monsterHunter', 'wildHearts', 'seaOfThieves', 'grounded', 'lol'] },
+      { mode: 'overlay', title: 'Because you love a challenge', subtitle: 'Competitive and combat-heavy picks matched to your hours.', games: ['lol', 'monsterHunter', 'wildHearts', 'seaOfThieves', 'minecraft'] },
+      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['monsterHunter', 'wildHearts', 'lol', 'grounded', 'seaOfThieves', 'overcooked'] },
+      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['wildHearts', 'monsterHunter', 'lol', 'grounded'] },
+    ],
+  },
+  daniel: {
+    foryou: ['gangBeasts', 'overcooked', 'humanFallFlat', 'lol', 'minecraftDungeons', 'minecraft', 'monsterHunter'],
+    rows: [
+      { mode: 'expand', title: 'Bring the chaos', subtitle: 'Party brawlers and pile-ups, best with a full lobby.', games: ['gangBeasts', 'overcooked', 'humanFallFlat', 'lol', 'minecraftDungeons'] },
+      { mode: 'overlay', title: 'Because you love a good mess', subtitle: 'Loud, silly, competitive nights matched to your hours.', games: ['humanFallFlat', 'gangBeasts', 'overcooked', 'lol', 'minecraft'] },
+      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['gangBeasts', 'overcooked', 'humanFallFlat', 'lol', 'minecraftDungeons', 'monsterHunter'] },
+      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['overcooked', 'gangBeasts', 'humanFallFlat', 'minecraftDungeons'] },
+    ],
+  },
+}
+
 // "Your Blends" — colored playlist cards (palette from the Figma landing frame).
 // Green (the user, sauhee) is a member of every blend.
 // abby=green, blake=blue, chloe=purple, daniel=red. Each person is in exactly
@@ -486,6 +548,7 @@ const STEAM_ROW = [
 
 function Content({ onOpenBlend, onCreateBlend, onWishlist }) {
   const { blends } = useRoomCtx()
+  const recs = RECS[SELF_NAME] || RECS.abby
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav */}
@@ -537,24 +600,27 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist }) {
             </div>
           </section>
 
-          {/* For you */}
+          {/* For you — portrait tiles reflect this profile's taste */}
           <section className="mt-[52px]">
             <SectionHeading size={40}>For you</SectionHeading>
             <div className="no-scrollbar mt-[24px] flex gap-[18px] overflow-x-auto pb-[8px]">
-              {FORYOU.map((g) => <PortraitTile key={g.title} {...g} />)}
+              {recs.foryou.map((k) => <PortraitTile key={k} title={CATALOG[k].title} image={CATALOG[k].image} />)}
             </div>
           </section>
 
-          {/* Recommendation rows — personal to you (group-curated lists live on
-              each blend's page). */}
-          <CardRow title="Your Friday-night taste" subtitle="Short, loud co-op — the kind of session you actually finish." cards={shelfToday} onWishlist={onWishlist} />
-          <CardRow title="Because you can't put down Monster Hunter" subtitle="More action-RPG and survival picks matched to the hours you play." cards={shelfFriends} overlay onWishlist={onWishlist} />
-
-          {/* Steam-style horizontal row — detail flyout on hover */}
-          <CardRow title="Recommended based on what you play" subtitle="Hover a card for the full read." cards={STEAM_ROW} onWishlist={onWishlist} />
-
-          {/* Always-expanded cards */}
-          <CardRow title="More to jump into" subtitle="The full read, up front." cards={shelfMore} expanded onWishlist={onWishlist} />
+          {/* Recommendation rows — personal to this profile (each tester has a
+              different taste, so different lists). */}
+          {recs.rows.map((row, ri) => (
+            <CardRow
+              key={ri}
+              title={row.title}
+              subtitle={row.subtitle}
+              cards={row.games.map((k, i) => mkCard(k, i, row.mode === 'steam' ? { steam: true } : undefined))}
+              overlay={row.mode === 'overlay'}
+              expanded={row.mode === 'expanded'}
+              onWishlist={onWishlist}
+            />
+          ))}
         </div>
       </div>
     </main>
