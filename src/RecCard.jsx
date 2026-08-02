@@ -398,25 +398,15 @@ export function RecCard({ avatars, label, image, players, details, video, shared
           </div>
         </div>
 
-        {/* Hover pop-up — info rises over a bottom gradient; the pills sit at the
-            top of the panel so the tags stay visible, and the trailer above
-            still shows through. */}
+        {/* Hover pop-up — the detail sits over the cover, ABOVE the pills. The
+            pills never move; the panel stops right above them. The trailer
+            still shows through the gradient at the top. */}
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
           <div className="absolute right-[16px] top-[16px] flex gap-[8px]">
             <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
             <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
           </div>
-          <div className="absolute inset-x-0 bottom-0 flex flex-col gap-[10px] bg-gradient-to-t from-black via-black/95 to-transparent px-[16px] pb-[16px] pt-[48px]">
-            <div className="flex items-center gap-[4px]">
-              <Pill>
-                <span className="flex -scale-y-100 rotate-180 items-center justify-center">
-                  <img alt="" src={userGroup} className="size-[16px]" />
-                </span>
-                <span className="text-[12px] text-[#7e7f87]">{players}</span>
-              </Pill>
-              <Pill><span className="text-[12px] text-[#7e7f87]">{details.playtime}</span></Pill>
-              <Pill><span className="text-[12px] text-[#7e7f87]">{details.genre}</span></Pill>
-            </div>
+          <div className="absolute inset-x-[16px] top-[62px] bottom-[66px] flex flex-col justify-end gap-[10px] overflow-hidden rounded-[16px] bg-gradient-to-t from-black via-black/85 to-black/25 p-[16px]">
             <div className="flex flex-col gap-[4px] text-[#e7e7e7]">
               <p className="text-[22px] font-semibold leading-tight text-white">{details.title}</p>
               <p className="text-[13px]">by <span className="font-semibold">{details.developer}</span></p>
