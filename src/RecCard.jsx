@@ -406,27 +406,36 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
             <CardIconButton glyph={ChatAddGlyph} othersActive={shared} label="Add to chat" />
           </div>
-          <div className="absolute inset-x-[16px] top-[62px] bottom-[66px] flex flex-col justify-end gap-[10px] overflow-hidden rounded-[16px] bg-gradient-to-t from-black via-black/85 to-black/25 p-[16px]">
-            <div className="flex flex-col gap-[4px] text-[#e7e7e7]">
-              <p className="text-[22px] font-semibold leading-tight text-white">{details.title}</p>
-              <p className="text-[13px]">by <span className="font-semibold">{details.developer}</span></p>
+          <div className="absolute inset-x-[16px] bottom-[82px] flex flex-col gap-[8px] rounded-b-[16px] bg-gradient-to-t from-black via-black/80 to-transparent px-[16px] pb-[14px] pt-[52px]">
+            <div className="flex flex-col text-[#e7e7e7]">
+              <p className="text-[19px] font-semibold leading-tight text-white">{details.title}</p>
+              <p className="text-[12px]">by <span className="font-semibold">{details.developer}</span></p>
             </div>
-            <div className="flex flex-col gap-[8px]">
-              {details.ratings.map((r, i) => <RatingRow key={i} {...r} />)}
+            <div className="flex items-center gap-[18px]">
+              {details.ratings.map((r, i) => (
+                <div key={i} className="flex items-center gap-[7px]">
+                  <img alt="" src={thumbsUp} className="size-[22px] shrink-0" />
+                  <span className="text-[18px] font-semibold text-white">{r.pct}</span>
+                  <span className="text-[10px] leading-tight text-[#e7e7e7]">
+                    {r.line1}
+                    <br />
+                    <span className={r.line2Bold ? 'font-bold' : undefined}>{r.line2}</span>
+                  </span>
+                </div>
+              ))}
             </div>
-            <div className="flex items-center justify-between gap-[10px]">
+            <div className="flex items-center justify-between gap-[10px] text-[12px] text-[#e7e7e7]">
               {details.age && (
-                <div className="flex min-w-0 items-center gap-[6px] text-[12px] text-[#e7e7e7]">
-                  <span className="shrink-0 font-semibold">{details.age}</span>
-                  <span className="truncate">{details.descriptors}</span>
-                </div>
+                <span className="min-w-0 truncate">
+                  <span className="font-semibold">{details.age}</span> {details.descriptors}
+                </span>
               )}
-              <div className="flex shrink-0 items-center gap-[10px]">
-                <div className="grid size-[16px] grid-cols-2 grid-rows-2 gap-px">
+              <span className="flex shrink-0 items-center gap-[8px]">
+                <span className="grid size-[14px] grid-cols-2 grid-rows-2 gap-px">
                   <span className="bg-white" /><span className="bg-white" /><span className="bg-white" /><span className="bg-white" />
-                </div>
-                <img alt="" src={appleLogo} className="h-[16px] w-[13px]" />
-              </div>
+                </span>
+                <img alt="" src={appleLogo} className="h-[14px] w-[11px]" />
+              </span>
             </div>
           </div>
         </div>
