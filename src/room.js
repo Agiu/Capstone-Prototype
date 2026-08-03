@@ -87,6 +87,13 @@ export function useRoomNode(path, fallback) {
   return [val, write]
 }
 
+// Write a single leaf without touching its siblings. Used where several people
+// write into the same object at once (e.g. one vote each) and a whole-object
+// write would drop the votes that landed in between.
+export function writeRoomPath(path, value) {
+  return set(ref(db, `rooms/${ROOM_ID}/${path}`), value)
+}
+
 const RoomContext = createContext(null)
 export const RoomProvider = RoomContext.Provider
 export function useRoomCtx() {

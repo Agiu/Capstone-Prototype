@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { RecCard, CardRow, AVATAR } from './RecCard.jsx'
-import { useRoom, RoomProvider, useRoomCtx, useRoomNode } from './room.js'
+import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath } from './room.js'
 import {
   discordLogo,
   xboxSprite,
@@ -676,18 +676,27 @@ function FeedRow({ who, text, when }) {
   )
 }
 
-// Xbox-green pill that kicks off the "decide a game" flow — sits to the right
-// of a blend's title.
-function XboxDecideButton({ onClick }) {
+// Xbox-green pill that opens the "decide a game" wheel — sits to the right of a
+// blend's title. The chevron points down when closed, up once the wheel is out.
+function XboxDecideButton({ onClick, open }) {
   return (
     <button
       onClick={onClick}
+      aria-expanded={open}
       className="group/dec flex shrink-0 items-center gap-[10px] rounded-[12px] bg-[#107C10] px-[20px] py-[12px] text-[15px] font-semibold text-white shadow-[0_4px_18px_rgba(16,124,16,0.45)] transition hover:-translate-y-[1px] hover:bg-[#0e8f0e]"
     >
       <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 7v5l3 2" />
       </svg>
       Decide a game
+      <svg
+        viewBox="0 0 24 24"
+        className="size-[16px] transition-transform duration-300"
+        style={{ transform: open ? 'rotate(180deg)' : 'none' }}
+        fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+      >
+        <path d="M6 9l6 6 6-6" />
+      </svg>
     </button>
   )
 }
@@ -779,9 +788,26 @@ const PLAY_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="curren
 const BOOKMARK_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
 const LINK_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
 
-function BlendPage({ blend, onBack, onDecide }) {
+function BlendPage({ blend, onBack, onDecide, spin }) {
   const [menu, setMenu] = useState(null) // { x, y, title }
   const [launching, setLaunching] = useState(null)
+  // "Decide a game" drops the divider and unfolds the wheel above it.
+  const [wheelOpen, setWheelOpen] = useState(false)
+  const wheelRef = useRef(null)
+
+  // A spin started by anyone in this blend opens the area for everybody, so no
+  // one has to be told where to look.
+  const liveHere = spin.spin && spin.spin.blendId === blend.id
+  useEffect(() => {
+    if (liveHere) setWheelOpen(true)
+  }, [liveHere, spin.spin?.id])
+
+  // Scroll the wheel into view once the reveal has played out.
+  useEffect(() => {
+    if (!wheelOpen) return
+    const t = setTimeout(() => wheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 620)
+    return () => clearTimeout(t)
+  }, [wheelOpen])
   function openMenu(e, title) {
     e.preventDefault()
     setMenu({ x: e.clientX, y: e.clientY, title })
@@ -850,12 +876,48 @@ function BlendPage({ blend, onBack, onDecide }) {
             </div>
 
             {/* Decide-a-game entry point — off to the right of the title */}
-            <div className="ml-auto self-start pt-[6px]">
-              <XboxDecideButton onClick={onDecide} />
+            <div className="ml-auto flex flex-col items-end gap-[10px] self-start pt-[6px]">
+              <XboxDecideButton open={wheelOpen} onClick={() => setWheelOpen((v) => !v)} />
+              <button
+                onClick={onDecide}
+                className="text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white"
+              >
+                Match our preferences instead
+              </button>
             </div>
           </div>
 
-          <div className="my-[28px] h-px bg-[#1c1d21]" />
+          {/* The wheel unfolds here and pushes the divider down with it. */}
+          <div
+            ref={wheelRef}
+            className="grid"
+            style={{
+              gridTemplateRows: wheelOpen ? '1fr' : '0fr',
+              transition: 'grid-template-rows 560ms cubic-bezier(0.22,1,0.36,1)',
+            }}
+          >
+            <div className="overflow-hidden">
+              <div
+                className="pt-[28px]"
+                style={{
+                  opacity: wheelOpen ? 1 : 0,
+                  transform: wheelOpen ? 'none' : 'translateY(-12px)',
+                  transition: 'opacity 380ms ease 140ms, transform 420ms cubic-bezier(0.22,1,0.36,1) 140ms',
+                }}
+              >
+                <SpinPanel blend={blend} state={spin} onLaunch={setLaunching} />
+              </div>
+            </div>
+          </div>
+
+          <div
+            className="my-[28px] h-px"
+            style={{
+              backgroundColor: wheelOpen ? '#107C10' : '#1c1d21',
+              boxShadow: wheelOpen ? '0 0 14px rgba(16,124,16,0.55)' : 'none',
+              transition: 'background-color 520ms ease, box-shadow 520ms ease',
+            }}
+          />
 
           {/* Group wishlist — numbered, drag to rank */}
           <section>
@@ -1272,124 +1334,457 @@ function PreferenceModal({ blend, onClose, onContinue }) {
   )
 }
 
-// ── Decision wheel — spin-to-pick a game ───────────────────────────────────
+// ── Decision wheel — one shared spin the whole server watches ──────────────
 const WHEEL_COLORS = ['#5765f2', '#23a55a', '#eb459e', '#f0b232', '#9A45F7', '#5165F6', '#FF3737', '#3ba55d']
+const SPIN_MS = 4000
+// Whole turns before the wheel starts braking — a lot of them, so it whips
+// around fast instead of gliding. Randomized per spin (and shared), so no two
+// spins look alike.
+const MIN_TURNS = 9
+const MAX_TURNS = 16
 
-function DecisionWheel({ games, onResult }) {
+// Everything that makes one spin unique. The spinner rolls it once and writes
+// it to the room, so every screen runs the identical animation.
+function rollSpin(count, lastTarget) {
+  // Never land on the game we just picked — a re-roll that repeats itself reads
+  // as broken, however fair it is.
+  const pool = [...Array(count).keys()].filter((i) => count > 2 ? i !== lastTarget : true)
+  return {
+    target: pool[Math.floor(Math.random() * pool.length)],
+    turns: MIN_TURNS + Math.floor(Math.random() * (MAX_TURNS - MIN_TURNS + 1)),
+    // Land off-center inside the slice so the pointer doesn't stop dead
+    // straight every time.
+    jitter: (Math.random() - 0.5) * 0.7,
+  }
+}
+
+/**
+ * The live spin lives at rooms/<room>/spin — one at a time for the whole
+ * server. Everybody reads the same target and start time, so every wheel lands
+ * on the same game at the same moment without anyone re-rolling locally.
+ */
+function useSpin() {
+  const [spin, writeSpin] = useRoomNode('spin', null)
+  const [, tick] = useState(0)
+
+  // Clock skew between testers would shift when the wheel stops, so anchor the
+  // countdown to the earlier of "when the spinner says it started" and "when we
+  // first heard about it" — a rejoin still resolves instantly.
+  const seen = useRef({})
+  const id = spin?.id
+  if (id && seen.current[id] == null) seen.current[id] = Date.now()
+  const anchor = spin ? Math.min(spin.startedAt || 0, seen.current[id] ?? Date.now()) : 0
+  const remaining = spin ? anchor + SPIN_MS - Date.now() : 0
+
+  // Re-render exactly when the wheel is due to stop: "spinning" becomes
+  // "result" for everyone with no extra write.
+  useEffect(() => {
+    if (!spin || remaining <= 0) return
+    const t = setTimeout(() => tick((v) => v + 1), remaining + 80)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, anchor])
+
+  const phase = !spin ? 'idle' : remaining > 0 ? 'spinning' : 'result'
+  const picked = spin && spin.games ? spin.games[spin.target] : null
+  const vote = (v) => writeRoomPath(`spin/votes/${SELF_NAME}`, v)
+  const clear = () => writeSpin(null)
+  return { spin, writeSpin, phase, remaining, picked, vote, clear }
+}
+
+// Who is being waited on. Anyone who votes counts, even if they came online
+// after the roster was captured.
+function spinTally(spin) {
+  const votes = spin?.votes || {}
+  const people = [...new Set([...(spin?.roster || []), ...Object.keys(votes)])]
+  const yes = people.filter((n) => votes[n] === 'yes')
+  const no = people.filter((n) => votes[n] === 'no')
+  const waiting = people.filter((n) => !votes[n])
+  return { people, votes, yes, no, waiting, allIn: people.length > 0 && waiting.length === 0 && no.length === 0 }
+}
+
+function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
   const [rotation, setRotation] = useState(0)
-  const [spinning, setSpinning] = useState(false)
-  const [winner, setWinner] = useState(null)
-  const pending = useRef(null)
+  const [dur, setDur] = useState(0)
+  const shown = useRef(null)
+  const at = useRef(0) // where the wheel currently sits, for chaining spins
 
   const n = games.length
   const R = 168
   const C = 176
-  const seg = 360 / n
+  const seg = n ? 360 / n : 360
   // Point on the wheel at `deg` measured clockwise from the top (12 o'clock).
   const pt = (deg, rad = R) => {
     const a = (deg * Math.PI) / 180
     return [C + rad * Math.sin(a), C - rad * Math.cos(a)]
   }
 
-  function spin() {
-    if (spinning || n === 0) return
-    const target = Math.floor(Math.random() * n)
-    pending.current = target
-    const center = target * seg + seg / 2 // clockwise from top
-    const rest = (360 - (center % 360)) % 360 // land the target under the top pointer
-    const currentMod = ((rotation % 360) + 360) % 360
-    const delta = (rest - currentMod + 360) % 360
-    setWinner(null)
-    setSpinning(true)
-    setRotation(rotation + 5 * 360 + delta)
-  }
+  const target = spin?.target
+  // Drive the wheel off the shared session: land `target` under the pointer,
+  // and give a late arrival only the time that's actually left.
+  useEffect(() => {
+    if (!spin || target == null) {
+      shown.current = null
+      at.current = 0
+      setDur(0)
+      setRotation(0)
+      return
+    }
+    if (shown.current === spin.id) return
+    shown.current = spin.id
+    // Where under the pointer this spin should stop, measured clockwise from
+    // the top — offset inside the slice by the shared jitter.
+    const stop = (target + 0.5 + (spin.jitter || 0)) * seg
+    const rest = (360 - (stop % 360) + 360) % 360
+    // Carry on from wherever the last spin left the wheel, so a re-roll picks
+    // up speed instead of snapping back to zero first.
+    const from = at.current
+    const delta = (rest - (((from % 360) + 360) % 360) + 360) % 360
+    const final = from + (spin.turns || MIN_TURNS) * 360 + delta
+    at.current = final
+    if (remaining <= 150) {
+      setDur(0)
+      setRotation(final)
+      return
+    }
+    setDur(remaining)
+    setRotation(final)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spin?.id, target])
 
-  function onEnd() {
-    setSpinning(false)
-    const w = pending.current
-    setWinner(w)
-    if (w != null && onResult) onResult(games[w])
+  return (
+    <div className="relative" style={{ width: C * 2, height: C * 2 }}>
+      {/* Pointer */}
+      <div className="absolute left-1/2 top-[-6px] z-10 -translate-x-1/2">
+        <svg viewBox="0 0 24 28" className="h-[28px] w-[24px] drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
+          <path d="M12 26 L2 4 A14 14 0 0 1 22 4 Z" fill="#ffffff" />
+        </svg>
+      </div>
+
+      <svg
+        viewBox={`0 0 ${C * 2} ${C * 2}`}
+        className="size-full"
+        style={{
+          transform: `rotate(${rotation}deg)`,
+          // Off the line at full speed, braking only in the last stretch.
+          transition: dur > 0 ? `transform ${dur}ms cubic-bezier(0.06,0.86,0.18,1)` : 'none',
+        }}
+      >
+        <circle cx={C} cy={C} r={R + 6} fill="#0c0c0e" stroke="#26272b" strokeWidth="2" />
+        {games.map((g, i) => {
+          const a0 = i * seg
+          const a1 = (i + 1) * seg
+          const [x0, y0] = pt(a0)
+          const [x1, y1] = pt(a1)
+          const large = seg > 180 ? 1 : 0
+          const center = a0 + seg / 2
+          const flip = center > 90 && center < 270
+          const title = g.title.length > 18 ? g.title.slice(0, 17) + '…' : g.title
+          return (
+            <g key={i}>
+              <path
+                d={`M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`}
+                fill={WHEEL_COLORS[i % WHEEL_COLORS.length]}
+                stroke="#0c0c0e"
+                strokeWidth="2"
+              />
+              <g transform={`rotate(${center} ${C} ${C})`}>
+                <text
+                  x={C}
+                  y={C - R * 0.6}
+                  transform={flip ? `rotate(180 ${C} ${C - R * 0.6})` : undefined}
+                  textAnchor="middle"
+                  dominantBaseline="middle"
+                  className="pointer-events-none select-none"
+                  fontSize="13"
+                  fontWeight="700"
+                  fill="#ffffff"
+                >
+                  {title}
+                </text>
+              </g>
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Center hub — click to spin */}
+      <button
+        onClick={onSpin}
+        disabled={disabled}
+        className="absolute left-1/2 top-1/2 flex size-[76px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[15px] font-bold text-[#107C10] shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-70"
+      >
+        {spinning ? '…' : 'SPIN'}
+      </button>
+    </div>
+  )
+}
+
+// One row of the "who's in" list.
+function VoteRow({ name, vote }) {
+  const state = vote === 'yes'
+    ? { text: "In", color: '#3fbf3f' }
+    : vote === 'no'
+      ? { text: 'Out', color: '#f04747' }
+      : { text: 'Deciding…', color: D.mute }
+  return (
+    <div className="flex items-center gap-[10px] py-[6px]">
+      <Avatar color={COLOR_OF[name] || D.raised} size={26} />
+      <span className="flex-1 text-[14px] font-semibold text-white">
+        {capName(name)}{name === SELF_NAME ? ' (you)' : ''}
+      </span>
+      <span className="text-[13px] font-semibold" style={{ color: state.color }}>{state.text}</span>
+    </div>
+  )
+}
+
+// "I'm in / Not tonight" — shown to everyone who hasn't answered yet.
+function VoteButtons({ my, onVote, compact }) {
+  const base = compact
+    ? 'rounded-[8px] px-[14px] py-[7px] text-[13px] font-semibold transition '
+    : 'flex-1 rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition '
+  return (
+    <div className="flex items-center gap-[8px]">
+      <button
+        onClick={() => onVote('yes')}
+        className={base + (my === 'yes' ? 'bg-[#107C10] text-white' : 'bg-[#107C10]/15 text-[#3fbf3f] hover:bg-[#107C10]/30')}
+      >
+        I&rsquo;m in
+      </button>
+      <button
+        onClick={() => onVote('no')}
+        className={base + (my === 'no' ? 'bg-[#f04747] text-white' : 'bg-white/5 text-[#b5bac1] hover:bg-white/10')}
+      >
+        Not tonight
+      </button>
+    </div>
+  )
+}
+
+/**
+ * The blend page's spin area: the wheel on the left, and on the right the live
+ * read on the room — who's been asked, who's in, who's out — plus the play
+ * button once everyone has said yes.
+ */
+function SpinPanel({ blend, state, onLaunch }) {
+  const { online } = useRoomCtx()
+  const { spin, writeSpin, phase, remaining, picked, vote } = state
+  const here = spin && spin.blendId === blend.id ? spin : null
+  const elsewhere = spin && spin.blendId !== blend.id ? spin : null
+
+  // While a spin is live the wheel must show exactly what the spinner spun.
+  const games = here?.games || blend.games.map((k) => ({ key: k, title: CATALOG[k].title }))
+  const { people, votes, yes, no, allIn } = spinTally(here)
+  const my = here ? votes[SELF_NAME] : undefined
+  const iSpun = here?.spinner === SELF_NAME
+  const cover = picked && here ? CATALOG[picked.key]?.image : null
+
+  function startSpin() {
+    if (games.length === 0 || elsewhere) return
+    // Everyone online when the wheel is spun gets asked; the spinner is in by
+    // definition, since they're the one deciding.
+    const roster = [...new Set([SELF_NAME, ...online])]
+    writeSpin({
+      id: Date.now().toString(36),
+      blendId: blend.id,
+      blendName: blend.name,
+      spinner: SELF_NAME,
+      games,
+      ...rollSpin(games.length, here?.target),
+      startedAt: Date.now(),
+      roster,
+      votes: { [SELF_NAME]: 'yes' },
+    })
   }
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: C * 2, height: C * 2 }}>
-        {/* Pointer */}
-        <div className="absolute left-1/2 top-[-6px] z-10 -translate-x-1/2">
-          <svg viewBox="0 0 24 28" className="h-[28px] w-[24px] drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
-            <path d="M12 26 L2 4 A14 14 0 0 1 22 4 Z" fill="#ffffff" />
-          </svg>
+    <section className="rounded-[20px] bg-[#121214] p-[28px] ring-1 ring-[#107C10]/25">
+      <div className="flex flex-col items-start gap-[32px] lg:flex-row">
+        {/* Wheel */}
+        <div className="flex shrink-0 flex-col items-center">
+          <DecisionWheel
+            games={games}
+            spin={here}
+            remaining={remaining}
+            onSpin={startSpin}
+            spinning={!!here && phase === 'spinning'}
+            disabled={phase === 'spinning' || !!elsewhere}
+          />
+          <p className="mt-[18px] max-w-[340px] text-center text-[14px]" style={{ color: D.mute }}>
+            {elsewhere
+              ? `${capName(elsewhere.spinner)} is spinning in ${elsewhere.blendName} — hang on.`
+              : phase === 'spinning' && here
+                ? 'Spinning… the whole server is watching.'
+                : here
+                  ? 'Spin again to re-roll for the group.'
+                  : `Tap SPIN — everyone online gets pinged that a game is about to be chosen.`}
+          </p>
         </div>
 
-        <svg
-          viewBox={`0 0 ${C * 2} ${C * 2}`}
-          className="size-full"
-          style={{
-            transform: `rotate(${rotation}deg)`,
-            transition: spinning ? 'transform 4.2s cubic-bezier(0.15,0.85,0.25,1)' : 'none',
-          }}
-          onTransitionEnd={onEnd}
-        >
-          <circle cx={C} cy={C} r={R + 6} fill="#0c0c0e" stroke="#26272b" strokeWidth="2" />
-          {games.map((g, i) => {
-            const a0 = i * seg
-            const a1 = (i + 1) * seg
-            const [x0, y0] = pt(a0)
-            const [x1, y1] = pt(a1)
-            const large = seg > 180 ? 1 : 0
-            const center = a0 + seg / 2
-            const [lx, ly] = pt(center, R * 0.6)
-            const flip = center > 90 && center < 270
-            const title = g.title.length > 18 ? g.title.slice(0, 17) + '…' : g.title
-            return (
-              <g key={i}>
-                <path
-                  d={`M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`}
-                  fill={WHEEL_COLORS[i % WHEEL_COLORS.length]}
-                  stroke="#0c0c0e"
-                  strokeWidth="2"
-                />
-                <g transform={`rotate(${center} ${C} ${C})`}>
-                  <text
-                    x={C}
-                    y={C - R * 0.6}
-                    transform={flip ? `rotate(180 ${C} ${C - R * 0.6})` : undefined}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className="pointer-events-none select-none"
-                    fontSize="13"
-                    fontWeight="700"
-                    fill="#ffffff"
-                  >
-                    {title}
-                  </text>
-                </g>
-              </g>
-            )
-          })}
-        </svg>
+        {/* Result + who's in */}
+        <div className="min-w-0 flex-1 self-stretch">
+          {!here && (
+            <div className="flex h-full flex-col justify-center">
+              <h3 className="text-[24px] font-semibold text-white">Let the wheel decide</h3>
+              <p className="mt-[8px] max-w-[46ch] text-[15px] leading-snug" style={{ color: D.dim }}>
+                Spinning notifies everyone on the server. When it lands, they each say whether
+                they&rsquo;re in — and once everyone&rsquo;s in, the play button unlocks for the whole group.
+              </p>
+              <div className="mt-[18px] flex items-center gap-[8px]">
+                <span className="text-[13px]" style={{ color: D.mute }}>Online right now</span>
+                <span className="flex items-center">
+                  {[...new Set([SELF_NAME, ...online])].map((n, i) => (
+                    <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #121214', zIndex: 10 - i }} />
+                  ))}
+                </span>
+              </div>
+            </div>
+          )}
 
-        {/* Center hub — click to spin */}
-        <button
-          onClick={spin}
-          disabled={spinning}
-          className="absolute left-1/2 top-1/2 flex size-[76px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[15px] font-bold text-[#107C10] shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition hover:scale-105 disabled:opacity-70"
-        >
-          {spinning ? '…' : 'SPIN'}
-        </button>
+          {here && phase === 'spinning' && (
+            <div className="flex h-full flex-col justify-center">
+              <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>
+                {iSpun ? 'You spun' : `${capName(here.spinner)} spun`}
+              </p>
+              <h3 className="mt-[6px] text-[28px] font-semibold text-white">A game is about to be chosen…</h3>
+              <p className="mt-[8px] text-[15px]" style={{ color: D.dim }}>
+                Everyone on the server just got the notification.
+              </p>
+            </div>
+          )}
+
+          {here && phase === 'result' && picked && (
+            <div className="flex h-full flex-col">
+              <div className="flex items-center gap-[16px]">
+                {cover && <img alt="" src={cover} className="h-[76px] w-[136px] shrink-0 rounded-[12px] object-cover" />}
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>The game picked is</p>
+                  <p className="text-[30px] font-bold leading-tight text-white">{picked.title}</p>
+                </div>
+              </div>
+
+              {/* Your answer — everyone but the spinner still has to weigh in */}
+              {!iSpun && (
+                <div className="mt-[20px]">
+                  <p className="mb-[8px] text-[14px]" style={{ color: D.dim }}>
+                    {my ? `You said ${my === 'yes' ? "you're in" : 'not tonight'}.` : `Are you in for ${picked.title}?`}
+                  </p>
+                  <VoteButtons my={my} onVote={vote} />
+                </div>
+              )}
+
+              {/* The spinner's list: who wants to play, who doesn't */}
+              <div className="mt-[20px] rounded-[14px] bg-[#0c0c0e] p-[16px]">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>
+                    {iSpun ? 'Your table' : "Who's in"}
+                  </p>
+                  <p className="text-[13px]" style={{ color: D.mute }}>{yes.length} in · {no.length} out</p>
+                </div>
+                <div className="mt-[6px]">
+                  {people.map((n) => <VoteRow key={n} name={n} vote={votes[n]} />)}
+                </div>
+              </div>
+
+              {/* Unanimous — the play button unlocks for everyone */}
+              {allIn ? (
+                <div className="mt-[18px] flex items-center gap-[14px] rounded-[14px] bg-[#107C10]/15 p-[14px]">
+                  <PlayButton onClick={() => onLaunch(picked.title)} size={46} title={`Launch ${picked.title}`} />
+                  <div>
+                    <p className="text-[16px] font-semibold text-white">Everyone&rsquo;s in — {picked.title}</p>
+                    <p className="text-[13px]" style={{ color: D.dim }}>Hit play and the group drops in together.</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="mt-[18px] text-[14px]" style={{ color: D.mute }}>
+                  {no.length > 0
+                    ? `${no.map(capName).join(', ')} passed — spin again for something else.`
+                    : 'Waiting on the rest of the group…'}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
+    </section>
+  )
+}
 
-      {/* Result banner */}
-      <div className="mt-[22px] h-[52px]">
-        {winner != null ? (
-          <div className="flex items-center gap-[12px] rounded-[12px] bg-[#121214] px-[20px] py-[12px]">
-            <span className="size-[14px] rounded-full" style={{ backgroundColor: WHEEL_COLORS[winner % WHEEL_COLORS.length] }} />
-            <span className="text-[16px] text-[#9a9ba3]">Tonight you&rsquo;re playing</span>
-            <span className="text-[20px] font-bold text-white">{games[winner].title}</span>
-          </div>
+/**
+ * Server-wide notification. Rendered above every page so a spin reaches people
+ * who aren't on the blend — first "a game is about to be chosen", then the
+ * pick, the in/out vote, and finally the shared play button.
+ */
+function SpinNotification({ state, onLaunch, onOpenBlend }) {
+  const { spin, phase, picked, vote } = state
+  const [dismissed, setDismissed] = useState(null)
+  const { votes, yes, no, allIn } = spinTally(spin)
+  const key = spin ? `${spin.id}:${phase}` : null
+  if (!spin || phase === 'idle' || dismissed === key) return null
+
+  const my = votes[SELF_NAME]
+  const iSpun = spin.spinner === SELF_NAME
+  const cover = picked ? CATALOG[picked.key]?.image : null
+
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-[18px] z-[90] flex justify-center px-4">
+      <div className="pointer-events-auto flex max-w-[720px] items-center gap-[14px] rounded-[14px] border border-[#1c1d21] bg-[#111214] px-[18px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+        {phase === 'spinning' ? (
+          <>
+            <span className="relative flex size-[34px] shrink-0 items-center justify-center">
+              <span className="absolute inset-0 animate-ping rounded-full bg-[#107C10]/40" />
+              <Avatar color={COLOR_OF[spin.spinner] || D.raised} size={34} />
+            </span>
+            <p className="text-[15px] text-[#dbdee1]">
+              <span className="font-semibold text-white">{iSpun ? 'You' : capName(spin.spinner)}</span>
+              {iSpun ? ' spun the wheel in ' : ' is spinning the wheel in '}
+              <span className="font-semibold text-white">{spin.blendName}</span> — a game is about to be chosen.
+            </p>
+          </>
         ) : (
-          <p className="text-[15px]" style={{ color: D.mute }}>{spinning ? 'Spinning…' : 'Tap SPIN to let fate decide.'}</p>
+          <>
+            {cover && <img alt="" src={cover} className="h-[44px] w-[78px] shrink-0 rounded-[8px] object-cover" />}
+            <div className="min-w-0">
+              <p className="text-[15px] text-[#dbdee1]">
+                The game picked is <span className="font-semibold text-white">{picked?.title}</span>
+              </p>
+              <p className="text-[12px]" style={{ color: D.mute }}>
+                {allIn
+                  ? "Everyone's in."
+                  : no.length > 0
+                    ? `${yes.length} in · ${no.map(capName).join(', ')} passed`
+                    : `${yes.length} in · waiting on the rest`}
+              </p>
+            </div>
+            {allIn ? (
+              <button
+                onClick={() => onLaunch(picked.title)}
+                className="ml-[6px] flex shrink-0 items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#0e8f0e]"
+              >
+                <svg viewBox="0 0 24 24" className="size-[15px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                Play
+              </button>
+            ) : iSpun ? (
+              <button
+                onClick={() => onOpenBlend(spin.blendId)}
+                className="ml-[6px] shrink-0 rounded-[10px] bg-[#2b2d31] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]"
+              >
+                See who&rsquo;s in
+              </button>
+            ) : (
+              <div className="ml-[6px] shrink-0">
+                <VoteButtons my={my} onVote={vote} compact />
+              </div>
+            )}
+          </>
         )}
+        <button
+          onClick={() => setDismissed(key)}
+          aria-label="Dismiss"
+          className="ml-[4px] shrink-0 text-[#7e7f87] transition hover:text-white"
+        >
+          <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
       </div>
     </div>
   )
@@ -1414,10 +1809,6 @@ function DecidePage({ blend, prefs, onBack }) {
   const top = ranked[0]
   const rest = ranked.slice(1)
   const selectedLabels = [...new Set(prefs.map((p) => p.label))]
-
-  // The wheel spins over games that fit the group; fall back to all if none match.
-  const fitting = ranked.filter((g) => g.score > 0)
-  const wheelGames = fitting.length >= 2 ? fitting : ranked
 
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
@@ -1547,15 +1938,19 @@ function DecidePage({ blend, prefs, onBack }) {
 
           <div className="my-[40px] h-px bg-[#1c1d21]" />
 
-          {/* Still stuck? Spin the wheel — secondary */}
+          {/* Still stuck? The wheel now lives on the blend page. */}
           <section className="flex flex-col items-center">
-            <h2 className="mb-[6px] text-[22px] font-semibold text-white">Still can&rsquo;t decide? Spin for it</h2>
-            <p className="mb-[24px] text-[14px]" style={{ color: D.mute }}>
-              {fitting.length >= 2
-                ? `Spinning the ${wheelGames.length} games that fit the group.`
-                : 'Add preferences to narrow the wheel — spinning all games for now.'}
+            <h2 className="mb-[6px] text-[22px] font-semibold text-white">Still can&rsquo;t decide?</h2>
+            <p className="mb-[20px] max-w-[52ch] text-center text-[14px]" style={{ color: D.mute }}>
+              Head back to {blend.name} and hit &ldquo;Decide a game&rdquo; — the wheel spins for the whole
+              server and everyone gets a say.
             </p>
-            <DecisionWheel key={wheelGames.map((g) => g.key).join()} games={wheelGames} />
+            <button
+              onClick={onBack}
+              className="rounded-[10px] bg-[#107C10] px-[22px] py-[11px] text-[15px] font-semibold text-white transition hover:bg-[#0e8f0e]"
+            >
+              Spin the wheel in {blend.name}
+            </button>
           </section>
         </div>
       </div>
@@ -1701,6 +2096,10 @@ export default function Landing() {
   const [shareGame, setShareGame] = useState(null)
   const [prefsForId, setPrefsForId] = useState(null)
   const [decide, setDecide] = useState(null) // { blendId, prefs }
+  const [launching, setLaunching] = useState(null)
+
+  // The live wheel spin — read here so the notification reaches every page.
+  const spin = useSpin()
 
   const blend = byId(blendId)
   const prefsFor = byId(prefsForId)
@@ -1717,7 +2116,7 @@ export default function Landing() {
         {decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={decide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
-          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} />
+          <BlendPage key={blend.id} blend={blend} spin={spin} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} />
         ) : (
           <Content onOpenBlend={(b) => setBlendId(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} />
         )}
@@ -1731,6 +2130,14 @@ export default function Landing() {
             onContinue={(prefs) => { setDecide({ blendId: prefsFor.id, prefs }); setPrefsForId(null) }}
           />
         )}
+
+        {/* Server-wide spin notification — follows you across every page */}
+        <SpinNotification
+          state={spin}
+          onLaunch={setLaunching}
+          onOpenBlend={(id) => { setDecide(null); setBlendId(id) }}
+        />
+        {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
       </div>
     </RoomProvider>
   )
