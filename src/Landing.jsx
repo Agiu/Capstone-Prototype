@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
-import { RecCard, CardRow, AVATAR } from './RecCard.jsx'
+import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, AVATAR } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath } from './room.js'
 import {
   discordLogo,
@@ -182,13 +182,14 @@ function NavItem({ icon, label, active }) {
   )
 }
 
-function DmRow({ name, color, status, online }) {
+function DmRow({ name, color, status, online, active, unread = 0, onClick }) {
   return (
     <button
+      onClick={onClick}
       className="flex h-[44px] w-full items-center gap-[12px] rounded-[6px] px-[8px] transition-colors"
-      style={{ backgroundColor: 'transparent' }}
-      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = D.hover }}
-      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+      style={{ backgroundColor: active ? D.raised : 'transparent' }}
+      onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = D.hover }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.backgroundColor = 'transparent' }}
     >
       <div className="relative shrink-0">
         <Avatar color={color} size={32} />
@@ -198,18 +199,22 @@ function DmRow({ name, color, status, online }) {
         />
       </div>
       <div className="flex min-w-0 flex-col items-start leading-tight">
-        <span className="truncate text-[15px] font-semibold" style={{ color: online ? '#fff' : D.text }}>{name}</span>
+        <span className="truncate text-[15px] font-semibold" style={{ color: active || unread ? '#fff' : online ? '#fff' : D.text }}>{name}</span>
         {online ? (
           <span className="text-[12px]" style={{ color: D.mute }}>Online</span>
         ) : status ? (
           <span className="truncate text-[12px]" style={{ color: D.mute }}>{status}</span>
         ) : null}
       </div>
+      {unread > 0 && (
+        <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#f23f42] px-[5px] text-[11px] font-bold text-white">{unread}</span>
+      )}
     </button>
   )
 }
 
-function Sidebar({ online = [], onReset }) {
+function Sidebar({ online = [], onReset, activeDm, onOpenDm, reads = {} }) {
+  const inbox = useInbox()
   const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1'
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col" style={{ backgroundColor: D.panel }}>
@@ -239,9 +244,19 @@ function Sidebar({ online = [], onReset }) {
           <span className="text-[18px] leading-none" style={{ color: D.mute }}>+</span>
         </div>
         <div className="flex flex-col gap-[2px]">
-          {DMS.filter((d) => d.name !== SELF_NAME).map((d) => (
-            <DmRow key={d.name} {...d} online />
-          ))}
+          {DMS.filter((d) => d.name !== SELF_NAME).map((d) => {
+            const { unread } = inbox(d.name, reads[dmConvId(SELF_NAME, d.name)])
+            return (
+              <DmRow
+                key={d.name}
+                {...d}
+                online
+                active={activeDm === d.name}
+                unread={activeDm === d.name ? 0 : unread}
+                onClick={() => onOpenDm?.(d.name)}
+              />
+            )
+          })}
         </div>
         {isAdmin && (
           <button
@@ -327,18 +342,6 @@ const shelfMore = [
   { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded },
 ]
 
-// "For you" portrait tiles (landscape hero art cropped into portrait covers).
-const FORYOU = [
-  { title: 'Minecraft', image: heroMinecraft },
-  { title: 'Sea of Thieves', image: heroSeaOfThieves },
-  { title: "Assassin's Creed", image: heroAc },
-  { title: 'Overcooked! 2', image: heroOvercooked },
-  { title: 'Grounded', image: heroGrounded },
-  { title: 'Monster Hunter Rise', image: heroMonsterHunter },
-  { title: 'Human: Fall Flat', image: heroHumanFallFlat },
-  { title: 'For Honor', image: heroForHonor },
-]
-
 // Friend colors → display names (green is always the user).
 const NAME = { [AVATAR.green]: 'abby', [AVATAR.blue]: 'blake', [AVATAR.purple]: 'chloe', [AVATAR.red]: 'daniel' }
 
@@ -372,6 +375,45 @@ const VIDEOS = {
 }
 const ALL_COLORS = [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red]
 const capName = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+
+// ── Direct-message sync ─────────────────────────────────────────────────────
+// A conversation is keyed by the sorted pair of tester names, so both people
+// compute the same Firebase path and see the same thread. Each message is a
+// separate leaf keyed by a generated id, so two people appending at once never
+// clobber each other — and accept/decline just rewrites the same invite leaf.
+const dmConvId = (a, b) => [a, b].sort().join('__')
+const newMsgId = () => `${Date.now().toString(36)}-${SELF_NAME}-${Math.random().toString(36).slice(2, 7)}`
+
+// Write (or overwrite) a single message leaf in the DM between me and `other`.
+// Returns the id so callers can update the same message later.
+function putDM(other, msg) {
+  const id = msg.id || newMsgId()
+  writeRoomPath(`dms/${dmConvId(SELF_NAME, other)}/${id}`, { ...msg, id })
+  return id
+}
+
+// Subscribe to the thread with `other`; returns messages oldest→newest.
+function useDM(other) {
+  const [obj] = useRoomNode(other ? `dms/${dmConvId(SELF_NAME, other)}` : 'dms/__none', {})
+  const msgs = obj && typeof obj === 'object' ? Object.values(obj) : []
+  return msgs.filter(Boolean).sort((a, b) => (a.ts || 0) - (b.ts || 0))
+}
+
+// Everyone's threads, so the sidebar can show unread dots + last-message peeks
+// for each friend I have a conversation with.
+function useInbox() {
+  const [all] = useRoomNode('dms', {})
+  const convs = all && typeof all === 'object' ? all : {}
+  // name → { last, unreadFromOther } computed against my read marks in state.
+  return (friendName, lastReadTs) => {
+    const conv = convs[dmConvId(SELF_NAME, friendName)]
+    const list = conv && typeof conv === 'object' ? Object.values(conv).filter(Boolean) : []
+    if (!list.length) return { last: null, unread: 0 }
+    list.sort((a, b) => (a.ts || 0) - (b.ts || 0))
+    const unread = list.filter((m) => m.from !== SELF_NAME && (m.ts || 0) > (lastReadTs || 0)).length
+    return { last: list[list.length - 1], unread }
+  }
+}
 // Social proof from the OTHER testers (never the viewer), varied per card.
 function socialProof(i) {
   const others = ALL_COLORS.filter((c) => c !== SELF)
@@ -405,42 +447,62 @@ function mkCard(key, i = 0, extra) {
 // the four hover styles (expand / overlay / steam flyout / always-expanded).
 const RECS = {
   abby: {
-    foryou: ['minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'minecraftDungeons', 'gangBeasts', 'seaOfThieves'],
     rows: [
-      { mode: 'expand', title: 'Made for your co-op nights', subtitle: 'Chaotic, low-stakes games you can finish in a session.', games: ['overcooked', 'humanFallFlat', 'gangBeasts', 'minecraft', 'grounded'] },
       { mode: 'overlay', title: 'Because you love to build', subtitle: 'Cozy building and survival, matched to your hours.', games: ['minecraft', 'grounded', 'minecraftDungeons', 'seaOfThieves', 'humanFallFlat'] },
-      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['overcooked', 'minecraft', 'grounded', 'humanFallFlat', 'gangBeasts', 'minecraftDungeons'] },
-      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['gangBeasts', 'overcooked', 'minecraft', 'grounded'] },
     ],
   },
   blake: {
-    foryou: ['seaOfThieves', 'grounded', 'minecraft', 'monsterHunter', 'wildHearts', 'minecraftDungeons', 'overcooked'],
     rows: [
-      { mode: 'expand', title: 'Set sail this week', subtitle: 'Big open worlds and survival crews, picked for you.', games: ['seaOfThieves', 'grounded', 'minecraft', 'monsterHunter', 'wildHearts'] },
       { mode: 'overlay', title: 'Because you can’t put down survival', subtitle: 'More craft-and-survive loops matched to your hours.', games: ['grounded', 'minecraft', 'seaOfThieves', 'monsterHunter', 'minecraftDungeons'] },
-      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['seaOfThieves', 'monsterHunter', 'grounded', 'wildHearts', 'minecraft', 'overcooked'] },
-      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['monsterHunter', 'seaOfThieves', 'grounded', 'wildHearts'] },
     ],
   },
   chloe: {
-    foryou: ['monsterHunter', 'wildHearts', 'lol', 'seaOfThieves', 'grounded', 'minecraft', 'overcooked'],
     rows: [
-      { mode: 'expand', title: 'For the hunt', subtitle: 'Action-RPGs and boss fights that reward the grind.', games: ['monsterHunter', 'wildHearts', 'seaOfThieves', 'grounded', 'lol'] },
       { mode: 'overlay', title: 'Because you love a challenge', subtitle: 'Competitive and combat-heavy picks matched to your hours.', games: ['lol', 'monsterHunter', 'wildHearts', 'seaOfThieves', 'minecraft'] },
-      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['monsterHunter', 'wildHearts', 'lol', 'grounded', 'seaOfThieves', 'overcooked'] },
-      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['wildHearts', 'monsterHunter', 'lol', 'grounded'] },
     ],
   },
   daniel: {
-    foryou: ['gangBeasts', 'overcooked', 'humanFallFlat', 'lol', 'minecraftDungeons', 'minecraft', 'monsterHunter'],
     rows: [
-      { mode: 'expand', title: 'Bring the chaos', subtitle: 'Party brawlers and pile-ups, best with a full lobby.', games: ['gangBeasts', 'overcooked', 'humanFallFlat', 'lol', 'minecraftDungeons'] },
       { mode: 'overlay', title: 'Because you love a good mess', subtitle: 'Loud, silly, competitive nights matched to your hours.', games: ['humanFallFlat', 'gangBeasts', 'overcooked', 'lol', 'minecraft'] },
-      { mode: 'steam', title: 'Recommended based on what you play', subtitle: 'Hover a card for the full read.', games: ['gangBeasts', 'overcooked', 'humanFallFlat', 'lol', 'minecraftDungeons', 'monsterHunter'] },
-      { mode: 'expanded', title: 'More to jump into', subtitle: 'The full read, up front.', games: ['overcooked', 'gangBeasts', 'humanFallFlat', 'minecraftDungeons'] },
     ],
   },
 }
+
+// ── Two extra "For you" rows in bespoke styles (Figma 622:2733/2755 + 620:2460).
+// Both reuse the game CATALOG for covers/metadata and VIDEOS for trailers, so
+// this stays a self-contained layout/animation mock.
+const CINEMATIC_ROW = [
+  { key: 'seaOfThieves', avatars: [AVATAR.blue, AVATAR.green], label: 'wishlisted this game' },
+  { key: 'monsterHunter', avatars: [AVATAR.blue], label: 'recommends this game' },
+  { key: 'grounded', avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours' },
+  { key: 'humanFallFlat', avatars: [AVATAR.red, AVATAR.purple], label: 'played this for 4 hours' },
+  { key: 'minecraft', avatars: [AVATAR.green], label: 'recommends this game' },
+  { key: 'gangBeasts', avatars: [AVATAR.red], label: 'wishlisted this game' },
+].map(({ key, avatars, label }) => {
+  const g = CATALOG[key]
+  return {
+    id: key, avatars, label,
+    image: g.image,
+    video: VIDEOS[key] ? { youTubeId: VIDEOS[key], poster: g.image } : undefined,
+    players: g.players, playtime: g.playtime, genre: g.genre,
+    title: g.title, description: g.caption,
+  }
+})
+
+const PORTRAIT_ROW = [
+  { key: 'minecraft', released: 'Released on Nov 18, 2011', recommend: 'Highly recommended game', multiplayer: 'Online multiplayer (1+)', tags: ['Sandbox', 'Survival', 'Everyone 10+'] },
+  { key: 'seaOfThieves', released: 'Released on Jun 3, 2020', recommend: 'A hit with your crew', multiplayer: 'Online co-op (1-4)', tags: ['Adventure', 'Pirates', 'Teen 13+'] },
+  { key: 'monsterHunter', released: 'Released on Jan 12, 2022', recommend: 'Highly recommended game', multiplayer: 'Online co-op (1-4)', tags: ['Action RPG', 'Hunting', 'Teen 13+'] },
+  { key: 'grounded', released: 'Released on Sep 27, 2022', recommend: 'Popular in your Mixes', multiplayer: 'Online co-op (1-4)', tags: ['Survival', 'Crafting', 'Everyone 10+'] },
+  { key: 'overcooked', released: 'Released on Aug 7, 2018', recommend: 'Great for a full lobby', multiplayer: 'Local + online (1-4)', tags: ['Co-op', 'Party', 'Everyone 7+'] },
+  { key: 'forHonor', released: 'Released on Feb 14, 2017', recommend: 'Highly recommended game', multiplayer: 'Online multiplayer (1-4)', tags: ['Fighting', 'Melee', 'Mature 17+'] },
+].map(({ key, released, recommend, multiplayer, tags }) => {
+  const g = CATALOG[key]
+  return {
+    id: key, released, recommend, multiplayer, tags,
+    image: g.image, title: g.title, publisher: g.developer, description: g.caption,
+  }
+})
 
 // "Your Blends" — colored playlist cards (palette from the Figma landing frame).
 // Green (the user, sauhee) is a member of every blend.
@@ -505,17 +567,6 @@ function guessTag(label) {
   return null
 }
 
-function PortraitTile({ title, image }) {
-  return (
-    <button className="group flex w-[184px] shrink-0 flex-col text-left">
-      <div className="aspect-[2/3] w-full overflow-hidden rounded-[10px] bg-[#1a1a1d]">
-        <img alt="" src={image} loading="lazy" className="size-full object-cover transition-transform duration-200 group-hover:scale-105" />
-      </div>
-      <p className="mt-[8px] text-[15px] font-medium leading-tight text-white">{title}</p>
-    </button>
-  )
-}
-
 function BlendCard({ name, color, members, onOpen }) {
   return (
     <button onClick={onOpen} className="group flex w-[160px] shrink-0 flex-col text-left">
@@ -542,7 +593,7 @@ function CreateBlendCard({ onClick }) {
           <path d="M12 5v14M5 12h14" />
         </svg>
       </div>
-      <p className="mt-[10px] text-[16px] font-semibold text-white">Create a new &ldquo;Blend&rdquo;</p>
+      <p className="mt-[10px] text-[16px] font-semibold text-white">Create a new Mix</p>
     </button>
   )
 }
@@ -564,19 +615,11 @@ const STEAM_ROW = [
 
 // Row display order (by hover style): overlay → expanded → steam → expand.
 const ROW_ORDER = { overlay: 0, expanded: 1, steam: 2, expand: 3 }
-// Title for the "For you" portrait-tile row, per profile.
-const PICK_TITLE = {
-  abby: 'Trending in co-op right now',
-  blake: 'New worlds to explore',
-  chloe: 'Big this week for the hunt',
-  daniel: 'Party picks blowing up',
-}
 
 function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
   const { blends } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.abby
   const orderedRows = [...recs.rows].sort((a, b) => (ROW_ORDER[a.mode] ?? 9) - (ROW_ORDER[b.mode] ?? 9))
-  const pickTitle = PICK_TITLE[SELF_NAME] || 'Top picks for you'
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav */}
@@ -594,7 +637,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
         <div className="mx-auto w-full max-w-[1400px]">
           {/* Hero — centered (Figma 550:979) */}
           <section className="flex flex-col items-center text-center">
-            <h1 className="text-[56px] font-semibold leading-[1.05] tracking-tight text-white">Product Name</h1>
+            <h1 className="text-[56px] font-semibold leading-[1.05] tracking-tight text-white">XBOX PARTY</h1>
             <p className="mt-[10px] max-w-[560px] text-[18px] leading-snug text-[#e7e7e7]">
               Jump into 200+ Xbox games instantly, powered by the cloud and playable right inside Discord.
             </p>
@@ -621,7 +664,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
 
           {/* Your Blends — centered, colored cards (Figma 550:979) */}
           <section className="mt-[48px] flex flex-col items-center">
-            <SectionHeading size={24}>Your &ldquo;Blends&rdquo;</SectionHeading>
+            <SectionHeading size={24}>Your Mixes</SectionHeading>
             <div className="mt-[24px] flex max-w-full flex-wrap justify-center gap-x-[16px] gap-y-[24px]">
               <CreateBlendCard onClick={onCreateBlend} />
               {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => <BlendCard key={b.id} {...b} onOpen={() => onOpenBlend(b)} />)}
@@ -633,30 +676,33 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
             <SectionHeading size={40}>For you</SectionHeading>
           </section>
 
-          {/* Recommendation rows — personal to this profile. The portrait-tile
-              row sits between "More to jump into" and "Recommended based on what
-              you play" (after the 2nd row), with its own title. */}
+          {/* Overlay rows (e.g. "Because you love to build") — at the top. */}
           {orderedRows.map((row, ri) => (
-            <Fragment key={ri}>
-              <CardRow
-                title={row.title}
-                subtitle={row.subtitle}
-                cards={row.games.map((k, i) => mkCard(k, i, row.mode === 'steam' ? { steam: true } : undefined))}
-                overlay={row.mode === 'overlay'}
-                expanded={row.mode === 'expanded'}
-                onWishlist={onWishlist}
-                onShare={onShare}
-              />
-              {ri === 1 && (
-                <section className="mt-[56px]">
-                  <p className="text-[24px] font-bold text-white">{pickTitle}</p>
-                  <div className="no-scrollbar mt-[24px] flex gap-[18px] overflow-x-auto pb-[8px]">
-                    {recs.foryou.map((k) => <PortraitTile key={k} title={CATALOG[k].title} image={CATALOG[k].image} />)}
-                  </div>
-                </section>
-              )}
-            </Fragment>
+            <CardRow
+              key={ri}
+              title={row.title}
+              subtitle={row.subtitle}
+              cards={row.games.map((k, i) => mkCard(k, i, row.mode === 'steam' ? { steam: true } : undefined))}
+              overlay={row.mode === 'overlay'}
+              expanded={row.mode === 'expanded'}
+              onWishlist={onWishlist}
+              onShare={onShare}
+            />
           ))}
+
+          {/* Cinematic hover row (Figma 622:2733 / 622:2755) */}
+          <ShelfRow title="Featured for movie night" subtitle="Big, cinematic games — hover to watch them in motion.">
+            {CINEMATIC_ROW.map((c) => (
+              <CinematicCard key={c.id} {...c} onWishlist={onWishlist} />
+            ))}
+          </ShelfRow>
+
+          {/* Portrait expand-tile row (Figma 620:2460) */}
+          <ShelfRow title="New releases you might like" subtitle="Fresh drops matched to your taste — hover for the details.">
+            {PORTRAIT_ROW.map((c) => (
+              <PortraitCard key={c.id} {...c} />
+            ))}
+          </ShelfRow>
         </div>
       </div>
     </main>
@@ -868,7 +914,7 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
             <div>
               <h1 className="text-[52px] font-semibold leading-none tracking-tight text-white">{blend.name}</h1>
               <div className="mt-[16px] flex items-center gap-[10px] text-[18px] text-[#e7e7e7]">
-                A Blend of games for
+                A Mix of games for
                 <span className="flex items-center">
                   {blend.members.map((c, i) => (
                     <Avatar key={i} color={c} size={30} style={{ marginRight: i < blend.members.length - 1 ? -10 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
@@ -925,9 +971,9 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
           {/* Group wishlist — numbered, drag to rank */}
           <section>
             <div className="mb-[18px] flex items-baseline gap-[14px]">
-              <h2 className="text-[28px] font-semibold text-white">Your Group Wishlist</h2>
+              <h2 className="text-[28px] font-semibold text-white">Your XBOX PLAYlist</h2>
               <span className="text-[12px] font-medium text-[#7e7f87]">drag to rank</span>
-              <button className="ml-auto text-[12px] font-semibold uppercase tracking-wide text-[#9a9ba3] transition hover:text-white">View entire wishlist</button>
+              <button className="ml-auto text-[12px] font-semibold uppercase tracking-wide text-[#9a9ba3] transition hover:text-white">View entire PLAYlist</button>
             </div>
             <div className="no-scrollbar flex gap-[20px] overflow-x-auto pb-[8px]">
               {wish.map((g, i) => (
@@ -1006,7 +1052,7 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
           items={[
             { label: 'Launch game', icon: PLAY_GLYPH, primary: true, onClick: () => launch(menu.title) },
             { divider: true },
-            { label: 'Add to wishlist', icon: BOOKMARK_MENU_GLYPH, onClick: () => setMenu(null) },
+            { label: 'Add to Mix', icon: BOOKMARK_MENU_GLYPH, onClick: () => setMenu(null) },
             { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setMenu(null) },
           ]}
         />
@@ -1033,18 +1079,27 @@ function CreateBlendModal({ onClose, onCreated }) {
   const anySelected = selectedNames.length > 0
   const blendName = nameOverride !== null ? nameOverride : selectedNames.join(', ')
   function createBlend() {
-    const name = (blendName || 'New Blend').trim()
+    const name = (blendName || 'New Mix').trim()
     const games = ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'monsterHunter']
     const newBlend = {
       id: slug(name) + '-' + Date.now().toString(36).slice(-4),
       name,
       color: BLEND_COLORS[blends.length % BLEND_COLORS.length],
       when: 'just now',
-      members: [SELF, ...selectedFriends.map((f) => f.color)],
+      // Only the creator is a member up front; invitees join once they accept.
+      members: [SELF],
+      invited: selectedFriends.map((f) => f.color),
       games,
       wishlist: games.slice(0, 4),
     }
     setBlends([...blends, newBlend])
+    // Drop an invitation into each invitee's DM — they accept or decline there.
+    selectedFriends.forEach((f) => {
+      putDM(f.name, {
+        from: SELF_NAME, to: f.name, kind: 'invite',
+        blendId: newBlend.id, blendName: name, status: 'pending', ts: Date.now(),
+      })
+    })
     onCreated?.(newBlend.id)
   }
   return (
@@ -1056,8 +1111,8 @@ function CreateBlendModal({ onClose, onCreated }) {
         <div className="p-[24px]">
           <div className="flex items-start justify-between gap-[12px]">
             <div>
-              <h3 className="text-[22px] font-bold text-white">Create a &ldquo;Blend&rdquo;</h3>
-              <p className="mt-[4px] text-[15px] text-[#b5bac1]">Select who you want to create a &ldquo;Blend&rdquo; with.</p>
+              <h3 className="text-[22px] font-bold text-white">Create a Mix</h3>
+              <p className="mt-[4px] text-[15px] text-[#b5bac1]">Select who you want to create a Mix with.</p>
             </div>
             <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
               <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -1070,7 +1125,7 @@ function CreateBlendModal({ onClose, onCreated }) {
           </div>
 
           <p className="mt-[16px] text-[12px] font-semibold uppercase tracking-wide text-[#b5bac1]">
-            Add friends or server members to &ldquo;Blends&rdquo;
+            Add friends or server members to Mixes
           </p>
           <div className="no-scrollbar mt-[8px] flex max-h-[280px] flex-col overflow-y-auto">
             {friends.map((f) => {
@@ -1110,18 +1165,18 @@ function CreateBlendModal({ onClose, onCreated }) {
                 </span>
               </div>
               <div className="min-w-0 flex-1">
-                <label className="text-[13px] text-[#b5bac1]">Blend Name (optional)</label>
+                <label className="text-[13px] text-[#b5bac1]">Mix Name (optional)</label>
                 <input
                   value={blendName}
                   onChange={(e) => setNameOverride(e.target.value)}
-                  placeholder="Blend name"
+                  placeholder="Mix name"
                   className="mt-[4px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px] text-[14px] text-white outline-none placeholder:text-[#87898c]"
                 />
               </div>
             </div>
             <div className="mt-[18px] flex justify-end gap-[10px]">
               <button onClick={onClose} className="rounded-[8px] bg-[#2b2d31] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]">Cancel</button>
-              <button onClick={createBlend} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Create a new &ldquo;Blend&rdquo;</button>
+              <button onClick={createBlend} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Create a new Mix</button>
             </div>
           </div>
         ) : (
@@ -1159,8 +1214,8 @@ function WishlistModal({ game, onClose }) {
         <div className="p-[24px]">
           <div className="flex items-start justify-between gap-[12px]">
             <div>
-              <h3 className="text-[20px] font-bold text-white">Add to a &ldquo;Blend&rdquo;</h3>
-              <p className="mt-[4px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a Blend&rsquo;s wishlist.</p>
+              <h3 className="text-[20px] font-bold text-white">Add to Mix</h3>
+              <p className="mt-[4px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a Mix&rsquo;s XBOX PLAYlist.</p>
             </div>
             <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
               <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -1649,7 +1704,7 @@ function WheelGameEditor({ keys, onChange, locked, isDefault, onReset }) {
       <p className="mt-[2px] text-[12px] leading-snug" style={{ color: D.mute }}>
         {keys.length > ART_FULL
           ? `Past ${ART_FULL} the slices get too thin for cover art.`
-          : 'Only changes the wheel — nothing leaves the blend.'}
+          : 'Only changes the wheel — nothing leaves the Mix.'}
       </p>
 
       <div className="thin-scrollbar mt-[8px] max-h-[190px] min-h-[86px] overflow-y-auto pr-[2px]">
@@ -1702,7 +1757,7 @@ function WheelGameEditor({ keys, onChange, locked, isDefault, onReset }) {
           onClick={onReset}
           className="mt-[10px] text-left text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white"
         >
-          Reset to the blend&rsquo;s games
+          Reset to the Mix&rsquo;s games
         </button>
       ) : null}
     </div>
@@ -2207,6 +2262,12 @@ function ShareModal({ game, onClose }) {
         games: ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'monsterHunter'],
         wishlist: ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat'],
       }])
+    } else {
+      // Forward the game into each chosen friend's DM, where it syncs live.
+      const note = message.trim()
+      chosenFriends.forEach((f) => {
+        putDM(f.name, { from: SELF_NAME, to: f.name, kind: 'game', game, text: note, ts: Date.now() })
+      })
     }
     onClose()
   }
@@ -2292,6 +2353,198 @@ function ShareModal({ game, onClose }) {
   )
 }
 
+// ── Direct-message conversation page ───────────────────────────────────────
+// Opened from a friend in the DM sidebar. Real, synced messages: plain text,
+// shared games, and Blend invitations you can accept or decline in place.
+function DmDivider({ label }) {
+  return (
+    <div className="my-[16px] flex items-center gap-[12px] px-[4px]">
+      <div className="h-px flex-1" style={{ backgroundColor: '#26272b' }} />
+      <span className="text-[12px] font-semibold" style={{ color: D.mute }}>{label}</span>
+      <div className="h-px flex-1" style={{ backgroundColor: '#26272b' }} />
+    </div>
+  )
+}
+
+const dmTime = (ts) => {
+  try { return new Date(ts).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) }
+  catch { return '' }
+}
+const dmDay = (ts) => {
+  try { return new Date(ts).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' }) }
+  catch { return '' }
+}
+
+function InviteMessage({ msg, mine, onRespond }) {
+  const pending = (msg.status || 'pending') === 'pending'
+  const accepted = msg.status === 'accepted'
+  const declined = msg.status === 'declined'
+  return (
+    <div className="mt-[6px] w-full max-w-[440px] overflow-hidden rounded-[10px] border border-[#3a3c42] bg-[#232428]">
+      <div className="flex items-center gap-[10px] border-b border-[#2f3136] bg-[#1e1f22] px-[14px] py-[10px]">
+        <span className="flex size-[34px] items-center justify-center rounded-[8px] bg-[#5765f2] text-[16px]">🎮</span>
+        <div className="min-w-0">
+          <p className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>Mix invitation</p>
+          <p className="truncate text-[15px] font-semibold text-white">{msg.blendName}</p>
+        </div>
+      </div>
+      <div className="px-[14px] py-[12px]">
+        <p className="text-[14px] text-[#dbdee1]">
+          {mine
+            ? <>You invited <span className="font-semibold text-white">{capName(msg.to)}</span> to join this Mix.</>
+            : <><span className="font-semibold text-white">{capName(msg.from)}</span> invited you to join this Mix.</>}
+        </p>
+        {msg.text ? <p className="mt-[6px] text-[13px] text-[#b5bac1]">“{msg.text}”</p> : null}
+
+        {mine ? (
+          <p className="mt-[10px] text-[13px] font-semibold" style={{ color: accepted ? D.green : declined ? '#f0787a' : D.mute }}>
+            {accepted ? '✓ Accepted' : declined ? '✕ Declined' : '• Waiting for a response…'}
+          </p>
+        ) : pending ? (
+          <div className="mt-[12px] flex gap-[8px]">
+            <button onClick={() => onRespond(true)} className="flex-1 rounded-[8px] bg-[#248046] px-[14px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110">Accept</button>
+            <button onClick={() => onRespond(false)} className="flex-1 rounded-[8px] bg-[#3a3c42] px-[14px] py-[8px] text-[14px] font-semibold text-white transition hover:bg-[#4a4c52]">Decline</button>
+          </div>
+        ) : (
+          <p className="mt-[10px] text-[13px] font-semibold" style={{ color: accepted ? D.green : '#f0787a' }}>
+            {accepted ? '✓ You joined this Mix' : '✕ You declined'}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function GameMessage({ msg }) {
+  const cover = CATALOG[KEY_OF_TITLE[msg.game] || msg.game]?.image
+  const meta = CATALOG[KEY_OF_TITLE[msg.game] || msg.game]
+  return (
+    <div className="mt-[6px] w-full max-w-[440px] overflow-hidden rounded-[10px] border border-[#3a3c42] bg-[#232428]">
+      {cover && <img alt="" src={cover} className="h-[150px] w-full object-cover" />}
+      <div className="px-[14px] py-[12px]">
+        <p className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>Shared a game</p>
+        <p className="mt-[2px] text-[16px] font-semibold text-white">{msg.game}</p>
+        {meta?.caption && <p className="mt-[4px] text-[13px] leading-snug text-[#b5bac1]">{meta.caption}</p>}
+        {msg.text ? <p className="mt-[8px] text-[13px] text-[#dbdee1]">{msg.text}</p> : null}
+      </div>
+    </div>
+  )
+}
+
+function DMPage({ friend, onBack, onOpenBlend }) {
+  const { blends, setBlends } = useRoomCtx()
+  const msgs = useDM(friend.name)
+  const [draft, setDraft] = useState('')
+  const scrollRef = useRef(null)
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [msgs.length])
+
+  function sendText() {
+    const text = draft.trim()
+    if (!text) return
+    putDM(friend.name, { from: SELF_NAME, to: friend.name, kind: 'text', text, ts: Date.now() })
+    setDraft('')
+  }
+
+  function respondInvite(msg, accept) {
+    // Rewrite the same invite leaf so the inviter sees the result live…
+    putDM(friend.name, { ...msg, status: accept ? 'accepted' : 'declined' })
+    // …and update the shared blend: joining adds me to members, either way I
+    // drop off the pending "invited" list.
+    setBlends(blends.map((b) => {
+      if (b.id !== msg.blendId) return b
+      const invited = (b.invited || []).filter((c) => c !== SELF)
+      const members = accept ? [...new Set([...(b.members || []), SELF])] : (b.members || [])
+      return { ...b, invited, members }
+    }))
+  }
+
+  // Group consecutive messages by calendar day for the divider labels.
+  let lastDay = null
+
+  return (
+    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+      <header className="flex h-[56px] shrink-0 items-center gap-[12px] border-b border-[#1c1d21] px-[20px]">
+        <button onClick={onBack} aria-label="Back" className="flex size-[32px] items-center justify-center rounded-[6px] text-[#b5bac1] transition hover:bg-white/5 hover:text-white">
+          <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
+        <Avatar color={friend.color} size={30} />
+        <div className="leading-tight">
+          <div className="text-[16px] font-semibold text-white">{friend.name}</div>
+          <div className="text-[12px]" style={{ color: D.mute }}>Online</div>
+        </div>
+      </header>
+
+      <div ref={scrollRef} className="no-scrollbar flex-1 overflow-y-auto px-[24px] py-[20px]">
+        <div className="mx-auto w-full max-w-[860px]">
+          {/* Conversation start card */}
+          <div className="mb-[8px] flex flex-col items-start">
+            <Avatar color={friend.color} size={72} />
+            <h2 className="mt-[12px] text-[28px] font-bold text-white">{friend.name}</h2>
+            <p className="mt-[2px] text-[15px]" style={{ color: D.dim }}>
+              This is the beginning of your direct message history with <span className="font-semibold text-white">{friend.name}</span>.
+            </p>
+          </div>
+
+          {msgs.length === 0 && (
+            <p className="mt-[16px] text-[14px]" style={{ color: D.mute }}>No messages yet. Say hi, share a game, or invite {friend.name} to a Mix.</p>
+          )}
+
+          {msgs.map((m) => {
+            const mine = m.from === SELF_NAME
+            const day = dmDay(m.ts)
+            const showDay = day !== lastDay
+            lastDay = day
+            const senderName = mine ? SELF_NAME : friend.name
+            const senderColor = mine ? SELF : friend.color
+            return (
+              <Fragment key={m.id}>
+                {showDay && <DmDivider label={day} />}
+                <div className="group flex items-start gap-[14px] rounded-[6px] px-[8px] py-[6px] transition hover:bg-white/[0.03]">
+                  <Avatar color={senderColor} size={40} />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-baseline gap-[8px]">
+                      <span className="text-[15px] font-semibold text-white">{senderName}</span>
+                      <span className="text-[11px]" style={{ color: D.mute }}>{dmTime(m.ts)}</span>
+                    </div>
+                    {m.kind === 'invite' ? (
+                      <InviteMessage msg={m} mine={mine} onRespond={(accept) => respondInvite(m, accept)} />
+                    ) : m.kind === 'game' ? (
+                      <GameMessage msg={m} />
+                    ) : (
+                      <p className="mt-[2px] whitespace-pre-wrap break-words text-[15px] leading-snug text-[#dbdee1]">{m.text}</p>
+                    )}
+                    {m.kind === 'invite' && m.status === 'accepted' && (
+                      <button onClick={() => onOpenBlend(m.blendId)} className="mt-[8px] text-[13px] font-semibold text-[#5765f2] transition hover:underline">Open the Mix →</button>
+                    )}
+                  </div>
+                </div>
+              </Fragment>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Composer */}
+      <div className="px-[24px] pb-[24px] pt-[4px]">
+        <div className="mx-auto flex w-full max-w-[860px] items-center gap-[10px] rounded-[10px] bg-[#1e1f22] px-[16px] py-[4px]">
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') sendText() }}
+            placeholder={`Message ${friend.name}`}
+            className="min-w-0 flex-1 bg-transparent py-[12px] text-[15px] text-white outline-none placeholder:text-[#87898c]"
+          />
+          <button onClick={sendText} disabled={!draft.trim()} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[16px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Send</button>
+        </div>
+      </div>
+    </main>
+  )
+}
+
 export default function Landing() {
   const room = useRoom({ self: SELF_NAME, seedBlends: SEED_BLENDS })
   const blends = room.blends || SEED_BLENDS
@@ -2304,6 +2557,20 @@ export default function Landing() {
   const [prefsForId, setPrefsForId] = useState(null)
   const [decide, setDecide] = useState(null) // { blendId, prefs }
   const [launching, setLaunching] = useState(null)
+  const [dmName, setDmName] = useState(null)
+
+  // Per-conversation "last read" timestamps drive the unread dots in the
+  // sidebar. Persisted in localStorage so a reload doesn't re-flag old messages.
+  const READ_KEY = `dmReads:${SELF_NAME}`
+  const [reads, setReads] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(READ_KEY) || '{}') } catch { return {} }
+  })
+  const markRead = (name) => {
+    const next = { ...reads, [dmConvId(SELF_NAME, name)]: Date.now() }
+    setReads(next)
+    try { localStorage.setItem(READ_KEY, JSON.stringify(next)) } catch {}
+  }
+  const openDm = (name) => { markRead(name); setDmName(name); setBlendId(null); setDecide(null) }
 
   // The live wheel spin — read here so the notification reaches every page.
   const spin = useSpin()
@@ -2311,6 +2578,7 @@ export default function Landing() {
   const blend = byId(blendId)
   const prefsFor = byId(prefsForId)
   const decideBlend = decide ? byId(decide.blendId) : null
+  const dmFriend = dmName ? DMS.find((d) => d.name === dmName) : null
 
   return (
     <RoomProvider value={room}>
@@ -2319,13 +2587,20 @@ export default function Landing() {
         onContextMenu={(e) => e.preventDefault()}
       >
         <ServerRail />
-        <Sidebar online={room.online} onReset={room.resetRoom} />
-        {decideBlend ? (
+        <Sidebar online={room.online} onReset={room.resetRoom} activeDm={dmName} onOpenDm={openDm} reads={reads} />
+        {dmFriend ? (
+          <DMPage
+            key={dmFriend.name}
+            friend={dmFriend}
+            onBack={() => setDmName(null)}
+            onOpenBlend={(id) => { setDmName(null); setBlendId(id) }}
+          />
+        ) : decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={decide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
           <BlendPage key={blend.id} blend={blend} spin={spin} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} />
         ) : (
-          <Content onOpenBlend={(b) => setBlendId(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} />
+          <Content onOpenBlend={(b) => { setDmName(null); setBlendId(b.id) }} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} />
         )}
         {createOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
         {wishlistGame && <WishlistModal game={wishlistGame} onClose={() => setWishlistGame(null)} />}

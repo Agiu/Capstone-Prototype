@@ -113,9 +113,11 @@ function VideoTrailer({ mp4, youTubeId, poster }) {
       iv_load_policy: '3',
     })
     return (
+      // Cover the container regardless of its aspect: force 16:9 and let both
+      // min-dimensions push it to fill (like object-fit: cover for the iframe).
       <iframe
         title="Game trailer"
-        className="pointer-events-none absolute left-1/2 top-1/2 h-[135%] w-[135%] -translate-x-1/2 -translate-y-1/2 border-0"
+        className="pointer-events-none absolute left-1/2 top-1/2 aspect-video h-auto w-auto min-h-full min-w-full max-w-none -translate-x-1/2 -translate-y-1/2 border-0"
         src={`https://www.youtube-nocookie.com/embed/${youTubeId}?${params}`}
         allow="autoplay; encrypted-media"
       />
@@ -248,7 +250,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
           <div className="h-[380px] rounded-[16px] bg-[#121214] p-[16px] shadow-[0_12px_40px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
             <div className="flex h-full flex-col gap-[16px]">
               <div className="flex items-center justify-end gap-[8px]">
-                <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
                 <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
               </div>
               <div className="flex flex-1 flex-col justify-between pb-[5px]">
@@ -314,7 +316,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
         </div>
         <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px]">
           <div className="flex items-center justify-end gap-[8px]">
-            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
             <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
           </div>
           <div className="flex flex-1 flex-col justify-between pb-[5px]">
@@ -362,11 +364,13 @@ export function RecCard({ avatars, label, image, players, details, video, shared
   // pop-up over the cover on hover (instead of the card expanding sideways).
   if (overlay) {
     return (
-      <div className="group relative flex h-[380px] w-[452px] shrink-0 flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
+      <div className="group relative flex h-[314px] w-[452px] shrink-0 flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
         <div className="flex h-[30px] w-full items-center gap-[8px]">
           <AvatarStack colors={avatars} />
           <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
         </div>
+
+        {/* 16:9 cover → trailer on hover (does not fill the whole card) */}
         <div className="relative h-[236px] w-[420px] overflow-hidden rounded-[16px] bg-black">
           <img
             alt=""
@@ -384,57 +388,38 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             </div>
           )}
         </div>
-        <div className="flex h-[50px] w-full items-center gap-[8px]">
-          <div className="flex items-center gap-[4px]">
-            <Pill>
-              <span className="flex -scale-y-100 rotate-180 items-center justify-center">
-                <img alt="" src={userGroup} className="size-[16px]" />
-              </span>
-              <span className="text-[12px] text-[#7e7f87]">{players}</span>
-            </Pill>
-            <Pill><span className="text-[12px] text-[#7e7f87]">{details.playtime}</span></Pill>
-            <Pill><span className="text-[12px] text-[#7e7f87]">{details.genre}</span></Pill>
-          </div>
-        </div>
 
-        {/* Hover pop-up — the detail sits over the cover, ABOVE the pills. The
-            pills never move; the panel stops right above them. The trailer
-            still shows through the gradient at the top. */}
+        {/* Hover pop-up — action buttons + the detail (title, review + tags),
+            over the bottom of the 16:9 cover. Fades in on hover. */}
         <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
           <div className="absolute right-[16px] top-[16px] flex gap-[8px]">
-            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
             <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
           </div>
-          <div className="absolute inset-x-[16px] bottom-[82px] flex flex-col gap-[8px] rounded-b-[16px] bg-gradient-to-t from-black via-black/80 to-transparent px-[16px] pb-[14px] pt-[52px]">
+          <div className="absolute inset-x-[16px] bottom-[16px] flex flex-col gap-[8px] rounded-b-[16px] bg-gradient-to-t from-black via-black/80 to-transparent px-[16px] pb-[14px] pt-[52px]">
             <div className="flex flex-col text-[#e7e7e7]">
               <p className="text-[19px] font-semibold leading-tight text-white">{details.title}</p>
               <p className="text-[12px]">by <span className="font-semibold">{details.developer}</span></p>
             </div>
-            <div className="flex items-center gap-[18px]">
-              {details.ratings.map((r, i) => (
-                <div key={i} className="flex items-center gap-[7px]">
+            <div className="flex items-center gap-[16px]">
+              {/* review info (left) */}
+              {details.ratings.slice(0, 1).map((r, i) => (
+                <div key={i} className="flex shrink-0 items-center gap-[7px]">
                   <img alt="" src={thumbsUp} className="size-[22px] shrink-0" />
                   <span className="text-[18px] font-semibold text-white">{r.pct}</span>
-                  <span className="text-[10px] leading-tight text-[#e7e7e7]">
-                    {r.line1}
-                    <br />
-                    <span className={r.line2Bold ? 'font-bold' : undefined}>{r.line2}</span>
-                  </span>
                 </div>
               ))}
-            </div>
-            <div className="flex items-center justify-between gap-[10px] text-[12px] text-[#e7e7e7]">
-              {details.age && (
-                <span className="min-w-0 truncate">
-                  <span className="font-semibold">{details.age}</span> {details.descriptors}
-                </span>
-              )}
-              <span className="flex shrink-0 items-center gap-[8px]">
-                <span className="grid size-[14px] grid-cols-2 grid-rows-2 gap-px">
-                  <span className="bg-white" /><span className="bg-white" /><span className="bg-white" /><span className="bg-white" />
-                </span>
-                <img alt="" src={appleLogo} className="h-[14px] w-[11px]" />
-              </span>
+              {/* tags (right of the review) */}
+              <div className="flex flex-wrap items-center gap-[4px]">
+                <Pill>
+                  <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+                    <img alt="" src={userGroup} className="size-[16px]" />
+                  </span>
+                  <span className="text-[12px] text-[#e7e7e7]">{players}</span>
+                </Pill>
+                <Pill><span className="text-[12px] text-[#e7e7e7]">{details.playtime}</span></Pill>
+                <Pill><span className="text-[12px] text-[#e7e7e7]">{details.genre}</span></Pill>
+              </div>
             </div>
           </div>
         </div>
@@ -518,7 +503,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
       {/* Right column — hover_content; fades in as the card expands */}
       <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px] opacity-0 transition-opacity delay-[0ms] duration-[400ms] ease-out group-hover:opacity-100 group-hover:delay-[550ms]">
         <div className="flex items-center justify-end gap-[8px]">
-          <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to a Blend" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
           <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
         </div>
 
@@ -558,6 +543,143 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Cinematic hover card (Figma 622:2733 default / 622:2755 hover). The card is a
+ * FIXED size. Collapsed it shows only the cover. On hover the card splits cleanly
+ * in half — no gradients: the LEFT half is a solid detail panel (game detail
+ * slides down from the top, tags slide up from the bottom) and the RIGHT half is
+ * the trailer, which slides in from the right to fill exactly half the card.
+ */
+export function CinematicCard({ image, video, avatars, label, players, playtime, genre, title, description, onWishlist }) {
+  const LightPill = ({ children }) => (
+    <span className="flex shrink-0 items-center gap-[2px] whitespace-nowrap rounded-[16px] border border-[#c3c3c3] px-[6px] py-[2px] text-[12px] text-[#c3c3c3]">
+      {children}
+    </span>
+  )
+  // Soft ease-out reveals. Detail drops in from the top; tags rise from the
+  // bottom — matching the trailer that slides in from the right.
+  const ease = 'transition-[transform,opacity] duration-[650ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100'
+  const fromTop = `-translate-y-[16px] opacity-0 ${ease}`
+  const fromBottom = `translate-y-[16px] opacity-0 ${ease}`
+  return (
+    <div className="group relative h-[292px] w-[520px] shrink-0 overflow-hidden rounded-[16px] bg-[#121214]">
+      {/* Cover — fills the whole card by default */}
+      <img
+        alt=""
+        src={image}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 size-full object-cover"
+      />
+
+      {/* Left half — solid detail panel, no gradient. Fades in on hover. */}
+      <div className="absolute inset-y-0 left-0 w-1/2 bg-[#121214] opacity-0 transition-opacity duration-[350ms] ease-out group-hover:opacity-100" />
+
+      {/* Right half — trailer, exactly 50%, slides in from the right. Hard edge. */}
+      {video && (
+        <div className="absolute inset-y-0 right-0 w-1/2 translate-x-full overflow-hidden bg-black opacity-0 transition-[transform,opacity] duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0 group-hover:opacity-100">
+          <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+        </div>
+      )}
+
+      {/* Game detail — the whole block slides in from the top as one piece */}
+      <div className={`${fromTop} pointer-events-none absolute left-[20px] top-[20px] flex w-[calc(50%-40px)] flex-col gap-[10px] group-hover:delay-[120ms]`}>
+        <p className="text-[24px] font-bold leading-[1.05] text-[#e7e7e7]">{title}</p>
+        <div className="flex items-center gap-[8px]">
+          <AvatarStack colors={avatars} />
+          <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
+        </div>
+        <p className="text-[15px] leading-snug text-white/90">{description}</p>
+      </div>
+
+      {/* Tags — the whole block slides in from the bottom as one piece */}
+      <div className={`${fromBottom} pointer-events-none absolute bottom-[20px] left-[20px] flex w-[calc(50%-40px)] items-center gap-[4px] group-hover:delay-[120ms]`}>
+        <LightPill>
+          <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+            <img alt="" src={userGroup} className="size-[16px]" />
+          </span>
+          {players}
+        </LightPill>
+        <LightPill>{playtime}</LightPill>
+        <LightPill>{genre}</LightPill>
+      </div>
+
+      {/* + add-to-Mix — bottom-right of the trailer half */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
+        title="Add to Mix"
+        className={`${fromBottom} absolute bottom-[8px] right-[18px] flex size-[44px] items-center justify-center text-[42px] font-bold leading-none text-white hover:scale-110 group-hover:delay-[120ms]`}
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+/**
+ * Portrait tile that expands sideways on hover (Figma 620:2347 default /
+ * 620:2350 hover). Collapsed it's box art; on hover it widens and a dark panel
+ * slides in with title, publisher, release date, blurb, a recommendation line
+ * and user-tag pills.
+ */
+export function PortraitCard({ image, title, publisher, released, description, recommend, multiplayer, tags = [] }) {
+  const Tag = ({ children }) => (
+    <span className="flex w-fit items-center justify-center whitespace-nowrap rounded-[20px] bg-[#4c5053] px-[8px] py-[2px] text-[10px] text-white">
+      {children}
+    </span>
+  )
+  // Info copy just fades in and out — no slide.
+  const fade = 'opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100'
+  return (
+    <div className="group relative flex h-[276px] w-[184px] shrink-0 overflow-hidden rounded-[12px] bg-[#15181c] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[388px]">
+      {/* Portrait cover (left) */}
+      <div className="relative h-full w-[184px] shrink-0">
+        <img alt="" src={image} loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-l from-[#15181c] to-transparent opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100" />
+      </div>
+
+      {/* Info panel (right) — the whole panel just fades in and out */}
+      <div className={`${fade} flex h-full w-[204px] shrink-0 flex-col gap-[8px] overflow-hidden bg-[#15181c] p-[12px] group-hover:delay-[100ms]`}>
+        <p className="text-[20px] font-semibold leading-none tracking-[0.1px] text-white">{title}</p>
+        <div className="flex flex-col text-[12px] leading-[1.1]">
+          <span className="text-[#2da000]">{publisher}</span>
+          <span className="text-[#e7e7e7]">{released}</span>
+        </div>
+        <p className="text-[12px] leading-[1.15] text-white">{description}</p>
+        <div className="flex items-start gap-[8px]">
+          <img alt="" src={thumbsUp} className="size-[20px] shrink-0" />
+          <p className="text-[12px] leading-[1.1] text-white">
+            <span className="font-semibold">{recommend}</span> for you and your friends
+          </p>
+        </div>
+        <div className="mt-auto flex flex-col gap-[4px]">
+          <p className="text-[10px] text-white">User Tags</p>
+          {multiplayer && <Tag>{multiplayer}</Tag>}
+          <div className="flex flex-wrap gap-[4px]">
+            {tags.map((t, i) => <Tag key={i}>{t}</Tag>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/** A titled shelf wrapper (heading + horizontally-scrollable row) for bespoke
+ *  card styles that don't go through RecCard. */
+export function ShelfRow({ title, subtitle, gap = 24, children }) {
+  return (
+    <div className="mt-[56px] flex w-full shrink-0 flex-col">
+      <p className="text-[24px] font-bold text-white">{title}</p>
+      {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
+      <div className="rec-row no-scrollbar flex w-full items-start overflow-x-auto py-[20px]" style={{ gap }}>
+        {children}
+        <div aria-hidden className="w-[40px] shrink-0" />
       </div>
     </div>
   )
