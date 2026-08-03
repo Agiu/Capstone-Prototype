@@ -75,16 +75,23 @@ export function useRoom({ self, seedBlends }) {
 }
 
 // Sync an arbitrary sub-tree of the room (e.g. decide-a-game preferences).
+// `ready` tells you the first snapshot has landed, so callers can tell "no
+// value" apart from "not loaded yet".
 export function useRoomNode(path, fallback) {
   const [val, setVal] = useState(fallback)
+  const [ready, setReady] = useState(false)
   useEffect(() => {
+    setReady(false)
     const r = ref(db, `rooms/${ROOM_ID}/${path}`)
-    const unsub = onValue(r, (snap) => setVal(snap.val() ?? fallback))
+    const unsub = onValue(r, (snap) => {
+      setVal(snap.val() ?? fallback)
+      setReady(true)
+    })
     return () => unsub()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [path])
   const write = (next) => set(ref(db, `rooms/${ROOM_ID}/${path}`), next)
-  return [val, write]
+  return [val, write, ready]
 }
 
 // Write a single leaf without touching its siblings. Used where several people

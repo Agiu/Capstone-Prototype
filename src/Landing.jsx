@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import { RecCard, CardRow, AVATAR } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath } from './room.js'
 import {
@@ -817,14 +817,17 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
     setLaunching(title)
   }
   const { blends, setBlends } = useRoomCtx()
-  const games = blend.games.map((k) => CATALOG[k])
+  const games = blend.games.map((k) => CATALOG[k]).filter(Boolean)
   const m = blend.members
+  // A blend can hold any number of games, so the feed wraps rather than
+  // assuming there are four to name.
+  const g = (i) => (games.length ? games[i % games.length] : { title: 'a game' })
   // Activity feed — includes you (green/sauhee) alongside the other members.
   const feed = [
-    { who: SELF, text: `wishlisted ${games[2].title}`, when: '1h' },
-    { who: m[1] || SELF, text: `finished ${games[0].title} and left it five stars`, when: '2h' },
-    { who: m[2] || m[1] || SELF, text: `is in a ${games[1].title} lobby — one seat open`, when: 'live' },
-    { who: SELF, text: `added ${games[3].title} to the group list`, when: 'yest' },
+    { who: SELF, text: `wishlisted ${g(2).title}`, when: '1h' },
+    { who: m[1] || SELF, text: `finished ${g(0).title} and left it five stars`, when: '2h' },
+    { who: m[2] || m[1] || SELF, text: `is in a ${g(1).title} lobby — one seat open`, when: 'live' },
+    { who: SELF, text: `added ${g(3).title} to the group list`, when: 'yest' },
     { who: m[1] || SELF, text: `pinned ${blend.when} as their free window`, when: '2d' },
   ]
 
@@ -1342,6 +1345,13 @@ const SPIN_MS = 4000
 // spins look alike.
 const MIN_TURNS = 9
 const MAX_TURNS = 16
+// How long a spin stays the room's business before it's treated as over.
+const SPIN_EXPIRY = 10 * 60 * 1000
+// Cover art only reads while the slices are wide enough to show it. Past
+// ART_FULL games it fades out slice by slice, and past ART_NONE it isn't
+// rendered — or loaded — at all, leaving the color wheel underneath.
+const ART_FULL = 7
+const ART_NONE = 12
 
 // Everything that makes one spin unique. The spinner rolls it once and writes
 // it to the room, so every screen runs the identical animation.
@@ -1364,16 +1374,20 @@ function rollSpin(count, lastTarget) {
  * on the same game at the same moment without anyone re-rolling locally.
  */
 function useSpin() {
-  const [spin, writeSpin] = useRoomNode('spin', null)
+  const [raw, writeSpin, ready] = useRoomNode('spin', null)
   const [, tick] = useState(0)
 
   // Clock skew between testers would shift when the wheel stops, so anchor the
   // countdown to the earlier of "when the spinner says it started" and "when we
   // first heard about it" — a rejoin still resolves instantly.
   const seen = useRef({})
-  const id = spin?.id
+  const id = raw?.id
   if (id && seen.current[id] == null) seen.current[id] = Date.now()
-  const anchor = spin ? Math.min(spin.startedAt || 0, seen.current[id] ?? Date.now()) : 0
+  const anchor = raw ? Math.min(raw.startedAt || 0, seen.current[id] ?? Date.now()) : 0
+
+  // A spin nobody cleared shouldn't haunt the room. After a while it stops
+  // counting: the notification goes, and every wheel is free again.
+  const spin = raw && Date.now() - anchor < SPIN_EXPIRY ? raw : null
   const remaining = spin ? anchor + SPIN_MS - Date.now() : 0
 
   // Re-render exactly when the wheel is due to stop: "spinning" becomes
@@ -1389,7 +1403,20 @@ function useSpin() {
   const picked = spin && spin.games ? spin.games[spin.target] : null
   const vote = (v) => writeRoomPath(`spin/votes/${SELF_NAME}`, v)
   const clear = () => writeSpin(null)
-  return { spin, writeSpin, phase, remaining, picked, vote, clear }
+
+  // Boot clean: whatever was left over from the last run is wiped the first
+  // time the room loads, so the app never opens on a spun wheel. A wheel that's
+  // genuinely mid-turn is left alone — reloading shouldn't yank a live spin
+  // away from everyone else in the room.
+  const booted = useRef(false)
+  useEffect(() => {
+    if (!ready || booted.current) return
+    booted.current = true
+    if (phase !== 'spinning') clear()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
+
+  return { spin, writeSpin, phase, remaining, picked, vote, clear, ready }
 }
 
 // Who is being waited on. Anyone who votes counts, even if they came online
@@ -1408,6 +1435,8 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
   const [dur, setDur] = useState(0)
   const shown = useRef(null)
   const at = useRef(0) // where the wheel currently sits, for chaining spins
+  // Slice clip paths are referenced by id, so they have to be unique per wheel.
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '')
 
   const n = games.length
   const R = 168
@@ -1418,6 +1447,26 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
     const a = (deg * Math.PI) / 180
     return [C + rad * Math.sin(a), C - rad * Math.cos(a)]
   }
+
+  // Past ART_FULL slices the art is too narrow to read, so it fades out as
+  // games pile on and stops being requested at all once it's invisible.
+  const art = n <= ART_FULL ? 1 : Math.max(0, (ART_NONE - n) / (ART_NONE - ART_FULL))
+
+  // Geometry per slice: the wedge itself, and a square big enough to cover its
+  // bounding box, dropped on the slice's axis so each wedge shows its own art
+  // rather than a shared crop of the whole wheel.
+  const slices = games.map((g, i) => {
+    const [x0, y0] = pt(i * seg)
+    const [x1, y1] = pt((i + 1) * seg)
+    return {
+      g,
+      i,
+      center: i * seg + seg / 2,
+      wedge: `M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${seg > 180 ? 1 : 0} 1 ${x1} ${y1} Z`,
+      side: Math.max(2 * R * Math.sin((Math.min(seg, 180) / 2) * (Math.PI / 180)), R) * 1.02,
+      clip: `${uid}-slice-${i}`,
+    }
+  })
 
   const target = spin?.target
   // Drive the wheel off the shared session: land `target` under the pointer,
@@ -1470,42 +1519,40 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
           transition: dur > 0 ? `transform ${dur}ms cubic-bezier(0.06,0.86,0.18,1)` : 'none',
         }}
       >
+        <defs>
+          {art > 0 && slices.map(({ wedge, clip }) => (
+            <clipPath key={clip} id={clip}>
+              <path d={wedge} />
+            </clipPath>
+          ))}
+        </defs>
+
         <circle cx={C} cy={C} r={R + 6} fill="#0c0c0e" stroke="#26272b" strokeWidth="2" />
-        {games.map((g, i) => {
-          const a0 = i * seg
-          const a1 = (i + 1) * seg
-          const [x0, y0] = pt(a0)
-          const [x1, y1] = pt(a1)
-          const large = seg > 180 ? 1 : 0
-          const center = a0 + seg / 2
-          const flip = center > 90 && center < 270
-          const title = g.title.length > 18 ? g.title.slice(0, 17) + '…' : g.title
-          return (
-            <g key={i}>
-              <path
-                d={`M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${large} 1 ${x1} ${y1} Z`}
-                fill={WHEEL_COLORS[i % WHEEL_COLORS.length]}
-                stroke="#0c0c0e"
-                strokeWidth="2"
-              />
-              <g transform={`rotate(${center} ${C} ${C})`}>
-                <text
-                  x={C}
-                  y={C - R * 0.6}
-                  transform={flip ? `rotate(180 ${C} ${C - R * 0.6})` : undefined}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
+        {slices.map(({ g, i, wedge, clip, center, side }) => (
+          <g key={g.key || i}>
+            {/* Color underneath doubles as the fallback if art won't load. */}
+            <path d={wedge} fill={WHEEL_COLORS[i % WHEEL_COLORS.length]} />
+            {/* The clip has to sit on an untransformed wrapper: an element's
+                own transform is applied to its clip path too, so clipping and
+                rotating on one node would swing the wedge out of place. */}
+            {art > 0 && (
+              <g clipPath={`url(#${clip})`}>
+                <image
+                  href={CATALOG[g.key]?.image}
+                  x={C - side / 2}
+                  y={C - R / 2 - side / 2}
+                  width={side}
+                  height={side}
+                  preserveAspectRatio="xMidYMid slice"
+                  transform={`rotate(${center} ${C} ${C})`}
                   className="pointer-events-none select-none"
-                  fontSize="13"
-                  fontWeight="700"
-                  fill="#ffffff"
-                >
-                  {title}
-                </text>
+                  style={{ opacity: art, transition: 'opacity 450ms ease' }}
+                />
               </g>
-            </g>
-          )
-        })}
+            )}
+            <path d={wedge} fill="none" stroke="#0c0c0e" strokeWidth="2" />
+          </g>
+        ))}
       </svg>
 
       {/* Center hub — click to spin */}
@@ -1562,25 +1609,142 @@ function VoteButtons({ my, onVote, compact }) {
 }
 
 /**
- * The blend page's spin area: the wheel on the left, and on the right the live
- * read on the room — who's been asked, who's in, who's out — plus the play
- * button once everyone has said yes.
+ * Edit what's on the wheel. Sits beside it and stays scrollable however many
+ * games pile up. A wheel needs at least two slices, so the last two can't be
+ * removed.
+ */
+function EditorRow({ k, action, disabled, glyph, tone }) {
+  return (
+    <div className="flex items-center gap-[10px] rounded-[8px] py-[5px] pl-[5px] pr-[6px] transition hover:bg-white/5">
+      <img alt="" src={CATALOG[k].image} className="h-[30px] w-[52px] shrink-0 rounded-[5px] object-cover" />
+      <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-white">{CATALOG[k].title}</span>
+      <button
+        onClick={action}
+        disabled={disabled}
+        aria-label={`${glyph === '+' ? 'Add' : 'Remove'} ${CATALOG[k].title}`}
+        className={
+          'flex size-[22px] shrink-0 items-center justify-center rounded-[6px] text-[15px] font-bold leading-none transition disabled:cursor-not-allowed disabled:opacity-30 ' +
+          tone
+        }
+      >
+        {glyph}
+      </button>
+    </div>
+  )
+}
+
+function WheelGameEditor({ keys, onChange, locked, isDefault, onReset }) {
+  const [adding, setAdding] = useState(false)
+  const pool = Object.keys(CATALOG).filter((k) => !keys.includes(k))
+
+  const remove = (k) => { if (keys.length > 2) onChange(keys.filter((x) => x !== k)) }
+  const add = (k) => onChange([...keys, k])
+
+  return (
+    <div className="flex w-full shrink-0 flex-col rounded-[14px] bg-[#0c0c0e] p-[14px] lg:w-[268px]">
+      <div className="flex items-baseline justify-between">
+        <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>On the wheel</p>
+        <span className="text-[13px]" style={{ color: D.mute }}>{keys.length}</span>
+      </div>
+      <p className="mt-[2px] text-[12px] leading-snug" style={{ color: D.mute }}>
+        {keys.length > ART_FULL
+          ? `Past ${ART_FULL} the slices get too thin for cover art.`
+          : 'Only changes the wheel — nothing leaves the blend.'}
+      </p>
+
+      <div className="thin-scrollbar mt-[8px] max-h-[190px] min-h-[86px] overflow-y-auto pr-[2px]">
+        {keys.map((k) => (
+          <EditorRow
+            key={k}
+            k={k}
+            glyph="×"
+            action={() => remove(k)}
+            disabled={locked || keys.length <= 2}
+            tone="bg-white/5 text-[#b5bac1] hover:bg-[#f04747] hover:text-white"
+          />
+        ))}
+      </div>
+
+      <div className="my-[10px] h-px bg-[#1c1d21]" />
+
+      {adding ? (
+        <>
+          <div className="flex items-baseline justify-between">
+            <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>Add a game</p>
+            <button onClick={() => setAdding(false)} className="text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Done</button>
+          </div>
+          <div className="thin-scrollbar mt-[8px] max-h-[190px] overflow-y-auto pr-[2px]">
+            {pool.length === 0 ? (
+              <p className="py-[8px] text-[13px]" style={{ color: D.mute }}>Every game is already on the wheel.</p>
+            ) : (
+              pool.map((k) => (
+                <EditorRow key={k} k={k} glyph="+" action={() => add(k)} disabled={locked} tone="bg-[#107C10]/20 text-[#3fbf3f] hover:bg-[#107C10] hover:text-white" />
+              ))
+            )}
+          </div>
+        </>
+      ) : (
+        <button
+          onClick={() => setAdding(true)}
+          disabled={locked}
+          className="flex items-center justify-center gap-[8px] rounded-[8px] border border-dashed border-[#3a3c41] py-[9px] text-[13px] font-semibold text-[#b5bac1] transition hover:border-[#107C10] hover:text-white disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#3a3c41]"
+        >
+          <span className="text-[15px] leading-none">+</span> Add a game
+        </button>
+      )}
+
+      {locked ? (
+        <p className="mt-[10px] text-[12px] leading-snug" style={{ color: D.mute }}>
+          Hold on — the wheel&rsquo;s turning.
+        </p>
+      ) : !isDefault ? (
+        <button
+          onClick={onReset}
+          className="mt-[10px] text-left text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white"
+        >
+          Reset to the blend&rsquo;s games
+        </button>
+      ) : null}
+    </div>
+  )
+}
+
+/**
+ * The blend page's spin area: the wheel on the left, the wheel's game list
+ * beside it, and on the right the live read on the room — who's been asked,
+ * who's in, who's out — plus the play button once everyone has said yes.
  */
 function SpinPanel({ blend, state, onLaunch }) {
   const { online } = useRoomCtx()
-  const { spin, writeSpin, phase, remaining, picked, vote } = state
+  const { spin, writeSpin, phase, remaining, picked, vote, clear } = state
   const here = spin && spin.blendId === blend.id ? spin : null
   const elsewhere = spin && spin.blendId !== blend.id ? spin : null
 
-  // While a spin is live the wheel must show exactly what the spinner spun.
-  const games = here?.games || blend.games.map((k) => ({ key: k, title: CATALOG[k].title }))
+  // What's on the wheel is the wheel's business: a separate shared list that
+  // starts as the blend's games, so trimming it is purely a "don't spin for
+  // that tonight" call and never touches the blend or the catalog.
+  const [savedKeys, setWheelKeys] = useRoomNode('wheel/' + blend.id, null)
+  const saved = Array.isArray(savedKeys) ? savedKeys.filter((k) => CATALOG[k]) : null
+  const custom = saved && saved.length >= 2 ? saved : null
+  // Never trust a key straight from the room — a game that's left the catalog
+  // would take the whole page down with it.
+  const wheelKeys = custom || blend.games.filter((k) => CATALOG[k])
+
+  // Edits show on the wheel straight away. The one exception is the ~4s it's
+  // actually turning: that animation is locked to the list the spinner rolled
+  // against, or it would land somewhere other than the game everyone was told
+  // won.
+  const mid = !!here && phase === 'spinning'
+  const games = mid ? here.games : wheelKeys.map((k) => ({ key: k, title: CATALOG[k].title }))
   const { people, votes, yes, no, allIn } = spinTally(here)
   const my = here ? votes[SELF_NAME] : undefined
   const iSpun = here?.spinner === SELF_NAME
   const cover = picked && here ? CATALOG[picked.key]?.image : null
 
   function startSpin() {
-    if (games.length === 0 || elsewhere) return
+    // Only a wheel that's mid-turn blocks a new spin — a finished one anywhere
+    // just gets replaced, so nobody is ever stuck waiting on a stale result.
+    if (games.length === 0 || phase === 'spinning') return
     // Everyone online when the wheel is spun gets asked; the spinner is in by
     // definition, since they're the one deciding.
     const roster = [...new Set([SELF_NAME, ...online])]
@@ -1599,7 +1763,7 @@ function SpinPanel({ blend, state, onLaunch }) {
 
   return (
     <section className="rounded-[20px] bg-[#121214] p-[28px] ring-1 ring-[#107C10]/25">
-      <div className="flex flex-col items-start gap-[32px] lg:flex-row">
+      <div className="flex flex-col items-start gap-[24px] lg:flex-row">
         {/* Wheel */}
         <div className="flex shrink-0 flex-col items-center">
           <DecisionWheel
@@ -1608,18 +1772,29 @@ function SpinPanel({ blend, state, onLaunch }) {
             remaining={remaining}
             onSpin={startSpin}
             spinning={!!here && phase === 'spinning'}
-            disabled={phase === 'spinning' || !!elsewhere}
+            disabled={phase === 'spinning'}
           />
           <p className="mt-[18px] max-w-[340px] text-center text-[14px]" style={{ color: D.mute }}>
-            {elsewhere
-              ? `${capName(elsewhere.spinner)} is spinning in ${elsewhere.blendName} — hang on.`
-              : phase === 'spinning' && here
+            {phase === 'spinning'
+              ? here
                 ? 'Spinning… the whole server is watching.'
-                : here
-                  ? 'Spin again to re-roll for the group.'
-                  : `Tap SPIN — everyone online gets pinged that a game is about to be chosen.`}
+                : `${capName(elsewhere.spinner)} is spinning in ${elsewhere.blendName} — hang on.`
+              : here
+                ? 'Spin again to re-roll for the group.'
+                : elsewhere
+                  ? `${elsewhere.blendName} picked ${elsewhere.games?.[elsewhere.target]?.title} — spin here to take over.`
+                  : 'Tap SPIN — everyone online gets pinged that a game is about to be chosen.'}
           </p>
         </div>
+
+        {/* Add / remove what the wheel spins over — wheel-only, never the blend */}
+        <WheelGameEditor
+          keys={wheelKeys}
+          onChange={setWheelKeys}
+          locked={mid}
+          isDefault={!custom}
+          onReset={() => setWheelKeys(null)}
+        />
 
         {/* Result + who's in */}
         <div className="min-w-0 flex-1 self-stretch">
@@ -1675,11 +1850,17 @@ function SpinPanel({ blend, state, onLaunch }) {
 
               {/* The spinner's list: who wants to play, who doesn't */}
               <div className="mt-[20px] rounded-[14px] bg-[#0c0c0e] p-[16px]">
-                <div className="flex items-baseline justify-between">
+                <div className="flex items-baseline justify-between gap-[10px]">
                   <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>
                     {iSpun ? 'Your table' : "Who's in"}
                   </p>
-                  <p className="text-[13px]" style={{ color: D.mute }}>{yes.length} in · {no.length} out</p>
+                  <p className="ml-auto text-[13px]" style={{ color: D.mute }}>{yes.length} in · {no.length} out</p>
+                  <button
+                    onClick={clear}
+                    className="text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white"
+                  >
+                    Clear
+                  </button>
                 </div>
                 <div className="mt-[6px]">
                   {people.map((n) => <VoteRow key={n} name={n} vote={votes[n]} />)}
@@ -1720,6 +1901,16 @@ function SpinNotification({ state, onLaunch, onOpenBlend }) {
   const [dismissed, setDismissed] = useState(null)
   const { votes, yes, no, allIn } = spinTally(spin)
   const key = spin ? `${spin.id}:${phase}` : null
+  // Someone said no: the pick is dead, so the box shakes, goes red and clears
+  // itself rather than sitting there waiting on votes that can't save it.
+  const rejected = phase === 'result' && no.length > 0
+
+  useEffect(() => {
+    if (!rejected || dismissed === key) return
+    const t = setTimeout(() => setDismissed(key), 4200)
+    return () => clearTimeout(t)
+  }, [rejected, key, dismissed])
+
   if (!spin || phase === 'idle' || dismissed === key) return null
 
   const my = votes[SELF_NAME]
@@ -1728,7 +1919,12 @@ function SpinNotification({ state, onLaunch, onOpenBlend }) {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 top-[18px] z-[90] flex justify-center px-4">
-      <div className="pointer-events-auto flex max-w-[720px] items-center gap-[14px] rounded-[14px] border border-[#1c1d21] bg-[#111214] px-[18px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+      <div
+        className={
+          'pointer-events-auto flex max-w-[720px] items-center gap-[14px] rounded-[14px] border px-[18px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)] transition-colors duration-300 ' +
+          (rejected ? 'spin-reject border-[#f04747]/70 bg-[#2a1517]' : 'border-[#1c1d21] bg-[#111214]')
+        }
+      >
         {phase === 'spinning' ? (
           <>
             <span className="relative flex size-[34px] shrink-0 items-center justify-center">
@@ -1743,20 +1939,30 @@ function SpinNotification({ state, onLaunch, onOpenBlend }) {
           </>
         ) : (
           <>
-            {cover && <img alt="" src={cover} className="h-[44px] w-[78px] shrink-0 rounded-[8px] object-cover" />}
+            {cover && (
+              <img
+                alt=""
+                src={cover}
+                className="h-[44px] w-[78px] shrink-0 rounded-[8px] object-cover transition duration-300"
+                style={rejected ? { filter: 'grayscale(0.7)' } : undefined}
+              />
+            )}
             <div className="min-w-0">
               <p className="text-[15px] text-[#dbdee1]">
-                The game picked is <span className="font-semibold text-white">{picked?.title}</span>
+                The game picked is{' '}
+                <span className={'font-semibold text-white ' + (rejected ? 'line-through decoration-[#f04747] decoration-2' : '')}>
+                  {picked?.title}
+                </span>
               </p>
-              <p className="text-[12px]" style={{ color: D.mute }}>
+              <p className="text-[12px]" style={{ color: rejected ? '#ff9a9a' : D.mute }}>
                 {allIn
                   ? "Everyone's in."
-                  : no.length > 0
-                    ? `${yes.length} in · ${no.map(capName).join(', ')} passed`
+                  : rejected
+                    ? `${no.map(capName).join(', ')} passed — not everyone's in.`
                     : `${yes.length} in · waiting on the rest`}
               </p>
             </div>
-            {allIn ? (
+            {rejected ? null : allIn ? (
               <button
                 onClick={() => onLaunch(picked.title)}
                 className="ml-[6px] flex shrink-0 items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#0e8f0e]"
@@ -1797,6 +2003,7 @@ function DecidePage({ blend, prefs, onBack }) {
 
   // Annotate each blend game with which of the group's preferences it matches.
   const ranked = blend.games
+    .filter((key) => CATALOG[key])
     .map((key) => {
       const tags = GAME_TAGS[key] || []
       const matched = prefs.filter((p) => p.tag && tags.includes(p.tag))
