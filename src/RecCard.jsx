@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/index.js'
 
 // Expanded (hover) card width — used to compute how far the row must scroll to
@@ -86,6 +86,30 @@ function RatingRow({ pct, line1, line2, line2Bold }) {
 
 /** Trailer that plays on hover. Pass `mp4` (preferred) or `youTubeId`. */
 function VideoTrailer({ mp4, youTubeId, poster }) {
+  const frameRef = useRef(null)
+
+  // `cc_load_policy=0` only sets the *default* — YouTube still turns captions
+  // back on for anyone whose account or device has them switched on, which is
+  // why they keep showing up. The only way to actually kill them is to tell the
+  // player to drop its captions module over the JS API. The player ignores
+  // commands until it reports ready and gives us no cross-origin way to observe
+  // that, so we just re-send for a few seconds and stop. ('captions' and 'cc'
+  // are the module names for the two player generations — send both.)
+  useEffect(() => {
+    if (!youTubeId) return
+    const send = () => {
+      const w = frameRef.current?.contentWindow
+      if (!w) return
+      for (const mod of ['captions', 'cc']) {
+        w.postMessage(JSON.stringify({ event: 'command', func: 'unloadModule', args: [mod] }), '*')
+      }
+    }
+    send()
+    const tick = setInterval(send, 400)
+    const stop = setTimeout(() => clearInterval(tick), 6000)
+    return () => { clearInterval(tick); clearTimeout(stop) }
+  }, [youTubeId])
+
   if (mp4) {
     return (
       <video
@@ -103,21 +127,25 @@ function VideoTrailer({ mp4, youTubeId, poster }) {
     const params = new URLSearchParams({
       autoplay: '1',
       mute: '1',
-      controls: '0',
+      controls: '0', // no chrome, and no centre play button once autoplay takes
       loop: '1',
       playlist: youTubeId,
       modestbranding: '1',
       playsinline: '1',
       rel: '0',
       disablekb: '1',
-      iv_load_policy: '3',
+      iv_load_policy: '3', // no annotations
+      cc_load_policy: '0', // captions off by default; the effect above enforces it
+      fs: '0',
+      enablejsapi: '1', // opens the postMessage channel used to drop captions
     })
     return (
       // Cover the container regardless of its aspect: force 16:9 and let both
       // min-dimensions push it to fill (like object-fit: cover for the iframe).
       <iframe
+        ref={frameRef}
         title="Game trailer"
-        className="pointer-events-none absolute left-1/2 top-1/2 aspect-video h-auto w-auto min-h-full min-w-full max-w-none -translate-x-1/2 -translate-y-1/2 border-0"
+        className="pointer-events-none absolute left-1/2 top-1/2 aspect-video h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%]"
         src={`https://www.youtube-nocookie.com/embed/${youTubeId}?${params}`}
         allow="autoplay; encrypted-media"
       />
@@ -164,6 +192,28 @@ function ChatAddGlyph({ filled, color = 'white' }) {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+    </svg>
+  )
+}
+
+// Inline copy of the `userGroup` asset's paths. It's needed as a real SVG
+// (rather than the plain <img> used elsewhere) wherever the icon has to be
+// recolored — `userGroup` is stroke-only with no fill, and a stroke-only
+// image is an unreliable CSS mask source (renders as a solid block instead
+// of the icon shape in some browsers). An inline `<path stroke={color}>` has
+// no such issue.
+const USER_GROUP_PATHS = [
+  'M13.8493 12C14.3489 12 14.7462 11.6857 15.103 11.2461C15.8333 10.3463 14.6342 9.6272 14.1769 9.27507C13.712 8.91707 13.1929 8.71427 12.6667 8.66667M12 7.33333C12.9205 7.33333 13.6667 6.58714 13.6667 5.66667C13.6667 4.74619 12.9205 4 12 4',
+  'M2.15038 12C1.65084 12 1.25352 11.6857 0.896771 11.2461C0.166464 10.3463 1.36552 9.6272 1.82284 9.27507C2.28772 8.91707 2.80679 8.71427 3.33307 8.66667M3.6664 7.33333C2.74593 7.33333 1.99974 6.58714 1.99974 5.66667C1.99974 4.74619 2.74593 4 3.6664 4',
+  'M5.38894 10.0744C4.70776 10.4956 2.92173 11.3557 4.00954 12.4319C4.54092 12.9576 5.13275 13.3336 5.87682 13.3336H10.1227C10.8667 13.3336 11.4585 12.9576 11.9899 12.4319C13.0777 11.3557 11.2917 10.4956 10.6105 10.0744C9.01314 9.08666 6.98634 9.08666 5.38894 10.0744Z',
+  'M10.3331 4.99974C10.3331 6.28841 9.28841 7.33307 7.99974 7.33307C6.71107 7.33307 5.66641 6.28841 5.66641 4.99974C5.66641 3.71107 6.71107 2.66641 7.99974 2.66641C9.28841 2.66641 10.3331 3.71107 10.3331 4.99974Z',
+]
+function UserGroupGlyph({ color = '#7e7f87', className = 'size-[16px]' }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={className}>
+      {USER_GROUP_PATHS.map((d, i) => (
+        <path key={i} d={d} stroke={color} strokeWidth="1.15254" strokeLinecap="round" strokeLinejoin="round" />
+      ))}
     </svg>
   )
 }
@@ -550,22 +600,68 @@ export function RecCard({ avatars, label, image, players, details, video, shared
 
 /**
  * Cinematic hover card (Figma 622:2733 default / 622:2755 hover). The card is a
- * FIXED size. Collapsed it shows only the cover. On hover the card splits cleanly
- * in half — no gradients: the LEFT half is a solid detail panel (game detail
- * slides down from the top, tags slide up from the bottom) and the RIGHT half is
- * the trailer, which slides in from the right to fill exactly half the card.
+ * FIXED size. Collapsed it shows only the cover. On hover the trailer is cropped
+ * open across the WHOLE card and the copy converges into place on top of it.
+ *
+ * Legibility comes from two black gradients rather than a panel or a full-card
+ * scrim, so the footage stays bright everywhere it isn't competing with text.
+ * Title, the avatars/label row, and the description are stacked together in
+ * ONE pool, top-left — its gradient is the block's own background, so it grows
+ * with however many lines land in it. Tags are deliberately kept OUTSIDE that
+ * block: their own pool, at the bottom, unchanged in vertical position from
+ * before, but revealed with a much longer rise than the rest of the copy so
+ * they read as sliding up from beneath the card rather than settling in place.
+ *
+ * Motion is matched to the reference prototype:
+ *  · one expo-out curve for everything, ~450ms in and a quicker ~300ms unwind
+ *  · the trailer is revealed by an inset clip wiping leftward from the card's
+ *    right edge — it never translates — and cross-fades up out of Xbox green
  */
-export function CinematicCard({ image, video, avatars, label, players, playtime, genre, title, description, onWishlist }) {
+export function CinematicCard({ image, video, avatars, label, players, playtime, genre, title, onWishlist, onViewDetails }) {
+  const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
   const LightPill = ({ children }) => (
-    <span className="flex shrink-0 items-center gap-[2px] whitespace-nowrap rounded-[16px] border border-[#c3c3c3] px-[6px] py-[2px] text-[12px] text-[#c3c3c3]">
+    <span
+      className="flex shrink-0 items-center gap-[3px] whitespace-nowrap rounded-[16px] border px-[7px] py-[2px] text-[12px] font-semibold"
+      style={{ borderColor: ACCENT, color: ACCENT }}
+    >
       {children}
     </span>
   )
-  // Soft ease-out reveals. Detail drops in from the top; tags rise from the
-  // bottom — matching the trailer that slides in from the right.
-  const ease = 'transition-[transform,opacity] duration-[650ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-y-0 group-hover:opacity-100'
-  const fromTop = `-translate-y-[16px] opacity-0 ${ease}`
-  const fromBottom = `translate-y-[16px] opacity-0 ${ease}`
+  const EASE = 'ease-[cubic-bezier(0.16,1,0.3,1)]'
+  // Shared reveal: slower and slightly staggered on the way in, brisk on the
+  // way out (the base duration is the exit; group-hover overrides it).
+  // NB: transition `translate`/`scale`, not `transform` — Tailwind v4 compiles
+  // the translate/scale utilities to those standalone CSS properties, so a
+  // `transition-[transform]` here animates nothing and the copy just snaps in.
+  const reveal =
+    `opacity-0 transition-[translate,scale,opacity] duration-[260ms] ${EASE}` +
+    ' group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100' +
+    ' group-hover:duration-[420ms] group-hover:delay-[60ms]'
+  // Copy just lifts barely as it fades — a hint of motion, not a throw. Each
+  // line carries its own `group-hover:delay-[…]` at the usage site so they
+  // arrive one after another rather than as a block. (The delays have to be
+  // written out literally: Tailwind scans source text, so a template-built
+  // class name would never be generated.)
+  const rise =
+    `translate-y-[3px] opacity-0 transition-[translate,opacity] duration-[220ms] ${EASE}` +
+    ' group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[380ms]'
+  // Tags read as arriving fractionally after the title block, so they keep a
+  // slightly longer (but still tiny) rise rather than sharing the merged text
+  // block above — same idea as before, just scaled way down.
+  const riseUp =
+    `translate-y-[6px] opacity-0 transition-[translate,opacity] duration-[320ms] ${EASE}` +
+    ' group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[460ms]'
+  const pool =
+    `pointer-events-none absolute opacity-0 transition-opacity duration-[240ms] ${EASE}` +
+    ' group-hover:opacity-100 group-hover:duration-[340ms]'
+  // The tags' own pool runs the full width as a flat horizontal band, which is
+  // what lets it cover the + as well — no separate pool needed in that corner.
+  // Recipe matched to the overlay card's hover scrim ("Because you love to
+  // build" etc — RecCard's `overlay` branch below): `from-black via-black/80
+  // to-transparent`, i.e. black at the bottom, 80% black at the midpoint, clear
+  // at the top.
+  const bottomBg =
+    'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)'
   return (
     <div className="group relative h-[292px] w-[520px] shrink-0 overflow-hidden rounded-[16px] bg-[#121214]">
       {/* Cover — fills the whole card by default */}
@@ -577,47 +673,99 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
         className="absolute inset-0 size-full object-cover"
       />
 
-      {/* Left half — solid detail panel, no gradient. Fades in on hover. */}
-      <div className="absolute inset-y-0 left-0 w-1/2 bg-[#121214] opacity-0 transition-opacity duration-[350ms] ease-out group-hover:opacity-100" />
-
-      {/* Right half — trailer, exactly 50%, slides in from the right. Hard edge. */}
+      {/* Trailer — now full-bleed. The layer never moves: an inset clip wipes
+          leftward from the card's right edge, so the frame is cropped in rather
+          than slid in. It's Xbox green underneath, and the trailer cross-fades
+          up out of it as the crop widens. */}
       {video && (
-        <div className="absolute inset-y-0 right-0 w-1/2 translate-x-full overflow-hidden bg-black opacity-0 transition-[transform,opacity] duration-[700ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:translate-x-0 group-hover:opacity-100">
-          <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+        <div
+          className={`absolute inset-0 overflow-hidden bg-[#107C10] [clip-path:inset(0%_0%_0%_100%)] transition-[clip-path] duration-[300ms] ${EASE} group-hover:[clip-path:inset(0%_0%_0%_0%)] group-hover:duration-[450ms]`}
+        >
+          <div
+            className={`absolute inset-0 opacity-0 transition-opacity duration-[160ms] ${EASE} group-hover:opacity-100 group-hover:duration-[260ms] group-hover:delay-[60ms]`}
+          >
+            <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+          </div>
         </div>
       )}
 
-      {/* Game detail — the whole block slides in from the top as one piece */}
-      <div className={`${fromTop} pointer-events-none absolute left-[20px] top-[20px] flex w-[calc(50%-40px)] flex-col gap-[10px] group-hover:delay-[120ms]`}>
-        <p className="text-[24px] font-bold leading-[1.05] text-[#e7e7e7]">{title}</p>
-        <div className="flex items-center gap-[8px]">
+      {/* Title — no scrim. Legibility comes from a plain drop shadow instead,
+          which keeps the letters true white on any footage. */}
+      <p
+        className={`pointer-events-none absolute left-0 top-0 w-[320px] translate-y-[3px] pb-[28px] pl-[24px] pr-[32px] pt-[20px] text-[28px] font-bold leading-[1.1] text-white opacity-0 transition-[translate,opacity] duration-[380ms] ${EASE} group-hover:translate-y-0 group-hover:opacity-100 group-hover:delay-[70ms]`}
+        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))' }}
+      >
+        {title}
+      </p>
+
+      {/* Bottom pool — avatars/label sit directly above the tags, both in the
+          same band. Full width so it still covers the + and eye icons in the
+          far corner without needing a separate pool there. */}
+      <div
+        className={`${pool} bottom-0 left-0 flex w-full flex-col items-start gap-[16px] pb-[18px] pl-[24px] pt-[30px] group-hover:delay-[220ms]`}
+        style={{ background: bottomBg }}
+      >
+        <div className={`${rise} flex items-center gap-[8px] group-hover:delay-[240ms]`}>
           <AvatarStack colors={avatars} />
           <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
         </div>
-        <p className="text-[15px] leading-snug text-white/90">{description}</p>
+        <div className={`${riseUp} flex items-center gap-[4px] group-hover:delay-[280ms]`}>
+          <LightPill>
+            <UserGroupGlyph color={ACCENT} className="size-[16px] -scale-x-100" />
+            {players}
+          </LightPill>
+          <LightPill>{playtime}</LightPill>
+          <LightPill>{genre}</LightPill>
+        </div>
       </div>
 
-      {/* Tags — the whole block slides in from the bottom as one piece */}
-      <div className={`${fromBottom} pointer-events-none absolute bottom-[20px] left-[20px] flex w-[calc(50%-40px)] items-center gap-[4px] group-hover:delay-[120ms]`}>
-        <LightPill>
-          <span className="flex -scale-y-100 rotate-180 items-center justify-center">
-            <img alt="" src={userGroup} className="size-[16px]" />
+      {/* + add-to-Mix / eye view-details — bottom-right of the trailer half.
+          Both enter from the card's right edge with the crop (they start far
+          enough out that the card's own overflow clips them), just a short
+          slide rather than a long throw. Each button's own hover reveals its
+          label, so `group/add` and `group/view` are scoped to the button and
+          don't disturb the card-level `group` the rest of the reveal hangs off. */}
+      <div className="absolute bottom-[12px] right-[16px] flex items-center gap-[14px]">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
+          aria-label="Add to Mix"
+          className={`${reveal} translate-x-[10px] group/add relative flex size-[44px] items-center justify-center`}
+        >
+          <span className="pointer-events-none absolute right-[38px] whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">
+            Add to Mix
           </span>
-          {players}
-        </LightPill>
-        <LightPill>{playtime}</LightPill>
-        <LightPill>{genre}</LightPill>
+          <span
+            style={{ color: ACCENT }}
+            className={`text-[42px] font-bold leading-none transition-[scale,text-shadow] duration-200 ${EASE} group-hover/add:scale-110 group-hover/add:[text-shadow:0_0_12px_rgba(155,240,11,0.95),0_0_26px_rgba(155,240,11,0.5)]`}
+          >
+            +
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onViewDetails?.(title) }}
+          aria-label="View details"
+          className={`${reveal} translate-x-[10px] group/view relative flex size-[28px] items-center justify-center group-hover:delay-[20ms]`}
+        >
+          <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/view:opacity-100">
+            View details
+          </span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className={`size-[26px] transition-[scale] duration-200 ${EASE} group-hover/view:scale-110`}
+          >
+            <path
+              d="M2 12C2 12 5.5 5 12 5C18.5 5 22 12 22 12C22 12 18.5 19 12 19C5.5 19 2 12 2 12Z"
+              stroke={ACCENT}
+              strokeWidth="1.8"
+              strokeLinejoin="round"
+            />
+            <circle cx="12" cy="12" r="3.2" stroke={ACCENT} strokeWidth="1.8" />
+          </svg>
+        </button>
       </div>
-
-      {/* + add-to-Mix — bottom-right of the trailer half */}
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
-        title="Add to Mix"
-        className={`${fromBottom} absolute bottom-[8px] right-[18px] flex size-[44px] items-center justify-center text-[42px] font-bold leading-none text-white hover:scale-110 group-hover:delay-[120ms]`}
-      >
-        +
-      </button>
     </div>
   )
 }
@@ -670,16 +818,79 @@ export function PortraitCard({ image, title, publisher, released, description, r
   )
 }
 
+function ChevronGlyph({ direction }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[20px]" fill="none">
+      <path
+        d={direction === 'left' ? 'M15 6L9 12L15 18' : 'M9 6L15 12L9 18'}
+        stroke="white"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 /** A titled shelf wrapper (heading + horizontally-scrollable row) for bespoke
- *  card styles that don't go through RecCard. */
+ *  card styles that don't go through RecCard. A left/right arrow appears over
+ *  the row's edge whenever there are more cards scrolled out of view on that
+ *  side, and disappears once scrolling reaches that end. */
 export function ShelfRow({ title, subtitle, gap = 24, children }) {
+  const rowRef = useRef(null)
+  const [canLeft, setCanLeft] = useState(false)
+  const [canRight, setCanRight] = useState(false)
+
+  useEffect(() => {
+    const el = rowRef.current
+    if (!el) return
+    const update = () => {
+      setCanLeft(el.scrollLeft > 4)
+      setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => { el.removeEventListener('scroll', update); ro.disconnect() }
+  }, [])
+
+  function scrollByPage(dir) {
+    const el = rowRef.current
+    if (!el) return
+    const target = el.scrollLeft + dir * el.clientWidth * 0.85
+    smoothScrollLeft(el, Math.max(0, Math.min(target, el.scrollWidth - el.clientWidth)))
+  }
+
   return (
     <div className="mt-[56px] flex w-full shrink-0 flex-col">
       <p className="text-[24px] font-bold text-white">{title}</p>
       {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
-      <div className="rec-row no-scrollbar flex w-full items-start overflow-x-auto py-[20px]" style={{ gap }}>
-        {children}
-        <div aria-hidden className="w-[40px] shrink-0" />
+      <div className="relative">
+        <div ref={rowRef} className="rec-row no-scrollbar flex w-full items-start overflow-x-auto py-[20px]" style={{ gap }}>
+          {children}
+          <div aria-hidden className="w-[40px] shrink-0" />
+        </div>
+        {canLeft && (
+          <button
+            type="button"
+            aria-label="Scroll left"
+            onClick={() => scrollByPage(-1)}
+            className="absolute left-[8px] top-1/2 z-10 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-black/70 transition hover:bg-black/90"
+          >
+            <ChevronGlyph direction="left" />
+          </button>
+        )}
+        {canRight && (
+          <button
+            type="button"
+            aria-label="Scroll right"
+            onClick={() => scrollByPage(1)}
+            className="absolute right-[8px] top-1/2 z-10 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-black/70 transition hover:bg-black/90"
+          >
+            <ChevronGlyph direction="right" />
+          </button>
+        )}
       </div>
     </div>
   )
@@ -688,16 +899,10 @@ export function ShelfRow({ title, subtitle, gap = 24, children }) {
 /** A titled shelf: a heading over a horizontally-scrollable row of rec cards. */
 export function CardRow({ title, subtitle, cards, overlay, expanded, onWishlist, onShare }) {
   return (
-    <div className="mt-[56px] flex w-full shrink-0 flex-col">
-      <p className="text-[24px] font-bold text-white">{title}</p>
-      {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
-      <div className="rec-row no-scrollbar flex w-full items-start gap-[40px] overflow-x-auto py-[20px]">
-        {cards.map((c, i) => (
-          <RecCard key={i} {...c} overlay={overlay} expanded={expanded} onWishlist={onWishlist} onShare={onShare} />
-        ))}
-        {/* Trailing room so the last card can scroll fully into view on hover. */}
-        <div aria-hidden className="w-[40px] shrink-0" />
-      </div>
-    </div>
+    <ShelfRow title={title} subtitle={subtitle} gap={40}>
+      {cards.map((c, i) => (
+        <RecCard key={i} {...c} overlay={overlay} expanded={expanded} onWishlist={onWishlist} onShare={onShare} />
+      ))}
+    </ShelfRow>
   )
 }

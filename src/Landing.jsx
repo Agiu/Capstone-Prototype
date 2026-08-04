@@ -494,7 +494,7 @@ const CINEMATIC_ROW = [
     image: g.image,
     video: VIDEOS[key] ? { youTubeId: VIDEOS[key], poster: g.image } : undefined,
     players: g.players, playtime: g.playtime, genre: g.genre,
-    title: g.title, description: g.caption,
+    title: g.title,
   }
 })
 
@@ -580,7 +580,7 @@ function BlendCard({ name, color, members, onOpen }) {
   return (
     <button onClick={onOpen} className="group flex w-[160px] shrink-0 flex-col text-left">
       <div
-        className="size-[160px] rounded-[20px] transition-transform duration-200 group-hover:-translate-y-[3px]"
+        className="size-[160px] rounded-[20px] transition-[translate] duration-200 group-hover:-translate-y-[3px]"
         style={{ backgroundColor: color }}
       />
       <p className="mt-[10px] text-[16px] font-semibold text-white">{name}</p>
@@ -597,7 +597,7 @@ function BlendCard({ name, color, members, onOpen }) {
 function CreateBlendCard({ onClick }) {
   return (
     <button onClick={onClick} className="group flex w-[160px] shrink-0 flex-col text-left">
-      <div className="flex size-[160px] items-center justify-center rounded-[20px] bg-[#5765f2] transition-transform duration-200 group-hover:-translate-y-[3px]">
+      <div className="flex size-[160px] items-center justify-center rounded-[20px] bg-[#5765f2] transition-[translate] duration-200 group-hover:-translate-y-[3px]">
         <svg viewBox="0 0 24 24" className="size-[40px] text-white" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
@@ -700,9 +700,10 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
           ))}
 
           {/* Cinematic hover row (Figma 622:2733 / 622:2755) */}
-          <ShelfRow title="Featured for movie night" subtitle="Big, cinematic games — hover to watch them in motion.">
+          <ShelfRow title="Featured for movie night" subtitle="Big, cinematic games.">
             {CINEMATIC_ROW.map((c) => (
-              <CinematicCard key={c.id} {...c} onWishlist={onWishlist} />
+              // onViewDetails is a stub until the product-detail / content-delivery page exists.
+              <CinematicCard key={c.id} {...c} onWishlist={onWishlist} onViewDetails={() => {}} />
             ))}
           </ShelfRow>
 
@@ -2709,7 +2710,7 @@ function ModeratorWall() {
   const [spec] = useRoomNode('spectate', {})
   const [focus, setFocus] = useState(null)
   const src = (name) => `${window.location.pathname}?u=${name}&spectate=1&room=${ROOM_ID}`
-  const nudge = (name, type) => writeRoomPath(`spectate/${name}/cmd`, { type, id: Date.now().toString(36) })
+  const nudge = (name, type) => writeRoomPath(`spectate/${name}/cmd`, { type, id: Date.now().toString(36), ts: Date.now() })
   const now = Date.now()
   const specMap = spec && typeof spec === 'object' ? spec : {}
   return (
@@ -2799,11 +2800,22 @@ export default function Landing() {
   const [mirror] = useRoomNode(IS_SPECTATE ? SPECTATE_PATH : 'spectate/__none', null)
   const [cmd] = useRoomNode(IS_LIVE ? `${SPECTATE_PATH}/cmd` : 'spectate/__nocmd', null)
 
-  // Moderator "nudge" commands (only a live tester obeys them).
+  // Moderator "nudge" commands (only a live tester obeys them). A command is a
+  // momentary signal, not persisted state, so it has to be consumed: the node is
+  // cleared once handled, the id is remembered across a reload, and anything
+  // older than a few seconds is dropped. Without those guards a `reload` left in
+  // the database re-fires on every fresh load and the tab reloads forever.
+  const CMD_KEY = `lastCmd:${SELF_NAME}`
   const lastCmd = useRef(null)
+  if (lastCmd.current === null) {
+    try { lastCmd.current = sessionStorage.getItem(CMD_KEY) } catch {}
+  }
   useEffect(() => {
-    if (!IS_LIVE || !cmd || cmd.id === lastCmd.current) return
+    if (!IS_LIVE || !cmd?.id || cmd.id === lastCmd.current) return
     lastCmd.current = cmd.id
+    try { sessionStorage.setItem(CMD_KEY, cmd.id) } catch {}
+    writeRoomPath(`${SPECTATE_PATH}/cmd`, null)
+    if (Date.now() - (cmd.ts || 0) > 15000) return
     if (cmd.type === 'reload') { window.location.reload(); return }
     if (cmd.type === 'home') { setBlendId(null); setDmName(null); setDecide(null); setCreateOpen(false); setWishlistGame(null); setShareGame(null); setPrefsForId(null) }
   }, [cmd])
