@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
 import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, AVATAR } from './RecCard.jsx'
-import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath } from './room.js'
+import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import {
   discordLogo,
   xboxSprite,
@@ -25,6 +25,15 @@ const COLOR_OF = { abby: AVATAR.green, blake: AVATAR.blue, chloe: AVATAR.purple,
 const _u = new URLSearchParams(window.location.search).get('u')
 const SELF_NAME = COLOR_OF[_u] ? _u : 'abby'
 const SELF = COLOR_OF[SELF_NAME]
+
+// ── Observation modes (for the moderator's live participant wall) ────────────
+// ?moderator=1 → the wall itself. ?spectate=1 → a read-only mirror of one
+// participant (embedded per-tile in the wall). Neither flag → a live tester.
+const _params = new URLSearchParams(window.location.search)
+const IS_MODERATOR = _params.get('moderator') === '1'
+const IS_SPECTATE = _params.get('spectate') === '1'
+const IS_LIVE = !IS_MODERATOR && !IS_SPECTATE
+const SPECTATE_PATH = `spectate/${SELF_NAME}` // where this identity's mirror lives
 
 /* ── Discord dark palette (from the reference screenshot) ──────────────────
  * A darker-than-default Discord: near-black rail, very dark panel, raised
@@ -1467,7 +1476,9 @@ function useSpin() {
   useEffect(() => {
     if (!ready || booted.current) return
     booted.current = true
-    if (phase !== 'spinning') clear()
+    // Only a real tester should reset a stale wheel — a spectator/moderator
+    // instance must never write to the shared room.
+    if (IS_LIVE && phase !== 'spinning') clear()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready])
 
@@ -2545,8 +2556,217 @@ function DMPage({ friend, onBack, onOpenBlend }) {
   )
 }
 
+// ── Live observation: publish + mirror + moderator wall ─────────────────────
+// A live tester publishes their view (nav), pointer, clicks, scroll and a
+// heartbeat into rooms/{ROOM_ID}/spectate/{name}. A spectator instance replays
+// it read-only; the moderator wall embeds one spectator per participant.
+function useMirrorPublish(nav) {
+  const navKey = JSON.stringify(nav)
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/view`, nav)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navKey])
+
+  useEffect(() => {
+    if (!IS_LIVE) return
+    // A backgrounded tab can momentarily report a 0/1px viewport; never publish
+    // a degenerate size (it would make the mirror scale a 1px app up to a wall).
+    const ok = () => window.innerWidth > 200 && window.innerHeight > 200
+    const setVp = () => { if (ok()) writeRoomPath(`${SPECTATE_PATH}/vp`, { w: window.innerWidth, h: window.innerHeight }) }
+    setVp()
+    let lastMove = 0
+    const onMove = (e) => {
+      const t = Date.now()
+      if (t - lastMove < 55 || !ok()) return
+      lastMove = t
+      writeRoomPath(`${SPECTATE_PATH}/pointer`, { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight, t })
+    }
+    const onDown = (e) => { if (ok()) writeRoomPath(`${SPECTATE_PATH}/click`, { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight, t: Date.now() }) }
+    let lastScroll = 0
+    // Scroll containers share the .no-scrollbar class, so the same ordered list
+    // exists on the mirror — index into it to replay the exact scroll.
+    const onScroll = (e) => {
+      const t = Date.now()
+      if (t - lastScroll < 70) return
+      lastScroll = t
+      const i = [...document.querySelectorAll('.no-scrollbar')].indexOf(e.target)
+      if (i < 0) return
+      writeRoomPath(`${SPECTATE_PATH}/scroll`, { i, top: e.target.scrollTop || 0, left: e.target.scrollLeft || 0, t })
+    }
+    writeRoomPath(`${SPECTATE_PATH}/ts`, Date.now())
+    const beat = setInterval(() => writeRoomPath(`${SPECTATE_PATH}/ts`, Date.now()), 4000)
+    window.addEventListener('resize', setVp)
+    document.addEventListener('visibilitychange', setVp)
+    window.addEventListener('pointermove', onMove, true)
+    window.addEventListener('pointerdown', onDown, true)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      window.removeEventListener('resize', setVp)
+      document.removeEventListener('visibilitychange', setVp)
+      window.removeEventListener('pointermove', onMove, true)
+      window.removeEventListener('pointerdown', onDown, true)
+      window.removeEventListener('scroll', onScroll, true)
+      clearInterval(beat)
+    }
+  }, [])
+}
+
+function SpectatorCursor({ pointer, click }) {
+  const [size, setSize] = useState({ w: window.innerWidth, h: window.innerHeight })
+  useEffect(() => {
+    const r = () => setSize({ w: window.innerWidth, h: window.innerHeight })
+    window.addEventListener('resize', r)
+    return () => window.removeEventListener('resize', r)
+  }, [])
+  const x = (pointer?.x ?? 0.5) * size.w
+  const y = (pointer?.y ?? 0.5) * size.h
+  return (
+    <div className="pointer-events-none fixed inset-0 z-[9998]">
+      <div className="absolute left-0 top-0 transition-transform duration-[80ms] ease-linear" style={{ transform: `translate(${x}px, ${y}px)` }}>
+        <svg viewBox="0 0 24 24" className="size-[24px] drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]" style={{ transform: 'translate(-2px,-1px)' }}>
+          <path d="M5 2l13 7.5-5.6 1.4L10 19 5 2z" fill="#fff" stroke="#000" strokeWidth="1.4" strokeLinejoin="round" />
+        </svg>
+      </div>
+      {click && (
+        <span key={click.t} className="sp-ripple absolute size-[16px] rounded-full" style={{ left: click.x * size.w, top: click.y * size.h }} />
+      )}
+    </div>
+  )
+}
+
+function describeView(v) {
+  if (!v) return 'Idle'
+  if (v.shareGame) return `Sharing “${v.shareGame}”`
+  if (v.wishlistGame) return `Add to Mix: ${v.wishlistGame}`
+  if (v.createOpen) return 'Creating a Mix'
+  if (v.prefsForId) return 'Setting preferences'
+  if (v.decide) return 'The Jumble (deciding)'
+  if (v.dmName) return `DM with ${v.dmName}`
+  if (v.blendId) return 'Viewing a Mix'
+  return 'Home / For you'
+}
+
+// Scales a full-size participant iframe to FIT ENTIRELY inside its box (contain,
+// centered, letterboxed if the aspect differs) so nothing the participant sees
+// is ever cropped.
+function FitFrame({ src, vp }) {
+  const ref = useRef(null)
+  const [box, setBox] = useState({ w: 0, h: 0 })
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight })
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    measure()
+    return () => ro.disconnect()
+  }, [])
+  const scale = box.w && box.h ? Math.min(box.w / vp.w, box.h / vp.h) : 0
+  const sw = vp.w * scale
+  const sh = vp.h * scale
+  return (
+    <div ref={ref} className="relative size-full overflow-hidden bg-black">
+      {scale > 0 && (
+        <iframe
+          title="participant"
+          src={src}
+          className="absolute origin-top-left border-0"
+          style={{ width: vp.w, height: vp.h, transform: `scale(${scale})`, left: Math.round((box.w - sw) / 2), top: Math.round((box.h - sh) / 2) }}
+        />
+      )}
+    </div>
+  )
+}
+
+function ModeratorTile({ name, color, vp, online, view, src, onNudge, onExpand }) {
+  return (
+    <div className="flex min-h-0 flex-col overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111114]">
+      <div className="flex items-center gap-[10px] px-[12px] py-[8px]">
+        <span className="relative shrink-0">
+          <Avatar color={color} size={24} />
+          <span className="absolute -bottom-[1px] -right-[1px] size-[9px] rounded-full" style={{ backgroundColor: online ? '#23a55a' : '#5c5e66', border: '2px solid #111114' }} />
+        </span>
+        <div className="min-w-0">
+          <div className="text-[14px] font-semibold leading-tight">{name}</div>
+          <div className="truncate text-[11px] text-[#80848e]">{online ? describeView(view) : 'offline'}</div>
+        </div>
+        <div className="ml-auto flex shrink-0 gap-[6px]">
+          <button onClick={onExpand} title="Expand" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Expand</button>
+          <button onClick={() => onNudge('home')} title="Send them to Home" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Home</button>
+          <button onClick={() => onNudge('reload')} title="Reload their tab" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Reload</button>
+        </div>
+      </div>
+      <div className="min-h-0 flex-1">
+        <FitFrame src={src} vp={vp} />
+      </div>
+    </div>
+  )
+}
+
+function ModeratorWall() {
+  const room = useRoom({ self: null, seedBlends: SEED_BLENDS })
+  const [spec] = useRoomNode('spectate', {})
+  const [focus, setFocus] = useState(null)
+  const src = (name) => `${window.location.pathname}?u=${name}&spectate=1&room=${ROOM_ID}`
+  const nudge = (name, type) => writeRoomPath(`spectate/${name}/cmd`, { type, id: Date.now().toString(36) })
+  const now = Date.now()
+  const specMap = spec && typeof spec === 'object' ? spec : {}
+  return (
+    <RoomProvider value={room}>
+      <div className="flex h-screen w-screen flex-col bg-[#0b0b0d] text-white" onContextMenu={(e) => e.preventDefault()}>
+        <header className="flex items-center gap-[14px] border-b border-[#1c1d21] px-[24px] py-[14px]">
+          <span className="text-[18px] font-bold">Moderator · live participant wall</span>
+          <span className="rounded-full bg-[#1c1d21] px-[10px] py-[3px] text-[12px] text-[#b5bac1]">room: {ROOM_ID}</span>
+          <button
+            onClick={() => { if (window.confirm('Reset the room to a fresh state for everyone?')) room.resetRoom() }}
+            className="ml-auto rounded-[8px] border border-[#4e5058] px-[14px] py-[7px] text-[13px] font-semibold text-[#f0a0a0] transition hover:bg-[#4e5058]/30"
+          >
+            Reset room
+          </button>
+        </header>
+        <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-[16px] overflow-hidden p-[16px]">
+          {DMS.map((t) => {
+            const s = specMap[t.name] || {}
+            const vp = s.vp && s.vp.w > 200 && s.vp.h > 200 ? s.vp : { w: 1280, h: 800 }
+            const online = s.ts && now - s.ts < 15000
+            return (
+              <ModeratorTile
+                key={t.name}
+                name={t.name}
+                color={t.color}
+                vp={vp}
+                online={online}
+                view={s.view}
+                src={src(t.name)}
+                onNudge={(type) => nudge(t.name, type)}
+                onExpand={() => setFocus(t.name)}
+              />
+            )
+          })}
+        </div>
+
+        {focus && (
+          <div className="fixed inset-0 z-50 flex flex-col bg-black/85 p-[24px]" onClick={() => setFocus(null)}>
+            <div className="mb-[12px] flex items-center gap-[10px]" onClick={(e) => e.stopPropagation()}>
+              <span className="text-[16px] font-semibold">{focus}</span>
+              <button onClick={() => nudge(focus, 'home')} className="rounded-[6px] bg-[#2b2d31] px-[12px] py-[6px] text-[12px] font-semibold transition hover:bg-[#35373c]">Send to Home</button>
+              <button onClick={() => nudge(focus, 'reload')} className="rounded-[6px] bg-[#2b2d31] px-[12px] py-[6px] text-[12px] font-semibold transition hover:bg-[#35373c]">Reload their tab</button>
+              <button onClick={() => setFocus(null)} className="ml-auto rounded-[6px] bg-[#2b2d31] px-[12px] py-[6px] text-[12px] font-semibold transition hover:bg-[#35373c]">Close</button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-hidden rounded-[10px] bg-black" onClick={(e) => e.stopPropagation()}>
+              <FitFrame src={src(focus)} vp={specMap[focus]?.vp?.w > 200 ? specMap[focus].vp : { w: 1280, h: 800 }} />
+            </div>
+          </div>
+        )}
+      </div>
+    </RoomProvider>
+  )
+}
+
 export default function Landing() {
-  const room = useRoom({ self: SELF_NAME, seedBlends: SEED_BLENDS })
+  if (IS_MODERATOR) return <ModeratorWall />
+  const room = useRoom({ self: IS_LIVE ? SELF_NAME : null, seedBlends: SEED_BLENDS })
   const blends = room.blends || SEED_BLENDS
   const byId = (id) => blends.find((b) => b.id === id) || null
 
@@ -2572,22 +2792,59 @@ export default function Landing() {
   }
   const openDm = (name) => { markRead(name); setDmName(name); setBlendId(null); setDecide(null) }
 
+  // Observation plumbing. A live tester publishes their nav + pointer/scroll;
+  // a spectator instance reads it back and drives the view read-only.
+  const nav = { blendId, dmName, decide, createOpen, wishlistGame, shareGame, prefsForId }
+  useMirrorPublish(nav)
+  const [mirror] = useRoomNode(IS_SPECTATE ? SPECTATE_PATH : 'spectate/__none', null)
+  const [cmd] = useRoomNode(IS_LIVE ? `${SPECTATE_PATH}/cmd` : 'spectate/__nocmd', null)
+
+  // Moderator "nudge" commands (only a live tester obeys them).
+  const lastCmd = useRef(null)
+  useEffect(() => {
+    if (!IS_LIVE || !cmd || cmd.id === lastCmd.current) return
+    lastCmd.current = cmd.id
+    if (cmd.type === 'reload') { window.location.reload(); return }
+    if (cmd.type === 'home') { setBlendId(null); setDmName(null); setDecide(null); setCreateOpen(false); setWishlistGame(null); setShareGame(null); setPrefsForId(null) }
+  }, [cmd])
+
+  // Replay the mirrored scroll onto the matching container.
+  useEffect(() => {
+    if (!IS_SPECTATE || !mirror?.scroll) return
+    const { i, top, left } = mirror.scroll
+    const id = requestAnimationFrame(() => {
+      const el = document.querySelectorAll('.no-scrollbar')[i]
+      if (el) { el.scrollTop = top; el.scrollLeft = left }
+    })
+    return () => cancelAnimationFrame(id)
+  }, [mirror?.scroll?.t])
+
+  // In spectate mode the whole view is driven by the published `view` blob.
+  const mv = IS_SPECTATE ? (mirror?.view || {}) : null
+  const eBlendId = IS_SPECTATE ? (mv.blendId ?? null) : blendId
+  const eDmName = IS_SPECTATE ? (mv.dmName ?? null) : dmName
+  const eDecide = IS_SPECTATE ? (mv.decide ?? null) : decide
+  const eCreateOpen = IS_SPECTATE ? !!mv.createOpen : createOpen
+  const eWishlistGame = IS_SPECTATE ? (mv.wishlistGame ?? null) : wishlistGame
+  const eShareGame = IS_SPECTATE ? (mv.shareGame ?? null) : shareGame
+  const ePrefsForId = IS_SPECTATE ? (mv.prefsForId ?? null) : prefsForId
+
   // The live wheel spin — read here so the notification reaches every page.
   const spin = useSpin()
 
-  const blend = byId(blendId)
-  const prefsFor = byId(prefsForId)
-  const decideBlend = decide ? byId(decide.blendId) : null
-  const dmFriend = dmName ? DMS.find((d) => d.name === dmName) : null
+  const blend = byId(eBlendId)
+  const prefsFor = byId(ePrefsForId)
+  const decideBlend = eDecide ? byId(eDecide.blendId) : null
+  const dmFriend = eDmName ? DMS.find((d) => d.name === eDmName) : null
 
   return (
     <RoomProvider value={room}>
       <div
-        className="group/rail flex h-screen w-screen overflow-hidden bg-black text-white"
+        className={'group/rail flex h-screen w-screen overflow-hidden bg-black text-white' + (IS_SPECTATE ? ' pointer-events-none select-none' : '')}
         onContextMenu={(e) => e.preventDefault()}
       >
         <ServerRail />
-        <Sidebar online={room.online} onReset={room.resetRoom} activeDm={dmName} onOpenDm={openDm} reads={reads} />
+        <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} reads={reads} />
         {dmFriend ? (
           <DMPage
             key={dmFriend.name}
@@ -2596,15 +2853,15 @@ export default function Landing() {
             onOpenBlend={(id) => { setDmName(null); setBlendId(id) }}
           />
         ) : decideBlend ? (
-          <DecidePage key={decideBlend.id} blend={decideBlend} prefs={decide.prefs} onBack={() => setDecide(null)} />
+          <DecidePage key={decideBlend.id} blend={decideBlend} prefs={eDecide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
           <BlendPage key={blend.id} blend={blend} spin={spin} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} />
         ) : (
           <Content onOpenBlend={(b) => { setDmName(null); setBlendId(b.id) }} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} />
         )}
-        {createOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
-        {wishlistGame && <WishlistModal game={wishlistGame} onClose={() => setWishlistGame(null)} />}
-        {shareGame && <ShareModal game={shareGame} onClose={() => setShareGame(null)} />}
+        {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
+        {eWishlistGame && <WishlistModal game={eWishlistGame} onClose={() => setWishlistGame(null)} />}
+        {eShareGame && <ShareModal game={eShareGame} onClose={() => setShareGame(null)} />}
         {prefsFor && (
           <PreferenceModal
             blend={prefsFor}
@@ -2620,6 +2877,9 @@ export default function Landing() {
           onOpenBlend={(id) => { setDecide(null); setBlendId(id) }}
         />
         {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
+
+        {/* Read-only mirror overlay: the participant's live cursor + click ripples */}
+        {IS_SPECTATE && <SpectatorCursor pointer={mirror?.pointer} click={mirror?.click} />}
       </div>
     </RoomProvider>
   )

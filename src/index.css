@@ -84,3 +84,14 @@ body,
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Spectator wall: a click ripple where the mirrored participant tapped. */
+@keyframes sp-ripple {
+  0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0.9; }
+  100% { transform: translate(-50%, -50%) scale(3.2); opacity: 0; }
+}
+.sp-ripple {
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+  animation: sp-ripple 600ms ease-out forwards;
+}
