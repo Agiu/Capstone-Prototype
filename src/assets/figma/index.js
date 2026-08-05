@@ -78,3 +78,12 @@ export { default as iosShare } from './4c6a80a23d3336c088e71ec09c0f0e8fecb247eb.
 export { default as bookmarkSmall } from './29280779e380ee9157174e0d769565e2e7e06459.svg'
 export { default as bookmark01 } from './824637c33fee59084c66810a4f41d8853efadc4d.svg'
 export { default as chatAdd } from './a1e3a17abb69f170cb96b3db41d66e916ae50bee.svg'
+
+// "Discovered for You" banner art (Figma 863:3729)
+export { default as discoveredHalo } from './discovered_halo.png'
+
+// Mix cover thumbnail options (Figma 882:4956)
+export { default as mixThumbSquad } from './squad_thumbnail.jpg'
+export { default as mixThumbMix } from './mix_thumbnail.jpg'
+export { default as mixThumbDuo1 } from './duo_thumbnail_1.jpg'
+export { default as mixThumbDuo2 } from './duo_thumbnail_2.jpg'

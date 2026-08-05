@@ -31,6 +31,30 @@
   font-display: swap;
 }
 
+/* "Base Neue Trial" — display faces for the home-page hero + banner headings
+   (Figma 863:3726). Only the three faces the design uses are bundled. */
+@font-face {
+  font-family: "Base Neue Cond ExtBd";
+  src: url("./assets/fonts/BaseNeueTrial-CondExtBdObliq.ttf") format("truetype");
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Base Neue Black";
+  src: url("./assets/fonts/BaseNeueTrial-BlackOblique.ttf") format("truetype");
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Base Neue Cond Bold";
+  src: url("./assets/fonts/BaseNeueTrial-CondBoldObliq.ttf") format("truetype");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
 :root {
   font-family: "gg sans", "ABC Ginto Normal", "Noto Sans", "Helvetica Neue",
     Helvetica, Arial, sans-serif;

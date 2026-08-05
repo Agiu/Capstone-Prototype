@@ -85,7 +85,7 @@ function RatingRow({ pct, line1, line2, line2Bold }) {
 }
 
 /** Trailer that plays on hover. Pass `mp4` (preferred) or `youTubeId`. */
-function VideoTrailer({ mp4, youTubeId, poster }) {
+export function VideoTrailer({ mp4, youTubeId, poster }) {
   const frameRef = useRef(null)
 
   // `cc_load_policy=0` only sets the *default* — YouTube still turns captions
@@ -239,10 +239,13 @@ function CardIconButton({ glyph: Glyph, initialMine = false, othersActive = fals
  * Collapsed → thumbnail column (420px); on hover → 718px and the 250px
  * hover_content fades in.
  */
-export function RecCard({ avatars, label, image, players, details, video, shared, overlay, steam, expanded, onWishlist, onShare }) {
-  const wishlistedByMe = label === 'wishlisted this game' && (avatars || []).includes(AVATAR.green)
+export function RecCard({ avatars, label, image, players, details, video, shared, overlay, steam, expanded, onWishlist, onShare, onOpen, reveal }) {
+  const wishlistedByMe = label === 'PLAYlisted this game' && (avatars || []).includes(AVATAR.green)
   const cardRef = useRef(null)
   const [fly, setFly] = useState(null)
+  // Clicking anywhere on the card (except the wishlist/share buttons, which
+  // stopPropagation) opens the game's content detail page.
+  const open = () => onOpen?.(details.title)
 
   // Steam variant — the original game card in a horizontal row, with a detail
   // flyout (same content as the expanded card). The flyout is fixed-positioned
@@ -259,7 +262,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
     }
     const hideFly = () => setFly(null)
     return (
-      <div ref={cardRef} onMouseEnter={showFly} onMouseLeave={hideFly} className="relative flex h-[380px] w-[452px] shrink-0 flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
+      <div ref={cardRef} data-game={details.title} onClick={open} onMouseEnter={showFly} onMouseLeave={hideFly} className="relative flex h-[380px] w-[452px] shrink-0 cursor-pointer flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
         <div className="flex h-[30px] w-full items-center gap-[8px]">
           <AvatarStack colors={avatars} />
           <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
@@ -340,7 +343,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
   // details side by side) by default, with no hover expansion.
   if (expanded) {
     return (
-      <div className="group flex h-[380px] w-[718px] shrink-0 gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
+      <div data-game={details.title} onClick={open} className="group flex h-[380px] w-[718px] shrink-0 cursor-pointer gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
         <div className="flex w-[420px] shrink-0 flex-col gap-[16px]">
           <div className="flex h-[30px] w-full items-center gap-[8px]">
             <AvatarStack colors={avatars} />
@@ -414,7 +417,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
   // pop-up over the cover on hover (instead of the card expanding sideways).
   if (overlay) {
     return (
-      <div className="group relative flex h-[314px] w-[452px] shrink-0 flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
+      <div data-game={details.title} onClick={open} className="group relative flex h-[314px] w-[452px] shrink-0 cursor-pointer flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
         <div className="flex h-[30px] w-full items-center gap-[8px]">
           <AvatarStack colors={avatars} />
           <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
@@ -441,7 +444,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
 
         {/* Hover pop-up — action buttons + the detail (title, review + tags),
             over the bottom of the 16:9 cover. Fades in on hover. */}
-        <div className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100">
+        <div className={'pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100' + (reveal ? ' !opacity-100' : '')}>
           <div className="absolute right-[16px] top-[16px] flex gap-[8px]">
             <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
             <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
@@ -498,8 +501,10 @@ export function RecCard({ avatars, label, image, players, details, video, shared
   return (
     <div
       ref={cardRef}
+      data-game={details.title}
+      onClick={open}
       onTransitionEnd={handleExpandEnd}
-      className="group flex h-[380px] w-[452px] shrink-0 gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px] transition-[width] duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:w-[718px] hover:delay-[450ms]"
+      className="group flex h-[380px] w-[452px] shrink-0 cursor-pointer gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px] transition-[width] duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:w-[718px] hover:delay-[450ms]"
     >
       {/* Left column — thumbnail_content */}
       <div className="flex w-[420px] shrink-0 flex-col gap-[16px]">
@@ -617,8 +622,11 @@ export function RecCard({ avatars, label, image, players, details, video, shared
  *  · the trailer is revealed by an inset clip wiping leftward from the card's
  *    right edge — it never translates — and cross-fades up out of Xbox green
  */
-export function CinematicCard({ image, video, avatars, label, players, playtime, genre, title, onWishlist, onViewDetails }) {
+export function CinematicCard({ image, video, avatars, label, players, playtime, genre, title, onWishlist, onViewDetails, onOpen, forceReveal }) {
+  const open = () => (onViewDetails || onOpen)?.(title)
   const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
+  // Spectate mirroring: force the hover reveal on (a moderator can't hover).
+  const F = forceReveal ? ' !opacity-100 !translate-x-0 !translate-y-0' : ''
   const LightPill = ({ children }) => (
     <span
       className="flex shrink-0 items-center gap-[3px] whitespace-nowrap rounded-[16px] border px-[7px] py-[2px] text-[12px] font-semibold"
@@ -636,7 +644,7 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
   const reveal =
     `opacity-0 transition-[translate,scale,opacity] duration-[260ms] ${EASE}` +
     ' group-hover:translate-x-0 group-hover:translate-y-0 group-hover:opacity-100' +
-    ' group-hover:duration-[420ms] group-hover:delay-[60ms]'
+    ' group-hover:duration-[420ms] group-hover:delay-[60ms]' + F
   // Copy just lifts barely as it fades — a hint of motion, not a throw. Each
   // line carries its own `group-hover:delay-[…]` at the usage site so they
   // arrive one after another rather than as a block. (The delays have to be
@@ -644,16 +652,16 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
   // class name would never be generated.)
   const rise =
     `translate-y-[3px] opacity-0 transition-[translate,opacity] duration-[220ms] ${EASE}` +
-    ' group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[380ms]'
+    ' group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[380ms]' + F
   // Tags read as arriving fractionally after the title block, so they keep a
   // slightly longer (but still tiny) rise rather than sharing the merged text
   // block above — same idea as before, just scaled way down.
   const riseUp =
     `translate-y-[6px] opacity-0 transition-[translate,opacity] duration-[320ms] ${EASE}` +
-    ' group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[460ms]'
+    ' group-hover:translate-y-0 group-hover:opacity-100 group-hover:duration-[460ms]' + F
   const pool =
     `pointer-events-none absolute opacity-0 transition-opacity duration-[240ms] ${EASE}` +
-    ' group-hover:opacity-100 group-hover:duration-[340ms]'
+    ' group-hover:opacity-100 group-hover:duration-[340ms]' + (forceReveal ? ' !opacity-100' : '')
   // The tags' own pool runs the full width as a flat horizontal band, which is
   // what lets it cover the + as well — no separate pool needed in that corner.
   // Recipe matched to the overlay card's hover scrim ("Because you love to
@@ -663,7 +671,7 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
   const bottomBg =
     'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)'
   return (
-    <div className="group relative h-[292px] w-[520px] shrink-0 overflow-hidden rounded-[16px] bg-[#121214]">
+    <div data-game={title} onClick={open} className="group relative h-[292px] w-[520px] shrink-0 cursor-pointer overflow-hidden rounded-[16px] bg-[#121214]">
       {/* Cover — fills the whole card by default */}
       <img
         alt=""
@@ -679,10 +687,10 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
           up out of it as the crop widens. */}
       {video && (
         <div
-          className={`absolute inset-0 overflow-hidden bg-[#107C10] [clip-path:inset(0%_0%_0%_100%)] transition-[clip-path] duration-[300ms] ${EASE} group-hover:[clip-path:inset(0%_0%_0%_0%)] group-hover:duration-[450ms]`}
+          className={`absolute inset-0 overflow-hidden bg-[#107C10] [clip-path:inset(0%_0%_0%_100%)] transition-[clip-path] duration-[300ms] ${EASE} group-hover:[clip-path:inset(0%_0%_0%_0%)] group-hover:duration-[450ms]` + (forceReveal ? ' ![clip-path:inset(0%_0%_0%_0%)]' : '')}
         >
           <div
-            className={`absolute inset-0 opacity-0 transition-opacity duration-[160ms] ${EASE} group-hover:opacity-100 group-hover:duration-[260ms] group-hover:delay-[60ms]`}
+            className={`absolute inset-0 opacity-0 transition-opacity duration-[160ms] ${EASE} group-hover:opacity-100 group-hover:duration-[260ms] group-hover:delay-[60ms]` + (forceReveal ? ' !opacity-100' : '')}
           >
             <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
           </div>
@@ -692,7 +700,7 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
       {/* Title — no scrim. Legibility comes from a plain drop shadow instead,
           which keeps the letters true white on any footage. */}
       <p
-        className={`pointer-events-none absolute left-0 top-0 w-[320px] translate-y-[3px] pb-[28px] pl-[24px] pr-[32px] pt-[20px] text-[28px] font-bold leading-[1.1] text-white opacity-0 transition-[translate,opacity] duration-[380ms] ${EASE} group-hover:translate-y-0 group-hover:opacity-100 group-hover:delay-[70ms]`}
+        className={`pointer-events-none absolute left-0 top-0 w-[320px] translate-y-[3px] pb-[28px] pl-[24px] pr-[32px] pt-[20px] text-[28px] font-bold leading-[1.1] text-white opacity-0 transition-[translate,opacity] duration-[380ms] ${EASE} group-hover:translate-y-0 group-hover:opacity-100 group-hover:delay-[70ms]` + F}
         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))' }}
       >
         {title}
@@ -744,7 +752,7 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
         </button>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onViewDetails?.(title) }}
+          onClick={(e) => { e.stopPropagation(); (onViewDetails || onOpen)?.(title) }}
           aria-label="View details"
           className={`${reveal} translate-x-[10px] group/view relative flex size-[28px] items-center justify-center group-hover:delay-[20ms]`}
         >
@@ -776,7 +784,7 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
  * slides in with title, publisher, release date, blurb, a recommendation line
  * and user-tag pills.
  */
-export function PortraitCard({ image, title, publisher, released, description, recommend, multiplayer, tags = [] }) {
+export function PortraitCard({ image, title, publisher, released, description, recommend, multiplayer, tags = [], onOpen, forceReveal }) {
   const Tag = ({ children }) => (
     <span className="flex w-fit items-center justify-center whitespace-nowrap rounded-[20px] bg-[#4c5053] px-[8px] py-[2px] text-[10px] text-white">
       {children}
@@ -784,16 +792,18 @@ export function PortraitCard({ image, title, publisher, released, description, r
   )
   // Info copy just fades in and out — no slide.
   const fade = 'opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100'
+  // Spectate mirroring: force the expand + reveal on (a moderator can't hover).
+  const F = forceReveal ? ' !opacity-100' : ''
   return (
-    <div className="group relative flex h-[276px] w-[184px] shrink-0 overflow-hidden rounded-[12px] bg-[#15181c] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[388px]">
+    <div data-game={title} onClick={() => onOpen?.(title)} className={'group relative flex h-[276px] w-[184px] shrink-0 cursor-pointer overflow-hidden rounded-[12px] bg-[#15181c] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[388px]' + (forceReveal ? ' !w-[388px]' : '')}>
       {/* Portrait cover (left) */}
       <div className="relative h-full w-[184px] shrink-0">
         <img alt="" src={image} loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-l from-[#15181c] to-transparent opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100" />
+        <div className={'absolute inset-0 bg-gradient-to-l from-[#15181c] to-transparent opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100' + F} />
       </div>
 
       {/* Info panel (right) — the whole panel just fades in and out */}
-      <div className={`${fade} flex h-full w-[204px] shrink-0 flex-col gap-[8px] overflow-hidden bg-[#15181c] p-[12px] group-hover:delay-[100ms]`}>
+      <div className={`${fade}${F} flex h-full w-[204px] shrink-0 flex-col gap-[8px] overflow-hidden bg-[#15181c] p-[12px] group-hover:delay-[100ms]`}>
         <p className="text-[20px] font-semibold leading-none tracking-[0.1px] text-white">{title}</p>
         <div className="flex flex-col text-[12px] leading-[1.1]">
           <span className="text-[#2da000]">{publisher}</span>
@@ -897,11 +907,11 @@ export function ShelfRow({ title, subtitle, gap = 24, children }) {
 }
 
 /** A titled shelf: a heading over a horizontally-scrollable row of rec cards. */
-export function CardRow({ title, subtitle, cards, overlay, expanded, onWishlist, onShare }) {
+export function CardRow({ title, subtitle, cards, overlay, expanded, onWishlist, onShare, onOpen, revealTitle }) {
   return (
     <ShelfRow title={title} subtitle={subtitle} gap={40}>
       {cards.map((c, i) => (
-        <RecCard key={i} {...c} overlay={overlay} expanded={expanded} onWishlist={onWishlist} onShare={onShare} />
+        <RecCard key={i} {...c} overlay={overlay} expanded={expanded} onWishlist={onWishlist} onShare={onShare} onOpen={onOpen} reveal={!!revealTitle && c.details?.title === revealTitle} />
       ))}
     </ShelfRow>
   )

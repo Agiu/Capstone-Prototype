@@ -28,18 +28,29 @@ export function useRoom({ self, seedBlends }) {
   const [blends, setBlendsState] = useState(seedBlends)
   const [ready, setReady] = useState(false)
   const [online, setOnline] = useState([])
+  // Moderator-set display-name overrides, keyed by identity (abby/blake/…).
+  const [names, setNames] = useState({})
+  useEffect(() => {
+    const r = ref(db, `rooms/${ROOM_ID}/names`)
+    const unsub = onValue(r, (snap) => setNames(snap.val() || {}))
+    return () => unsub()
+  }, [])
+  // Moderator-hidden profiles, keyed by identity — hidden everywhere for everyone.
+  const [hiddenProfiles, setHiddenProfiles] = useState({})
+  useEffect(() => {
+    const r = ref(db, `rooms/${ROOM_ID}/hidden`)
+    const unsub = onValue(r, (snap) => setHiddenProfiles(snap.val() || {}))
+    return () => unsub()
+  }, [])
 
-  // Blends: subscribe, and seed the room once if it's empty.
+  // Blends: subscribe. Rooms start empty (no premade Mixes) and stay whatever
+  // the group builds — an empty room reads back as null, which we treat as [].
   useEffect(() => {
     const r = ref(db, `rooms/${ROOM_ID}/blends`)
     const unsub = onValue(r, (snap) => {
       const v = snap.val()
-      if (v == null) {
-        set(r, seedBlends)
-      } else {
-        // RTDB returns arrays for contiguous integer keys; normalize just in case.
-        setBlendsState(Array.isArray(v) ? v.filter(Boolean) : Object.values(v))
-      }
+      // RTDB returns arrays for contiguous integer keys; normalize just in case.
+      setBlendsState(Array.isArray(v) ? v.filter(Boolean) : v && typeof v === 'object' ? Object.values(v) : [])
       setReady(true)
     })
     return () => unsub()
@@ -69,9 +80,22 @@ export function useRoom({ self, seedBlends }) {
   }, [self])
 
   const setBlends = (next) => set(ref(db, `rooms/${ROOM_ID}/blends`), next)
-  const resetRoom = () => set(ref(db, `rooms/${ROOM_ID}/blends`), seedBlends)
+  // Reset wipes the Mixes AND the ephemeral room state: DM history, any live
+  // spin/launch party, group preferences/wheels, and the spectate mirrors.
+  const resetRoom = () => {
+    set(ref(db, `rooms/${ROOM_ID}/blends`), seedBlends)
+    set(ref(db, `rooms/${ROOM_ID}/dms`), null)
+    set(ref(db, `rooms/${ROOM_ID}/spin`), null)
+    set(ref(db, `rooms/${ROOM_ID}/launch`), null)
+    set(ref(db, `rooms/${ROOM_ID}/prefs`), null)
+    set(ref(db, `rooms/${ROOM_ID}/wheel`), null)
+    set(ref(db, `rooms/${ROOM_ID}/spectate`), null)
+    set(ref(db, `rooms/${ROOM_ID}/hidden`), null)
+  }
 
-  return { blends, ready, online, setBlends, resetRoom }
+  const setName = (key, name) => set(ref(db, `rooms/${ROOM_ID}/names/${key}`), name || null)
+  const setHiddenProfile = (key, hidden) => set(ref(db, `rooms/${ROOM_ID}/hidden/${key}`), hidden ? true : null)
+  return { blends, ready, online, names, hiddenProfiles, setBlends, resetRoom, setName, setHiddenProfile }
 }
 
 // Sync an arbitrary sub-tree of the room (e.g. decide-a-game preferences).

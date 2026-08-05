@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useId, useRef, useState } from 'react'
-import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, AVATAR } from './RecCard.jsx'
+import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import {
   discordLogo,
@@ -17,13 +17,23 @@ import {
   heroAc,
   heroForHonor,
   searchIcon,
+  userGroup,
+  discoveredHalo,
+  mixThumbSquad,
+  mixThumbMix,
+  mixThumbDuo1,
+  mixThumbDuo2,
 } from './assets/figma/index.js'
 
-// ── Active tester profile, from the URL (?u=abby|blake|chloe|daniel) ────────
+// ── Active tester profile, from the URL (?u=1|2|3|4) ────────────────────────
 // No login: each tester opens their own link and `SELF` is their identity.
+// The URL uses simple numbers; internally the four identities keep stable keys.
 const COLOR_OF = { abby: AVATAR.green, blake: AVATAR.blue, chloe: AVATAR.purple, daniel: AVATAR.red }
+const U_TO_NAME = { 1: 'abby', 2: 'blake', 3: 'chloe', 4: 'daniel' }
+const NAME_TO_U = { abby: 1, blake: 2, chloe: 3, daniel: 4 }
 const _u = new URLSearchParams(window.location.search).get('u')
-const SELF_NAME = COLOR_OF[_u] ? _u : 'abby'
+// Accept ?u=1..4 (preferred) or a legacy ?u=abby..daniel.
+const SELF_NAME = U_TO_NAME[_u] || (COLOR_OF[_u] ? _u : 'abby')
 const SELF = COLOR_OF[SELF_NAME]
 
 // ── Observation modes (for the moderator's live participant wall) ────────────
@@ -224,6 +234,9 @@ function DmRow({ name, color, status, online, active, unread = 0, onClick }) {
 
 function Sidebar({ online = [], onReset, activeDm, onOpenDm, reads = {} }) {
   const inbox = useInbox()
+  const room = useRoomCtx()
+  const names = (room && room.names) || {}
+  const hiddenP = (room && room.hiddenProfiles) || {}
   const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1'
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col" style={{ backgroundColor: D.panel }}>
@@ -239,7 +252,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, reads = {} }) {
           {NAV.map((n) => <NavItem key={n.label} icon={n.icon} label={n.label} />)}
           <NavItem
             active
-            label="Xbox on Discord"
+            label="XBOX PARTY"
             icon={<XboxLogo size={20} />}
           />
         </div>
@@ -253,12 +266,13 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, reads = {} }) {
           <span className="text-[18px] leading-none" style={{ color: D.mute }}>+</span>
         </div>
         <div className="flex flex-col gap-[2px]">
-          {DMS.filter((d) => d.name !== SELF_NAME).map((d) => {
+          {DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name]).map((d) => {
             const { unread } = inbox(d.name, reads[dmConvId(SELF_NAME, d.name)])
             return (
               <DmRow
                 key={d.name}
                 {...d}
+                name={dispName(d.name, names)}
                 online
                 active={activeDm === d.name}
                 unread={activeDm === d.name ? 0 : unread}
@@ -283,7 +297,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, reads = {} }) {
           <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.green }} fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4Zm11.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Z" /></svg>
           <div className="leading-tight">
             <div className="text-[14px] font-semibold" style={{ color: D.green }}>Voice Connected</div>
-            <div className="text-[12px]" style={{ color: D.mute }}>General · Xbox on Discord</div>
+            <div className="text-[12px]" style={{ color: D.mute }}>General · XBOX PARTY</div>
           </div>
         </div>
         <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.dim }} fill="none" stroke="currentColor" strokeWidth="2"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11 11 0 0 0 3.5.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.3a1 1 0 0 1 1 1c0 1.2.2 2.4.56 3.5a1 1 0 0 1-.25 1Z" /></svg>
@@ -296,7 +310,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, reads = {} }) {
           <span className="absolute -bottom-[1px] -right-[1px] size-[11px] rounded-full" style={{ backgroundColor: D.green, border: `3px solid ${D.inset}` }} />
         </div>
         <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-[14px] font-semibold text-white">{SELF_NAME}</div>
+          <div className="truncate text-[14px] font-semibold text-white">{dispName(SELF_NAME, names)}</div>
           <div className="truncate text-[12px]" style={{ color: D.mute }}>Online</div>
         </div>
         <div className="flex gap-[2px]" style={{ color: D.dim }}>
@@ -330,24 +344,24 @@ const details = {
 const shelfToday = [
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, owners: [AVATAR.blue, AVATAR.green, AVATAR.purple] },
   { featured: true, avatars: [AVATAR.purple], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red] },
-  { avatars: [AVATAR.green], label: 'wishlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol, free: true, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red] },
+  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol, free: true, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red] },
   { avatars: [AVATAR.red, AVATAR.purple], label: 'played this for 4 hours', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red], shared: true },
   { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, owners: [AVATAR.green, AVATAR.purple] },
 ]
 
 const shelfFriends = [
-  { avatars: [AVATAR.green], label: 'wishlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, owners: [AVATAR.green, AVATAR.red] },
+  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, owners: [AVATAR.green, AVATAR.red] },
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, owners: [AVATAR.blue, AVATAR.red], shared: true },
-  { avatars: [AVATAR.red], label: 'wishlisted this game', players: '1-8', image: heroGangBeasts, video: { youTubeId: 'Lm3HDdLufmA', poster: heroGangBeasts }, details: details.gangBeasts, owners: [AVATAR.purple, AVATAR.red] },
-  { avatars: [AVATAR.purple], label: 'wishlisted this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: details.wildHearts, owners: [AVATAR.blue] },
+  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-8', image: heroGangBeasts, video: { youTubeId: 'Lm3HDdLufmA', poster: heroGangBeasts }, details: details.gangBeasts, owners: [AVATAR.purple, AVATAR.red] },
+  { avatars: [AVATAR.purple], label: 'PLAYlisted this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: details.wildHearts, owners: [AVATAR.blue] },
   { avatars: [AVATAR.red], label: 'recommends this game', players: '1-4', image: heroMinecraftDungeons, video: { youTubeId: 'TxNH6bapa3A', poster: heroMinecraftDungeons }, details: details.minecraftDungeons, owners: [AVATAR.red, AVATAR.purple] },
 ]
 
 const shelfMore = [
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves },
   { avatars: [AVATAR.purple], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft },
-  { avatars: [AVATAR.green], label: 'wishlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol },
-  { avatars: [AVATAR.red], label: 'wishlisted this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat },
+  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol },
+  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat },
   { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded },
 ]
 
@@ -384,6 +398,18 @@ const VIDEOS = {
 }
 const ALL_COLORS = [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red]
 const capName = (s) => s.charAt(0).toUpperCase() + s.slice(1)
+// Display name for an identity key, honoring the moderator's name overrides.
+const dispName = (key, names) => (key && names && names[key]) || (key ? capName(key) : '')
+// Hook: the shared name-override map from the room context.
+function useNames() {
+  const room = useRoomCtx()
+  return (room && room.names) || {}
+}
+// Hook: the shared hidden-profiles map from the room context.
+function useHidden() {
+  const room = useRoomCtx()
+  return (room && room.hiddenProfiles) || {}
+}
 
 // ── Direct-message sync ─────────────────────────────────────────────────────
 // A conversation is keyed by the sorted pair of tester names, so both people
@@ -428,12 +454,11 @@ function socialProof(i) {
   const others = ALL_COLORS.filter((c) => c !== SELF)
   const who = others[i % others.length]
   const name = capName(NAME[who])
+  const hours = [5, 3, 8, 4, 6][i % 5]
   const variants = [
     { avatars: [who], label: `${name} recommends this` },
-    { avatars: others.slice(0, 2), label: 'popular with your friends' },
-    { avatars: [who], label: `${name} plays this a lot` },
-    { avatars: [who], label: `wishlisted by ${name}` },
-    { avatars: others, label: 'a hit in your groups' },
+    { avatars: [who], label: `${name} played this for ${hours} hours` },
+    { avatars: [who], label: `${name} PLAYlisted this game` },
   ]
   return variants[i % variants.length]
 }
@@ -457,22 +482,22 @@ function mkCard(key, i = 0, extra) {
 const RECS = {
   abby: {
     rows: [
-      { mode: 'overlay', title: 'Because you love to build', subtitle: 'Cozy building and survival, matched to your hours.', games: ['minecraft', 'grounded', 'minecraftDungeons', 'seaOfThieves', 'humanFallFlat'] },
+      { mode: 'overlay', title: 'You’d rather build than sleep', subtitle: 'Cozy craft-and-survive worlds, sized to your sessions.', games: ['minecraft', 'grounded', 'minecraftDungeons', 'seaOfThieves', 'humanFallFlat'] },
     ],
   },
   blake: {
     rows: [
-      { mode: 'overlay', title: 'Because you can’t put down survival', subtitle: 'More craft-and-survive loops matched to your hours.', games: ['grounded', 'minecraft', 'seaOfThieves', 'monsterHunter', 'minecraftDungeons'] },
+      { mode: 'overlay', title: 'One more night, one more base', subtitle: 'Craft-and-survive loops your hours say you can’t quit.', games: ['grounded', 'minecraft', 'seaOfThieves', 'monsterHunter', 'minecraftDungeons'] },
     ],
   },
   chloe: {
     rows: [
-      { mode: 'overlay', title: 'Because you love a challenge', subtitle: 'Competitive and combat-heavy picks matched to your hours.', games: ['lol', 'monsterHunter', 'wildHearts', 'seaOfThieves', 'minecraft'] },
+      { mode: 'overlay', title: 'Certified sweat, respectfully', subtitle: 'Combat-heavy picks to keep your reflexes honest.', games: ['lol', 'monsterHunter', 'wildHearts', 'seaOfThieves', 'minecraft'] },
     ],
   },
   daniel: {
     rows: [
-      { mode: 'overlay', title: 'Because you love a good mess', subtitle: 'Loud, silly, competitive nights matched to your hours.', games: ['humanFallFlat', 'gangBeasts', 'overcooked', 'lol', 'minecraft'] },
+      { mode: 'overlay', title: 'Here for the beautiful chaos', subtitle: 'Loud, silly nights that end with everyone yelling.', games: ['humanFallFlat', 'gangBeasts', 'overcooked', 'lol', 'minecraft'] },
     ],
   },
 }
@@ -481,12 +506,12 @@ const RECS = {
 // Both reuse the game CATALOG for covers/metadata and VIDEOS for trailers, so
 // this stays a self-contained layout/animation mock.
 const CINEMATIC_ROW = [
-  { key: 'seaOfThieves', avatars: [AVATAR.blue, AVATAR.green], label: 'wishlisted this game' },
+  { key: 'seaOfThieves', avatars: [AVATAR.blue, AVATAR.green], label: 'PLAYlisted this game' },
   { key: 'monsterHunter', avatars: [AVATAR.blue], label: 'recommends this game' },
   { key: 'grounded', avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours' },
   { key: 'humanFallFlat', avatars: [AVATAR.red, AVATAR.purple], label: 'played this for 4 hours' },
   { key: 'minecraft', avatars: [AVATAR.green], label: 'recommends this game' },
-  { key: 'gangBeasts', avatars: [AVATAR.red], label: 'wishlisted this game' },
+  { key: 'gangBeasts', avatars: [AVATAR.red], label: 'PLAYlisted this game' },
 ].map(({ key, avatars, label }) => {
   const g = CATALOG[key]
   return {
@@ -529,7 +554,8 @@ const BLENDS = [
 // The seed the shared room is initialized with — each blend gets a stable id and
 // an initial wishlist order (the shared, drag-rankable list).
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
-const SEED_BLENDS = BLENDS.map((b) => ({ ...b, id: slug(b.name), wishlist: b.games.slice(0, 4) }))
+// Start with no premade Mixes — everyone builds their own.
+const SEED_BLENDS = []
 
 // Preference tags per game — the decision page matches the group's stated
 // preferences against these to rank and filter the blend's games.
@@ -576,13 +602,25 @@ function guessTag(label) {
   return null
 }
 
-function BlendCard({ name, color, members, onOpen }) {
+function BlendCard({ name, color, members, games = [], cover, onOpen, onContext }) {
+  // Cover art: a custom thumbnail if one's been set, otherwise a default image
+  // built from the Mix's own game art (a 2×2 collage), falling back to the
+  // accent color if the Mix has no games yet.
+  const covers = games.map((k) => CATALOG[k]?.image).filter(Boolean).slice(0, 4)
   return (
-    <button onClick={onOpen} className="group flex w-[160px] shrink-0 flex-col text-left">
+    <button onClick={onOpen} onContextMenu={onContext} className="group flex w-[160px] shrink-0 flex-col text-left">
       <div
-        className="size-[160px] rounded-[20px] transition-[translate] duration-200 group-hover:-translate-y-[3px]"
+        className="size-[160px] overflow-hidden rounded-[20px] transition-[translate] duration-200 group-hover:-translate-y-[3px]"
         style={{ backgroundColor: color }}
-      />
+      >
+        {cover ? (
+          <img alt="" src={cover} className="size-full object-cover" />
+        ) : covers.length ? (
+          <div className="grid size-full grid-cols-2 grid-rows-2 gap-[2px]">
+            {covers.map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}
+          </div>
+        ) : null}
+      </div>
       <p className="mt-[10px] text-[16px] font-semibold text-white">{name}</p>
       <div className="mt-[7px] flex items-center gap-[5px]">
         {members.map((c, i) => (
@@ -611,12 +649,52 @@ function SectionHeading({ children, size = 34 }) {
   return <p className="font-semibold tracking-tight text-white" style={{ fontSize: size }}>{children}</p>
 }
 
+// "Discovered for You" cinematic banner (Figma 863:3729). Full-width rounded
+// panel: a blurred, stretched copy of the art fills the width, the sharp art is
+// anchored to the right and masked so it melts into the blur, and the heading
+// sits on the left over a left-to-right darkening scrim.
+function DiscoveredBanner() {
+  const CARD_H = 152 // the rounded card
+  const STICK = 84 // how far the art rises above the card's top edge
+  return (
+    <section className="mt-[52px]">
+      {/* Wrapper is taller than the card and NOT clipped, so the art can poke
+          out above the card's top edge (Figma 882:4613). */}
+      <div className="relative w-full" style={{ height: CARD_H + STICK }}>
+        {/* The card: a blurred copy of the scene + a left-to-right scrim, clipped
+            to the rounded rectangle. */}
+        <div className="absolute inset-x-0 bottom-0 overflow-hidden rounded-[16px] bg-[#0a0f16]" style={{ height: CARD_H }}>
+          <img alt="" src={discoveredHalo} className="absolute inset-0 size-full scale-110 object-cover opacity-70 blur-[16px]" style={{ objectPosition: 'center 45%' }} />
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(6,10,14,0.9) 0%, rgba(6,10,14,0.5) 26%, rgba(6,10,14,0.05) 56%)' }} />
+        </div>
+        {/* Sharp scene on the right — bottom flush with the card, top rising past
+            it so the helmet sticks out. Faded on the left into the scrim. */}
+        <img
+          alt=""
+          src={discoveredHalo}
+          className="pointer-events-none absolute bottom-0 left-[16%] w-[74%] object-cover object-top"
+          style={{ height: CARD_H + STICK, maskImage: 'linear-gradient(to right, transparent, black 30%)', WebkitMaskImage: 'linear-gradient(to right, transparent, black 30%)' }}
+        />
+        {/* Heading, aligned to the card (not the taller wrapper). */}
+        <div className="absolute inset-x-0 bottom-0 flex items-center pl-[36px]" style={{ height: CARD_H }}>
+          <h2
+            className="text-[clamp(32px,3.6vw,56px)] uppercase tracking-[0.02em] text-white [text-shadow:0_4px_4px_rgba(0,0,0,0.85)]"
+            style={{ fontFamily: '"Base Neue Cond Bold"' }}
+          >
+            Discovered for You
+          </h2>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 // ── Xbox content area ───────────────────────────────────────────────────────
 // Steam-style row — the original game cards with a Steam detail flyout on hover.
 const STEAM_ROW = [
   { avatars: [AVATAR.green], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, steam: { released: 'Nov 18, 2011', desc: 'Build, explore and survive in an infinite world of blocks — solo or with friends. Mine deep, craft anything, and make the world your own.', review: 'Overwhelmingly Positive', reviews: '2.4M', tags: ['Sandbox', 'Survival', 'Building', 'Multiplayer'] } },
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, steam: { released: 'Jun 3, 2020', desc: 'A shared-world pirate adventure — sail, fight and hunt treasure with your crew across an open ocean full of other real players.', review: 'Very Positive', reviews: '312K', tags: ['Adventure', 'Open World', 'Pirates', 'Co-op'] } },
-  { avatars: [AVATAR.red], label: 'wishlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, steam: { released: 'Aug 7, 2018', desc: 'Chaotic co-op cooking across wobbling, falling-apart kitchens. Chop, cook and serve before the timer runs out.', review: 'Very Positive', reviews: '58K', tags: ['Co-op', 'Party', 'Casual', 'Local Multiplayer'] } },
+  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, steam: { released: 'Aug 7, 2018', desc: 'Chaotic co-op cooking across wobbling, falling-apart kitchens. Chop, cook and serve before the timer runs out.', review: 'Very Positive', reviews: '58K', tags: ['Co-op', 'Party', 'Casual', 'Local Multiplayer'] } },
   { avatars: [AVATAR.purple], label: 'recommends this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, steam: { released: 'Jul 22, 2016', desc: 'Floppy physics puzzles in surreal dreamscapes. No skill floor at all, endless slapstick, and better with friends.', review: 'Overwhelmingly Positive', reviews: '180K', tags: ['Puzzle', 'Physics', 'Co-op', 'Funny'] } },
   { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, steam: { released: 'Sep 27, 2022', desc: 'Shrunk to the size of an ant, survive the backyard: build bases, brew gear and fight off giant bugs with friends.', review: 'Very Positive', reviews: '96K', tags: ['Survival', 'Co-op', 'Crafting', 'Adventure'] } },
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, steam: { released: 'Jan 12, 2022', desc: 'Hunt colossal monsters, craft mighty gear, and chain fluid aerial combat with the new Wirebug.', review: 'Very Positive', reviews: '110K', tags: ['Action RPG', 'Co-op', 'Hunting', 'Multiplayer'] } },
@@ -625,65 +703,160 @@ const STEAM_ROW = [
 // Row display order (by hover style): overlay → expanded → steam → expand.
 const ROW_ORDER = { overlay: 0, expanded: 1, steam: 2, expand: 3 }
 
-function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
-  const { blends } = useRoomCtx()
+function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn }) {
+  const { blends, setBlends } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.abby
+
+  // Right-click menu for the Mix cards (same editor as the Mix page).
+  const [mixMenu, setMixMenu] = useState(null) // { x, y, blend }
+  const [coverFor, setCoverFor] = useState(null)
+  const [renameFor, setRenameFor] = useState(null)
+  const [inviteFor, setInviteFor] = useState(null)
+  const patchMix = (b, patch) => setBlends(blends.map((x) => (x.id === b.id ? { ...x, ...patch } : x)))
+  const openMixMenu = (e, b) => { e.preventDefault(); e.stopPropagation(); setMixMenu({ x: e.clientX, y: e.clientY, blend: b }) }
+  const leaveMixCard = (b) => { if (window.confirm(`Leave ${b.name}?`)) patchMix(b, { members: b.members.filter((c) => c !== SELF) }) }
+  const [searchOpen, setSearchOpen] = useState(false)
   const orderedRows = [...recs.rows].sort((a, b) => (ROW_ORDER[a.mode] ?? 9) - (ROW_ORDER[b.mode] ?? 9))
+
+  // ── Spectate/moderator fidelity ──────────────────────────────────────────
+  // The home menus/modals + the hovered card live only in this component's
+  // local state, so a moderator watching the mirror can't see them. Publish
+  // them to this participant's spectate path; a spectate instance reads them
+  // back and renders the same overlays.
+  const [hover, setHover] = useState(null) // game title of the card under the pointer
+  const [cUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/contentUI` : 'spectate/__nocui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/contentUI`, {
+      mixMenu: mixMenu ? { x: mixMenu.x, y: mixMenu.y, blendId: mixMenu.blend.id } : null,
+      coverForId: coverFor?.id || null,
+      renameForId: renameFor?.id || null,
+      inviteForId: inviteFor?.id || null,
+      searchOpen: !!searchOpen,
+      hover: hover || null,
+    })
+  }, [mixMenu, coverFor, renameFor, inviteFor, searchOpen, hover])
+  const bybid = (id) => blends.find((b) => b.id === id) || null
+  const eMixMenu = IS_SPECTATE ? (cUI?.mixMenu ? { x: cUI.mixMenu.x, y: cUI.mixMenu.y, blend: bybid(cUI.mixMenu.blendId) } : null) : mixMenu
+  const eCoverFor = IS_SPECTATE ? bybid(cUI?.coverForId) : coverFor
+  const eRenameFor = IS_SPECTATE ? bybid(cUI?.renameForId) : renameFor
+  const eInviteFor = IS_SPECTATE ? bybid(cUI?.inviteForId) : inviteFor
+  const eSearchOpen = IS_SPECTATE ? !!cUI?.searchOpen : searchOpen
+  const eHover = IS_SPECTATE ? (cUI?.hover ?? null) : hover
+
+  // Hero background video: parallax (scrolls slower than the title/info that sit
+  // on the page) + a 1.5s ease-in/out fade at each loop's start and end so the
+  // loop seam is invisible.
+  const scrollRef = useRef(null)
+  const videoRef = useRef(null)
+  useEffect(() => {
+    const sc = scrollRef.current
+    const v = videoRef.current
+    if (v) v.style.opacity = '0' // fade in on first play
+    if (!sc) return
+    const onScroll = () => {
+      if (videoRef.current) videoRef.current.style.transform = `translate3d(0, ${sc.scrollTop * 0.35}px, 0)`
+    }
+    sc.addEventListener('scroll', onScroll, { passive: true })
+    return () => sc.removeEventListener('scroll', onScroll)
+  }, [])
+  // The CSS transition supplies the 1.5s ease; we just flip opacity at the edges.
+  const onVideoTime = (e) => {
+    const v = e.currentTarget
+    if (!v.duration) return
+    v.style.opacity = v.currentTime >= v.duration - 1.5 ? '0' : '1'
+  }
+
   return (
-    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
-      {/* Top nav */}
-      <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-[#1c1d21] px-[40px]">
+    <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+      {/* Top nav — layered blur over the hero video (Figma 882:4898). The blur
+          lives on its own masked layer so it fades out toward the bottom while
+          the nav content stays crisp. */}
+      <header className="absolute inset-x-0 top-0 z-20 flex h-[56px] shrink-0 items-center gap-[32px] px-[40px]">
+        <div className="pointer-events-none absolute inset-0 -z-10 border-b border-white/10 bg-black/25 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_55%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_55%,transparent)]" />
         <XboxLogo size={24} />
         <button className="border-b-2 border-white pb-[2px] text-[16px] font-medium text-white">Home</button>
-        <button className="pb-[2px] text-[16px] font-medium text-[#9a9ba3] hover:text-white">Library</button>
+        <button className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] hover:text-white">Library</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <img alt="Search" src={searchIcon} className="size-[22px] opacity-80" />
+          <button onClick={() => setSearchOpen(true)} aria-label="Search" className="flex size-[34px] items-center justify-center rounded-full transition hover:bg-white/10">
+            <img alt="" src={searchIcon} className="size-[22px] opacity-80" />
+          </button>
         </div>
       </header>
 
       {/* Scrollable landing */}
-      <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
-        <div className="mx-auto w-full max-w-[1400px]">
-          {/* Hero — centered (Figma 550:979) */}
-          <section className="flex flex-col items-center text-center">
-            <h1 className="text-[56px] font-semibold leading-[1.05] tracking-tight text-white">XBOX PARTY</h1>
-            <p className="mt-[10px] max-w-[560px] text-[18px] leading-snug text-[#e7e7e7]">
-              Jump into 200+ Xbox games instantly, powered by the cloud and playable right inside Discord.
-            </p>
-            {/* Game Pass pill */}
-            <div className="mt-[22px] flex items-center gap-[12px] rounded-full border border-white/10 bg-white/[0.06] px-[18px] py-[8px]">
-              <div className="flex items-center">
-                {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((c, i) => (
-                  <Avatar key={i} color={c} size={26} style={{ marginRight: i < 2 ? -10 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
-                ))}
+      <div
+        ref={scrollRef}
+        className="no-scrollbar flex-1 overflow-y-auto pb-[80px]"
+        onMouseOver={IS_LIVE ? (e) => { const el = e.target.closest?.('[data-game]'); setHover(el ? el.getAttribute('data-game') : null) } : undefined}
+        onMouseLeave={IS_LIVE ? () => setHover(null) : undefined}
+      >
+        {/* Hero + Mixes over the full-bleed background video (Figma 863:3726) */}
+        <section className="relative overflow-hidden">
+          <video
+            ref={videoRef}
+            onTimeUpdate={onVideoTime}
+            className="pointer-events-none absolute left-0 top-0 h-[135%] w-full object-cover will-change-transform"
+            style={{ transition: 'opacity 1.5s ease-in-out' }}
+            src="/PartyHome.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+          {/* Darken the footage and fade it into the page background at the bottom */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(to bottom, rgba(12,12,14,0.35) 0%, rgba(12,12,14,0.55) 55%, #0c0c0e 100%)' }}
+          />
+          <div className="relative mx-auto w-full max-w-[1400px] px-[40px] pb-[8px] pt-[64px]">
+            {/* Hero title — "Welcome to the XBOX PARTY" (Figma 863:3749) */}
+            <div className="flex flex-col items-center text-center">
+              <h1 className="flex flex-col items-center gap-[8px] leading-[1.085] text-white [text-shadow:0_4px_18px_rgba(0,0,0,0.55)]">
+                <span className="text-[clamp(32px,4.6vw,64px)] leading-[1.085] tracking-[0.005em]" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>Welcome to</span>
+                <span className="text-[clamp(64px,10.5vw,128px)] uppercase leading-[1.085] tracking-[0.005em]" style={{ fontFamily: '"Base Neue Black"' }}>XBOX PARTY</span>
+              </h1>
+              <p className="mt-[16px] max-w-[560px] text-[18px] leading-snug text-[#e7e7e7]">
+                Jump into 200+ Xbox games instantly, powered by the cloud and playable right inside Discord.
+              </p>
+              {/* "See who's on PARTY" — opens the friends popup */}
+              <button
+                onClick={onWhosOn}
+                className="mt-[22px] flex items-center gap-[12px] rounded-full border border-white/10 bg-black/30 px-[18px] py-[8px] backdrop-blur-sm transition hover:border-white/25 hover:bg-black/45"
+              >
+                <div className="flex items-center">
+                  {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((c, i) => (
+                    <Avatar key={i} color={c} size={26} style={{ marginRight: i < 2 ? -10 : 0, boxShadow: '0 0 0 2px rgba(0,0,0,0.55)' }} />
+                  ))}
+                </div>
+                <span className="text-[15px] font-medium text-white">See who’s on</span>
+                <span className="flex items-center gap-[6px]">
+                  <XboxLogo size={16} />
+                  <span className="text-[13px] font-bold uppercase tracking-wide text-[#95ff00]">Party</span>
+                </span>
+              </button>
+            </div>
+
+            {/* Your Mixes — centered, colored cards */}
+            <div className="mt-[48px] flex flex-col items-center">
+              <h2
+                className="text-[clamp(26px,2.6vw,40px)] uppercase tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
+                style={{ fontFamily: '"Base Neue Cond Bold"' }}
+              >
+                Your Mixes
+              </h2>
+              <div className="mt-[24px] flex max-w-full flex-wrap justify-center gap-x-[16px] gap-y-[24px]">
+                <CreateBlendCard onClick={onCreateBlend} />
+                {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => <BlendCard key={b.id} {...b} onOpen={() => onOpenBlend(b)} onContext={(e) => openMixMenu(e, b)} />)}
               </div>
-              <span className="text-[15px] font-medium text-white">Join your friends on</span>
-              <span className="flex items-center gap-[6px]">
-                <XboxLogo size={16} />
-                <span className="text-[13px] font-bold uppercase tracking-wide text-[#95ff00]">Game Pass</span>
-              </span>
             </div>
-            {/* Subscribe / Gift */}
-            <div className="mt-[14px] flex items-center gap-[10px]">
-              <button className="rounded-[8px] bg-white px-[26px] py-[9px] text-[15px] font-semibold text-black transition hover:bg-white/90">Subscribe</button>
-              <button className="rounded-[8px] bg-[#2b2d31] px-[26px] py-[9px] text-[15px] font-semibold text-white transition hover:bg-[#35373c]">Gift</button>
-            </div>
-            <p className="mt-[10px] text-[12px] text-[#9a9ba3]">Plans start at $XX.99/month · cancel anytime</p>
-          </section>
+          </div>
+        </section>
 
-          {/* Your Blends — centered, colored cards (Figma 550:979) */}
-          <section className="mt-[48px] flex flex-col items-center">
-            <SectionHeading size={24}>Your Mixes</SectionHeading>
-            <div className="mt-[24px] flex max-w-full flex-wrap justify-center gap-x-[16px] gap-y-[24px]">
-              <CreateBlendCard onClick={onCreateBlend} />
-              {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => <BlendCard key={b.id} {...b} onOpen={() => onOpenBlend(b)} />)}
-            </div>
-          </section>
-
-          {/* "For you" — section header for the recommendations below */}
-          <section className="mt-[52px]">
-            <SectionHeading size={40}>For you</SectionHeading>
-          </section>
+        {/* Discovered for You banner + recommendation rows */}
+        <div className="mx-auto w-full max-w-[1400px] px-[40px]">
+          {/* "Discovered for You" cinematic banner (Figma 863:3729) */}
+          <DiscoveredBanner />
 
           {/* Overlay rows (e.g. "Because you love to build") — at the top. */}
           {orderedRows.map((row, ri) => (
@@ -696,36 +869,60 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare }) {
               expanded={row.mode === 'expanded'}
               onWishlist={onWishlist}
               onShare={onShare}
+              onOpen={onOpen}
+              revealTitle={IS_SPECTATE ? eHover : null}
             />
           ))}
 
           {/* Cinematic hover row (Figma 622:2733 / 622:2755) */}
-          <ShelfRow title="Featured for movie night" subtitle="Big, cinematic games.">
+          <ShelfRow title="Basically movie night" subtitle="Big, cinematic worlds worth dimming the lights for.">
             {CINEMATIC_ROW.map((c) => (
-              // onViewDetails is a stub until the product-detail / content-delivery page exists.
-              <CinematicCard key={c.id} {...c} onWishlist={onWishlist} onViewDetails={() => {}} />
+              <CinematicCard key={c.id} {...c} onWishlist={onWishlist} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === c.title} />
             ))}
           </ShelfRow>
 
           {/* Portrait expand-tile row (Figma 620:2460) */}
-          <ShelfRow title="New releases you might like" subtitle="Fresh drops matched to your taste — hover for the details.">
+          <ShelfRow title="Fresh drops with your name on them" subtitle="Just-released picks matched to your taste — hover for the details.">
             {PORTRAIT_ROW.map((c) => (
-              <PortraitCard key={c.id} {...c} />
+              <PortraitCard key={c.id} {...c} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === c.title} />
             ))}
           </ShelfRow>
         </div>
       </div>
+
+      {/* Right-click Mix card menu (same editor as the Mix page) */}
+      {eMixMenu && eMixMenu.blend && (
+        <ContextMenu
+          x={eMixMenu.x}
+          y={eMixMenu.y}
+          onClose={() => setMixMenu(null)}
+          items={[
+            { label: 'Open Mix', icon: PLAY_GLYPH, primary: true, onClick: () => { onOpenBlend(eMixMenu.blend); setMixMenu(null) } },
+            { divider: true },
+            { label: 'Change cover image', icon: IMAGE_MENU_GLYPH, onClick: () => { setCoverFor(eMixMenu.blend); setMixMenu(null) } },
+            { label: 'Rename Mix', icon: EDIT_MENU_GLYPH, onClick: () => { setRenameFor(eMixMenu.blend); setMixMenu(null) } },
+            { label: 'Invite members', icon: PEOPLE_MENU_GLYPH, onClick: () => { setInviteFor(eMixMenu.blend); setMixMenu(null) } },
+            { divider: true },
+            { label: 'Leave Mix', icon: LEAVE_MENU_GLYPH, onClick: () => { const b = eMixMenu.blend; setMixMenu(null); leaveMixCard(b) } },
+          ]}
+        />
+      )}
+      {eCoverFor && <CoverPickerModal blend={eCoverFor} games={eCoverFor.games.map((k) => CATALOG[k]).filter(Boolean)} onClose={() => setCoverFor(null)} onSave={(patch) => patchMix(eCoverFor, patch)} />}
+      {eRenameFor && <RenameMixModal blend={eRenameFor} onClose={() => setRenameFor(null)} onSave={(patch) => patchMix(eRenameFor, patch)} />}
+      {eInviteFor && <InviteMembersModal blend={eInviteFor} onClose={() => setInviteFor(null)} onSave={(patch) => patchMix(eInviteFor, patch)} />}
+      {eSearchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
     </main>
   )
 }
 
 // ── Blend group page (Figma node 489:2783) ─────────────────────────────────
 function FeedRow({ who, text, when }) {
+  const names = useNames()
   return (
     <div className="flex items-start gap-[10px]">
       <Avatar color={who} size={28} />
       <p className="flex-1 text-[13px] leading-snug text-[#b5bac1]">
-        <span className="font-semibold text-white">{NAME[who]}</span> {text}
+        <span className="font-semibold text-white">{dispName(NAME[who], names)}</span> {text}
       </p>
       <span className="shrink-0 text-[11px]" style={{ color: when === 'live' ? '#95ff00' : '#7e7f87' }}>{when}</span>
     </div>
@@ -842,9 +1039,146 @@ function LaunchToast({ title, onDone }) {
 
 const PLAY_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
 const BOOKMARK_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+const REMOVE_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /><path d="M9 9h6" strokeLinecap="round" /></svg>
+const IMAGE_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" fill="currentColor" stroke="none" /><path d="M5 18l5-5 4 4 2-2 3 3" /></svg>
+const EDIT_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z" /></svg>
+const PEOPLE_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-5-5.9" strokeLinecap="round" /></svg>
+const LEAVE_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 4h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-3" /><path d="M10 17l-5-5 5-5M5 12h11" /></svg>
+
+// Mix cover thumbnail options (Figma 882:4956). `null` = the default game collage.
+const MIX_COVERS = [
+  { label: 'Squad', src: mixThumbSquad },
+  { label: 'Papa John’s', src: mixThumbMix },
+  { label: 'Batman duo', src: mixThumbDuo1 },
+  { label: 'SpongeBob duo', src: mixThumbDuo2 },
+]
+
+function useEscClose(onClose) {
+  useEffect(() => {
+    const k = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', k)
+    return () => window.removeEventListener('keydown', k)
+  }, [onClose])
+}
+
+// Pick a cover for a Mix — one of the thumbnail options, an uploaded image, or
+// the default collage. Whatever's chosen is saved to the shared Mix, so it
+// updates for every member.
+function CoverPickerModal({ blend, games, onClose, onSave }) {
+  useEscClose(onClose)
+  const fileRef = useRef(null)
+  const onFile = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => { onSave({ cover: reader.result }); onClose() }
+    reader.readAsDataURL(file)
+  }
+  const Tile = ({ src, label, active, children }) => (
+    <button
+      onClick={() => { onSave({ cover: src }); onClose() }}
+      className={'relative aspect-square overflow-hidden rounded-[12px] ring-2 transition ' + (active ? 'ring-[#5765f2]' : 'ring-transparent hover:ring-white/30')}
+    >
+      {children}
+      <span className="absolute inset-x-0 bottom-0 bg-black/55 py-[3px] text-[11px] font-semibold text-white">{label}</span>
+    </button>
+  )
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-[460px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <h3 className="text-[20px] font-bold text-white">Change cover image</h3>
+        <p className="mt-[4px] text-[14px] text-[#b5bac1]">Pick a cover for <span className="font-semibold text-white">{blend.name}</span>.</p>
+        <div className="mt-[18px] grid grid-cols-3 gap-[12px]">
+          {/* Default = the auto game collage */}
+          <Tile src={undefined} label="Default" active={!blend.cover}>
+            <div className="grid size-full grid-cols-2 grid-rows-2 gap-[1px] bg-black">
+              {games.slice(0, 4).map((g, i) => <img key={i} alt="" src={g.image} className="size-full object-cover" />)}
+            </div>
+          </Tile>
+          {MIX_COVERS.map((c) => (
+            <Tile key={c.label} src={c.src} label={c.label} active={blend.cover === c.src}>
+              <img alt="" src={c.src} className="size-full object-cover" />
+            </Tile>
+          ))}
+          {/* Upload from device */}
+          <button
+            onClick={() => fileRef.current?.click()}
+            className="relative flex aspect-square flex-col items-center justify-center gap-[8px] rounded-[12px] border-2 border-dashed border-[#4a4d55] text-[#b5bac1] transition hover:border-[#5765f2] hover:text-white"
+          >
+            <svg viewBox="0 0 24 24" className="size-[26px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4M8 8l4-4 4 4" /><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>
+            <span className="text-[12px] font-semibold">Upload image</span>
+          </button>
+          <input ref={fileRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+        </div>
+        <div className="mt-[18px] flex justify-end">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Done</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function RenameMixModal({ blend, onClose, onSave }) {
+  const [name, setName] = useState(blend.name)
+  useEscClose(onClose)
+  const save = () => { const n = name.trim(); if (n) onSave({ name: n }); onClose() }
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <h3 className="text-[20px] font-bold text-white">Rename Mix</h3>
+        <input
+          value={name}
+          autoFocus
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') save() }}
+          className="mt-[16px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[10px] text-[15px] text-white focus:outline-none"
+        />
+        <div className="mt-[18px] flex justify-end gap-[10px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
+          <button onClick={save} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Save</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function InviteMembersModal({ blend, onClose, onSave }) {
+  const [sel, setSel] = useState(() => new Set(blend.members))
+  useEscClose(onClose)
+  const toggle = (c) => setSel((s) => { const n = new Set(s); n.has(c) ? n.delete(c) : n.add(c); return n })
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <h3 className="text-[20px] font-bold text-white">Invite members</h3>
+        <p className="mt-[4px] text-[14px] text-[#b5bac1]">Choose who’s in <span className="font-semibold text-white">{blend.name}</span>.</p>
+        <div className="mt-[16px] flex flex-col gap-[2px]">
+          {ALL_COLORS.map((c) => {
+            const on = sel.has(c)
+            const isSelf = c === SELF
+            return (
+              <button key={c} onClick={() => !isSelf && toggle(c)} className={'flex items-center gap-[12px] rounded-[8px] p-[8px] text-left transition ' + (isSelf ? 'opacity-70' : 'hover:bg-white/5')}>
+                <Avatar color={c} size={40} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-white">{capName(NAME[c] || 'Member')}{isSelf ? ' (you)' : ''}</p>
+                </div>
+                <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+                  {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="mt-[18px] flex justify-end gap-[10px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
+          <button onClick={() => { onSave({ members: [...sel] }); onClose() }} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Save</button>
+        </div>
+      </div>
+    </div>
+  )
+}
 const LINK_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
 
-function BlendPage({ blend, onBack, onDecide, spin }) {
+function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
   const [menu, setMenu] = useState(null) // { x, y, title }
   const [launching, setLaunching] = useState(null)
   // "Decide a game" drops the divider and unfolds the wheel above it.
@@ -866,13 +1200,63 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
   }, [wheelOpen])
   function openMenu(e, title) {
     e.preventDefault()
+    e.stopPropagation() // this page has its own PLAYlist-aware menu; don't also fire the global one
     setMenu({ x: e.clientX, y: e.clientY, title })
   }
   function launch(title) {
     setMenu(null)
-    setLaunching(title)
+    // Same launch flow as the home/detail page — opens the "Who's playing?" party.
+    const key = KEY_OF_TITLE[title] || title
+    if (onPlay && CATALOG[key]) onPlay(key)
+    else setLaunching(title)
   }
   const { blends, setBlends } = useRoomCtx()
+  // Add/remove a game from this Mix's shared PLAYlist (the right-click menu).
+  function setPlaylistMembership(title, add) {
+    const key = KEY_OF_TITLE[title] || title
+    const cur = blend.wishlist || []
+    const next = add ? (cur.includes(key) ? cur : [...cur, key]) : cur.filter((k) => k !== key)
+    setBlends(blends.map((b) => (b.id === blend.id ? { ...b, wishlist: next } : b)))
+    setMenu(null)
+  }
+  // Mix cover right-click menu + its editor modals.
+  const [coverMenu, setCoverMenu] = useState(null) // { x, y }
+  const [coverPicker, setCoverPicker] = useState(false)
+  const [renameOpen, setRenameOpen] = useState(false)
+  const [inviteOpen, setInviteOpen] = useState(false)
+  const patchBlend = (patch) => setBlends(blends.map((b) => (b.id === blend.id ? { ...b, ...patch } : b)))
+  function leaveMix() {
+    if (!window.confirm(`Leave ${blend.name}?`)) return
+    patchBlend({ members: blend.members.filter((c) => c !== SELF) })
+    onBack()
+  }
+
+  // ── Spectate/moderator fidelity ──────────────────────────────────────────
+  // The wheel + this page's menus/modals are local state, so publish them to
+  // this participant's spectate path and read them back on a spectate instance
+  // (a moderator can't open the wheel or a menu on the mirror itself).
+  const [bUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/blendUI` : 'spectate/__nobui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/blendUI`, {
+      blendId: blend.id,
+      wheelOpen: !!wheelOpen,
+      menu: menu ? { x: menu.x, y: menu.y, title: menu.title } : null,
+      coverMenu: coverMenu ? { x: coverMenu.x, y: coverMenu.y } : null,
+      coverPicker: !!coverPicker,
+      renameOpen: !!renameOpen,
+      inviteOpen: !!inviteOpen,
+    })
+  }, [blend.id, wheelOpen, menu, coverMenu, coverPicker, renameOpen, inviteOpen])
+  // Only trust the mirror when it's for the Mix currently being viewed.
+  const bui = IS_SPECTATE && bUI?.blendId === blend.id ? bUI : null
+  const eWheelOpen = IS_SPECTATE ? !!bui?.wheelOpen : wheelOpen
+  const eMenu = IS_SPECTATE ? (bui?.menu ?? null) : menu
+  const eCoverMenu = IS_SPECTATE ? (bui?.coverMenu ?? null) : coverMenu
+  const eCoverPicker = IS_SPECTATE ? !!bui?.coverPicker : coverPicker
+  const eRenameOpen = IS_SPECTATE ? !!bui?.renameOpen : renameOpen
+  const eInviteOpen = IS_SPECTATE ? !!bui?.inviteOpen : inviteOpen
+
   const games = blend.games.map((k) => CATALOG[k]).filter(Boolean)
   const m = blend.members
   // A blend can hold any number of games, so the feed wraps rather than
@@ -880,7 +1264,7 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
   const g = (i) => (games.length ? games[i % games.length] : { title: 'a game' })
   // Activity feed — includes you (green/sauhee) alongside the other members.
   const feed = [
-    { who: SELF, text: `wishlisted ${g(2).title}`, when: '1h' },
+    { who: SELF, text: `PLAYlisted ${g(2).title}`, when: '1h' },
     { who: m[1] || SELF, text: `finished ${g(0).title} and left it five stars`, when: '2h' },
     { who: m[2] || m[1] || SELF, text: `is in a ${g(1).title} lobby — one seat open`, when: 'live' },
     { who: SELF, text: `added ${g(3).title} to the group list`, when: 'yest' },
@@ -916,10 +1300,20 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
 
           {/* Header — cover quad + name + members + refresh note */}
           <div className="flex items-center gap-[28px]">
-            <div className="grid size-[184px] shrink-0 grid-cols-2 grid-rows-2 gap-[2px] overflow-hidden rounded-[16px]">
-              {games.slice(0, 4).map((g, i) => (
-                <img key={i} alt="" src={g.image} className="size-full object-cover" />
-              ))}
+            <div
+              onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCoverMenu({ x: e.clientX, y: e.clientY }) }}
+              title="Right-click to edit this Mix"
+              className="size-[184px] shrink-0 cursor-pointer overflow-hidden rounded-[16px] bg-[#1a1a1d]"
+            >
+              {blend.cover ? (
+                <img alt="" src={blend.cover} className="size-full object-cover" />
+              ) : (
+                <div className="grid size-full grid-cols-2 grid-rows-2 gap-[2px]">
+                  {games.slice(0, 4).map((g, i) => (
+                    <img key={i} alt="" src={g.image} className="size-full object-cover" />
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <h1 className="text-[52px] font-semibold leading-none tracking-tight text-white">{blend.name}</h1>
@@ -936,7 +1330,7 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
 
             {/* Decide-a-game entry point — off to the right of the title */}
             <div className="ml-auto flex flex-col items-end gap-[10px] self-start pt-[6px]">
-              <XboxDecideButton open={wheelOpen} onClick={() => setWheelOpen((v) => !v)} />
+              <XboxDecideButton open={eWheelOpen} onClick={() => setWheelOpen((v) => !v)} />
               <button
                 onClick={onDecide}
                 className="text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white"
@@ -951,7 +1345,7 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
             ref={wheelRef}
             className="grid"
             style={{
-              gridTemplateRows: wheelOpen ? '1fr' : '0fr',
+              gridTemplateRows: eWheelOpen ? '1fr' : '0fr',
               transition: 'grid-template-rows 560ms cubic-bezier(0.22,1,0.36,1)',
             }}
           >
@@ -959,12 +1353,12 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
               <div
                 className="pt-[28px]"
                 style={{
-                  opacity: wheelOpen ? 1 : 0,
-                  transform: wheelOpen ? 'none' : 'translateY(-12px)',
+                  opacity: eWheelOpen ? 1 : 0,
+                  transform: eWheelOpen ? 'none' : 'translateY(-12px)',
                   transition: 'opacity 380ms ease 140ms, transform 420ms cubic-bezier(0.22,1,0.36,1) 140ms',
                 }}
               >
-                <SpinPanel blend={blend} state={spin} onLaunch={setLaunching} />
+                <SpinPanel blend={blend} state={spin} onLaunch={launch} />
               </div>
             </div>
           </div>
@@ -972,8 +1366,8 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
           <div
             className="my-[28px] h-px"
             style={{
-              backgroundColor: wheelOpen ? '#107C10' : '#1c1d21',
-              boxShadow: wheelOpen ? '0 0 14px rgba(16,124,16,0.55)' : 'none',
+              backgroundColor: eWheelOpen ? '#107C10' : '#1c1d21',
+              boxShadow: eWheelOpen ? '0 0 14px rgba(16,124,16,0.55)' : 'none',
               transition: 'background-color 520ms ease, box-shadow 520ms ease',
             }}
           />
@@ -995,9 +1389,10 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
                   onDragLeave={() => setOverIdx((v) => (v === i ? null : v))}
                   onDrop={() => dropAt(i)}
                   onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                  onClick={() => onOpen?.(g.title)}
                   onContextMenu={(e) => openMenu(e, g.title)}
                   className={
-                    'w-[320px] shrink-0 cursor-grab select-none rounded-[14px] p-[6px] ring-2 transition active:cursor-grabbing ' +
+                    'w-[320px] shrink-0 cursor-pointer select-none rounded-[14px] p-[6px] ring-2 transition ' +
                     (dragIdx === i ? 'opacity-40 ' : '') +
                     (overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')
                   }
@@ -1023,6 +1418,7 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
                 {games.map((g, i) => (
                   <button
                     key={i}
+                    onClick={() => onOpen?.(g.title)}
                     onContextMenu={(e) => openMenu(e, g.title)}
                     className="group flex items-center gap-[20px] rounded-[14px] p-[10px] text-left transition hover:bg-[#151517]"
                   >
@@ -1054,28 +1450,180 @@ function BlendPage({ blend, onBack, onDecide, spin }) {
       </div>
 
       {/* Right-click game menu */}
-      {menu && (
+      {eMenu && (
         <ContextMenu
-          x={menu.x}
-          y={menu.y}
+          x={eMenu.x}
+          y={eMenu.y}
           onClose={() => setMenu(null)}
           items={[
-            { label: 'Launch game', icon: PLAY_GLYPH, primary: true, onClick: () => launch(menu.title) },
+            { label: 'Start a party', icon: PLAY_GLYPH, primary: true, onClick: () => launch(eMenu.title) },
             { divider: true },
-            { label: 'Add to Mix', icon: BOOKMARK_MENU_GLYPH, onClick: () => setMenu(null) },
+            (blend.wishlist || []).includes(KEY_OF_TITLE[eMenu.title] || eMenu.title)
+              ? { label: 'Remove from PLAYlist', icon: REMOVE_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, false) }
+              : { label: 'Add to PLAYlist', icon: BOOKMARK_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, true) },
             { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setMenu(null) },
           ]}
         />
       )}
+
+      {/* Right-click Mix cover menu */}
+      {eCoverMenu && (
+        <ContextMenu
+          x={eCoverMenu.x}
+          y={eCoverMenu.y}
+          onClose={() => setCoverMenu(null)}
+          items={[
+            { label: 'Change cover image', icon: IMAGE_MENU_GLYPH, onClick: () => { setCoverPicker(true); setCoverMenu(null) } },
+            { label: 'Rename Mix', icon: EDIT_MENU_GLYPH, onClick: () => { setRenameOpen(true); setCoverMenu(null) } },
+            { label: 'Invite members', icon: PEOPLE_MENU_GLYPH, onClick: () => { setInviteOpen(true); setCoverMenu(null) } },
+            { divider: true },
+            { label: 'Leave Mix', icon: LEAVE_MENU_GLYPH, onClick: () => { setCoverMenu(null); leaveMix() } },
+          ]}
+        />
+      )}
+      {eCoverPicker && <CoverPickerModal blend={blend} games={games} onClose={() => setCoverPicker(false)} onSave={patchBlend} />}
+      {eRenameOpen && <RenameMixModal blend={blend} onClose={() => setRenameOpen(false)} onSave={patchBlend} />}
+      {eInviteOpen && <InviteMembersModal blend={blend} onClose={() => setInviteOpen(false)} onSave={patchBlend} />}
       {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
     </main>
   )
 }
 
 // ── Create a "Blend" modal (Figma node 531:2105) ───────────────────────────
+// Game search — a command-palette-style overlay that filters the catalog and
+// opens a game's detail page on select (Enter picks the top result).
+function SearchModal({ onClose, onOpen }) {
+  const [q, setQ] = useState('')
+  useEscClose(onClose)
+  const query = q.trim().toLowerCase()
+  const results = Object.entries(CATALOG)
+    .filter(([, v]) => !query || v.title.toLowerCase().includes(query) || (v.genre || '').toLowerCase().includes(query))
+    .slice(0, 8)
+  const pick = (title) => { onOpen(title); onClose() }
+  return (
+    <div className="fixed inset-0 z-[95] flex items-start justify-center bg-black/60 p-4 pt-[12vh]" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-[560px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="flex items-center gap-[12px] border-b border-black/20 px-[18px] py-[14px]">
+          <svg viewBox="0 0 24 24" className="size-[20px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+          <input
+            autoFocus
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) pick(results[0][1].title) }}
+            placeholder="Search games"
+            className="min-w-0 flex-1 bg-transparent text-[16px] text-white outline-none placeholder:text-[#87898c]"
+          />
+        </div>
+        <div className="no-scrollbar max-h-[52vh] overflow-y-auto p-[8px]">
+          {results.length ? results.map(([k, v]) => (
+            <button key={k} onClick={() => pick(v.title)} className="flex w-full items-center gap-[12px] rounded-[8px] p-[8px] text-left transition hover:bg-white/5">
+              <img alt="" src={v.image} className="h-[44px] w-[78px] shrink-0 rounded-[6px] object-cover" />
+              <div className="min-w-0">
+                <p className="truncate text-[15px] font-semibold text-white">{v.title}</p>
+                <p className="truncate text-[13px] text-[#9a9ba3]">{capName(v.genre || 'game')} · {v.players} players</p>
+              </div>
+            </button>
+          )) : <p className="px-[12px] py-[16px] text-[14px] text-[#9a9ba3]">No games match “{q}”.</p>}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// "See who's on PARTY" — friends list (online first) with a one-tap Create-a-Mix.
+function WhosOnModal({ onClose, onCreated }) {
+  const { blends, setBlends, online } = useRoomCtx()
+  const hiddenP = useHidden()
+  const friends = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
+  const [sel, setSel] = useState({})
+  const [q, setQ] = useState('')
+  const query = q.trim().toLowerCase()
+  const sorted = [...friends]
+    .filter((d) => !query || capName(d.name).toLowerCase().includes(query))
+    .sort((a, b) => (online.includes(b.name) ? 1 : 0) - (online.includes(a.name) ? 1 : 0))
+  useEscClose(onClose)
+  const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
+  const chosen = friends.filter((f) => sel[f.name])
+  function createMix() {
+    if (!chosen.length) return
+    const name = chosen.map((f) => capName(f.name)).join(', ')
+    const games = ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'monsterHunter']
+    const newBlend = {
+      id: slug(name) + '-' + Date.now().toString(36).slice(-4),
+      name,
+      color: BLEND_COLORS[blends.length % BLEND_COLORS.length],
+      when: 'just now',
+      members: [SELF],
+      invited: chosen.map((f) => f.color),
+      games,
+      wishlist: [],
+    }
+    setBlends([...blends, newBlend])
+    chosen.forEach((f) => putDM(f.name, {
+      from: SELF_NAME, to: f.name, kind: 'invite',
+      blendId: newBlend.id, blendName: name, status: 'pending', ts: Date.now(),
+    }))
+    onCreated?.(newBlend.id)
+  }
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
+          <div>
+            <p className="text-[22px] font-bold text-white">Who’s on PARTY</p>
+            <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick who to start a Mix with.</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        <div className="px-[24px] pt-[16px]">
+          <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+          </div>
+        </div>
+        <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[10px]">
+          {sorted.length === 0 && <p className="py-[6px] text-[13px] text-[#6f7276]">No friends match “{q}”.</p>}
+          {sorted.map((f) => {
+            const isOn = online.includes(f.name)
+            const on = !!sel[f.name]
+            return (
+              <button key={f.name} onClick={() => toggle(f.name)} className="flex w-full items-center gap-[12px] py-[8px] text-left">
+                <span className="relative shrink-0">
+                  <Avatar color={f.color} size={40} />
+                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: isOn ? '#23a55a' : '#80848e' }} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
+                  <p className="text-[13px]" style={{ color: isOn ? '#23a55a' : '#80848e' }}>{isOn ? 'Online' : 'Offline'}</p>
+                </div>
+                <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+                  {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex items-center justify-center gap-[10px] border-t border-black/20 px-[24px] py-[16px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
+          <button
+            disabled={!chosen.length}
+            onClick={createMix}
+            className="rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Create a Mix{chosen.length ? ` with ${chosen.length}` : ''}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CreateBlendModal({ onClose, onCreated }) {
   const { blends, setBlends } = useRoomCtx()
-  const friends = DMS.filter((d) => d.name !== SELF_NAME)
+  const hiddenP = useHidden()
+  const friends = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const [sel, setSel] = useState({})
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -1100,7 +1648,7 @@ function CreateBlendModal({ onClose, onCreated }) {
       members: [SELF],
       invited: selectedFriends.map((f) => f.color),
       games,
-      wishlist: games.slice(0, 4),
+      wishlist: [],
     }
     setBlends([...blends, newBlend])
     // Drop an invitation into each invitee's DM — they accept or decline there.
@@ -1963,7 +2511,8 @@ function SpinPanel({ blend, state, onLaunch }) {
  * who aren't on the blend — first "a game is about to be chosen", then the
  * pick, the in/out vote, and finally the shared play button.
  */
-function SpinNotification({ state, onLaunch, onOpenBlend }) {
+function SpinNotification({ state, onLaunch, onOpenBlend, onParty }) {
+  const spinNames = useNames()
   const { spin, phase, picked, vote } = state
   const [dismissed, setDismissed] = useState(null)
   const { votes, yes, no, allIn } = spinTally(spin)
@@ -1999,7 +2548,7 @@ function SpinNotification({ state, onLaunch, onOpenBlend }) {
               <Avatar color={COLOR_OF[spin.spinner] || D.raised} size={34} />
             </span>
             <p className="text-[15px] text-[#dbdee1]">
-              <span className="font-semibold text-white">{iSpun ? 'You' : capName(spin.spinner)}</span>
+              <span className="font-semibold text-white">{iSpun ? 'You' : dispName(spin.spinner, spinNames)}</span>
               {iSpun ? ' spun the wheel in ' : ' is spinning the wheel in '}
               <span className="font-semibold text-white">{spin.blendName}</span> — a game is about to be chosen.
             </p>
@@ -2031,7 +2580,7 @@ function SpinNotification({ state, onLaunch, onOpenBlend }) {
             </div>
             {rejected ? null : allIn ? (
               <button
-                onClick={() => onLaunch(picked.title)}
+                onClick={() => onParty?.(picked, spin)}
                 className="ml-[6px] flex shrink-0 items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#0e8f0e]"
               >
                 <svg viewBox="0 0 24 24" className="size-[15px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
@@ -2058,6 +2607,290 @@ function SpinNotification({ state, onLaunch, onOpenBlend }) {
         >
           <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
+      </div>
+    </div>
+  )
+}
+
+// ── Game launch / party ready-up flow (Figma 863:4265 … 863:4469) ───────────
+// A launch party is one shared session at room node `launch`, mirrored to every
+// tester in the room (same mechanism as the spin wheel). The host invites other
+// testers, each readies up on their own screen, and the host launches once
+// enough are ready.
+const LAUNCH_RESPOND_MS = 60000 // an invitee's "Respond in 60s" window (display)
+const LAUNCH_EXPIRY = 180000 // a party nobody launched clears itself after this
+
+function useLaunch() {
+  const [raw, writeLaunch, ready] = useRoomNode('launch', null)
+  const [, tick] = useState(0)
+
+  // Anchor to the earlier of "host says it started" and "we first saw it", so a
+  // rejoin doesn't restart the clock (mirrors the spin hook).
+  const seen = useRef({})
+  const id = raw?.id
+  if (id && seen.current[id] == null) seen.current[id] = Date.now()
+  const anchor = raw ? Math.min(raw.startedAt || 0, seen.current[id] ?? Date.now()) : 0
+  const launch = raw && Date.now() - anchor < LAUNCH_EXPIRY ? raw : null
+
+  // Never open on someone else's stale party — a live tester wipes an expired one.
+  const booted = useRef(false)
+  useEffect(() => {
+    if (!ready || booted.current) return
+    booted.current = true
+    if (IS_LIVE && raw && Date.now() - (raw.startedAt || 0) >= LAUNCH_EXPIRY) writeLaunch(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
+
+  // Tick once a second while a party is live so the countdown/among-readies update.
+  useEffect(() => {
+    if (!launch || launch.launched) return
+    const t = setInterval(() => tick((v) => v + 1), 1000)
+    return () => clearInterval(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, launch?.launched])
+
+  const start = (game, invitees) =>
+    writeLaunch({
+      id: `${Date.now().toString(36)}-${SELF_NAME}`,
+      game,
+      host: SELF_NAME,
+      invitees,
+      ready: { [SELF_NAME]: true }, // the host is implicitly ready
+      declined: {},
+      startedAt: Date.now(),
+      launched: false,
+    })
+  const readyUp = () => writeRoomPath(`launch/ready/${SELF_NAME}`, true)
+  const undoReady = () => writeRoomPath(`launch/ready/${SELF_NAME}`, null)
+  const decline = () => writeRoomPath(`launch/declined/${SELF_NAME}`, true)
+  const launchNow = () => writeRoomPath('launch/launched', true)
+  const clear = () => writeLaunch(null)
+
+  return { launch, start, readyUp, undoReady, decline, launchNow, clear }
+}
+
+// Who's ready / still pending among the invited testers (the host aside).
+function launchTally(launch) {
+  const invitees = launch?.invitees || []
+  const ready = launch?.ready || {}
+  const declined = launch?.declined || {}
+  const readyInvitees = invitees.filter((n) => ready[n])
+  const pending = invitees.filter((n) => !ready[n] && !declined[n])
+  const allReady = invitees.length > 0 && pending.length === 0 && readyInvitees.length > 0
+  return { invitees, ready, declined, readyInvitees, pending, allReady }
+}
+
+// Step 1 — "Who's playing?" invite picker (Figma 863:4265). Online testers are
+// listed under "In your call" and pre-selected; everyone else is searchable
+// under "Invite someone else".
+function WhosPlayingModal({ game, onClose, onStart }) {
+  const { online } = useRoomCtx()
+  const hiddenP = useHidden()
+  const others = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
+  const inCall = others.filter((d) => online.includes(d.name))
+  const elsewhere = others.filter((d) => !online.includes(d.name))
+  const [sel, setSel] = useState(() => Object.fromEntries(inCall.map((d) => [d.name, true])))
+  const [q, setQ] = useState('')
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
+  const selectAll = () => setSel((s) => ({ ...s, ...Object.fromEntries(inCall.map((d) => [d.name, true])) }))
+  const chosen = Object.keys(sel).filter((n) => sel[n])
+  const filtered = elsewhere.filter((d) => capName(d.name).toLowerCase().includes(q.toLowerCase()))
+
+  const Row = ({ d }) => (
+    <button onClick={() => toggle(d.name)} className="flex w-full items-center gap-[12px] py-[8px]">
+      <Avatar color={d.color} size={40} />
+      <div className="min-w-0 flex-1 text-left">
+        <p className="text-[15px] font-semibold text-white">{capName(d.name)}</p>
+        <p className="truncate text-[13px] text-[#9a9ba3]">{capName(d.name)}</p>
+      </div>
+      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+        {sel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+      </span>
+    </button>
+  )
+
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
+          <div>
+            <p className="text-[22px] font-bold text-white">Who’s playing?</p>
+            <p className="mt-[4px] text-[15px] text-[#b5bac1]">Choose who to invite to <span className="font-semibold text-white">{game.title}</span>.</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] py-[16px]">
+          <div className="flex items-center gap-[12px]">
+            <span className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">In your call</span>
+            {inCall.length > 0 && <button onClick={selectAll} className="text-[13px] font-semibold text-[#8aa0ff] transition hover:underline">Select all</button>}
+          </div>
+          {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is in the room right now — invite someone below.</p>}
+          <p className="mb-[6px] mt-[16px] text-[15px] text-white">Invite someone else</p>
+          <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+          </div>
+          <p className="mt-[10px] text-[12px] text-[#9a9ba3]">Search friends and server members</p>
+          {filtered.map((d) => <Row key={d.name} d={d} />)}
+        </div>
+        <div className="flex items-center justify-center gap-[10px] border-t border-black/20 px-[24px] py-[16px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
+          <button
+            disabled={!chosen.length}
+            onClick={() => onStart(chosen)}
+            className="rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Send Ready Up{chosen.length ? ` [${chosen.length} selected]` : ''}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// The party roster row: each member's avatar with a green check once ready.
+function PartyAvatars({ launch }) {
+  const { ready } = launchTally(launch)
+  const members = [launch.host, ...(launch.invitees || [])]
+  return (
+    <div className="flex items-center">
+      {members.map((n, i) => {
+        const isReady = n === launch.host || ready[n]
+        return (
+          <span key={n} className="relative" style={{ marginRight: i < members.length - 1 ? -8 : 0 }}>
+            <Avatar color={COLOR_OF[n] || '#4a4d55'} size={38} style={{ boxShadow: '0 0 0 2px #17181b', opacity: isReady ? 1 : 0.55 }} />
+            {isReady && (
+              <span className="absolute -bottom-[1px] -right-[1px] flex size-[15px] items-center justify-center rounded-full bg-[#23a55a] ring-2 ring-[#17181b]">
+                <svg viewBox="0 0 24 24" className="size-[9px] text-white" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
+              </span>
+            )}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+const CheckBadge = () => (
+  <span className="flex size-[16px] items-center justify-center rounded-full bg-[#23a55a]">
+    <svg viewBox="0 0 24 24" className="size-[10px] text-white" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
+  </span>
+)
+
+// The cross-page party toast (Figma 863:4361 / 4425 / 4382 / 4469). Which face it
+// shows depends on whether you're the host or an invitee and your ready state.
+// Rendered once at the app root so it follows you across every page.
+function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, clear, onLaunch }) {
+  const launchNames = useNames()
+  const [, tick] = useState(0)
+  useEffect(() => {
+    const t = setInterval(() => tick((v) => v + 1), 1000)
+    return () => clearInterval(t)
+  }, [])
+
+  // When the host launches, everyone drops the "Launching…" toast; the host then
+  // clears the shared party a beat later.
+  const launched = !!launch?.launched
+  const isHost = launch?.host === SELF_NAME
+  useEffect(() => {
+    if (!launched) return
+    onLaunch(launch.game?.title)
+    if (isHost && IS_LIVE) { // only the real host clears the shared party (never a spectator)
+      const t = setTimeout(clear, 1400)
+      return () => clearTimeout(t)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [launched])
+
+  if (!launch || launched) return null
+
+  const isInvitee = (launch.invitees || []).includes(SELF_NAME)
+  if (!isHost && !isInvitee) return null // a bystander in the room sees nothing
+
+  const iReady = !!(launch.ready || {})[SELF_NAME]
+  const iDeclined = !!(launch.declined || {})[SELF_NAME]
+  if (isInvitee && !isHost && iDeclined) return null // I passed — toast gone
+
+  const { readyInvitees, allReady } = launchTally(launch)
+  const cover = launch.game?.image || CATALOG[launch.game?.key]?.image
+  const remaining = Math.max(0, Math.ceil((launch.startedAt + LAUNCH_RESPOND_MS - Date.now()) / 1000))
+
+  // Pick the body for this viewer's role/state.
+  let body
+  if (isInvitee && !iReady) {
+    // Screen 2 — incoming invite.
+    body = (
+      <>
+        <div>
+          <p className="text-[13px] text-[#c7c9cb]"><span className="font-semibold text-white">{dispName(launch.host, launchNames)}</span> invited you to play</p>
+          <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+        </div>
+        <div>
+          <p className="text-[13px] font-semibold text-white">Ready up to join this session.</p>
+          <p className="text-[12px] text-[#9a9ba3]">Respond in {remaining}s</p>
+        </div>
+        <div className="flex gap-[8px]">
+          <button onClick={decline} className="flex-1 rounded-[8px] bg-[#3a3c42] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Not Now</button>
+          <button onClick={readyUp} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Ready Up</button>
+        </div>
+      </>
+    )
+  } else if (isInvitee && !isHost && iReady) {
+    // Screen 4 — you're ready.
+    body = (
+      <>
+        <div>
+          <p className="flex items-center gap-[7px] text-[13px] text-[#c7c9cb]"><CheckBadge /> You’re ready</p>
+          <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+        </div>
+        <PartyAvatars launch={launch} />
+        <button onClick={undoReady} className="w-full rounded-[8px] bg-[#3a3c42] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Undo Ready Up</button>
+      </>
+    )
+  } else if (allReady) {
+    // Screen 5 — host, party ready.
+    body = (
+      <>
+        <div>
+          <p className="flex items-center gap-[7px] text-[13px] text-[#c7c9cb]"><CheckBadge /> Party is ready</p>
+          <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+        </div>
+        <PartyAvatars launch={launch} />
+        <div className="flex gap-[8px]">
+          <button onClick={clear} className="rounded-[8px] bg-[#3a3c42] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
+          <button onClick={launchNow} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Launch Game</button>
+        </div>
+      </>
+    )
+  } else {
+    // Screen 3 — host, getting the party ready.
+    body = (
+      <>
+        <div>
+          <p className="text-[13px] text-[#c7c9cb]">Getting the party ready</p>
+          <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+        </div>
+        <PartyAvatars launch={launch} />
+        <div className="flex gap-[8px]">
+          <button onClick={clear} className="rounded-[8px] bg-[#3a3c42] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
+          <button onClick={launchNow} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Launch with {readyInvitees.length} Ready</button>
+        </div>
+      </>
+    )
+  }
+
+  return (
+    <div className="pointer-events-auto fixed bottom-[24px] right-[24px] z-[85] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+      <div className="flex">
+        {cover && <img alt="" src={cover} className="w-[116px] shrink-0 self-stretch object-cover" />}
+        <div className="flex min-w-0 flex-1 flex-col gap-[12px] p-[16px]">{body}</div>
       </div>
     </div>
   )
@@ -2236,8 +3069,9 @@ function DecidePage({ blend, prefs, onBack }) {
 // ── Forward a game to chat (opened from a card's chat button) ──────────────
 function ShareModal({ game, onClose }) {
   const { blends, setBlends } = useRoomCtx()
+  const hiddenP = useHidden()
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
-  const friends = DMS.filter((d) => d.name !== SELF_NAME)
+  const friends = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const myGroups = blends.filter((b) => (b.members || []).includes(SELF))
   const [selF, setSelF] = useState({})
   const [selG, setSelG] = useState({})
@@ -2427,11 +3261,17 @@ function InviteMessage({ msg, mine, onRespond }) {
   )
 }
 
-function GameMessage({ msg }) {
-  const cover = CATALOG[KEY_OF_TITLE[msg.game] || msg.game]?.image
-  const meta = CATALOG[KEY_OF_TITLE[msg.game] || msg.game]
+function GameMessage({ msg, onOpen }) {
+  const key = KEY_OF_TITLE[msg.game] || msg.game
+  const cover = CATALOG[key]?.image
+  const meta = CATALOG[key]
   return (
-    <div className="mt-[6px] w-full max-w-[440px] overflow-hidden rounded-[10px] border border-[#3a3c42] bg-[#232428]">
+    <button
+      type="button"
+      data-game={msg.game}
+      onClick={() => onOpen?.(msg.game)}
+      className="mt-[6px] block w-full max-w-[440px] cursor-pointer overflow-hidden rounded-[10px] border border-[#3a3c42] bg-[#232428] text-left transition hover:border-[#5765f2]"
+    >
       {cover && <img alt="" src={cover} className="h-[150px] w-full object-cover" />}
       <div className="px-[14px] py-[12px]">
         <p className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>Shared a game</p>
@@ -2439,12 +3279,14 @@ function GameMessage({ msg }) {
         {meta?.caption && <p className="mt-[4px] text-[13px] leading-snug text-[#b5bac1]">{meta.caption}</p>}
         {msg.text ? <p className="mt-[8px] text-[13px] text-[#dbdee1]">{msg.text}</p> : null}
       </div>
-    </div>
+    </button>
   )
 }
 
-function DMPage({ friend, onBack, onOpenBlend }) {
+function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
   const { blends, setBlends } = useRoomCtx()
+  const names = useNames()
+  const fname = dispName(friend.name, names)
   const msgs = useDM(friend.name)
   const [draft, setDraft] = useState('')
   const scrollRef = useRef(null)
@@ -2485,7 +3327,7 @@ function DMPage({ friend, onBack, onOpenBlend }) {
         </button>
         <Avatar color={friend.color} size={30} />
         <div className="leading-tight">
-          <div className="text-[16px] font-semibold text-white">{friend.name}</div>
+          <div className="text-[16px] font-semibold text-white">{fname}</div>
           <div className="text-[12px]" style={{ color: D.mute }}>Online</div>
         </div>
       </header>
@@ -2495,14 +3337,14 @@ function DMPage({ friend, onBack, onOpenBlend }) {
           {/* Conversation start card */}
           <div className="mb-[8px] flex flex-col items-start">
             <Avatar color={friend.color} size={72} />
-            <h2 className="mt-[12px] text-[28px] font-bold text-white">{friend.name}</h2>
+            <h2 className="mt-[12px] text-[28px] font-bold text-white">{fname}</h2>
             <p className="mt-[2px] text-[15px]" style={{ color: D.dim }}>
-              This is the beginning of your direct message history with <span className="font-semibold text-white">{friend.name}</span>.
+              This is the beginning of your direct message history with <span className="font-semibold text-white">{fname}</span>.
             </p>
           </div>
 
           {msgs.length === 0 && (
-            <p className="mt-[16px] text-[14px]" style={{ color: D.mute }}>No messages yet. Say hi, share a game, or invite {friend.name} to a Mix.</p>
+            <p className="mt-[16px] text-[14px]" style={{ color: D.mute }}>No messages yet. Say hi, share a game, or invite {fname} to a Mix.</p>
           )}
 
           {msgs.map((m) => {
@@ -2510,7 +3352,7 @@ function DMPage({ friend, onBack, onOpenBlend }) {
             const day = dmDay(m.ts)
             const showDay = day !== lastDay
             lastDay = day
-            const senderName = mine ? SELF_NAME : friend.name
+            const senderName = mine ? dispName(SELF_NAME, names) : fname
             const senderColor = mine ? SELF : friend.color
             return (
               <Fragment key={m.id}>
@@ -2525,7 +3367,7 @@ function DMPage({ friend, onBack, onOpenBlend }) {
                     {m.kind === 'invite' ? (
                       <InviteMessage msg={m} mine={mine} onRespond={(accept) => respondInvite(m, accept)} />
                     ) : m.kind === 'game' ? (
-                      <GameMessage msg={m} />
+                      <GameMessage msg={m} onOpen={onOpen} />
                     ) : (
                       <p className="mt-[2px] whitespace-pre-wrap break-words text-[15px] leading-snug text-[#dbdee1]">{m.text}</p>
                     )}
@@ -2547,7 +3389,7 @@ function DMPage({ friend, onBack, onOpenBlend }) {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') sendText() }}
-            placeholder={`Message ${friend.name}`}
+            placeholder={`Message ${fname}`}
             className="min-w-0 flex-1 bg-transparent py-[12px] text-[15px] text-white outline-none placeholder:text-[#87898c]"
           />
           <button onClick={sendText} disabled={!draft.trim()} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[16px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Send</button>
@@ -2680,7 +3522,7 @@ function FitFrame({ src, vp }) {
   )
 }
 
-function ModeratorTile({ name, color, vp, online, view, src, onNudge, onExpand }) {
+function ModeratorTile({ name, displayName, onRename, color, vp, online, view, src, hidden, onHide, onNudge, onExpand }) {
   return (
     <div className="flex min-h-0 flex-col overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111114]">
       <div className="flex items-center gap-[10px] px-[12px] py-[8px]">
@@ -2689,17 +3531,33 @@ function ModeratorTile({ name, color, vp, online, view, src, onNudge, onExpand }
           <span className="absolute -bottom-[1px] -right-[1px] size-[9px] rounded-full" style={{ backgroundColor: online ? '#23a55a' : '#5c5e66', border: '2px solid #111114' }} />
         </span>
         <div className="min-w-0">
-          <div className="text-[14px] font-semibold leading-tight">{name}</div>
-          <div className="truncate text-[11px] text-[#80848e]">{online ? describeView(view) : 'offline'}</div>
+          {/* Editable display name — the moderator can rename each participant;
+              the name syncs to the room and shows across that person's screens. */}
+          <input
+            key={displayName}
+            defaultValue={displayName}
+            onBlur={(e) => onRename(e.target.value.trim())}
+            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+            title="Rename this participant"
+            className="w-full rounded-[4px] bg-transparent px-[3px] py-[1px] text-[14px] font-semibold leading-tight text-white outline-none transition hover:bg-[#1c1d21] focus:bg-[#1c1d21]"
+          />
+          <div className="truncate px-[3px] text-[11px] text-[#80848e]">{online ? describeView(view) : 'offline'}</div>
         </div>
         <div className="ml-auto flex shrink-0 gap-[6px]">
-          <button onClick={onExpand} title="Expand" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Expand</button>
-          <button onClick={() => onNudge('home')} title="Send them to Home" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Home</button>
-          <button onClick={() => onNudge('reload')} title="Reload their tab" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Reload</button>
+          <button onClick={onHide} title={hidden ? 'Show this participant' : 'Hide this participant'} className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">{hidden ? 'Show' : 'Hide'}</button>
+          {!hidden && <>
+            <button onClick={onExpand} title="Expand" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Expand</button>
+            <button onClick={() => onNudge('home')} title="Send them to Home" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Home</button>
+            <button onClick={() => onNudge('reload')} title="Reload their tab" className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Reload</button>
+          </>}
         </div>
       </div>
       <div className="min-h-0 flex-1">
-        <FitFrame src={src} vp={vp} />
+        {hidden ? (
+          <div className="flex size-full items-center justify-center text-[13px] text-[#80848e]">Hidden</div>
+        ) : (
+          <FitFrame src={src} vp={vp} />
+        )}
       </div>
     </div>
   )
@@ -2709,7 +3567,8 @@ function ModeratorWall() {
   const room = useRoom({ self: null, seedBlends: SEED_BLENDS })
   const [spec] = useRoomNode('spectate', {})
   const [focus, setFocus] = useState(null)
-  const src = (name) => `${window.location.pathname}?u=${name}&spectate=1&room=${ROOM_ID}`
+  const hidden = room.hiddenProfiles || {} // shared — hidden participants disappear everywhere
+  const src = (name) => `${window.location.pathname}?u=${NAME_TO_U[name] || name}&spectate=1&room=${ROOM_ID}`
   const nudge = (name, type) => writeRoomPath(`spectate/${name}/cmd`, { type, id: Date.now().toString(36), ts: Date.now() })
   const now = Date.now()
   const specMap = spec && typeof spec === 'object' ? spec : {}
@@ -2735,11 +3594,15 @@ function ModeratorWall() {
               <ModeratorTile
                 key={t.name}
                 name={t.name}
+                displayName={dispName(t.name, room.names)}
+                onRename={(n) => room.setName(t.name, n)}
                 color={t.color}
                 vp={vp}
                 online={online}
                 view={s.view}
                 src={src(t.name)}
+                hidden={!!hidden[t.name]}
+                onHide={() => room.setHiddenProfile(t.name, !hidden[t.name])}
                 onNudge={(type) => nudge(t.name, type)}
                 onExpand={() => setFocus(t.name)}
               />
@@ -2765,6 +3628,390 @@ function ModeratorWall() {
   )
 }
 
+// ── Game content detail page (Figma node 822:2328) ──────────────────────────
+// Opens when a game card is clicked anywhere in the app. Data-driven from the
+// existing CATALOG/details, with richer showcase copy per game in DETAIL_COPY
+// (games without bespoke copy fall back to sensible defaults). The left Discord
+// chrome (ServerRail + Sidebar) is provided by Landing; this is the main pane.
+
+// Simple inline glyphs (the Figma assets live on a temporary dev server, so we
+// draw these to match the app's existing inline-SVG convention).
+function ThumbsUpGlyph({ size = 22, className }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor" className={className}>
+      <path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" />
+    </svg>
+  )
+}
+function ShareGlyph({ size = 22 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 15V3M8 7l4-4 4 4" />
+      <path d="M5 11v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8" />
+    </svg>
+  )
+}
+function AppleGlyph({ size = 22 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      <path d="M16.4 12.7c0-2.2 1.8-3.3 1.9-3.4-1-1.5-2.7-1.7-3.3-1.8-1.4-.1-2.7.8-3.4.8s-1.8-.8-2.9-.8c-1.5 0-2.9.9-3.7 2.2-1.6 2.8-.4 6.8 1.1 9 .8 1.1 1.6 2.3 2.8 2.2 1.1 0 1.5-.7 2.9-.7s1.7.7 2.9.7 2-1.1 2.7-2.1c.9-1.3 1.2-2.5 1.2-2.5-.1 0-2.4-.9-2.4-3.6ZM14.3 6.2c.6-.7 1-1.8.9-2.9-.9 0-2 .6-2.7 1.4-.6.6-1.1 1.7-1 2.7 1 .1 2.1-.5 2.8-1.2Z" />
+    </svg>
+  )
+}
+function StarGlyph({ size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      <path d="M12 2.5l2.9 6 6.6.6-5 4.4 1.5 6.4L12 16.9 6 19.9l1.5-6.4-5-4.4 6.6-.6z" />
+    </svg>
+  )
+}
+function PersonGlyph({ size = 16 }) {
+  return (
+    <svg viewBox="0 0 24 24" width={size} height={size} fill="currentColor">
+      <circle cx="12" cy="8" r="4" />
+      <path d="M4 20a8 8 0 0 1 16 0Z" />
+    </svg>
+  )
+}
+
+// A 2×2 white tile grid — the Windows/tiles platform mark from the design.
+function WindowsGlyph({ size = 24 }) {
+  const cell = (size - 3) / 2
+  return (
+    <div style={{ width: size, height: size, display: 'grid', gridTemplateColumns: `${cell}px ${cell}px`, gridTemplateRows: `${cell}px ${cell}px`, gap: 3 }}>
+      {[0, 1, 2, 3].map((i) => <div key={i} style={{ background: '#fff', borderRadius: 1 }} />)}
+    </div>
+  )
+}
+
+const DETAIL_COPY = {
+  ac: {
+    title: "Assassin's Creed Black Flag Resynced",
+    description:
+      "Discover Assassin's Creed IV Black Flag, the classic pirate action-adventure game. Command your ship, hunt Templars and carve your legend as Edward Kenway across the Caribbean's Golden Age of Piracy.",
+    publisher: 'Ubisoft Montreal', developer: 'Ubisoft Montreal',
+    released: '10/29/2013', storage: '16 GB RAM', difficulty: 'Intermediate',
+    ratingPct: '80%', ratingCount: '15K', recPct: '75%',
+    lastSession: '04/18/2026', sessionRecord: '4.2 Hours', totalTime: '14.8 Hours',
+  },
+}
+
+// Merge catalog data + showcase copy into one view model, with fallbacks so any
+// game opens a sensible page even without bespoke copy.
+function detailFor(key) {
+  const g = CATALOG[key] || {}
+  const c = DETAIL_COPY[key] || {}
+  return {
+    key,
+    image: g.image,
+    title: c.title || g.title || 'Untitled',
+    description: c.description || g.caption || '',
+    players: g.players || '1-4',
+    playtime: g.playtime || '~2hrs',
+    genre: capName(g.genre || 'action'),
+    difficulty: c.difficulty || 'Intermediate',
+    publisher: c.publisher || g.developer || 'Unknown',
+    developer: c.developer || g.developer || 'Unknown',
+    released: c.released || 'TBA',
+    storage: c.storage || '16 GB',
+    ratingPct: c.ratingPct || '80%',
+    ratingCount: c.ratingCount || '12K',
+    recPct: c.recPct || '75%',
+    lastSession: c.lastSession || '04/18/2026',
+    sessionRecord: c.sessionRecord || '4.2 Hours',
+    totalTime: c.totalTime || '14.8 Hours',
+  }
+}
+
+const REVIEW_BODY =
+  'I have never really been able to get into the AC Games for some reason, they should appeal to me since I tend to enjoy this type of game but despite trying many (I have several outside of the ones I have on Steam), they just never managed to hold my attention. At least until now that is . . .'
+
+const REVIEWS = [
+  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', pct: '80%' },
+  { name: 'Timmy Two Toes', color: AVATAR.purple, joined: '06/18/2015', skill: 'Veteran', privacy: 'Public', title: 'Better Than Expected', pct: '80%' },
+  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', pct: '80%' },
+  { name: 'Timmy Two Toes', color: AVATAR.purple, joined: '06/18/2015', skill: 'Veteran', privacy: 'Public', title: 'Better Than Expected', pct: '80%' },
+  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', pct: '80%' },
+  { name: 'Timmy Two Toes', color: AVATAR.purple, joined: '06/18/2015', skill: 'Veteran', privacy: 'Public', title: 'Better Than Expected', pct: '80%' },
+]
+
+function DetailPill({ children }) {
+  return (
+    <span className="flex items-center gap-[6px] whitespace-nowrap rounded-full border border-[#8e9297] px-[12px] py-[3px] text-[14px] font-semibold text-[#c7c9cb]">
+      {children}
+    </span>
+  )
+}
+
+function InfoLine({ label, children }) {
+  return (
+    <p className="text-[16px] leading-[1.7] text-[#9a9ba3]">
+      {label} <span className="font-semibold text-[#e7e7e7]">{children}</span>
+    </p>
+  )
+}
+
+function PrivacyBadge({ kind }) {
+  const friends = kind === 'Friends Only'
+  return (
+    <span className="flex items-center gap-[7px] whitespace-nowrap rounded-[6px] border border-white/70 px-[12px] py-[6px] text-[13px] font-semibold text-white">
+      {friends ? <StarGlyph size={14} /> : <PersonGlyph size={14} />}
+      {kind}
+    </span>
+  )
+}
+
+function ReviewCard({ r }) {
+  return (
+    <div className="flex gap-[20px] rounded-[10px] bg-[#121214] p-[20px]">
+      <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
+      <div className="flex w-[220px] shrink-0 flex-col justify-start pt-[2px]">
+        <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
+        <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
+        <p className="text-[13px] text-[#6f7276]">Skill Level: <span className="text-[#9a9ba3]">{r.skill}</span></p>
+      </div>
+      <div className="relative flex flex-1 flex-col">
+        <div className="mb-[6px] flex items-start justify-between gap-[16px]">
+          <p className="text-[26px] font-semibold leading-tight text-white">{r.title}</p>
+          <div className="flex shrink-0 items-center gap-[10px]">
+            <PrivacyBadge kind={r.privacy} />
+            <span className="flex items-center gap-[6px] text-[18px] font-semibold text-white">{r.pct} <ThumbsUpGlyph size={20} /></span>
+          </div>
+        </div>
+        {/* Body fades out toward the bottom — the "read more" effect from Figma. */}
+        <p
+          className="max-h-[96px] overflow-hidden text-[15px] leading-[1.5] text-transparent"
+          style={{ backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
+        >
+          {REVIEW_BODY}
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// Extra screenshot slides per game (beyond the cover), extensible as art lands.
+const GALLERY = {}
+
+// Build the ordered media slides for a game's hero carousel: cover first, then
+// any bespoke screenshots, then the trailer (as a video slide) if one exists.
+function slidesFor(key, cover) {
+  const slides = [{ type: 'image', src: cover }]
+  for (const src of GALLERY[key] || []) slides.push({ type: 'image', src })
+  if (VIDEOS[key]) slides.push({ type: 'video', youTubeId: VIDEOS[key], poster: cover })
+  return slides
+}
+
+// Hero image/video carousel — arrow buttons wrap around, dots jump directly,
+// and left/right arrow keys page through. Only the active video slide mounts a
+// live trailer; the rest fall back to their poster so we never stack iframes.
+function HeroCarousel({ slides, children }) {
+  const [i, setI] = useState(0)
+  const n = slides.length
+  const go = (dir) => setI((p) => (p + dir + n) % n)
+  useEffect(() => {
+    if (n <= 1) return
+    const onKey = (e) => {
+      if (e.key === 'ArrowLeft') setI((p) => (p - 1 + n) % n)
+      else if (e.key === 'ArrowRight') setI((p) => (p + 1) % n)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [n])
+  return (
+    <div className="group relative w-full shrink-0 overflow-hidden rounded-[10px] bg-black shadow-[0_4px_20px_rgba(0,0,0,0.5)] lg:w-[560px]">
+      <div
+        className="flex aspect-[16/10] w-full transition-transform duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+        style={{ transform: `translateX(-${i * 100}%)` }}
+      >
+        {slides.map((s, idx) => (
+          <div key={idx} className="relative size-full shrink-0 basis-full bg-black">
+            {s.type === 'video' && idx === i ? (
+              <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} />
+            ) : (
+              <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
+            )}
+            {s.type === 'video' && (
+              <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">Trailer</span>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Overlay content (platform marks) passed by the parent */}
+      {children}
+
+      {n > 1 && (
+        <>
+          <button
+            onClick={() => go(-1)}
+            aria-label="Previous"
+            className="absolute left-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
+          >
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          <button
+            onClick={() => go(1)}
+            aria-label="Next"
+            className="absolute right-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
+          >
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+          <div className="absolute bottom-[14px] left-1/2 flex -translate-x-1/2 gap-[7px]">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setI(idx)}
+                aria-label={`Slide ${idx + 1}`}
+                className={'size-[7px] rounded-full transition ' + (idx === i ? 'scale-110 bg-white' : 'bg-white/40 hover:bg-white/70')}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+function GameDetailPage({ gameKey, onBack, onWishlist, onShare, onOpen, onPlay }) {
+  const d = detailFor(gameKey)
+  const slides = slidesFor(gameKey, d.image)
+  const playedBy = [AVATAR.blue, AVATAR.purple, AVATAR.green]
+  const recCinematic = CINEMATIC_ROW.filter((c) => c.id !== gameKey)
+  const recPortrait = PORTRAIT_ROW.filter((c) => c.id !== gameKey)
+
+  return (
+    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+      {/* Top nav — back arrow + the standard Home/Library header */}
+      <header className="flex h-[56px] shrink-0 items-center gap-[20px] border-b border-[#1c1d21] px-[24px]">
+        <button onClick={onBack} aria-label="Back" className="flex size-[34px] items-center justify-center rounded-full text-[#c7c9cb] transition hover:bg-white/10 hover:text-white">
+          <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+        </button>
+        <XboxLogo size={24} />
+        <button onClick={onBack} className="pb-[2px] text-[16px] font-medium text-[#9a9ba3] hover:text-white">Home</button>
+        <button className="pb-[2px] text-[16px] font-medium text-[#9a9ba3] hover:text-white">Library</button>
+        <div className="flex flex-1 items-center justify-end gap-[20px]">
+          <img alt="Search" src={searchIcon} className="size-[22px] opacity-80" />
+        </div>
+      </header>
+
+      <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[32px]">
+        <div className="mx-auto w-full max-w-[1240px]">
+          {/* Hero — cover on the left, title/description/tags/ratings on the right */}
+          <section className="flex flex-col gap-[32px] lg:flex-row">
+            <HeroCarousel slides={slides}>
+              {/* Platform marks, bottom-left of the cover */}
+              <div className="pointer-events-none absolute bottom-[16px] left-[16px] z-[1] flex items-center gap-[16px] text-white [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.8))]">
+                <WindowsGlyph size={26} />
+                <AppleGlyph size={26} />
+              </div>
+            </HeroCarousel>
+
+            <div className="flex min-w-0 flex-1 flex-col">
+              <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-white">{d.title}</h1>
+              <p className="mt-[16px] max-w-[560px] text-[16px] leading-[1.5] text-[#a2a4ae]">{d.description}</p>
+              <div className="mt-[20px] flex flex-wrap items-center gap-[8px]">
+                <DetailPill>
+                  <img alt="" src={userGroup} className="size-[15px] -scale-x-100" />
+                  {d.players}
+                </DetailPill>
+                <DetailPill>{d.playtime}</DetailPill>
+                <DetailPill>{d.genre}</DetailPill>
+                <DetailPill>{d.difficulty}</DetailPill>
+              </div>
+
+              {/* Rating cluster */}
+              <div className="mt-[26px] flex flex-wrap items-center gap-x-[40px] gap-y-[16px]">
+                <div className="flex items-center gap-[10px]">
+                  <span className="text-[34px] font-semibold leading-none text-white">{d.ratingPct}</span>
+                  <ThumbsUpGlyph size={24} className="text-white" />
+                  <span className="text-[13px] leading-[1.15] text-[#9a9ba3]">out of<br /><span className="font-semibold text-[#c7c9cb]">{d.ratingCount} ratings</span></span>
+                </div>
+                <div className="flex items-center gap-[10px]">
+                  <span className="text-[34px] font-semibold leading-none text-white">{d.recPct}</span>
+                  <ThumbsUpGlyph size={24} className="text-white" />
+                  <div className="flex items-center">
+                    {playedBy.map((c, i) => (
+                      <Avatar key={i} color={c} size={28} style={{ marginRight: i < playedBy.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* Action bar */}
+          <section className="mt-[28px] flex items-center gap-[12px]">
+            <button
+              onClick={() => onPlay?.(gameKey)}
+              className="flex items-center gap-[10px] rounded-[8px] bg-[#107C10] px-[30px] py-[12px] text-[16px] font-bold text-white shadow-[0_2px_12px_rgba(16,124,16,0.45)] transition hover:bg-[#0e8f0e]"
+            >
+              <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+              Play
+            </button>
+            <button
+              onClick={() => onWishlist?.(d.title)}
+              className="flex items-center gap-[10px] rounded-[8px] border-2 border-white/85 px-[26px] py-[11px] text-[16px] font-bold text-white transition hover:bg-white/10"
+            >
+              <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
+              Add to PLAYlist
+            </button>
+            <button
+              onClick={() => onShare?.(d.title)}
+              aria-label="Share"
+              className="flex size-[48px] items-center justify-center rounded-[8px] border-2 border-white/85 text-white transition hover:bg-white/10"
+            >
+              <ShareGlyph size={22} />
+            </button>
+          </section>
+
+          {/* Metadata columns */}
+          <section className="mt-[28px] grid grid-cols-1 gap-x-[64px] gap-y-[8px] border-t border-[#1c1d21] pt-[24px] md:grid-cols-2">
+            <div>
+              <InfoLine label="Publisher:">{d.publisher}</InfoLine>
+              <InfoLine label="Developer:">{d.developer}</InfoLine>
+              <InfoLine label="Released:">{d.released}</InfoLine>
+              <InfoLine label="Required Storage:">{d.storage}</InfoLine>
+            </div>
+            <div>
+              <div className="flex items-center gap-[10px] text-[16px] leading-[1.7] text-[#9a9ba3]">
+                Played By:
+                <span className="flex items-center">
+                  {playedBy.map((c, i) => (
+                    <Avatar key={i} color={c} size={24} style={{ marginRight: i < playedBy.length - 1 ? -7 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                  ))}
+                </span>
+              </div>
+              <InfoLine label="Last Group Session:">{d.lastSession}</InfoLine>
+              <InfoLine label="Group Session Record:">{d.sessionRecord}</InfoLine>
+              <InfoLine label="Total Game Time:">{d.totalTime}</InfoLine>
+            </div>
+          </section>
+
+          {/* Reviews */}
+          <section className="mt-[36px] flex flex-col gap-[16px]">
+            {REVIEWS.map((r, i) => <ReviewCard key={i} r={r} />)}
+          </section>
+
+          {/* Recommendation rows — each card opens its own detail page */}
+          <div className="mt-[24px]">
+            <ShelfRow title="Based on Your Friends Activity" subtitle="Games your crew has been into.">
+              {recCinematic.map((c) => (
+                <CinematicCard key={c.id} {...c} onWishlist={onWishlist} onOpen={onOpen} />
+              ))}
+            </ShelfRow>
+          </div>
+          <ShelfRow title="Similar Play Time" subtitle="Matched to how long your sessions run.">
+            {recPortrait.map((c) => (
+              <PortraitCard key={c.id} {...c} onOpen={onOpen} />
+            ))}
+          </ShelfRow>
+        </div>
+      </div>
+    </main>
+  )
+}
+
 export default function Landing() {
   if (IS_MODERATOR) return <ModeratorWall />
   const room = useRoom({ self: IS_LIVE ? SELF_NAME : null, seedBlends: SEED_BLENDS })
@@ -2772,12 +4019,17 @@ export default function Landing() {
   const byId = (id) => blends.find((b) => b.id === id) || null
 
   const [blendId, setBlendId] = useState(null)
+  const [detailKey, setDetailKey] = useState(null) // game content detail page
+  const [detailFrom, setDetailFrom] = useState(null) // where the detail was opened from ({dm}|{blend}|null)
   const [createOpen, setCreateOpen] = useState(false)
   const [wishlistGame, setWishlistGame] = useState(null)
   const [shareGame, setShareGame] = useState(null)
   const [prefsForId, setPrefsForId] = useState(null)
   const [decide, setDecide] = useState(null) // { blendId, prefs }
   const [launching, setLaunching] = useState(null)
+  const [playKey, setPlayKey] = useState(null) // game key whose "Who's playing?" modal is open
+  const [whoOpen, setWhoOpen] = useState(false) // "See who's on PARTY" friends popup
+  const [gameMenu, setGameMenu] = useState(null) // { x, y, title } — global right-click game menu
   const [dmName, setDmName] = useState(null)
 
   // Per-conversation "last read" timestamps drive the unread dots in the
@@ -2791,11 +4043,25 @@ export default function Landing() {
     setReads(next)
     try { localStorage.setItem(READ_KEY, JSON.stringify(next)) } catch {}
   }
-  const openDm = (name) => { markRead(name); setDmName(name); setBlendId(null); setDecide(null) }
+  const openDm = (name) => { markRead(name); setDmName(name); setBlendId(null); setDecide(null); setDetailKey(null) }
+  // Cards hand back a game title; map it to a catalog key and open the detail page.
+  const openGame = (titleOrKey) => {
+    const key = CATALOG[titleOrKey] ? titleOrKey : (KEY_OF_TITLE[titleOrKey] || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey))
+    if (!key) return
+    // Remember where we came from so the detail page's Back returns there.
+    setDetailFrom(dmName ? { dm: dmName } : blendId ? { blend: blendId } : null)
+    setDetailKey(key); setDmName(null); setBlendId(null); setDecide(null)
+  }
+  const closeDetail = () => {
+    setDetailKey(null)
+    if (detailFrom?.dm) setDmName(detailFrom.dm)
+    else if (detailFrom?.blend) setBlendId(detailFrom.blend)
+    setDetailFrom(null)
+  }
 
   // Observation plumbing. A live tester publishes their nav + pointer/scroll;
   // a spectator instance reads it back and drives the view read-only.
-  const nav = { blendId, dmName, decide, createOpen, wishlistGame, shareGame, prefsForId }
+  const nav = { blendId, detailKey, dmName, decide, createOpen, wishlistGame, shareGame, prefsForId, playKey, whoOpen, gameMenu }
   useMirrorPublish(nav)
   const [mirror] = useRoomNode(IS_SPECTATE ? SPECTATE_PATH : 'spectate/__none', null)
   const [cmd] = useRoomNode(IS_LIVE ? `${SPECTATE_PATH}/cmd` : 'spectate/__nocmd', null)
@@ -2817,7 +4083,7 @@ export default function Landing() {
     writeRoomPath(`${SPECTATE_PATH}/cmd`, null)
     if (Date.now() - (cmd.ts || 0) > 15000) return
     if (cmd.type === 'reload') { window.location.reload(); return }
-    if (cmd.type === 'home') { setBlendId(null); setDmName(null); setDecide(null); setCreateOpen(false); setWishlistGame(null); setShareGame(null); setPrefsForId(null) }
+    if (cmd.type === 'home') { setBlendId(null); setDetailKey(null); setDmName(null); setDecide(null); setCreateOpen(false); setWishlistGame(null); setShareGame(null); setPrefsForId(null); setPlayKey(null); setWhoOpen(false); setGameMenu(null) }
   }, [cmd])
 
   // Replay the mirrored scroll onto the matching container.
@@ -2834,15 +4100,21 @@ export default function Landing() {
   // In spectate mode the whole view is driven by the published `view` blob.
   const mv = IS_SPECTATE ? (mirror?.view || {}) : null
   const eBlendId = IS_SPECTATE ? (mv.blendId ?? null) : blendId
+  const eDetailKey = IS_SPECTATE ? (mv.detailKey ?? null) : detailKey
   const eDmName = IS_SPECTATE ? (mv.dmName ?? null) : dmName
   const eDecide = IS_SPECTATE ? (mv.decide ?? null) : decide
   const eCreateOpen = IS_SPECTATE ? !!mv.createOpen : createOpen
   const eWishlistGame = IS_SPECTATE ? (mv.wishlistGame ?? null) : wishlistGame
   const eShareGame = IS_SPECTATE ? (mv.shareGame ?? null) : shareGame
   const ePrefsForId = IS_SPECTATE ? (mv.prefsForId ?? null) : prefsForId
+  const ePlayKey = IS_SPECTATE ? (mv.playKey ?? null) : playKey
+  const eWhoOpen = IS_SPECTATE ? !!mv.whoOpen : whoOpen
+  const eGameMenu = IS_SPECTATE ? (mv.gameMenu ?? null) : gameMenu
 
   // The live wheel spin — read here so the notification reaches every page.
   const spin = useSpin()
+  // The live launch party — likewise shared, so its toast reaches every page.
+  const party = useLaunch()
 
   const blend = byId(eBlendId)
   const prefsFor = byId(ePrefsForId)
@@ -2853,7 +4125,12 @@ export default function Landing() {
     <RoomProvider value={room}>
       <div
         className={'group/rail flex h-screen w-screen overflow-hidden bg-black text-white' + (IS_SPECTATE ? ' pointer-events-none select-none' : '')}
-        onContextMenu={(e) => e.preventDefault()}
+        onContextMenu={(e) => {
+          e.preventDefault()
+          // Right-clicking any game card (tagged with data-game) opens the game menu.
+          const el = e.target.closest?.('[data-game]')
+          if (el) setGameMenu({ x: e.clientX, y: e.clientY, title: el.getAttribute('data-game') })
+        }}
       >
         <ServerRail />
         <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} reads={reads} />
@@ -2863,15 +4140,27 @@ export default function Landing() {
             friend={dmFriend}
             onBack={() => setDmName(null)}
             onOpenBlend={(id) => { setDmName(null); setBlendId(id) }}
+            onOpen={openGame}
           />
         ) : decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={eDecide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
-          <BlendPage key={blend.id} blend={blend} spin={spin} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} />
+          <BlendPage key={blend.id} blend={blend} spin={spin} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} />
+        ) : eDetailKey ? (
+          <GameDetailPage
+            key={eDetailKey}
+            gameKey={eDetailKey}
+            onBack={closeDetail}
+            onWishlist={setWishlistGame}
+            onShare={setShareGame}
+            onOpen={openGame}
+            onPlay={setPlayKey}
+          />
         ) : (
-          <Content onOpenBlend={(b) => { setDmName(null); setBlendId(b.id) }} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} />
+          <Content onOpenBlend={(b) => { setDmName(null); setBlendId(b.id) }} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} />
         )}
         {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
+        {eWhoOpen && <WhosOnModal onClose={() => setWhoOpen(false)} onCreated={(id) => { setWhoOpen(false); setBlendId(id) }} />}
         {eWishlistGame && <WishlistModal game={eWishlistGame} onClose={() => setWishlistGame(null)} />}
         {eShareGame && <ShareModal game={eShareGame} onClose={() => setShareGame(null)} />}
         {prefsFor && (
@@ -2882,11 +4171,57 @@ export default function Landing() {
           />
         )}
 
+        {/* "Who's playing?" invite picker (host only), opened from a game's Play button */}
+        {ePlayKey && CATALOG[ePlayKey] && (
+          <WhosPlayingModal
+            game={{ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }}
+            onClose={() => setPlayKey(null)}
+            onStart={(invitees) => {
+              party.start({ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }, invitees)
+              setPlayKey(null)
+            }}
+          />
+        )}
+
+        {/* Global right-click game menu (any card tagged data-game) */}
+        {eGameMenu && (
+          <ContextMenu
+            x={eGameMenu.x}
+            y={eGameMenu.y}
+            onClose={() => setGameMenu(null)}
+            items={[
+              { label: 'Start a party', icon: PLAY_GLYPH, primary: true, onClick: () => { const k = KEY_OF_TITLE[eGameMenu.title]; setGameMenu(null); if (k) setPlayKey(k) } },
+              { divider: true },
+              { label: 'Add to Mix', icon: BOOKMARK_MENU_GLYPH, onClick: () => { setWishlistGame(eGameMenu.title); setGameMenu(null) } },
+              { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setGameMenu(null) },
+            ]}
+          />
+        )}
+
         {/* Server-wide spin notification — follows you across every page */}
         <SpinNotification
           state={spin}
           onLaunch={setLaunching}
           onOpenBlend={(id) => { setDecide(null); setBlendId(id) }}
+          onParty={(picked, sp) => {
+            // Everyone who was "in" on the spin becomes an invitee (host aside);
+            // launching the party notifies them all, then the spin clears.
+            const { yes } = spinTally(sp)
+            const invitees = [...new Set([...(sp.roster || []), ...yes])].filter((n) => n !== SELF_NAME)
+            const g = CATALOG[picked.key]
+            party.start({ key: picked.key, title: picked.title, image: g?.image }, invitees)
+            spin.clear()
+          }}
+        />
+        {/* Server-wide launch-party toast — likewise follows you across pages */}
+        <LaunchNotification
+          launch={party.launch}
+          readyUp={party.readyUp}
+          undoReady={party.undoReady}
+          decline={party.decline}
+          launchNow={party.launchNow}
+          clear={party.clear}
+          onLaunch={setLaunching}
         />
         {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
 

@@ -12,3 +12,6 @@ dist-ssr
 
 # Claude local settings
 .claude/settings.local.json
+
+# Large local-only video (exceeds GitHub 100MB limit)
+public/PartyHome.mp4

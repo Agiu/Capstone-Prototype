@@ -365,7 +365,7 @@ function RecCard({ avatars, label, image, players, details, video, featured, fre
   const allOwn = FRIENDS.every((c) => ownerState(c, own, gamePass, gpTier) !== 'none')
   const isFeatured = featured || allOwn
   // The bookmark is a wishlist marker: filled when the user (green) wishlisted it.
-  const wishlistedByMe = label === 'wishlisted this game' && (avatars || []).includes(AVATAR.green)
+  const wishlistedByMe = label === 'PLAYlisted this game' && (avatars || []).includes(AVATAR.green)
 
   return (
     <div
@@ -821,14 +821,14 @@ export default function RecServer() {
   const newOnGamePass = [
     { avatars: [AVATAR.blue, AVATAR.green], label: 'played this together', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: seaOfThievesDetails, owners: [AVATAR.blue, AVATAR.green, AVATAR.purple], bookmarked: true },
     { avatars: [AVATAR.red], label: 'recommends this game', players: '1-4', image: heroMinecraftDungeons, video: { youTubeId: 'TxNH6bapa3A', poster: heroMinecraftDungeons }, details: minecraftDungeonsDetails, owners: [AVATAR.red, AVATAR.purple], shared: true },
-    { avatars: [AVATAR.purple], label: 'wishlisted this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: wildHeartsDetails, owners: [AVATAR.blue] },
+    { avatars: [AVATAR.purple], label: 'PLAYlisted this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: wildHeartsDetails, owners: [AVATAR.blue] },
     { avatars: [AVATAR.red, AVATAR.purple], label: 'played this together', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: humanFallFlatDetails, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red], bookmarked: true, shared: true },
   ]
   const greatWithGroup = [
     { avatars: [AVATAR.green], label: 'wants to play this', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: overcookedDetails, owners: [AVATAR.green, AVATAR.red], bookmarked: true },
     { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: monsterHunterDetails, owners: [AVATAR.blue, AVATAR.red], shared: true },
     { avatars: [AVATAR.purple, AVATAR.green], label: 'played this together', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: groundedDetails, owners: [AVATAR.green, AVATAR.purple] },
-    { avatars: [AVATAR.red], label: 'wishlisted this game', players: '1-4', image: heroForHonor, video: { youTubeId: 'cBzhMK22XRs', poster: heroForHonor }, details: forHonorDetails, owners: [AVATAR.red], bookmarked: true },
+    { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-4', image: heroForHonor, video: { youTubeId: 'cBzhMK22XRs', poster: heroForHonor }, details: forHonorDetails, owners: [AVATAR.red], bookmarked: true },
   ]
 
   useLayoutEffect(() => {
@@ -1043,7 +1043,7 @@ export default function RecServer() {
               {/* Card 3 — League of Legends, free-to-play for everyone */}
               <RecCard
                 avatars={[AVATAR.green]}
-                label="wishlisted this game"
+                label="PLAYlisted this game"
                 players="1-5"
                 image={heroLol}
                 video={lolTrailer}
