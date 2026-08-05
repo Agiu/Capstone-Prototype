@@ -2961,14 +2961,16 @@ function SpinPanel({ blend, state, onLaunch }) {
   const elsewhere = spin && spin.blendId !== blend.id ? spin : null
 
   // What's on the wheel is the wheel's business: a separate shared list that
-  // starts as the blend's games, so trimming it is purely a "don't spin for
-  // that tonight" call and never touches the blend or the catalog.
+  // starts as the blend's games PLUS the group's XBOX PLAYlist, so trimming it
+  // is purely a "don't spin for that tonight" call and never touches the blend
+  // or the catalog.
   const [savedKeys, setWheelKeys] = useRoomNode('wheel/' + blend.id, null)
   const saved = Array.isArray(savedKeys) ? savedKeys.filter((k) => CATALOG[k]) : null
   const custom = saved && saved.length >= 2 ? saved : null
   // Never trust a key straight from the room — a game that's left the catalog
-  // would take the whole page down with it.
-  const wheelKeys = custom || blend.games.filter((k) => CATALOG[k])
+  // would take the whole page down with it. PLAYlist picks lead, then the rest
+  // of the Mix's games, deduped.
+  const wheelKeys = custom || [...new Set([...(blend.wishlist || []), ...(blend.games || [])])].filter((k) => CATALOG[k])
 
   // Edits show on the wheel straight away. The one exception is the ~4s it's
   // actually turning: that animation is locked to the list the spinner rolled
