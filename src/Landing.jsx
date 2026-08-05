@@ -235,9 +235,10 @@ const DMS = [
   { name: 'daniel', color: AVATAR.red, status: 'Streaming Minecraft' },
 ]
 
-function NavItem({ icon, label, active }) {
+function NavItem({ icon, label, active, onClick }) {
   return (
     <button
+      onClick={onClick}
       className="flex h-[42px] w-full items-center gap-[14px] rounded-[6px] px-[10px] text-[16px] transition-colors"
       style={{ color: active ? '#fff' : D.dim, backgroundColor: active ? D.raised : 'transparent' }}
       onMouseEnter={(e) => { if (!active) e.currentTarget.style.backgroundColor = D.hover }}
@@ -280,7 +281,7 @@ function DmRow({ name, color, status, online, active, unread = 0, onClick }) {
   )
 }
 
-function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, reads = {} }) {
+function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome, reads = {} }) {
   const inbox = useInbox()
   const room = useRoomCtx()
   const names = (room && room.names) || {}
@@ -300,7 +301,8 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, reads 
         <div className="flex flex-col gap-[2px] pt-[2px]">
           {NAV.map((n) => <NavItem key={n.label} icon={n.icon} label={n.label} />)}
           <NavItem
-            active
+            active={!activeDm}
+            onClick={onHome}
             label="XBOX PARTY"
             icon={<XboxLogo size={20} />}
           />
@@ -1230,7 +1232,8 @@ const STEAM_HEADER = (id) => `https://cdn.cloudflare.steamstatic.com/steam/apps/
 // local art) keep their entry; the rest get a Steam-art entry under a gp_ key.
 STARTER_LIBRARY.forEach((g) => {
   const k = g.catKey
-  if (!CATALOG[k] && g.steamAppId) {
+  if (!CATALOG[k]) {
+    if (!g.steamAppId) return // no art / not on Steam — stays a Library-only tile
     CATALOG[k] = {
       title: g.title,
       image: STEAM_HEADER(g.steamAppId),
@@ -1241,6 +1244,9 @@ STARTER_LIBRARY.forEach((g) => {
       caption: `${g.genre} — playable free with Game Pass Starter.`,
     }
   }
+  // Title → key must include Starter games too, or "already in PLAYlist" checks
+  // (and right-click "Add to PLAYlist") silently miss them.
+  KEY_OF_TITLE[g.title] = k
   if (g.youTubeId && !VIDEOS[k]) VIDEOS[k] = g.youTubeId
   if (!details[k]) details[k] = {
     title: g.title, developer: 'Game Pass', genre: g.genre, playtime: '~2hrs',
@@ -4795,7 +4801,7 @@ export default function Landing() {
         <TopBar />
         <div className="group/rail flex min-h-0 flex-1 overflow-hidden">
         <ServerRail />
-        <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} onOpenBlend={openBlend} reads={reads} />
+        <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} onOpenBlend={openBlend} onHome={goHome} reads={reads} />
         {dmFriend ? (
           <DMPage
             key={dmFriend.name}
