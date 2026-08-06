@@ -147,7 +147,7 @@ export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical }) {
       <iframe
         ref={frameRef}
         title="Game footage"
-        className={'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? ' [scale:1.45]' : '')}
+        className={'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? (vertical ? ' [scale:1.28]' : ' [scale:1.45]') : '')}
         src={`https://www.youtube-nocookie.com/embed/${youTubeId}?${params}`}
         allow="autoplay; encrypted-media"
       />
