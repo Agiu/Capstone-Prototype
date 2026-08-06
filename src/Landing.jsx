@@ -181,7 +181,7 @@ function TopBar() {
 function ServerRail() {
   return (
     <nav
-      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-[8px] overflow-y-auto pb-[112px] pt-[12px] no-scrollbar"
+      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-[8px] overflow-y-auto py-[12px] no-scrollbar"
       style={{ backgroundColor: D.rail }}
     >
       {SERVERS.map((s, i) => {
@@ -377,9 +377,8 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
         )}
       </div>
 
-      {/* Voice + user panel — spans the whole side menu (server rail + sidebar),
-          Discord-style, in #202024. It extends 72px left to cover the rail. */}
-      <div className="relative z-[30] -ml-[72px] w-[calc(100%+72px)] pt-[8px]" style={{ backgroundColor: '#202024' }}>
+      {/* Voice + user panel — fills the sidebar menu, Discord-style, in #202024. */}
+      <div className="pt-[8px]" style={{ backgroundColor: '#202024' }}>
       {/* Voice connected bar */}
       <div className="mx-[8px] mb-[2px] flex items-center justify-between rounded-[8px] px-[8px] py-[6px]" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
         <div className="flex items-center gap-[8px]">
@@ -916,9 +915,9 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         {/* Discord-style thin divider under the nav */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
         <XboxLogo size={24} />
-        <button className="border-b-2 border-white pb-[2px] text-[16px] font-medium text-white">Home</button>
-        <button onClick={onLibrary} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] hover:text-white">Library</button>
-        <button onClick={onMixes} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] hover:text-white">Mixes</button>
+        <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Home</button>
+        <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
+        <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
@@ -5177,10 +5176,11 @@ export default function Landing() {
       >
         <NavCtx.Provider value={navCtx}>
         <TopBar />
-        {/* Inner screen — a rounded, gray-bordered surface inset from the window
-            edges, matching Discord's window chrome. */}
-        <div className="group/rail mx-[8px] mb-[8px] flex min-h-0 flex-1 overflow-hidden rounded-[10px] border border-white/10">
+        <div className="group/rail flex min-h-0 flex-1 overflow-hidden">
         <ServerRail />
+        {/* The menu (sidebar) + main content sit in a rounded, gray-bordered box.
+            The server rail is left outside it, flush to the window edge. */}
+        <div className="my-[8px] mr-[8px] flex min-h-0 flex-1 overflow-hidden rounded-[10px] border border-white/10">
         <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} onOpenBlend={openBlend} onHome={goHome} reads={reads} />
         {dmFriend ? (
           <DMPage
@@ -5214,6 +5214,7 @@ export default function Landing() {
         ) : (
           <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onMixes={openMixes} onLibrary={openLibrary} />
         )}
+        </div>
         </div>
         {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
         {eWhoOpen && <WhosOnModal onClose={() => setWhoOpen(false)} onCreated={(id) => { setWhoOpen(false); setBlendId(id) }} />}
