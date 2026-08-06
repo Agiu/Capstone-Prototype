@@ -5176,7 +5176,7 @@ export default function Landing() {
       >
         <NavCtx.Provider value={navCtx}>
         <TopBar />
-        <div className="group/rail flex min-h-0 flex-1 overflow-hidden">
+        <div className="group/rail flex min-h-0 flex-1 overflow-hidden" style={{ backgroundColor: D.rail }}>
         <ServerRail />
         {/* The menu (sidebar) + main content — flush to the window, with only the
             top-left corner rounded and a gray border on the top + left edges
