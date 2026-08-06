@@ -786,7 +786,9 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
  * slides in with title, publisher, release date, blurb, a recommendation line
  * and user-tag pills.
  */
-export function PortraitCard({ image, video, title, publisher, released, recommend, multiplayer, tags = [], onOpen, forceReveal }) {
+export function PortraitCard({ image, video, title, publisher, released, recommend, avatars, multiplayer, tags = [], belowAvatars, onOpen, forceReveal }) {
+  const pair = avatars && avatars.length ? avatars.slice(0, 2) : [AVATAR.blue, AVATAR.purple]
+  const shortRec = recommend ? recommend.replace(/ (have|has) played recently$/, '') : ''
   // The cover swaps to the trailer while hovered (Figma 979:1206).
   const [hover, setHover] = useState(false)
   const showVid = (hover || forceReveal) && video?.youTubeId
@@ -800,6 +802,7 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
   // Spectate mirroring: force the expand + reveal on (a moderator can't hover).
   const F = forceReveal ? ' !opacity-100' : ''
   return (
+    <div className="flex shrink-0 flex-col">
     <div
       data-game={title}
       onClick={() => onOpen?.(title)}
@@ -819,15 +822,20 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
       {/* Info panel (right) — fades in as the card expands */}
       <div className={`${fade}${F} flex h-full w-[252px] shrink-0 flex-col gap-[10px] overflow-hidden bg-[#15181c] p-[16px] group-hover:delay-[100ms]`}>
         <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
-        {recommend && (
+        {recommend ? (
           <div className="flex items-center gap-[6px]">
             <div className="flex items-center">
-              {[AVATAR.blue, AVATAR.purple].map((c, i) => (
+              {pair.map((c, i) => (
                 <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#15181c]" style={{ marginRight: i < 1 ? -6 : 0, zIndex: 2 - i }} />
               ))}
               <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>
             </div>
             <p className="text-[12px] leading-[1.2] text-white">{recommend}</p>
+          </div>
+        ) : (
+          <div className="flex items-center gap-[7px]">
+            <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#9BF00B]" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4 3.9.9 5.6L12 15l-4.9 2.5L8 11.9 4 8l5.6-.6L12 2z" /></svg>
+            <p className="text-[12px] font-medium leading-[1.2] text-[#9BF00B]">Be the first to suggest this!</p>
           </div>
         )}
         <div className="flex flex-col text-[12px] leading-[1.3]">
@@ -842,6 +850,24 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
           </div>
         </div>
       </div>
+    </div>
+    {/* Profile pics under the cover — quick "who has played" glance. */}
+    {belowAvatars && (
+      <div className="mt-[10px] flex w-[200px] items-center gap-[7px]">
+        {recommend ? (
+          <>
+            <div className="flex items-center">
+              {pair.map((c, i) => (
+                <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#0c0c0e]" style={{ marginRight: i < 1 ? -6 : 0, zIndex: 2 - i }} />
+              ))}
+            </div>
+            <span className="truncate text-[12px] text-[#9a9ba3]">{shortRec}</span>
+          </>
+        ) : (
+          <span className="text-[12px] text-[#7e7f87]">No one has played yet</span>
+        )}
+      </div>
+    )}
     </div>
   )
 }

@@ -962,7 +962,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           {/* Friends Are Playing Now — vertical cards that expand on hover */}
           <ShelfRow title="Friends Are Playing Now">
             {HOME_FRIENDS_PLAYING.map((k) => (
-              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
+              <PortraitCard key={k} {...pcard(k)} belowAvatars onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
             ))}
           </ShelfRow>
 
@@ -1279,7 +1279,7 @@ const STARTER_DESC = {
   gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends have played recently' },
   gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '4 friends have played recently' },
   gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: '1 friend has played recently' },
-  gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '2 friends have played recently' },
+  gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '' },
   gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Daniel has played 3 hrs recently' },
   gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'A calm pick for tonight' },
   gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: 'Something a little different' },
@@ -1287,6 +1287,56 @@ const STARTER_DESC = {
   gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Short and unforgettable' },
   gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'A modern classic' },
   gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Beloved by everyone' },
+}
+// A stable, per-game pair of friend avatars so different cards show different
+// profiles (varied but consistent for a given game).
+const AV_POOL = [AVATAR.blue, AVATAR.purple, AVATAR.green, AVATAR.red]
+function pickAvatars(key) {
+  let h = 0
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0
+  const a = h % AV_POOL.length
+  const b = (a + 1 + ((h >>> 3) % (AV_POOL.length - 1))) % AV_POOL.length
+  return [AV_POOL[a], AV_POOL[b]]
+}
+// Native-vertical (9:16) gameplay Shorts for the portrait hover cards. Keyed by
+// catKey. These play in the card's vertical cover, unlike the horizontal
+// trailers we keep for the game-detail carousel.
+const GAMEPLAY_VERTICAL = {
+  gp_doometernal: 'MpLV6Q1pvRQ',
+  gp_deeprockgalactic: 'PBVeMxYTVCM',
+  gp_amongus: 'WPoCeNeST1s',
+  gp_chivalry2: '-ARp2fZjiig',
+  gp_warhammer40000darktide: 'sb1WTXvakSc',
+  gp_warhammervermintide2: 'mS0DSmj9e5Y',
+  gp_batmanarkhamknight: 'KrehP_tNEYM',
+  gp_controlultimateedition: 'bw-u_ryMH-k',
+  gp_dishonored2: 'vis6vpliz30',
+  gp_fallout4: 'MOY67DYMhTI',
+  gp_hellbladesenuassacrifice: 'uhatZ7CO0FM',
+  gp_fallout76: 'QaQsHAc9BCY',
+  gp_unpacking: 'NDeuL6CrJhg',
+  gp_spiritfarer: 'dZwPgMmsI58',
+  gp_tunic: 'MoFyxZnN--U',
+  gp_inside: 'NUEn27l2x1w',
+  gp_celeste: 'MqD6nATJ71I',
+  gp_limbo: 'nQ-PFPBHG7w',
+}
+// Horizontal (16:9) no-commentary gameplay for the wide landscape cards.
+const GAMEPLAY_LANDSCAPE = {
+  gp_stardewvalley: '_XfffJIzEtI',
+  gp_oriandthewillofthewisps: 'fXUrR6EiEcY',
+  gp_firewatch: 'T1bqemD7KPo',
+}
+// Release dates shown on the hover card.
+const STARTER_RELEASED = {
+  gp_doometernal: 'March 20, 2020', gp_deeprockgalactic: 'May 13, 2020', gp_amongus: 'November 16, 2018',
+  gp_chivalry2: 'June 8, 2021', gp_warhammer40000darktide: 'November 30, 2022', gp_warhammervermintide2: 'March 8, 2018',
+  gp_hades: 'September 17, 2020', gp_doom64: 'March 20, 2020', gp_vampiresurvivors: 'October 20, 2022',
+  gp_stardewvalley: 'February 26, 2016', gp_oriandthewillofthewisps: 'March 11, 2020',
+  gp_batmanarkhamknight: 'June 23, 2015', gp_controlultimateedition: 'August 27, 2019', gp_dishonored2: 'November 11, 2016',
+  gp_fallout4: 'November 10, 2015', gp_hellbladesenuassacrifice: 'August 8, 2017', gp_fallout76: 'November 14, 2018',
+  gp_firewatch: 'February 9, 2016', gp_unpacking: 'November 2, 2021', gp_spiritfarer: 'August 18, 2020',
+  gp_tunic: 'March 16, 2022', gp_inside: 'June 29, 2016', gp_celeste: 'January 25, 2018', gp_limbo: 'July 21, 2010',
 }
 // PortraitCard props for a Starter game key.
 function pcard(k) {
@@ -1296,11 +1346,12 @@ function pcard(k) {
   const p = g?.players
   return {
     image: starterCover(k),
-    video: g?.youTubeId ? { youTubeId: g.youTubeId } : undefined,
+    video: GAMEPLAY_VERTICAL[k] ? { youTubeId: GAMEPLAY_VERTICAL[k], vertical: true } : g?.youTubeId ? { youTubeId: g.youTubeId } : undefined,
     title: c.title || g?.title,
     publisher: d.studio || c.developer || 'Game Pass',
-    released: 'Game Pass Starter Edition',
+    released: STARTER_RELEASED[k] ? `Released on ${STARTER_RELEASED[k]}` : '',
     recommend: d.friends || '',
+    avatars: pickAvatars(k),
     multiplayer: p === 'MMO' ? 'MMO' : p && p !== '1' ? `${p} players` : null,
     tags: d.tags || [g?.genre].filter(Boolean),
   }
@@ -1356,22 +1407,38 @@ function WideGameCard({ gkey, onOpen }) {
       className="group relative aspect-video min-w-0 flex-1 overflow-hidden rounded-[16px] bg-[#121214] text-left"
     >
       <img alt="" src={starterHeader(gkey)} loading="lazy" className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-      {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gkey)} bare />}
+      {hover && (GAMEPLAY_LANDSCAPE[gkey] || g?.youTubeId) && <VideoTrailer youTubeId={GAMEPLAY_LANDSCAPE[gkey] || g.youTubeId} poster={starterHeader(gkey)} bare />}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
       <p className="pointer-events-none absolute bottom-[14px] left-[16px] right-[16px] text-[22px] font-bold text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.7)]">{title}</p>
     </button>
   )
 }
 
-// "Highly Rated by Your Friends" — two wide cards side by side.
+// CinematicCard props for a Starter game — the rich horizontal hover overlay
+// (trailer + title + social proof + tag pills, no default title).
+function cineCard(k) {
+  const g = STARTER_BY_KEY[k]
+  const c = CATALOG[k] || {}
+  const d = STARTER_DESC[k] || {}
+  const vid = GAMEPLAY_LANDSCAPE[k] || g?.youTubeId
+  return {
+    image: starterHeader(k),
+    video: vid ? { youTubeId: vid, poster: starterHeader(k) } : undefined,
+    avatars: pickAvatars(k),
+    label: d.friends || 'highly rated by your friends',
+    players: g?.players && g.players !== '1' && g.players !== 'MMO' ? g.players : g?.players === 'MMO' ? 'MMO' : '1',
+    playtime: c.playtime || '~2hrs',
+    genre: g?.genre,
+    title: c.title || g?.title,
+  }
+}
+
+// "Highly Rated by Your Friends" — wide cards with the cinematic hover overlay.
 function HighlyRatedRow({ items, onOpen }) {
   return (
-    <section className="mt-[56px]">
-      <p className="text-[24px] font-semibold text-white">Highly Rated by Your Friends</p>
-      <div className="mt-[20px] flex flex-col gap-[24px] sm:flex-row">
-        {items.map((k) => <WideGameCard key={k} gkey={k} onOpen={onOpen} />)}
-      </div>
-    </section>
+    <ShelfRow title="Highly Rated by Your Friends">
+      {items.map((k) => <CinematicCard key={k} {...cineCard(k)} onOpen={onOpen} />)}
+    </ShelfRow>
   )
 }
 
@@ -1394,7 +1461,7 @@ function WorthACloserLook({ gameKey, onOpen }) {
           className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-[16px] bg-[#121214] lg:w-[56%]"
         >
           <img alt="" src={starterHeader(gameKey)} className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.02]" />
-          {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gameKey)} bare />}
+          {hover && (GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && <VideoTrailer youTubeId={GAMEPLAY_LANDSCAPE[gameKey] || g.youTubeId} poster={starterHeader(gameKey)} bare />}
         </button>
         <div className="flex flex-1 flex-col justify-center">
           <div className="flex items-center gap-[10px]">
@@ -4654,6 +4721,9 @@ function HeroCarousel({ slides, children }) {
 function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlist, onShare, onOpen, onPlay }) {
   const d = detailFor(gameKey)
   const slides = slidesFor(gameKey, d.image)
+  // A game no friend has played yet ("Be the first" state) shows no friend
+  // reviews or social proof.
+  const unplayed = STARTER_DESC[gameKey]?.friends === ''
   const playedBy = [AVATAR.blue, AVATAR.purple, AVATAR.green]
   const recCinematic = CINEMATIC_ROW.filter((c) => c.id !== gameKey)
   const recPortrait = PORTRAIT_ROW.filter((c) => c.id !== gameKey)
@@ -4707,15 +4777,17 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                   <ThumbsUpGlyph size={24} className="text-white" />
                   <span className="text-[13px] leading-[1.15] text-[#9a9ba3]">out of<br /><span className="font-semibold text-[#c7c9cb]">{d.ratingCount} ratings</span></span>
                 </div>
-                <div className="flex items-center gap-[10px]">
-                  <span className="text-[34px] font-semibold leading-none text-white">{d.recPct}</span>
-                  <ThumbsUpGlyph size={24} className="text-white" />
-                  <div className="flex items-center">
-                    {playedBy.map((c, i) => (
-                      <Avatar key={i} color={c} size={28} style={{ marginRight: i < playedBy.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
-                    ))}
+                {!unplayed && (
+                  <div className="flex items-center gap-[10px]">
+                    <span className="text-[34px] font-semibold leading-none text-white">{d.recPct}</span>
+                    <ThumbsUpGlyph size={24} className="text-white" />
+                    <div className="flex items-center">
+                      {playedBy.map((c, i) => (
+                        <Avatar key={i} color={c} size={28} style={{ marginRight: i < playedBy.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                      ))}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </section>
@@ -4756,22 +4828,34 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
             <div>
               <div className="flex items-center gap-[10px] text-[16px] leading-[1.7] text-[#9a9ba3]">
                 Played By:
-                <span className="flex items-center">
-                  {playedBy.map((c, i) => (
-                    <Avatar key={i} color={c} size={24} style={{ marginRight: i < playedBy.length - 1 ? -7 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
-                  ))}
-                </span>
+                {unplayed ? (
+                  <span className="text-[15px] text-[#7e7f87]">No one in your Mix yet</span>
+                ) : (
+                  <span className="flex items-center">
+                    {playedBy.map((c, i) => (
+                      <Avatar key={i} color={c} size={24} style={{ marginRight: i < playedBy.length - 1 ? -7 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                    ))}
+                  </span>
+                )}
               </div>
-              <InfoLine label="Last Group Session:">{d.lastSession}</InfoLine>
-              <InfoLine label="Group Session Record:">{d.sessionRecord}</InfoLine>
-              <InfoLine label="Total Game Time:">{d.totalTime}</InfoLine>
+              {!unplayed && <InfoLine label="Last Group Session:">{d.lastSession}</InfoLine>}
+              {!unplayed && <InfoLine label="Group Session Record:">{d.sessionRecord}</InfoLine>}
+              {!unplayed && <InfoLine label="Total Game Time:">{d.totalTime}</InfoLine>}
             </div>
           </section>
 
-          {/* Reviews */}
-          <section className="mt-[36px] flex flex-col gap-[16px]">
-            {REVIEWS.map((r, i) => <ReviewCard key={i} r={r} />)}
-          </section>
+          {/* Reviews — hidden until a friend has actually played it */}
+          {unplayed ? (
+            <section className="mt-[36px] flex flex-col items-center gap-[8px] rounded-[16px] border border-dashed border-[#2b2d31] py-[36px] text-center">
+              <svg viewBox="0 0 24 24" className="size-[26px] text-[#9BF00B]" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4 3.9.9 5.6L12 15l-4.9 2.5L8 11.9 4 8l5.6-.6L12 2z" /></svg>
+              <p className="text-[16px] font-semibold text-white">No friend reviews yet</p>
+              <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your Mix and share what you think.</p>
+            </section>
+          ) : (
+            <section className="mt-[36px] flex flex-col gap-[16px]">
+              {REVIEWS.map((r, i) => <ReviewCard key={i} r={r} />)}
+            </section>
+          )}
 
           {/* Recommendation rows — each card opens its own detail page */}
           <div className="mt-[24px]">
