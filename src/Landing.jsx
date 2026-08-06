@@ -51,8 +51,8 @@ const SPECTATE_PATH = `spectate/${SELF_NAME}` // where this identity's mirror li
  * rows for active/hover, muted gray text, one online green accent. Kept in the
  * sidebar only — the Xbox content area keeps its own hi-fi styling. */
 const D = {
-  rail: '#000000',
-  panel: '#0a0a0b',
+  rail: '#121214',
+  panel: '#121214',
   raised: '#1c1d21',
   hover: '#161719',
   inset: '#101114',
@@ -159,9 +159,15 @@ function NavArrows({ className = '' }) {
 // the app name centered. Sits above the rail + sidebar + content.
 function TopBar() {
   return (
-    <div className="relative flex h-[34px] shrink-0 items-center border-b border-black/60" style={{ backgroundColor: '#0a0a0c' }}>
+    <div className="relative flex h-[34px] shrink-0 items-center" style={{ backgroundColor: '#121214' }}>
+      {/* macOS-style window traffic lights */}
+      <div className="flex items-center gap-[8px] pl-[13px]">
+        <span className="size-[12px] rounded-full" style={{ backgroundColor: '#EC6765' }} />
+        <span className="size-[12px] rounded-full" style={{ backgroundColor: '#F2CA44' }} />
+        <span className="size-[12px] rounded-full" style={{ backgroundColor: '#65C466' }} />
+      </div>
       {/* Arrows sit above the sidebar (past the 72px server rail), Discord-style */}
-      <div className="pl-[78px]">
+      <div className="pl-[24px]">
         <NavArrows />
       </div>
       <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center gap-[7px]">
@@ -175,7 +181,7 @@ function TopBar() {
 function ServerRail() {
   return (
     <nav
-      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-[8px] overflow-y-auto py-[12px] no-scrollbar"
+      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-[8px] overflow-y-auto pb-[112px] pt-[12px] no-scrollbar"
       style={{ backgroundColor: D.rail }}
     >
       {SERVERS.map((s, i) => {
@@ -291,14 +297,13 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
   const isAdmin = new URLSearchParams(window.location.search).get('admin') === '1'
   return (
     <aside className="flex h-full w-[240px] shrink-0 flex-col" style={{ backgroundColor: D.panel }}>
-      {/* Search */}
-      <div className="p-[8px]">
-        <div className="flex h-[32px] items-center rounded-[4px] px-[8px] text-[13px]" style={{ backgroundColor: D.inset, color: D.mute }}>
+      {/* Search — a 56px row with a bottom border, so its divider lines up
+          exactly with the home nav bar's bottom line across the whole top. */}
+      <div className="flex h-[56px] shrink-0 items-center border-b px-[8px]" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+        <div className="flex h-[36px] w-full items-center rounded-[4px] px-[8px] text-[13px]" style={{ backgroundColor: '#222225', color: D.mute }}>
           Find or start a conversation
         </div>
       </div>
-      {/* Thin divider under the search bar (Discord) */}
-      <div className="h-px shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-[8px]">
         <div className="flex flex-col gap-[2px] pt-[2px]">
@@ -372,8 +377,11 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
         )}
       </div>
 
+      {/* Voice + user panel — spans the whole side menu (server rail + sidebar),
+          Discord-style, in #202024. It extends 72px left to cover the rail. */}
+      <div className="relative z-[30] -ml-[72px] w-[calc(100%+72px)] pt-[8px]" style={{ backgroundColor: '#202024' }}>
       {/* Voice connected bar */}
-      <div className="mx-[8px] mb-[2px] flex items-center justify-between rounded-[8px] px-[8px] py-[6px]" style={{ backgroundColor: D.inset }}>
+      <div className="mx-[8px] mb-[2px] flex items-center justify-between rounded-[8px] px-[8px] py-[6px]" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
         <div className="flex items-center gap-[8px]">
           <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.green }} fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4Zm11.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Z" /></svg>
           <div className="leading-tight">
@@ -385,7 +393,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
       </div>
 
       {/* User bar */}
-      <div className="flex h-[52px] items-center gap-[8px] px-[8px]" style={{ backgroundColor: D.inset }}>
+      <div className="flex h-[52px] items-center gap-[8px] px-[8px]">
         <div className="relative">
           <Avatar color={SELF} size={32} />
           <span className="absolute -bottom-[1px] -right-[1px] size-[11px] rounded-full" style={{ backgroundColor: D.green, border: `3px solid ${D.inset}` }} />
@@ -403,6 +411,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
             <button key={i} className="flex size-[32px] items-center justify-center rounded-[4px] transition-colors hover:bg-white/5">{el}</button>
           ))}
         </div>
+      </div>
       </div>
     </aside>
   )
@@ -826,7 +835,7 @@ function GiftArcadeButton({ onClick }) {
       <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px] shrink-0">
         <path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" />
       </svg>
-      <span className="leading-none">Gift Arcade</span>
+      <span className="leading-none">Gift ARCADE</span>
     </button>
   )
 }
@@ -2403,6 +2412,7 @@ function WhosOnModal({ onClose, onCreated }) {
   const hiddenP = useHidden()
   const friends = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const [sel, setSel] = useState({})
+  const [gifted, setGifted] = useState({})
   const [q, setQ] = useState('')
   const query = q.trim().toLowerCase()
   const sorted = [...friends]
@@ -2456,18 +2466,18 @@ function WhosOnModal({ onClose, onCreated }) {
         </div>
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[10px]">
           {sorted.length === 0 && <p className="py-[6px] text-[13px] text-[#6f7276]">No friends match “{q}”.</p>}
-          {sorted.map((f) => {
-            const isOn = online.includes(f.name)
+          {/* On ARCADE — selectable for a Mix */}
+          {sorted.filter((f) => online.includes(f.name)).map((f) => {
             const on = !!sel[f.name]
             return (
               <button key={f.name} onClick={() => toggle(f.name)} className="flex w-full items-center gap-[12px] py-[8px] text-left">
                 <span className="relative shrink-0">
                   <Avatar color={f.color} size={40} />
-                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: isOn ? '#23a55a' : '#80848e' }} />
+                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: '#23a55a' }} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
-                  <p className="text-[13px]" style={{ color: isOn ? '#23a55a' : '#80848e' }}>{isOn ? 'Online' : 'Offline'}</p>
+                  <p className="text-[13px]" style={{ color: '#23a55a' }}>Online</p>
                 </div>
                 <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
                   {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
@@ -2475,6 +2485,30 @@ function WhosOnModal({ onClose, onCreated }) {
               </button>
             )
           })}
+          {/* Not on ARCADE — invite them with a gift */}
+          {sorted.some((f) => !online.includes(f.name)) && (
+            <p className="mb-[2px] mt-[14px] text-[12px] font-semibold uppercase tracking-wide text-[#80848e]">Not on ARCADE</p>
+          )}
+          {sorted.filter((f) => !online.includes(f.name)).map((f) => (
+            <div key={f.name} className="flex w-full items-center gap-[12px] py-[8px]">
+              <span className="relative shrink-0">
+                <Avatar color={f.color} size={40} />
+                <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: '#80848e' }} />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
+                <p className="text-[13px]" style={{ color: '#80848e' }}>Offline</p>
+              </div>
+              <button
+                onClick={() => setGifted((g) => ({ ...g, [f.name]: true }))}
+                disabled={gifted[f.name]}
+                className={'flex shrink-0 items-center gap-[6px] rounded-[8px] px-[12px] py-[7px] text-[13px] font-semibold text-white transition ' + (gifted[f.name] ? 'bg-[#3a3d41]' : 'bg-[#5765f2] hover:brightness-110')}
+              >
+                <svg viewBox="0 0 24 24" fill="currentColor" className="size-[15px]"><path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" /></svg>
+                {gifted[f.name] ? 'Gifted' : 'Gift'}
+              </button>
+            </div>
+          ))}
         </div>
         {dupMix && (
           <div className="mx-[24px] mb-[2px] mt-[4px] flex items-center justify-between gap-[10px] rounded-[8px] bg-[#f0505b]/12 px-[12px] py-[10px]">
@@ -5143,7 +5177,9 @@ export default function Landing() {
       >
         <NavCtx.Provider value={navCtx}>
         <TopBar />
-        <div className="group/rail flex min-h-0 flex-1 overflow-hidden">
+        {/* Inner screen — a rounded, gray-bordered surface inset from the window
+            edges, matching Discord's window chrome. */}
+        <div className="group/rail mx-[8px] mb-[8px] flex min-h-0 flex-1 overflow-hidden rounded-[10px] border border-white/10">
         <ServerRail />
         <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} onOpenBlend={openBlend} onHome={goHome} reads={reads} />
         {dmFriend ? (
