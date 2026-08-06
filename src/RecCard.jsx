@@ -758,7 +758,7 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
           slide rather than a long throw. Each button's own hover reveals its
           label, so `group/add` and `group/view` are scoped to the button and
           don't disturb the card-level `group` the rest of the reveal hangs off. */}
-      <div className="absolute bottom-[14px] right-[18px] flex items-center gap-[16px]">
+      <div className="absolute bottom-[14px] right-[18px] z-[2] flex items-center gap-[16px]">
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}

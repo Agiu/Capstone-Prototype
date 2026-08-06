@@ -298,7 +298,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
         </div>
       </div>
       {/* Thin divider under the search bar (Discord) */}
-      <div className="h-px shrink-0" style={{ backgroundColor: '#26272b' }} />
+      <div className="h-px shrink-0" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-[8px]">
         <div className="flex flex-col gap-[2px] pt-[2px]">
@@ -311,7 +311,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
           />
         </div>
 
-        <div className="my-[10px] h-px" style={{ backgroundColor: '#26272b' }} />
+        <div className="my-[10px] h-px" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
 
         {pinnedMixes.length > 0 && (
           <>
@@ -336,7 +336,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
                 )
               })}
             </div>
-            <div className="my-[10px] h-px" style={{ backgroundColor: '#26272b' }} />
+            <div className="my-[10px] h-px" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
           </>
         )}
 
@@ -3676,11 +3676,10 @@ function WhosPlayingModal({ game, onClose, onStart }) {
         <div className="flex items-center justify-center gap-[10px] border-t border-black/20 px-[24px] py-[16px]">
           <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
           <button
-            disabled={!chosen.length}
             onClick={() => onStart(chosen)}
-            className="rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+            className={'rounded-[8px] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 ' + (chosen.length ? 'bg-[#5765f2]' : 'bg-[#2da000]')}
           >
-            Send Ready Up{chosen.length ? ` [${chosen.length} selected]` : ''}
+            {chosen.length ? `Send Ready Up [${chosen.length} selected]` : 'Launch Solo'}
           </button>
         </div>
       </div>
@@ -4863,25 +4862,35 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
           <section className="mt-[32px] flex flex-col gap-[28px] lg:flex-row lg:items-start lg:gap-[32px]">
             {/* Left: play/wishlist/share, then publisher info — width matches the cover */}
             <div className="flex flex-col lg:w-[560px] lg:shrink-0">
-              <div className="flex items-center gap-[12px]">
+              <div className="flex items-center gap-[10px]">
+                {/* Start a Party — green primary action */}
                 <button
                   onClick={() => onPlay?.(gameKey)}
-                  className="flex items-center gap-[10px] rounded-[8px] bg-[#2da000] px-[32px] py-[14px] text-[17px] font-bold text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110"
+                  className="flex items-center gap-[9px] rounded-[8px] bg-[#2da000] px-[22px] py-[14px] text-[16px] font-bold text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2 19c0-2.7 2.9-4.3 6.5-4.3s6.5 1.6 6.5 4.3v.5H2zm14.4-4.2c.3-.04.6-.05 1-.02 2.2.16 3.6 1.4 3.6 3.2V19h-3.9v-.5c0-1.6-.55-2.9-1.5-4z" /></svg>
+                  Start a Party
+                </button>
+                {/* Play — gray secondary */}
+                <button
+                  onClick={() => onPlay?.(gameKey)}
+                  className="flex items-center gap-[9px] rounded-[8px] bg-[#3a3d41] px-[24px] py-[14px] text-[16px] font-bold text-white transition hover:bg-[#4c5053]"
                 >
                   <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
                   PLAY
                 </button>
+                {/* Add to Mix — outlined */}
                 <button
                   onClick={() => onWishlist?.(d.title)}
-                  className="flex items-center gap-[10px] rounded-[8px] border-2 border-white/85 px-[26px] py-[12px] text-[17px] font-bold text-white transition hover:bg-white/10"
+                  className="flex items-center gap-[9px] rounded-[8px] border-2 border-white/85 px-[20px] py-[12px] text-[16px] font-bold text-white transition hover:bg-white/10"
                 >
                   <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
-                  Add to Wishlist
+                  Add to Mix
                 </button>
                 <button
                   onClick={() => onShare?.(d.title)}
                   aria-label="Share"
-                  className="flex size-[52px] items-center justify-center rounded-[8px] border-2 border-white/85 text-white transition hover:bg-white/10"
+                  className="flex size-[50px] shrink-0 items-center justify-center rounded-[8px] border-2 border-white/85 text-white transition hover:bg-white/10"
                 >
                   <ShareGlyph size={22} />
                 </button>
@@ -4944,6 +4953,12 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               </div>
               <div className="mt-[16px] flex flex-col gap-[16px]">
                 {REVIEWS.map((r, i) => <ReviewCard key={i} r={r} />)}
+              </div>
+              <div className="mt-[20px] flex justify-center">
+                <button className="flex items-center gap-[8px] rounded-[10px] border border-[#3a3d41] px-[24px] py-[11px] text-[15px] font-semibold text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46]">
+                  Show more
+                  <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                </button>
               </div>
             </section>
           )}
