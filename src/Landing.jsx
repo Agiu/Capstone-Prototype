@@ -181,7 +181,7 @@ function TopBar() {
 function ServerRail() {
   return (
     <nav
-      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-[8px] overflow-y-auto py-[12px] no-scrollbar"
+      className="flex h-full w-[72px] shrink-0 flex-col items-center gap-[8px] overflow-y-auto pb-[176px] pt-[12px] no-scrollbar"
       style={{ backgroundColor: D.rail }}
     >
       {SERVERS.map((s, i) => {
@@ -301,6 +301,83 @@ function DmRow({ name, color, status, online, active, unread = 0, onClick }) {
   )
 }
 
+// The Discord voice + user bar. Lives at the bottom-left spanning the server
+// rail + sidebar (the whole left column), in #202024.
+function VoiceUserPanel() {
+  const room = useRoomCtx()
+  const names = (room && room.names) || {}
+  const ActionBtn = ({ children, active }) => (
+    <button className={'flex h-[42px] items-center justify-center rounded-[8px] transition ' + (active ? 'bg-[#248046] text-white hover:brightness-110' : 'bg-[#3a3d41] text-[#c5c6ca] hover:bg-[#43474d]')}>
+      {children}
+    </button>
+  )
+  return (
+    <div className="rounded-[14px] p-[10px] shadow-[0_8px_28px_rgba(0,0,0,0.45)]" style={{ backgroundColor: '#202024' }}>
+      {/* Voice / video connected */}
+      <div className="rounded-[10px] p-[10px]" style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}>
+        <div className="flex items-center gap-[8px]">
+          <div className="flex size-[40px] shrink-0 items-center justify-center rounded-[8px] bg-[#3a3d41]">
+            <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.green }} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5a10 10 0 0 1 14 0" /><path d="M8 15.5a6 6 0 0 1 8 0" /><circle cx="12" cy="18.6" r="1.1" fill="currentColor" stroke="none" /></svg>
+          </div>
+          <div className="min-w-0 flex-1 leading-tight">
+            <div className="truncate text-[13px] font-bold" style={{ color: D.green }}>Voice Connected</div>
+            <div className="truncate text-[12px]" style={{ color: D.dim }}>General · XBOX ARCADE</div>
+          </div>
+          <button aria-label="Signal" className="flex size-[30px] items-center justify-center rounded-[6px] text-[#c5c6ca] transition hover:bg-white/5">
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><rect x="3.5" y="9" width="2.4" height="6" rx="1.2" /><rect x="8" y="5" width="2.4" height="14" rx="1.2" /><rect x="12.6" y="7" width="2.4" height="10" rx="1.2" /><rect x="17.2" y="10" width="2.4" height="4" rx="1.2" /></svg>
+          </button>
+          <button aria-label="Disconnect" className="flex size-[30px] items-center justify-center rounded-[6px] text-[#c5c6ca] transition hover:bg-[#da373c] hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><path d="M12 7c-5.5 0-10 2-10 4.6 0 .9.4 1.5 1.3 1.7l2.8.6c.7.1 1.3-.3 1.5-1l.3-1.3c1.3-.3 2.7-.5 4.1-.5s2.8.2 4.1.5l.3 1.3c.2.7.8 1.1 1.5 1l2.8-.6c.9-.2 1.3-.8 1.3-1.7C22 9 17.5 7 12 7Z" /></svg>
+          </button>
+        </div>
+        {/* Call action buttons */}
+        <div className="mt-[8px] grid grid-cols-4 gap-[6px]">
+          <ActionBtn active>
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><path d="M4 6h11a2 2 0 0 1 2 2v1.8l4-2.4v9.2l-4-2.4V16a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" /></svg>
+          </ActionBtn>
+          <ActionBtn>
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="11" rx="2" /><path d="M9 20h6M12 16v4M12 8l3 3-3 0v-3Z" fill="currentColor" /></svg>
+          </ActionBtn>
+          <ActionBtn>
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><circle cx="12" cy="5.5" r="2.3" /><circle cx="5.5" cy="12" r="2.3" /><circle cx="18.5" cy="12" r="2.3" /><circle cx="12" cy="18.5" r="2.3" /></svg>
+          </ActionBtn>
+          <ActionBtn>
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><path d="M9 3l1.4 3.4L14 8l-3.6 1.6L9 13l-1.4-3.4L4 8l3.6-1.6L9 3Zm8 7l1 2.2 2.2 1-2.2 1-1 2.2-1-2.2-2.2-1 2.2-1 1-2.2Z" /></svg>
+          </ActionBtn>
+        </div>
+      </div>
+
+      {/* User bar */}
+      <div className="mt-[4px] flex h-[52px] items-center gap-[6px] px-[4px]">
+        <div className="relative shrink-0">
+          <Avatar color={SELF} size={32} />
+          <span className="absolute -bottom-[1px] -right-[1px] size-[11px] rounded-full" style={{ backgroundColor: D.green, border: '3px solid #202024' }} />
+        </div>
+        <div className="min-w-0 flex-1 leading-tight">
+          <div className="truncate text-[13px] font-semibold text-white">{dispName(SELF_NAME, names)}</div>
+          <div className="truncate text-[12px]" style={{ color: D.mute }}>Online</div>
+        </div>
+        <div className="flex items-center gap-[1px]" style={{ color: D.dim }}>
+          {/* Mute (with split dropdown) */}
+          <button className="flex h-[32px] items-center gap-[1px] rounded-[4px] px-[3px] transition hover:bg-white/5">
+            <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z" /><path d="M6 11a6 6 0 0 0 12 0M12 17v4" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg>
+            <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+          {/* Deafen (with split dropdown) */}
+          <button className="flex h-[32px] items-center gap-[1px] rounded-[4px] px-[3px] transition hover:bg-white/5">
+            <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 13a8 8 0 0 1 16 0" /><rect x="2.5" y="13" width="4" height="7" rx="1.5" fill="currentColor" stroke="none" /><rect x="17.5" y="13" width="4" height="7" rx="1.5" fill="currentColor" stroke="none" /></svg>
+            <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+          {/* Settings */}
+          <button className="flex size-[32px] items-center justify-center rounded-[4px] transition hover:bg-white/5">
+            <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome, reads = {} }) {
   const inbox = useInbox()
   const room = useRoomCtx()
@@ -338,8 +415,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
             </div>
             <div className="flex flex-col gap-[2px] pb-[6px]">
               {pinnedMixes.map((b) => {
-                const covers = (b.games || []).map((k) => CATALOG[k]?.image).filter(Boolean)
-                const thumb = b.cover || covers[0]
+                const thumb = b.cover || mixCoverImages(b)[0]
                 return (
                   <button
                     key={b.id}
@@ -390,41 +466,8 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
         )}
       </div>
 
-      {/* Voice + user panel — fills the sidebar menu, Discord-style, in #202024. */}
-      <div className="pt-[8px]" style={{ backgroundColor: '#202024' }}>
-      {/* Voice connected bar */}
-      <div className="mx-[8px] mb-[2px] flex items-center justify-between rounded-[8px] px-[8px] py-[6px]" style={{ backgroundColor: 'rgba(255,255,255,0.04)' }}>
-        <div className="flex items-center gap-[8px]">
-          <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.green }} fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4Zm11.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Z" /></svg>
-          <div className="leading-tight">
-            <div className="text-[14px] font-semibold" style={{ color: D.green }}>Voice Connected</div>
-            <div className="text-[12px]" style={{ color: D.mute }}>General · XBOX ARCADE</div>
-          </div>
-        </div>
-        <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.dim }} fill="none" stroke="currentColor" strokeWidth="2"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11 11 0 0 0 3.5.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.3a1 1 0 0 1 1 1c0 1.2.2 2.4.56 3.5a1 1 0 0 1-.25 1Z" /></svg>
-      </div>
-
-      {/* User bar */}
-      <div className="flex h-[52px] items-center gap-[8px] px-[8px]">
-        <div className="relative">
-          <Avatar color={SELF} size={32} />
-          <span className="absolute -bottom-[1px] -right-[1px] size-[11px] rounded-full" style={{ backgroundColor: D.green, border: `3px solid ${D.inset}` }} />
-        </div>
-        <div className="min-w-0 flex-1 leading-tight">
-          <div className="truncate text-[14px] font-semibold text-white">{dispName(SELF_NAME, names)}</div>
-          <div className="truncate text-[12px]" style={{ color: D.mute }}>Online</div>
-        </div>
-        <div className="flex gap-[2px]" style={{ color: D.dim }}>
-          {[
-            <svg key="m" viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M12 3a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3Z" /><path d="M6 11a6 6 0 0 0 12 0M12 17v4" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg>,
-            <svg key="h" viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 13a8 8 0 0 1 16 0" /><rect x="2.5" y="13" width="4" height="7" rx="1.5" fill="currentColor" stroke="none" /><rect x="17.5" y="13" width="4" height="7" rx="1.5" fill="currentColor" stroke="none" /></svg>,
-            <svg key="c" viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="1.7"><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" /></svg>,
-          ].map((el, i) => (
-            <button key={i} className="flex size-[32px] items-center justify-center rounded-[4px] transition-colors hover:bg-white/5">{el}</button>
-          ))}
-        </div>
-      </div>
-      </div>
+      {/* Spacer so the DM list clears the floating voice/user panel. */}
+      <div className="h-[168px] shrink-0" />
     </aside>
   )
 }
@@ -725,13 +768,16 @@ function seededShuffle(arr, seedStr) {
   return a
 }
 
+// The 4 collage images for a Mix — a distinct set seeded by the Mix's id so the
+// thumbnail is consistent everywhere the Mix is shown (home, Mixes page, detail).
+function mixCoverImages({ id, name, games = [] }) {
+  const own = (games || []).filter((k) => CATALOG[k]?.image)
+  return seededShuffle(own.length >= 4 ? own : COLLAGE_POOL, id || name).slice(0, 4).map((k) => CATALOG[k].image)
+}
+
 function BlendCard({ id, name, color, members, games = [], cover, onOpen, onContext, onMenu }) {
   // Cover art: a custom thumbnail if one's been set, otherwise a 2×2 collage.
-  // Each Mix draws a distinct set of 4 games (seeded by its id) so no two Mixes
-  // share the same thumbnail.
-  const own = games.map((k) => CATALOG[k]?.image).filter(Boolean)
-  const pickKeys = seededShuffle(own.length >= 4 ? games.filter((k) => CATALOG[k]?.image) : COLLAGE_POOL, id || name).slice(0, 4)
-  const covers = pickKeys.map((k) => CATALOG[k]?.image).filter(Boolean)
+  const covers = mixCoverImages({ id, name, games })
   // The hover ellipsis opens the same menu as right-click, anchored to itself.
   const openMenu = (e) => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); onMenu?.(r.left, r.bottom + 4) }
   return (
@@ -945,7 +991,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           lives on its own masked layer so it fades out toward the bottom while
           the nav content stays crisp. */}
       <header className="absolute inset-x-0 top-0 z-20 flex h-[56px] shrink-0 items-center gap-[32px] px-[40px]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[112px] bg-black/25 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_50%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent)]" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-black/25 backdrop-blur-md" />
         {/* Discord-style thin divider under the nav */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
         <XboxLogo size={24} />
@@ -1053,7 +1099,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
 
           {/* Because You Played… — vertical cards */}
-          <ShelfRow title="Because You Played…">
+          <ShelfRow title="Because You Played Deathloop">
             {HOME_BECAUSE_PLAYED.map((k) => (
               <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
             ))}
@@ -1114,9 +1160,9 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
         <XboxLogo size={24} />
-        <button onClick={onHome} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Home</button>
-        <button onClick={onLibrary} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button className="border-b-2 border-white pb-[2px] text-[16px] font-medium text-white">Mixes</button>
+        <button onClick={onHome} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Home</button>
+        <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
+        <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
@@ -1356,15 +1402,15 @@ const STARTER_DESC = {
   gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends have played recently' },
   gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends have played recently' },
   gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '4 friends have played recently' },
-  gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: '1 friend has played recently' },
+  gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: 'Daniel has played recently' },
   gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '' },
   gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Daniel has played 3 hrs recently' },
-  gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'A calm pick for tonight' },
-  gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: 'Something a little different' },
-  gp_tunic: { studio: 'Andrew Shouldice', desc: 'A tiny fox, a huge secret-filled world, and a manual you decode as you go.', tags: ['Adventure', 'Puzzle', 'Souls-like'], friends: 'A hidden gem' },
-  gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Short and unforgettable' },
-  gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'A modern classic' },
-  gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Beloved by everyone' },
+  gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'Chloe said "oddly therapeutic, lost an hour"' },
+  gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: 'Daniel said "I cried at the ending"' },
+  gp_tunic: { studio: 'Andrew Shouldice', desc: 'A tiny fox, a huge secret-filled world, and a manual you decode as you go.', tags: ['Adventure', 'Puzzle', 'Souls-like'], friends: 'Blake said "the secret manual blew my mind"' },
+  gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Chloe said "still thinking about that ending"' },
+  gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Blake said "creepy in the best way"' },
+  gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Daniel said "hardest game I love"' },
 }
 // A stable, per-game pair of friend avatars so different cards show different
 // profiles (varied but consistent for a given game).
@@ -1443,6 +1489,12 @@ const HOME_CLOSER_LOOK = 'gp_firewatch'
 const HOME_DIFFERENT = ['gp_unpacking', 'gp_spiritfarer', 'gp_tunic', 'gp_inside', 'gp_celeste', 'gp_limbo']
 
 const ELLIPSIS_GLYPH = <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+// Social proof for the "Trending in Your Communities" rows.
+const TRENDING_STATS = {
+  gp_hades: { friends: 5, hours: 12 },
+  gp_doom64: { friends: 3, hours: 4 },
+  gp_vampiresurvivors: { friends: 6, hours: 8 },
+}
 
 // "Trending in Your Communities" — a compact list of games (Figma 937:8591).
 function TrendingRow({ items, onOpen }) {
@@ -1460,9 +1512,35 @@ function TrendingRow({ items, onOpen }) {
               <img alt="" src={starterHeader(k)} loading="lazy" className="h-[104px] w-[185px] shrink-0 rounded-[10px] object-cover" />
               <div className="min-w-0 flex-1">
                 <p className="text-[18px] font-semibold text-white">{title}</p>
-                <p className="truncate text-[14px] text-[#9a9ba3]">{d.desc || c.caption}</p>
+                {(() => {
+                  const st = TRENDING_STATS[k] || { friends: 4, hours: 6 }
+                  const avs = pickAvatars(k)
+                  return (
+                    <div className="mt-[6px] flex items-center gap-[7px]">
+                      <span className="flex items-center">
+                        {avs.slice(0, 2).map((cc, i) => (
+                          <Avatar key={i} color={cc} size={18} style={{ marginRight: i < 1 ? -6 : 0, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 2 - i }} />
+                        ))}
+                        <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>
+                      </span>
+                      <p className="text-[13px] text-[#9a9ba3]">{st.friends} friends played this for avg. {st.hours} hours</p>
+                    </div>
+                  )
+                })()}
+                <p className="mt-[6px] truncate text-[14px] text-[#9a9ba3]">{d.desc || c.caption}</p>
               </div>
-              <span className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-[#9a9ba3] opacity-0 transition group-hover:opacity-100">{ELLIPSIS_GLYPH}</span>
+              <button
+                type="button"
+                aria-label="More"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  // Open the same menu as right-click: dispatch a contextmenu
+                  // event that bubbles to the global handler, anchored here.
+                  const r = e.currentTarget.getBoundingClientRect()
+                  e.currentTarget.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: r.left, clientY: r.bottom }))
+                }}
+                className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-[#9a9ba3] opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100"
+              >{ELLIPSIS_GLYPH}</button>
             </button>
           )
         })}
@@ -1506,8 +1584,8 @@ function cineCard(k) {
     label: d.recFriends ? `${d.recFriends} friends recommend this` : (d.friends || 'highly rated by your friends'),
     avatarsPlus: !!d.recFriends,
     players: g?.players && g.players !== '1' && g.players !== 'MMO' ? g.players : g?.players === 'MMO' ? 'MMO' : '1',
-    playtime: c.playtime || '~2hrs',
     genre: g?.genre,
+    genre2: (d.tags || []).find((t) => t && t !== g?.genre) || null,
     title: c.title || g?.title,
     recommendPct: d.rec,
   }
@@ -1613,9 +1691,9 @@ function LibraryPage({ onHome, onMixes, onOpen }) {
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
         <XboxLogo size={24} />
-        <button onClick={onHome} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Home</button>
-        <button className="border-b-2 border-white pb-[2px] text-[16px] font-medium text-white">Library</button>
-        <button onClick={onMixes} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
+        <button onClick={onHome} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Home</button>
+        <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Library</button>
+        <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
@@ -2196,8 +2274,8 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
                 <img alt="" src={blend.cover} className="size-full object-cover" />
               ) : (
                 <div className="grid size-full grid-cols-2 grid-rows-2 gap-[2px]">
-                  {games.slice(0, 4).map((g, i) => (
-                    <img key={i} alt="" src={g.image} className="size-full object-cover" />
+                  {mixCoverImages(blend).map((src, i) => (
+                    <img key={i} alt="" src={src} className="size-full object-cover" />
                   ))}
                 </div>
               )}
@@ -4882,7 +4960,7 @@ function HeroCarousel({ slides, children }) {
             {s.type === 'video' && idx === i ? (
               <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} />
             ) : (
-              <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-contain" />
+              <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
             )}
             {s.type === 'video' && (
               <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">Trailer</span>
@@ -5277,7 +5355,7 @@ export default function Landing() {
       >
         <NavCtx.Provider value={navCtx}>
         <TopBar />
-        <div className="group/rail flex min-h-0 flex-1 overflow-hidden" style={{ backgroundColor: D.rail }}>
+        <div className="group/rail relative flex min-h-0 flex-1 overflow-hidden" style={{ backgroundColor: D.rail }}>
         <ServerRail />
         {/* The menu (sidebar) + main content — flush to the window, with only the
             top-left corner rounded and a gray border on the top + left edges
@@ -5317,6 +5395,9 @@ export default function Landing() {
           <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onMixes={openMixes} onLibrary={openLibrary} />
         )}
         </div>
+        {/* Voice + user panel — a rounded card floating at the bottom-left,
+            overlapping the server rail + sidebar. */}
+        <div className="absolute bottom-[8px] left-[8px] z-[40] w-[298px]"><VoiceUserPanel /></div>
         </div>
         {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
         {eWhoOpen && <WhosOnModal onClose={() => setWhoOpen(false)} onCreated={(id) => { setWhoOpen(false); setBlendId(id) }} />}

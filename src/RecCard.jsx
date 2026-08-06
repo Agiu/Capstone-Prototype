@@ -152,7 +152,7 @@ export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical }) {
         <iframe
           ref={frameRef}
           title="Game footage"
-          className={'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? (vertical ? ' [scale:1.5]' : ' [scale:1.45]') : '')}
+          className={'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? (vertical ? ' [scale:1.5]' : ' [scale:1.6]') : '')}
           src={`https://www.youtube-nocookie.com/embed/${youTubeId}?${params}`}
           allow="autoplay; encrypted-media"
         />
@@ -651,7 +651,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
  *  · the trailer is revealed by an inset clip wiping leftward from the card's
  *    right edge — it never translates — and cross-fades up out of Xbox green
  */
-export function CinematicCard({ image, video, avatars, label, players, playtime, genre, title, recommendPct, avatarsPlus, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
+export function CinematicCard({ image, video, avatars, label, players, playtime, genre, genre2, title, recommendPct, avatarsPlus, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
   const open = () => (onViewDetails || onOpen)?.(title)
   const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
   // Spectate mirroring: force the hover reveal on (a moderator can't hover).
@@ -702,16 +702,14 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
         src={image}
         loading="lazy"
         decoding="async"
-        className="absolute inset-0 size-full object-cover"
+        className="absolute inset-0 size-full rounded-[16px] object-cover"
       />
 
-      {/* Trailer — now full-bleed. The layer never moves: an inset clip wipes
-          leftward from the card's right edge, so the frame is cropped in rather
-          than slid in. It's Xbox green underneath, and the trailer cross-fades
-          up out of it as the crop widens. */}
+      {/* Trailer — full-bleed, cross-fades up out of Xbox green on hover. Rounded
+          to match the card so it never peeks past the rounded corners. */}
       {video && (
         <div
-          className={`absolute inset-0 overflow-hidden bg-[#107C10] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
+          className={`absolute inset-0 overflow-hidden rounded-[16px] bg-[#107C10] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
         >
           <div
             className={`absolute inset-0 opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
@@ -747,8 +745,8 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
             <UserGroupGlyph color={ACCENT} className="size-[16px] -scale-x-100" />
             {players}
           </LightPill>
-          <LightPill>{playtime}</LightPill>
           <LightPill>{genre}</LightPill>
+          {genre2 && <LightPill>{genre2}</LightPill>}
         </div>
       </div>
 
@@ -795,12 +793,13 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
  */
 export function PortraitCard({ image, video, title, publisher, released, recommend, avatars, multiplayer, tags = [], belowAvatars, onWishlist, onShare, onOpen, forceReveal }) {
   const shortRec = recommend ? recommend.replace(/ (have|has) played recently$/, '') : ''
-  // Match the number of profile pics to the friend count: 1 friend → 1 pic,
-  // 2+ → 2 pics, with a "+" once there are 3+ (the pair can't show everyone).
+  // "N friends…" shows up to 2 pics (with a "+" at 3+); a personal line like
+  // "Chloe said …" or "Daniel has played recently" shows a single profile pic.
   const friendCount = parseInt(recommend || '', 10)
-  const shownCount = Number.isFinite(friendCount) ? Math.min(Math.max(friendCount, 1), 2) : 2
+  const isCount = Number.isFinite(friendCount)
+  const shownCount = isCount ? Math.min(Math.max(friendCount, 1), 2) : 1
   const pair = (avatars && avatars.length ? avatars : [AVATAR.blue, AVATAR.purple]).slice(0, shownCount)
-  const showPlus = Number.isFinite(friendCount) && friendCount >= 3
+  const showPlus = isCount && friendCount >= 3
   // The cover swaps to the trailer while hovered (Figma 979:1206).
   const [hover, setHover] = useState(false)
   const showVid = (hover || forceReveal) && video?.youTubeId
@@ -855,14 +854,14 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
         <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
         <div className="flex flex-col gap-[13px]">
           {recommend ? (
-            <div className="flex items-center gap-[6px]">
-              <div className="flex items-center">
+            <div className="flex items-start gap-[6px]">
+              <div className="mt-[1px] flex shrink-0 items-center">
                 {pair.map((c, i) => (
                   <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#191919]" style={{ marginRight: i < 1 ? -6 : 0, zIndex: 2 - i }} />
                 ))}
                 {showPlus && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
               </div>
-              <p className="text-[12px] leading-[1.2] text-white">{recommend}</p>
+              <p className="text-[12px] leading-[1.35] text-white">{recommend}</p>
             </div>
           ) : (
             <div className="flex items-center gap-[7px]">
