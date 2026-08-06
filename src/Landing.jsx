@@ -235,11 +235,24 @@ const NAV = [
 ]
 
 // The four test profiles (a/b/c/d), one per tester. `self` is set from the URL.
+// Blake / Chloe / Daniel are on Arcade.
 const DMS = [
   { name: 'abby', color: AVATAR.green },
   { name: 'blake', color: AVATAR.blue, status: 'Playing Sea of Thieves' },
   { name: 'chloe', color: AVATAR.purple, status: 'Listening to Spotify' },
   { name: 'daniel', color: AVATAR.red, status: 'Streaming Minecraft' },
+]
+
+// Friends who don't have Arcade yet — surfaced in the "Not on ARCADE" lists so
+// you can gift them access.
+const OFF_ARCADE_FRIENDS = [
+  { name: 'nelly', color: '#e35d9c' },
+  { name: 'peppe', color: '#f2a23c' },
+  { name: 'phibi', color: '#3cb2f2' },
+  { name: 'cap', color: '#8b5cf6' },
+  { name: 'wumpus', color: '#43b581' },
+  { name: 'locke', color: '#5165F6' },
+  { name: 'clyde', color: '#f04747' },
 ]
 
 function NavItem({ icon, label, active, onClick }) {
@@ -699,11 +712,26 @@ function guessTag(label) {
   return null
 }
 
-function BlendCard({ name, color, members, games = [], cover, onOpen, onContext, onMenu }) {
-  // Cover art: a custom thumbnail if one's been set, otherwise a default image
-  // built from the Mix's own game art (a 2×2 collage), falling back to the
-  // accent color if the Mix has no games yet.
-  const covers = games.map((k) => CATALOG[k]?.image).filter(Boolean).slice(0, 4)
+// Deterministic shuffle so a given seed always yields the same order — used to
+// give each Mix a distinct-looking cover collage that stays stable per Mix.
+const COLLAGE_POOL = Object.keys(CATALOG).filter((k) => CATALOG[k]?.image)
+function seededShuffle(arr, seedStr) {
+  const a = [...arr]
+  let seed = 2166136261
+  const s = String(seedStr || '')
+  for (let i = 0; i < s.length; i++) { seed ^= s.charCodeAt(i); seed = Math.imul(seed, 16777619) >>> 0 }
+  const rand = () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296 }
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rand() * (i + 1));[a[i], a[j]] = [a[j], a[i]] }
+  return a
+}
+
+function BlendCard({ id, name, color, members, games = [], cover, onOpen, onContext, onMenu }) {
+  // Cover art: a custom thumbnail if one's been set, otherwise a 2×2 collage.
+  // Each Mix draws a distinct set of 4 games (seeded by its id) so no two Mixes
+  // share the same thumbnail.
+  const own = games.map((k) => CATALOG[k]?.image).filter(Boolean)
+  const pickKeys = seededShuffle(own.length >= 4 ? games.filter((k) => CATALOG[k]?.image) : COLLAGE_POOL, id || name).slice(0, 4)
+  const covers = pickKeys.map((k) => CATALOG[k]?.image).filter(Boolean)
   // The hover ellipsis opens the same menu as right-click, anchored to itself.
   const openMenu = (e) => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); onMenu?.(r.left, r.bottom + 4) }
   return (
@@ -825,17 +853,23 @@ const STEAM_ROW = [
 const ROW_ORDER = { overlay: 0, expanded: 1, steam: 2, expand: 3 }
 
 // Nav "Gift Xbox Arcade" pill — modeled on Discord's "Gift Nitro" button.
-function GiftArcadeButton({ onClick }) {
+// Self-contained: clicking it opens the "Gift ARCADE" picker (friends not on
+// Arcade), so it works the same in every page header.
+function GiftArcadeButton() {
+  const [open, setOpen] = useState(false)
   return (
-    <button
-      onClick={onClick}
-      className="flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
-    >
-      <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px] shrink-0">
-        <path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" />
-      </svg>
-      <span className="leading-none">Gift ARCADE</span>
-    </button>
+    <>
+      <button
+        onClick={() => setOpen(true)}
+        className="flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
+      >
+        <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px] shrink-0">
+          <path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" />
+        </svg>
+        <span className="leading-none">Gift ARCADE</span>
+      </button>
+      {open && <GiftArcadeModal onClose={() => setOpen(false)} />}
+    </>
   )
 }
 
@@ -2414,9 +2448,10 @@ function WhosOnModal({ onClose, onCreated }) {
   const [gifted, setGifted] = useState({})
   const [q, setQ] = useState('')
   const query = q.trim().toLowerCase()
-  const sorted = [...friends]
-    .filter((d) => !query || capName(d.name).toLowerCase().includes(query))
-    .sort((a, b) => (online.includes(b.name) ? 1 : 0) - (online.includes(a.name) ? 1 : 0))
+  // Blake / Chloe / Daniel are on Arcade (selectable for a Mix); OFF_ARCADE
+  // friends aren't yet and get a Gift button.
+  const sorted = friends.filter((d) => !query || capName(d.name).toLowerCase().includes(query))
+  const offArcade = OFF_ARCADE_FRIENDS.filter((d) => !query || capName(d.name).toLowerCase().includes(query))
   useEscClose(onClose)
   const [dupMix, setDupMix] = useState(null)
   const toggle = (n) => { setDupMix(null); setSel((s) => ({ ...s, [n]: !s[n] })) }
@@ -2464,9 +2499,9 @@ function WhosOnModal({ onClose, onCreated }) {
           </div>
         </div>
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[10px]">
-          {sorted.length === 0 && <p className="py-[6px] text-[13px] text-[#6f7276]">No friends match “{q}”.</p>}
+          {sorted.length === 0 && offArcade.length === 0 && <p className="py-[6px] text-[13px] text-[#6f7276]">No friends match “{q}”.</p>}
           {/* On ARCADE — selectable for a Mix */}
-          {sorted.filter((f) => online.includes(f.name)).map((f) => {
+          {sorted.map((f) => {
             const on = !!sel[f.name]
             return (
               <button key={f.name} onClick={() => toggle(f.name)} className="flex w-full items-center gap-[12px] py-[8px] text-left">
@@ -2476,7 +2511,7 @@ function WhosOnModal({ onClose, onCreated }) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
-                  <p className="text-[13px]" style={{ color: '#23a55a' }}>Online</p>
+                  <p className="text-[13px]" style={{ color: '#23a55a' }}>On Arcade</p>
                 </div>
                 <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
                   {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
@@ -2485,10 +2520,10 @@ function WhosOnModal({ onClose, onCreated }) {
             )
           })}
           {/* Not on ARCADE — invite them with a gift */}
-          {sorted.some((f) => !online.includes(f.name)) && (
+          {offArcade.length > 0 && (
             <p className="mb-[2px] mt-[14px] text-[12px] font-semibold uppercase tracking-wide text-[#80848e]">Not on ARCADE</p>
           )}
-          {sorted.filter((f) => !online.includes(f.name)).map((f) => (
+          {offArcade.map((f) => (
             <div key={f.name} className="flex w-full items-center gap-[12px] py-[8px]">
               <span className="relative shrink-0">
                 <Avatar color={f.color} size={40} />
@@ -2523,6 +2558,72 @@ function WhosOnModal({ onClose, onCreated }) {
             className="rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Create a Mix{chosen.length ? ` with ${chosen.length}` : ''}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// The "Gift ARCADE" nav button opens this — a list of friends who aren't on
+// Arcade yet, with select-to-gift.
+function GiftArcadeModal({ onClose }) {
+  const [sel, setSel] = useState({})
+  const [q, setQ] = useState('')
+  const [sent, setSent] = useState(false)
+  useEscClose(onClose)
+  const query = q.trim().toLowerCase()
+  const list = OFF_ARCADE_FRIENDS.filter((f) => !query || capName(f.name).toLowerCase().includes(query))
+  const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
+  const chosen = OFF_ARCADE_FRIENDS.filter((f) => sel[f.name])
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
+          <div>
+            <p className="text-[22px] font-bold text-white">Gift ARCADE</p>
+            <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick friends who aren’t on Arcade yet.</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        <div className="px-[24px] pt-[16px]">
+          <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+          </div>
+        </div>
+        <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[10px]">
+          {list.length === 0 && <p className="py-[6px] text-[13px] text-[#6f7276]">No friends match “{q}”.</p>}
+          {list.map((f) => {
+            const on = !!sel[f.name]
+            return (
+              <button key={f.name} onClick={() => toggle(f.name)} className="flex w-full items-center gap-[12px] py-[8px] text-left">
+                <span className="relative shrink-0">
+                  <Avatar color={f.color} size={40} />
+                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: '#80848e' }} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
+                  <p className="text-[13px]" style={{ color: '#80848e' }}>Not on Arcade</p>
+                </div>
+                <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+                  {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+        <div className="flex items-center justify-center gap-[10px] border-t border-black/20 px-[24px] py-[16px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
+          <button
+            disabled={!chosen.length}
+            onClick={() => { setSent(true); setTimeout(onClose, 700) }}
+            className="flex items-center gap-[7px] rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="size-[16px]"><path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" /></svg>
+            {sent ? 'Gift sent!' : `Gift Arcade${chosen.length ? ` to ${chosen.length}` : ''}`}
           </button>
         </div>
       </div>
