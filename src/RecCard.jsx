@@ -820,11 +820,12 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
       <div className={`${fade}${F} flex h-full w-[252px] shrink-0 flex-col gap-[10px] overflow-hidden bg-[#15181c] p-[16px] group-hover:delay-[100ms]`}>
         <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
         {recommend && (
-          <div className="flex items-center gap-[8px]">
+          <div className="flex items-center gap-[6px]">
             <div className="flex items-center">
-              {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((c, i) => (
-                <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#15181c]" style={{ marginRight: i < 2 ? -6 : 0, zIndex: 3 - i }} />
+              {[AVATAR.blue, AVATAR.purple].map((c, i) => (
+                <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#15181c]" style={{ marginRight: i < 1 ? -6 : 0, zIndex: 2 - i }} />
               ))}
+              <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>
             </div>
             <p className="text-[12px] leading-[1.2] text-white">{recommend}</p>
           </div>
@@ -891,8 +892,8 @@ export function ShelfRow({ title, subtitle, gap = 24, children }) {
 
   return (
     <div className="mt-[56px] flex w-full shrink-0 flex-col">
-      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>{title}</p>
-      {subtitle && <p className="mt-[6px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
+      <p className="text-[24px] font-semibold text-white">{title}</p>
+      {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
       <div className="relative">
         <div ref={rowRef} className="rec-row no-scrollbar flex w-full items-start overflow-x-auto py-[20px]" style={{ gap }}>
           {children}

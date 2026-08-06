@@ -1319,7 +1319,7 @@ const ELLIPSIS_GLYPH = <svg viewBox="0 0 24 24" className="size-[18px]" fill="cu
 function TrendingRow({ items, onOpen }) {
   return (
     <section className="mt-[56px]">
-      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Trending in Your Communities</p>
+      <p className="text-[24px] font-semibold text-white">Trending in Your Communities</p>
       <div className="mt-[16px] flex flex-col gap-[4px]">
         {items.map((k) => {
           const g = STARTER_BY_KEY[k]
@@ -1367,7 +1367,7 @@ function WideGameCard({ gkey, onOpen }) {
 function HighlyRatedRow({ items, onOpen }) {
   return (
     <section className="mt-[56px]">
-      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Highly Rated by Your Friends</p>
+      <p className="text-[24px] font-semibold text-white">Highly Rated by Your Friends</p>
       <div className="mt-[20px] flex flex-col gap-[24px] sm:flex-row">
         {items.map((k) => <WideGameCard key={k} gkey={k} onOpen={onOpen} />)}
       </div>
@@ -1384,7 +1384,7 @@ function WorthACloserLook({ gameKey, onOpen }) {
   const title = c.title || g?.title
   return (
     <section className="mt-[56px]">
-      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Worth a Closer Look</p>
+      <p className="text-[24px] font-semibold text-white">Worth a Closer Look</p>
       <div className="mt-[20px] flex flex-col gap-[28px] lg:flex-row">
         <button
           data-game={title}
