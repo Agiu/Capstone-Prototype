@@ -119,3 +119,14 @@ body,
   box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
   animation: sp-ripple 600ms ease-out forwards;
 }
+
+/* Decision wheel — the "SPINNNNNNING" text stretches its N's while turning. */
+@keyframes spin-n {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.9); }
+}
+.spin-n {
+  display: inline-block;
+  transform-origin: center bottom;
+  animation: spin-n 620ms ease-in-out infinite;
+}

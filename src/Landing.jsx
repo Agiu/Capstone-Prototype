@@ -24,6 +24,7 @@ import {
   mixThumbDuo1,
   mixThumbDuo2,
 } from './assets/figma/index.js'
+import mixesHaloBg from './assets/figma/mixes-halo-matched.png'
 
 // ── Active tester profile, from the URL (?u=1|2|3|4) ────────────────────────
 // No login: each tester opens their own link and `SELF` is their identity.
@@ -50,11 +51,11 @@ const SPECTATE_PATH = `spectate/${SELF_NAME}` // where this identity's mirror li
  * rows for active/hover, muted gray text, one online green accent. Kept in the
  * sidebar only — the Xbox content area keeps its own hi-fi styling. */
 const D = {
-  rail: '#050506',
-  panel: '#0f0f12',
+  rail: '#000000',
+  panel: '#0a0a0b',
   raised: '#1c1d21',
-  hover: '#17181b',
-  inset: '#060607',
+  hover: '#161719',
+  inset: '#101114',
   text: '#dbdee1',
   dim: '#b5bac1',
   mute: '#80848e',
@@ -296,6 +297,8 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
           Find or start a conversation
         </div>
       </div>
+      {/* Thin divider under the search bar (Discord) */}
+      <div className="h-px shrink-0" style={{ backgroundColor: '#26272b' }} />
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-[8px]">
         <div className="flex flex-col gap-[2px] pt-[2px]">
@@ -723,10 +726,19 @@ function BlendCard({ name, color, members, games = [], cover, onOpen, onContext,
           </button>
         )}
       </div>
-      <div className="mt-[7px] flex items-center gap-[5px]">
-        {members.map((c, i) => (
-          <span key={i} className="size-[14px] rounded-full" style={{ backgroundColor: c, boxShadow: '0 0 0 2px #0c0c0e' }} />
+      {/* Member profile images — up to 5, then a "+N" for the rest. */}
+      <div className="mt-[8px] flex items-center">
+        {members.slice(0, 5).map((c, i) => (
+          <Avatar key={i} color={c} size={20} style={{ marginLeft: i ? -6 : 0, boxShadow: '0 0 0 2px #0c0c0e', zIndex: members.length - i }} />
         ))}
+        {members.length > 5 && (
+          <span
+            className="ml-[4px] flex h-[20px] items-center justify-center rounded-full bg-white/12 px-[6px] text-[11px] font-semibold leading-none text-white"
+            style={{ boxShadow: '0 0 0 2px #0c0c0e' }}
+          >
+            +{members.length - 5}
+          </span>
+        )}
       </div>
     </div>
   )
@@ -804,6 +816,21 @@ const STEAM_ROW = [
 // Row display order (by hover style): overlay → expanded → steam → expand.
 const ROW_ORDER = { overlay: 0, expanded: 1, steam: 2, expand: 3 }
 
+// Nav "Gift Xbox Arcade" pill — modeled on Discord's "Gift Nitro" button.
+function GiftArcadeButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
+    >
+      <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px] shrink-0">
+        <path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" />
+      </svg>
+      <span className="leading-none">Gift Arcade</span>
+    </button>
+  )
+}
+
 function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onMixes, onLibrary }) {
   const { blends, setBlends } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.abby
@@ -876,15 +903,15 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           lives on its own masked layer so it fades out toward the bottom while
           the nav content stays crisp. */}
       <header className="absolute inset-x-0 top-0 z-20 flex h-[56px] shrink-0 items-center gap-[32px] px-[40px]">
-        <div className="pointer-events-none absolute inset-0 -z-10 border-b border-white/10 bg-black/25 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_55%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_55%,transparent)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[112px] bg-black/25 backdrop-blur-md [mask-image:linear-gradient(to_bottom,black_50%,transparent)] [-webkit-mask-image:linear-gradient(to_bottom,black_50%,transparent)]" />
+        {/* Discord-style thin divider under the nav */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
         <XboxLogo size={24} />
         <button className="border-b-2 border-white pb-[2px] text-[16px] font-medium text-white">Home</button>
         <button onClick={onLibrary} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] hover:text-white">Library</button>
         <button onClick={onMixes} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <button onClick={() => setSearchOpen(true)} aria-label="Search" className="flex size-[34px] items-center justify-center rounded-full transition hover:bg-white/10">
-            <img alt="" src={searchIcon} className="size-[22px] opacity-80" />
-          </button>
+          <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
 
@@ -913,9 +940,10 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
             className="absolute inset-0"
             style={{ background: 'linear-gradient(to bottom, rgba(12,12,14,0.35) 0%, rgba(12,12,14,0.55) 55%, #0c0c0e 100%)' }}
           />
-          <div className="relative mx-auto w-full max-w-[1400px] px-[40px] pb-[8px] pt-[64px]">
-            {/* Hero title — "Welcome to the XBOX ARCADE" (Figma 863:3749) */}
-            <div className="flex flex-col items-center text-center">
+          <div className="relative mx-auto w-full max-w-[1400px] px-[40px] pb-[8px] pt-[24px]">
+            {/* Hero title — upper-center of the first screen, with the Mixes list
+                peeking out below it (Figma 863:3749) */}
+            <div className="flex min-h-[70vh] flex-col items-center justify-center text-center">
               <h1 className="flex flex-col items-center gap-[8px] italic leading-[1.085] text-white [text-shadow:0_4px_18px_rgba(0,0,0,0.55)]">
                 <span className="text-[clamp(30px,3.4vw,48px)] leading-[1.085] tracking-[0.24px]" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>Welcome to</span>
                 <span className="text-[clamp(58px,6.8vw,96px)] uppercase leading-[1.085] tracking-[0.48px]" style={{ fontFamily: '"Base Neue Black"' }}>XBOX ARCADE</span>
@@ -942,14 +970,24 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
             </div>
 
             {/* Your Mixes — centered, colored cards */}
-            <div className="mt-[48px] flex flex-col items-center">
+            <div className="relative mt-[72px] flex flex-col items-center">
+              {/* Halo Master Chief backdrop behind the Mixes (Figma 946:794) — full
+                  image, no crop; its own alpha fades out toward the bottom via a
+                  mask so it blends into whatever is behind it. */}
+              <div aria-hidden className="pointer-events-none absolute left-1/2 top-[-150px] w-[min(1180px,100%)] -translate-x-1/2">
+                <img
+                  src={mixesHaloBg}
+                  alt=""
+                  className="w-full select-none [-webkit-mask-image:radial-gradient(78%_80%_at_58%_36%,black_30%,transparent_72%)] [mask-image:radial-gradient(78%_80%_at_58%_36%,black_30%,transparent_72%)]"
+                />
+              </div>
               <h2
-                className="text-[clamp(26px,2.6vw,40px)] uppercase tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
+                className="relative text-[clamp(26px,2.6vw,40px)] uppercase tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
                 style={{ fontFamily: '"Base Neue Cond Bold"' }}
               >
                 Your Mixes
               </h2>
-              <div className="mt-[24px] flex max-w-full flex-wrap justify-center gap-x-[16px] gap-y-[24px]">
+              <div className="relative mt-[24px] flex max-w-full flex-wrap justify-center gap-x-[16px] gap-y-[24px]">
                 <CreateBlendCard onClick={onCreateBlend} />
                 {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => <BlendCard key={b.id} {...b} onOpen={() => onOpenBlend(b)} onContext={(e) => openMixMenu(e, b)} onMenu={(x, y) => setMixMenu({ x, y, blend: b })} />)}
               </div>
@@ -962,7 +1000,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           {/* Friends Are Playing Now — vertical cards that expand on hover */}
           <ShelfRow title="Friends Are Playing Now">
             {HOME_FRIENDS_PLAYING.map((k) => (
-              <PortraitCard key={k} {...pcard(k)} belowAvatars onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
+              <PortraitCard key={k} {...pcard(k)} belowAvatars onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
             ))}
           </ShelfRow>
 
@@ -970,12 +1008,12 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           <TrendingRow items={HOME_TRENDING} onOpen={onOpen} />
 
           {/* Highly Rated by Your Friends — two wide cards */}
-          <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} />
+          <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
 
           {/* Because You Played… — vertical cards */}
           <ShelfRow title="Because You Played…">
             {HOME_BECAUSE_PLAYED.map((k) => (
-              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
+              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
             ))}
           </ShelfRow>
 
@@ -985,7 +1023,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           {/* Something Different for You — vertical cards */}
           <ShelfRow title="Something Different for You">
             {HOME_DIFFERENT.map((k) => (
-              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
+              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
             ))}
           </ShelfRow>
         </div>
@@ -1038,9 +1076,7 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
         <button onClick={onLibrary} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
         <button className="border-b-2 border-white pb-[2px] text-[16px] font-medium text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <button onClick={() => setSearchOpen(true)} aria-label="Search" className="flex size-[34px] items-center justify-center rounded-full transition hover:bg-white/10">
-            <img alt="" src={searchIcon} className="size-[22px] opacity-80" />
-          </button>
+          <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
@@ -1272,8 +1308,8 @@ const STARTER_DESC = {
   gp_hades: { studio: 'Supergiant Games', desc: 'A god-like roguelike — fight out of Hell one perfect run at a time.', tags: ['Roguelike', 'Action', 'Story Rich'], friends: 'Trending with 120+ players' },
   gp_doom64: { studio: 'id Software', desc: 'The 1997 cult classic, restored — pure retro demon-blasting.', tags: ['FPS', 'Retro', 'Mature 17+'], friends: 'Rising in your communities' },
   gp_vampiresurvivors: { studio: 'poncle', desc: 'One button, a thousand monsters. Absurdly moreish bullet-heaven.', tags: ['Roguelike', 'Bullet Hell', 'Casual'], friends: 'Everyone is playing this' },
-  gp_stardewvalley: { studio: 'ConcernedApe', desc: 'Inherit a farm, build a life, lose a hundred hours to it happily.', tags: ['Farming Sim', 'Co-op', 'Cozy'], friends: 'Blake rated this 5 stars' },
-  gp_oriandthewillofthewisps: { studio: 'Moon Studios', desc: 'A gorgeous, heartbreaking platformer with movement that just sings.', tags: ['Platformer', 'Metroidvania', 'Story Rich'], friends: 'Chloe rated this 5 stars' },
+  gp_stardewvalley: { studio: 'ConcernedApe', desc: 'Inherit a farm, build a life, lose a hundred hours to it happily.', tags: ['Farming Sim', 'Co-op', 'Cozy'], friends: 'Blake rated this 5 stars', rec: 96, recFriends: 5 },
+  gp_oriandthewillofthewisps: { studio: 'Moon Studios', desc: 'A gorgeous, heartbreaking platformer with movement that just sings.', tags: ['Platformer', 'Metroidvania', 'Story Rich'], friends: 'Chloe rated this 5 stars', rec: 94, recFriends: 4 },
   gp_batmanarkhamknight: { studio: 'Rocksteady', desc: 'Be the Batman across a stormy, open Gotham in the Arkham finale.', tags: ['Action', 'Open World', 'Mature 17+'], friends: '3 friends have played recently' },
   gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends have played recently' },
   gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends have played recently' },
@@ -1346,7 +1382,7 @@ function pcard(k) {
   const p = g?.players
   return {
     image: starterCover(k),
-    video: GAMEPLAY_VERTICAL[k] ? { youTubeId: GAMEPLAY_VERTICAL[k], vertical: true } : g?.youTubeId ? { youTubeId: g.youTubeId } : undefined,
+    video: GAMEPLAY_LANDSCAPE[k] ? { youTubeId: GAMEPLAY_LANDSCAPE[k] } : g?.youTubeId ? { youTubeId: g.youTubeId } : undefined,
     title: c.title || g?.title,
     publisher: d.studio || c.developer || 'Game Pass',
     released: STARTER_RELEASED[k] ? `Released on ${STARTER_RELEASED[k]}` : '',
@@ -1425,19 +1461,21 @@ function cineCard(k) {
     image: starterHeader(k),
     video: vid ? { youTubeId: vid, poster: starterHeader(k) } : undefined,
     avatars: pickAvatars(k),
-    label: d.friends || 'highly rated by your friends',
+    label: d.recFriends ? `${d.recFriends} friends recommend this` : (d.friends || 'highly rated by your friends'),
+    avatarsPlus: !!d.recFriends,
     players: g?.players && g.players !== '1' && g.players !== 'MMO' ? g.players : g?.players === 'MMO' ? 'MMO' : '1',
     playtime: c.playtime || '~2hrs',
     genre: g?.genre,
     title: c.title || g?.title,
+    recommendPct: d.rec,
   }
 }
 
 // "Highly Rated by Your Friends" — wide cards with the cinematic hover overlay.
-function HighlyRatedRow({ items, onOpen }) {
+function HighlyRatedRow({ items, onOpen, onWishlist, onShare }) {
   return (
     <ShelfRow title="Highly Rated by Your Friends">
-      {items.map((k) => <CinematicCard key={k} {...cineCard(k)} onOpen={onOpen} />)}
+      {items.map((k) => <CinematicCard key={k} {...cineCard(k)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />)}
     </ShelfRow>
   )
 }
@@ -1537,9 +1575,7 @@ function LibraryPage({ onHome, onMixes, onOpen }) {
         <button className="border-b-2 border-white pb-[2px] text-[16px] font-medium text-white">Library</button>
         <button onClick={onMixes} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <button onClick={() => setSearchOpen(true)} aria-label="Search" className="flex size-[34px] items-center justify-center rounded-full transition hover:bg-white/10">
-            <img alt="" src={searchIcon} className="size-[22px] opacity-80" />
-          </button>
+          <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
@@ -3181,6 +3217,44 @@ function WheelGameEditor({ keys, onChange, locked, isDefault, onReset }) {
  * beside it, and on the right the live read on the room — who's been asked,
  * who's in, who's out — plus the play button once everyone has said yes.
  */
+// "SPINNNNNNING" — the N's stretch up and down while the wheel turns.
+function SpinningText() {
+  return (
+    <p className="uppercase leading-none text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(28px,3vw,46px)' }}>
+      SPI{[0, 1, 2, 3, 4, 5].map((i) => (
+        <span key={i} className="spin-n" style={{ animationDelay: `${i * 80}ms` }}>N</span>
+      ))}ING
+    </p>
+  )
+}
+
+// One row of the "Who's playing?" list — avatar with an in (green ✓) / out
+// (red ✗) status badge, then the name.
+function StatusRow({ name, vote }) {
+  const yes = vote === 'yes'
+  const no = vote === 'no'
+  return (
+    <div className="flex items-center gap-[12px]">
+      <div className="relative shrink-0">
+        <Avatar color={COLOR_OF[name] || D.raised} size={34} />
+        {(yes || no) && (
+          <span
+            className="absolute -bottom-[2px] -right-[2px] flex size-[16px] items-center justify-center rounded-full"
+            style={{ backgroundColor: yes ? '#7aff46' : '#ff5a5a', boxShadow: '0 0 0 2px #272727' }}
+          >
+            {yes ? (
+              <svg viewBox="0 0 24 24" className="size-[11px]" fill="none" stroke="#0c0c0e" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 6" /></svg>
+            ) : (
+              <svg viewBox="0 0 24 24" className="size-[10px]" fill="none" stroke="#0c0c0e" strokeWidth="3.6" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            )}
+          </span>
+        )}
+      </div>
+      <span className="text-[16px] text-white">{capName(name)}</span>
+    </div>
+  )
+}
+
 function SpinPanel({ blend, state, onLaunch }) {
   const { online } = useRoomCtx()
   const { spin, writeSpin, phase, remaining, picked, vote, clear } = state
@@ -3232,7 +3306,7 @@ function SpinPanel({ blend, state, onLaunch }) {
 
   return (
     <section className="rounded-[20px] bg-[#121214] p-[28px] ring-1 ring-[#107C10]/25">
-      <div className="flex flex-col items-start gap-[24px] lg:flex-row">
+      <div className="flex flex-col items-start gap-[24px] lg:flex-row lg:flex-wrap">
         {/* Wheel */}
         <div className="flex shrink-0 flex-col items-center">
           <DecisionWheel
@@ -3266,7 +3340,7 @@ function SpinPanel({ blend, state, onLaunch }) {
         />
 
         {/* Result + who's in */}
-        <div className="min-w-0 flex-1 self-stretch">
+        <div className="w-full flex-1 self-stretch lg:min-w-[360px] lg:basis-[360px]">
           {!here && (
             <div className="flex h-full flex-col justify-center">
               <h3 className="text-[24px] font-semibold text-white">Let the wheel decide</h3>
@@ -3286,74 +3360,79 @@ function SpinPanel({ blend, state, onLaunch }) {
           )}
 
           {here && phase === 'spinning' && (
-            <div className="flex h-full flex-col justify-center">
-              <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>
-                {iSpun ? 'You spun' : `${capName(here.spinner)} spun`}
-              </p>
-              <h3 className="mt-[6px] text-[28px] font-semibold text-white">A game is about to be chosen…</h3>
-              <p className="mt-[8px] text-[15px]" style={{ color: D.dim }}>
-                Everyone on the server just got the notification.
-              </p>
+            <div className="flex h-full min-h-[240px] flex-col items-center justify-center">
+              <SpinningText />
             </div>
           )}
 
-          {here && phase === 'result' && picked && (
-            <div className="flex h-full flex-col">
-              <div className="flex items-center gap-[16px]">
-                {cover && <img alt="" src={cover} className="h-[76px] w-[136px] shrink-0 rounded-[12px] object-cover" />}
-                <div className="min-w-0">
-                  <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>The game picked is</p>
-                  <p className="text-[30px] font-bold leading-tight text-white">{picked.title}</p>
-                </div>
-              </div>
-
-              {/* Your answer — everyone but the spinner still has to weigh in */}
-              {!iSpun && (
-                <div className="mt-[20px]">
-                  <p className="mb-[8px] text-[14px]" style={{ color: D.dim }}>
-                    {my ? `You said ${my === 'yes' ? "you're in" : 'not tonight'}.` : `Are you in for ${picked.title}?`}
+          {here && phase === 'result' && picked && (() => {
+            const anyOut = no.length > 0
+            const accent = allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#c5c6ca'
+            return (
+            <div className="flex h-full flex-col gap-[16px]">
+              {/* Top card — game art + status + big title (the whole card is the
+                  primary action: launch when everyone's in, re-spin when it failed) */}
+              <button
+                type="button"
+                onClick={allIn ? () => onLaunch(picked.title) : anyOut ? startSpin : undefined}
+                className={'group relative h-[210px] w-full shrink-0 overflow-hidden rounded-[12px] text-left ' + (allIn || anyOut ? 'cursor-pointer' : 'cursor-default')}
+              >
+                {cover && <img alt="" src={cover} className="absolute inset-0 size-full object-cover" />}
+                <div
+                  className="absolute inset-0"
+                  style={{ background: allIn
+                    ? 'linear-gradient(180deg, rgba(21,43,13,0.5), rgba(12,12,14,0.85)), rgba(21,43,13,0.35)'
+                    : anyOut
+                      ? 'linear-gradient(180deg, rgba(43,13,13,0.55), rgba(12,12,14,0.88)), rgba(43,13,13,0.4)'
+                      : 'linear-gradient(180deg, rgba(12,12,14,0.35), rgba(12,12,14,0.8))' }}
+                />
+                <div className="relative z-10 flex h-full flex-col p-[24px]">
+                  <p className="text-[16px] font-semibold" style={{ color: accent }}>
+                    {allIn ? 'Vote Finished' : anyOut ? 'Vote Failed' : 'Game Picked'}
                   </p>
+                  <p
+                    className="mt-[2px] uppercase leading-[0.95]"
+                    style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)', color: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#ffffff' }}
+                  >
+                    {allIn ? 'Launch Game' : anyOut ? 'Spin Again' : picked.title}
+                  </p>
+                  {allIn && (
+                    <svg viewBox="0 0 24 24" className="mt-auto size-[52px] transition-transform group-hover:translate-x-[6px]" fill="none" stroke="#7aff46" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+                  )}
+                </div>
+              </button>
+
+              {/* Non-spinner still has to weigh in */}
+              {!iSpun && !my && (
+                <div>
+                  <p className="mb-[8px] text-[14px]" style={{ color: D.dim }}>Are you in for {picked.title}?</p>
                   <VoteButtons my={my} onVote={vote} />
                 </div>
               )}
 
-              {/* The spinner's list: who wants to play, who doesn't */}
-              <div className="mt-[20px] rounded-[14px] bg-[#0c0c0e] p-[16px]">
-                <div className="flex items-baseline justify-between gap-[10px]">
-                  <p className="text-[13px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>
-                    {iSpun ? 'Your table' : "Who's in"}
-                  </p>
-                  <p className="ml-auto text-[13px]" style={{ color: D.mute }}>{yes.length} in · {no.length} out</p>
-                  <button
-                    onClick={clear}
-                    className="text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white"
-                  >
-                    Clear
-                  </button>
-                </div>
-                <div className="mt-[6px]">
-                  {people.map((n) => <VoteRow key={n} name={n} vote={votes[n]} />)}
-                </div>
-              </div>
-
-              {/* Unanimous — the play button unlocks for everyone */}
-              {allIn ? (
-                <div className="mt-[18px] flex items-center gap-[14px] rounded-[14px] bg-[#107C10]/15 p-[14px]">
-                  <PlayButton onClick={() => onLaunch(picked.title)} size={46} title={`Launch ${picked.title}`} />
-                  <div>
-                    <p className="text-[16px] font-semibold text-white">Everyone&rsquo;s in — {picked.title}</p>
-                    <p className="text-[13px]" style={{ color: D.dim }}>Hit play and the group drops in together.</p>
+              {/* Who's playing panel */}
+              <div className="rounded-[12px] border p-[20px]" style={{ backgroundColor: '#272727', borderColor: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#3a3d41' }}>
+                <div className="flex items-start justify-between gap-[12px]">
+                  <div className="min-w-0">
+                    <p className="text-[18px] font-semibold text-white">Who&rsquo;s playing?</p>
+                    <p className="text-[14px]" style={{ color: D.dim }}>See who wants to play and who would rather not</p>
                   </div>
+                  <p className="shrink-0 whitespace-nowrap text-[14px] font-bold" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>
+                    {allIn ? <span style={{ color: '#7aff46' }}>{yes.length} in</span>
+                     : anyOut ? <span style={{ color: '#ff5a5a' }}>{no.length} out</span>
+                     : <><span style={{ color: '#7aff46' }}>{yes.length} in</span> <span style={{ color: '#ff5a5a' }}>{no.length} out</span></>}
+                  </p>
                 </div>
-              ) : (
-                <p className="mt-[18px] text-[14px]" style={{ color: D.mute }}>
-                  {no.length > 0
-                    ? `${no.map(capName).join(', ')} passed — spin again for something else.`
-                    : 'Waiting on the rest of the group…'}
-                </p>
-              )}
+                <div className="mt-[14px] flex flex-col gap-[10px]">
+                  {people.map((n) => <StatusRow key={n} name={n} vote={votes[n]} />)}
+                </div>
+                {iSpun && (
+                  <button onClick={clear} className="mt-[12px] text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear votes</button>
+                )}
+              </div>
             </div>
-          )}
+            )
+          })()}
         </div>
       </div>
     </section>
@@ -4568,16 +4647,10 @@ function detailFor(key) {
   }
 }
 
-const REVIEW_BODY =
-  'I have never really been able to get into the AC Games for some reason, they should appeal to me since I tend to enjoy this type of game but despite trying many (I have several outside of the ones I have on Steam), they just never managed to hold my attention. At least until now that is . . .'
-
 const REVIEWS = [
-  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', pct: '80%' },
-  { name: 'Timmy Two Toes', color: AVATAR.purple, joined: '06/18/2015', skill: 'Veteran', privacy: 'Public', title: 'Better Than Expected', pct: '80%' },
-  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', pct: '80%' },
-  { name: 'Timmy Two Toes', color: AVATAR.purple, joined: '06/18/2015', skill: 'Veteran', privacy: 'Public', title: 'Better Than Expected', pct: '80%' },
-  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', pct: '80%' },
-  { name: 'Timmy Two Toes', color: AVATAR.purple, joined: '06/18/2015', skill: 'Veteran', privacy: 'Public', title: 'Better Than Expected', pct: '80%' },
+  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', thumb: 'up', body: 'I have never really been able to get into the AC Games for some reason, they should appeal to me since I tend to enjoy this type of game but despite trying many (I have several outside of the ones I have on Steam), they just never managed to hold my attention. At least until now that is . . .' },
+  { name: 'Pastel_089', color: AVATAR.purple, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Ugh. Gross', thumb: 'down', body: 'Ass.' },
+  { name: 'PastyBeans2021', color: AVATAR.green, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Nice Graphics', thumb: 'up', body: "I've never been able to get into AC Games. They should appeal to me, but despite trying many, they never held my attention until now. The graphics really pull you into the Golden Age of Piracy." },
 ]
 
 function DetailPill({ children }) {
@@ -4599,7 +4672,7 @@ function InfoLine({ label, children }) {
 function PrivacyBadge({ kind }) {
   const friends = kind === 'Friends Only'
   return (
-    <span className="flex items-center gap-[7px] whitespace-nowrap rounded-[6px] border border-white/70 px-[12px] py-[6px] text-[13px] font-semibold text-white">
+    <span className={'flex w-fit items-center gap-[7px] whitespace-nowrap rounded-[6px] border px-[11px] py-[5px] text-[13px] font-semibold ' + (friends ? 'border-[#7aff46]/55 text-[#7aff46]' : 'border-white/40 text-[#c7c9cb]')}>
       {friends ? <StarGlyph size={14} /> : <PersonGlyph size={14} />}
       {kind}
     </span>
@@ -4607,29 +4680,31 @@ function PrivacyBadge({ kind }) {
 }
 
 function ReviewCard({ r }) {
+  const down = r.thumb === 'down'
   return (
-    <div className="flex gap-[20px] rounded-[10px] bg-[#121214] p-[20px]">
+    <div className="flex gap-[18px] rounded-[8px] bg-[#1c1c1c] p-[16px]">
       <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
-      <div className="flex w-[220px] shrink-0 flex-col justify-start pt-[2px]">
+      {/* Reviewer meta — name, joined, skill, privacy badge */}
+      <div className="flex w-[200px] shrink-0 flex-col justify-start pt-[2px]">
         <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
         <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
         <p className="text-[13px] text-[#6f7276]">Skill Level: <span className="text-[#9a9ba3]">{r.skill}</span></p>
+        <div className="mt-[12px]"><PrivacyBadge kind={r.privacy} /></div>
       </div>
-      <div className="relative flex flex-1 flex-col">
-        <div className="mb-[6px] flex items-start justify-between gap-[16px]">
-          <p className="text-[26px] font-semibold leading-tight text-white">{r.title}</p>
-          <div className="flex shrink-0 items-center gap-[10px]">
-            <PrivacyBadge kind={r.privacy} />
-            <span className="flex items-center gap-[6px] text-[18px] font-semibold text-white">{r.pct} <ThumbsUpGlyph size={20} /></span>
-          </div>
+      {/* Review panel — title + body on the left, big thumb on the right */}
+      <div className="flex flex-1 items-center gap-[16px] rounded-[8px] bg-[#121214] p-[18px]">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <p className="text-[24px] font-semibold leading-tight text-white">{r.title}</p>
+          <p
+            className="mt-[8px] max-h-[96px] overflow-hidden text-[15px] leading-[1.5] text-transparent"
+            style={{ backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
+          >
+            {r.body}
+          </p>
         </div>
-        {/* Body fades out toward the bottom — the "read more" effect from Figma. */}
-        <p
-          className="max-h-[96px] overflow-hidden text-[15px] leading-[1.5] text-transparent"
-          style={{ backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
-        >
-          {REVIEW_BODY}
-        </p>
+        <div className="flex shrink-0 items-center pr-[10px] text-white">
+          <ThumbsUpGlyph size={46} className={down ? 'rotate-180' : undefined} />
+        </div>
       </div>
     </div>
   )
@@ -4674,7 +4749,7 @@ function HeroCarousel({ slides, children }) {
             {s.type === 'video' && idx === i ? (
               <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} />
             ) : (
-              <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
+              <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-contain" />
             )}
             {s.type === 'video' && (
               <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">Trailer</span>
@@ -4738,9 +4813,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
         <button onClick={onLibrary} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
         <button onClick={onMixes} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <button onClick={() => setSearchOpen(true)} aria-label="Search" className="flex size-[34px] items-center justify-center rounded-full transition hover:bg-white/10">
-            <img alt="" src={searchIcon} className="size-[22px] opacity-80" />
-          </button>
+          <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
@@ -4752,13 +4825,26 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
             <HeroCarousel slides={slides}>
               {/* Platform marks, bottom-left of the cover */}
               <div className="pointer-events-none absolute bottom-[16px] left-[16px] z-[1] flex items-center gap-[16px] text-white [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.8))]">
-                <WindowsGlyph size={26} />
-                <AppleGlyph size={26} />
+                <WindowsGlyph size={24} />
+                <AppleGlyph size={30} />
               </div>
             </HeroCarousel>
 
             <div className="flex min-w-0 flex-1 flex-col">
               <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-white">{d.title}</h1>
+              {/* Played By — right under the title */}
+              <div className="mt-[14px] flex items-center gap-[10px] text-[16px] text-[#a2a4ae]">
+                Played By:
+                {unplayed ? (
+                  <span className="text-[15px] text-[#7e7f87]">No one in your Mix yet</span>
+                ) : (
+                  <span className="flex items-center">
+                    {playedBy.map((c, i) => (
+                      <Avatar key={i} color={c} size={26} style={{ marginRight: i < playedBy.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                    ))}
+                  </span>
+                )}
+              </div>
               <p className="mt-[16px] max-w-[560px] text-[16px] leading-[1.5] text-[#a2a4ae]">{d.description}</p>
               <div className="mt-[20px] flex flex-wrap items-center gap-[8px]">
                 <DetailPill>
@@ -4769,79 +4855,70 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                 <DetailPill>{d.genre}</DetailPill>
                 <DetailPill>{d.difficulty}</DetailPill>
               </div>
+            </div>
+          </section>
 
-              {/* Rating cluster */}
-              <div className="mt-[26px] flex flex-wrap items-center gap-x-[40px] gap-y-[16px]">
-                <div className="flex items-center gap-[10px]">
-                  <span className="text-[34px] font-semibold leading-none text-white">{d.ratingPct}</span>
-                  <ThumbsUpGlyph size={24} className="text-white" />
-                  <span className="text-[13px] leading-[1.15] text-[#9a9ba3]">out of<br /><span className="font-semibold text-[#c7c9cb]">{d.ratingCount} ratings</span></span>
-                </div>
-                {!unplayed && (
-                  <div className="flex items-center gap-[10px]">
-                    <span className="text-[34px] font-semibold leading-none text-white">{d.recPct}</span>
-                    <ThumbsUpGlyph size={24} className="text-white" />
+          {/* Action band — buttons + publisher on the left, ratings + session
+              stats on the right (Figma 977:3261) */}
+          <section className="mt-[32px] flex flex-col gap-[28px] lg:flex-row lg:items-start lg:gap-[32px]">
+            {/* Left: play/wishlist/share, then publisher info — width matches the cover */}
+            <div className="flex flex-col lg:w-[560px] lg:shrink-0">
+              <div className="flex items-center gap-[12px]">
+                <button
+                  onClick={() => onPlay?.(gameKey)}
+                  className="flex items-center gap-[10px] rounded-[8px] bg-[#2da000] px-[32px] py-[14px] text-[17px] font-bold text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+                  PLAY
+                </button>
+                <button
+                  onClick={() => onWishlist?.(d.title)}
+                  className="flex items-center gap-[10px] rounded-[8px] border-2 border-white/85 px-[26px] py-[12px] text-[17px] font-bold text-white transition hover:bg-white/10"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
+                  Add to Wishlist
+                </button>
+                <button
+                  onClick={() => onShare?.(d.title)}
+                  aria-label="Share"
+                  className="flex size-[52px] items-center justify-center rounded-[8px] border-2 border-white/85 text-white transition hover:bg-white/10"
+                >
+                  <ShareGlyph size={22} />
+                </button>
+              </div>
+              <div className="mt-[24px]">
+                <InfoLine label="Publisher:">{d.publisher}</InfoLine>
+                <InfoLine label="Developer:">{d.developer}</InfoLine>
+                <InfoLine label="Released:">{d.released}</InfoLine>
+              </div>
+            </div>
+
+            {/* Right: ratings + session stats — aligned under the hero info column */}
+            {!unplayed && (
+              <div className="flex flex-1 flex-col items-start gap-[18px]">
+                <div className="flex flex-col gap-[10px]">
+                  <div className="flex items-center gap-[12px]">
+                    <span className="text-[34px] font-semibold leading-none text-[#7aff46]">{d.recPct}</span>
+                    <ThumbsUpGlyph size={24} className="text-[#7aff46]" />
                     <div className="flex items-center">
                       {playedBy.map((c, i) => (
-                        <Avatar key={i} color={c} size={28} style={{ marginRight: i < playedBy.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                        <Avatar key={i} color={c} size={30} style={{ marginRight: i < playedBy.length - 1 ? -9 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
                       ))}
                     </div>
                   </div>
-                )}
+                  <div className="flex items-center gap-[12px]">
+                    <span className="text-[34px] font-semibold leading-none text-white">{d.ratingPct}</span>
+                    <ThumbsUpGlyph size={24} className="text-white" />
+                    <span className="text-[13px] leading-[1.15] text-[#9a9ba3]">out of<br /><span className="font-semibold text-[#c7c9cb]">{d.ratingCount} ratings</span></span>
+                  </div>
+                </div>
+                <div className="mt-[2px]">
+                  <InfoLine label="Last Group Session:">{d.lastSession}</InfoLine>
+                  <InfoLine label="Group Session Record:">{d.sessionRecord}</InfoLine>
+                  <InfoLine label="Total Game Time:">{d.totalTime}</InfoLine>
+                </div>
               </div>
-            </div>
-          </section>
-
-          {/* Action bar */}
-          <section className="mt-[28px] flex items-center gap-[12px]">
-            <button
-              onClick={() => onPlay?.(gameKey)}
-              className="flex items-center gap-[10px] rounded-[8px] bg-[#107C10] px-[30px] py-[12px] text-[16px] font-bold text-white shadow-[0_2px_12px_rgba(16,124,16,0.45)] transition hover:bg-[#0e8f0e]"
-            >
-              <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-              Play
-            </button>
-            <button
-              onClick={() => onWishlist?.(d.title)}
-              className="flex items-center gap-[10px] rounded-[8px] border-2 border-white/85 px-[26px] py-[11px] text-[16px] font-bold text-white transition hover:bg-white/10"
-            >
-              <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
-              Add to PLAYlist
-            </button>
-            <button
-              onClick={() => onShare?.(d.title)}
-              aria-label="Share"
-              className="flex size-[48px] items-center justify-center rounded-[8px] border-2 border-white/85 text-white transition hover:bg-white/10"
-            >
-              <ShareGlyph size={22} />
-            </button>
-          </section>
-
-          {/* Metadata columns */}
-          <section className="mt-[28px] grid grid-cols-1 gap-x-[64px] gap-y-[8px] border-t border-[#1c1d21] pt-[24px] md:grid-cols-2">
-            <div>
-              <InfoLine label="Publisher:">{d.publisher}</InfoLine>
-              <InfoLine label="Developer:">{d.developer}</InfoLine>
-              <InfoLine label="Released:">{d.released}</InfoLine>
-              <InfoLine label="Required Storage:">{d.storage}</InfoLine>
-            </div>
-            <div>
-              <div className="flex items-center gap-[10px] text-[16px] leading-[1.7] text-[#9a9ba3]">
-                Played By:
-                {unplayed ? (
-                  <span className="text-[15px] text-[#7e7f87]">No one in your Mix yet</span>
-                ) : (
-                  <span className="flex items-center">
-                    {playedBy.map((c, i) => (
-                      <Avatar key={i} color={c} size={24} style={{ marginRight: i < playedBy.length - 1 ? -7 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
-                    ))}
-                  </span>
-                )}
-              </div>
-              {!unplayed && <InfoLine label="Last Group Session:">{d.lastSession}</InfoLine>}
-              {!unplayed && <InfoLine label="Group Session Record:">{d.sessionRecord}</InfoLine>}
-              {!unplayed && <InfoLine label="Total Game Time:">{d.totalTime}</InfoLine>}
-            </div>
+            )}
           </section>
 
           {/* Reviews — hidden until a friend has actually played it */}
@@ -4852,22 +4929,36 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your Mix and share what you think.</p>
             </section>
           ) : (
-            <section className="mt-[36px] flex flex-col gap-[16px]">
-              {REVIEWS.map((r, i) => <ReviewCard key={i} r={r} />)}
+            <section className="mt-[40px]">
+              <div className="flex items-center justify-between">
+                <h2 className="text-[26px] font-bold text-white">Reviews</h2>
+                <button aria-label="Filter" className="group relative flex items-center justify-center text-[#7aff46] transition hover:brightness-125">
+                  <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/80 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
+                    Filter
+                  </span>
+                  <svg viewBox="0 0 30 30" className="size-[24px]" fill="currentColor">
+                    <path d="M28.4375 21.875C28.4375 22.3875 28.0125 22.8125 27.5 22.8125H18.75V23.125C18.75 25 17.625 25.625 16.25 25.625H8.75C7.375 25.625 6.25 25 6.25 23.125V22.8125H2.5C1.9875 22.8125 1.5625 22.3875 1.5625 21.875C1.5625 21.3625 1.9875 20.9375 2.5 20.9375H6.25V20.625C6.25 18.75 7.375 18.125 8.75 18.125H16.25C17.625 18.125 18.75 18.75 18.75 20.625V20.9375H27.5C28.0125 20.9375 28.4375 21.3625 28.4375 21.875Z" />
+                    <path d="M28.4375 8.125C28.4375 8.6375 28.0125 9.0625 27.5 9.0625H23.75V9.375C23.75 11.25 22.625 11.875 21.25 11.875H13.75C12.375 11.875 11.25 11.25 11.25 9.375V9.0625H2.5C1.9875 9.0625 1.5625 8.6375 1.5625 8.125C1.5625 7.6125 1.9875 7.1875 2.5 7.1875H11.25V6.875C11.25 5 12.375 4.375 13.75 4.375H21.25C22.625 4.375 23.75 5 23.75 6.875V7.1875H27.5C28.0125 7.1875 28.4375 7.6125 28.4375 8.125Z" />
+                  </svg>
+                </button>
+              </div>
+              <div className="mt-[16px] flex flex-col gap-[16px]">
+                {REVIEWS.map((r, i) => <ReviewCard key={i} r={r} />)}
+              </div>
             </section>
           )}
 
-          {/* Recommendation rows — each card opens its own detail page */}
-          <div className="mt-[24px]">
-            <ShelfRow title="Based on Your Friends Activity" subtitle="Games your crew has been into.">
+          {/* Recommendation rows — portrait cover tiles, each opens its detail page */}
+          <div className="mt-[32px]">
+            <ShelfRow title="Friends Also Liked">
               {recCinematic.map((c) => (
-                <CinematicCard key={c.id} {...c} onWishlist={onWishlist} onOpen={onOpen} />
+                <PortraitCard key={c.id} {...pcard(c.id)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
               ))}
             </ShelfRow>
           </div>
-          <ShelfRow title="Similar Play Time" subtitle="Matched to how long your sessions run.">
+          <ShelfRow title="Like This Game">
             {recPortrait.map((c) => (
-              <PortraitCard key={c.id} {...c} onOpen={onOpen} />
+              <PortraitCard key={c.id} {...c} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
             ))}
           </ShelfRow>
         </div>
