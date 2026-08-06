@@ -5178,9 +5178,10 @@ export default function Landing() {
         <TopBar />
         <div className="group/rail flex min-h-0 flex-1 overflow-hidden">
         <ServerRail />
-        {/* The menu (sidebar) + main content sit in a rounded, gray-bordered box.
-            The server rail is left outside it, flush to the window edge. */}
-        <div className="my-[8px] mr-[8px] flex min-h-0 flex-1 overflow-hidden rounded-[10px] border border-white/10">
+        {/* The menu (sidebar) + main content — flush to the window, with only the
+            top-left corner rounded and a gray border on the top + left edges
+            (against the server rail). */}
+        <div className="flex min-h-0 flex-1 overflow-hidden rounded-tl-[10px] border-l border-t border-white/10">
         <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} onOpenBlend={openBlend} onHome={goHome} reads={reads} />
         {dmFriend ? (
           <DMPage
