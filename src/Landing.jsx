@@ -165,7 +165,7 @@ function TopBar() {
       </div>
       <div className="pointer-events-none absolute left-1/2 flex -translate-x-1/2 items-center gap-[7px]">
         <span style={{ filter: 'brightness(0) invert(1)' }}><XboxLogo size={15} /></span>
-        <span className="text-[13px] font-medium tracking-tight text-[#c7c9cb]">XBOX PARTY</span>
+        <span className="text-[13px] font-medium tracking-tight text-[#c7c9cb]">XBOX ARCADE</span>
       </div>
     </div>
   )
@@ -303,7 +303,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
           <NavItem
             active={!activeDm}
             onClick={onHome}
-            label="XBOX PARTY"
+            label="XBOX ARCADE"
             icon={<XboxLogo size={20} />}
           />
         </div>
@@ -375,7 +375,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
           <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.green }} fill="currentColor"><path d="M4 9v6h4l5 5V4L8 9H4Zm11.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4Z" /></svg>
           <div className="leading-tight">
             <div className="text-[14px] font-semibold" style={{ color: D.green }}>Voice Connected</div>
-            <div className="text-[12px]" style={{ color: D.mute }}>General · XBOX PARTY</div>
+            <div className="text-[12px]" style={{ color: D.mute }}>General · XBOX ARCADE</div>
           </div>
         </div>
         <svg viewBox="0 0 24 24" className="size-[18px]" style={{ color: D.dim }} fill="none" stroke="currentColor" strokeWidth="2"><path d="M6.6 10.8a15 15 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11 11 0 0 0 3.5.56 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.3a1 1 0 0 1 1 1c0 1.2.2 2.4.56 3.5a1 1 0 0 1-.25 1Z" /></svg>
@@ -914,14 +914,14 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
             style={{ background: 'linear-gradient(to bottom, rgba(12,12,14,0.35) 0%, rgba(12,12,14,0.55) 55%, #0c0c0e 100%)' }}
           />
           <div className="relative mx-auto w-full max-w-[1400px] px-[40px] pb-[8px] pt-[64px]">
-            {/* Hero title — "Welcome to the XBOX PARTY" (Figma 863:3749) */}
+            {/* Hero title — "Welcome to the XBOX ARCADE" (Figma 863:3749) */}
             <div className="flex flex-col items-center text-center">
               <h1 className="flex flex-col items-center gap-[8px] leading-[1.085] text-white [text-shadow:0_4px_18px_rgba(0,0,0,0.55)]">
                 <span className="text-[clamp(32px,4.6vw,64px)] leading-[1.085] tracking-[0.005em]" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>Welcome to</span>
-                <span className="text-[clamp(64px,10.5vw,128px)] uppercase leading-[1.085] tracking-[0.005em]" style={{ fontFamily: '"Base Neue Black"' }}>XBOX PARTY</span>
+                <span className="text-[clamp(64px,10.5vw,128px)] uppercase leading-[1.085] tracking-[0.005em]" style={{ fontFamily: '"Base Neue Black"' }}>XBOX ARCADE</span>
               </h1>
               <p className="mt-[16px] max-w-[560px] text-[18px] leading-snug text-[#e7e7e7]">
-                Jump into 200+ Xbox games instantly, powered by the cloud and playable right inside Discord.
+                Discover and play a curated collection of Xbox Game Pass titles through the cloud, right inside Discord.
               </p>
               {/* "See who's on PARTY" — opens the friends popup */}
               <button
@@ -936,7 +936,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                 <span className="text-[15px] font-medium text-white">See who’s on</span>
                 <span className="flex items-center gap-[6px]">
                   <XboxLogo size={16} />
-                  <span className="text-[13px] font-bold uppercase tracking-wide text-[#95ff00]">Party</span>
+                  <span className="text-[13px] font-bold uppercase tracking-wide text-[#95ff00]">Arcade</span>
                 </span>
               </button>
             </div>
@@ -957,38 +957,35 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           </div>
         </section>
 
-        {/* Discovered for You banner + recommendation rows */}
+        {/* Curated homepage shelves over the Starter catalog (Figma 937:8591) */}
         <div className="mx-auto w-full max-w-[1400px] px-[40px]">
-          {/* "Discovered for You" cinematic banner (Figma 863:3729) */}
-          <DiscoveredBanner />
-
-          {/* Overlay rows (e.g. "Because you love to build") — at the top. */}
-          {orderedRows.map((row, ri) => (
-            <CardRow
-              key={ri}
-              title={row.title}
-              subtitle={row.subtitle}
-              cards={row.games.map((k, i) => mkCard(k, i, row.mode === 'steam' ? { steam: true } : undefined))}
-              overlay={row.mode === 'overlay'}
-              expanded={row.mode === 'expanded'}
-              onWishlist={onWishlist}
-              onShare={onShare}
-              onOpen={onOpen}
-              revealTitle={IS_SPECTATE ? eHover : null}
-            />
-          ))}
-
-          {/* Cinematic hover row (Figma 622:2733 / 622:2755) */}
-          <ShelfRow title="Basically movie night" subtitle="Big, cinematic worlds worth dimming the lights for.">
-            {CINEMATIC_ROW.map((c) => (
-              <CinematicCard key={c.id} {...c} onWishlist={onWishlist} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === c.title} />
+          {/* Friends Are Playing Now — vertical cards that expand on hover */}
+          <ShelfRow title="Friends Are Playing Now">
+            {HOME_FRIENDS_PLAYING.map((k) => (
+              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
             ))}
           </ShelfRow>
 
-          {/* Portrait expand-tile row (Figma 620:2460) */}
-          <ShelfRow title="Fresh drops with your name on them" subtitle="Just-released picks matched to your taste — hover for the details.">
-            {PORTRAIT_ROW.map((c) => (
-              <PortraitCard key={c.id} {...c} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === c.title} />
+          {/* Trending in Your Communities — compact list */}
+          <TrendingRow items={HOME_TRENDING} onOpen={onOpen} />
+
+          {/* Highly Rated by Your Friends — two wide cards */}
+          <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} />
+
+          {/* Because You Played… — vertical cards */}
+          <ShelfRow title="Because You Played…">
+            {HOME_BECAUSE_PLAYED.map((k) => (
+              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
+            ))}
+          </ShelfRow>
+
+          {/* Worth a Closer Look — featured game + detail panel */}
+          <WorthACloserLook gameKey={HOME_CLOSER_LOOK} onOpen={onOpen} />
+
+          {/* Something Different for You — vertical cards */}
+          <ShelfRow title="Something Different for You">
+            {HOME_DIFFERENT.map((k) => (
+              <PortraitCard key={k} {...pcard(k)} onOpen={onOpen} forceReveal={IS_SPECTATE && eHover === (CATALOG[k]?.title)} />
             ))}
           </ShelfRow>
         </div>
@@ -1259,6 +1256,163 @@ const STARTER_MIX_GAMES = ['overcooked', 'grounded', 'gp_amongus', 'humanFallFla
 
 // Portrait cover art straight from Steam's CDN (600×900 library capsule).
 const STEAM_COVER = (id) => `https://cdn.cloudflare.steamstatic.com/steam/apps/${id}/library_600x900.jpg`
+
+// ── Homepage (Figma 937:8591) — curated shelves over the Starter catalog ─────
+const STARTER_BY_KEY = Object.fromEntries(STARTER_LIBRARY.map((g) => [g.catKey, g]))
+const starterCover = (k) => { const g = STARTER_BY_KEY[k]; return g?.steamAppId ? STEAM_COVER(g.steamAppId) : CATALOG[k]?.image }
+const starterHeader = (k) => { const g = STARTER_BY_KEY[k]; return g?.steamAppId ? STEAM_HEADER(g.steamAppId) : CATALOG[k]?.image }
+// Editorial copy for the games we feature on the homepage.
+const STARTER_DESC = {
+  gp_doometernal: { studio: 'id Software', desc: 'Rip and tear through Hell in the fastest, most brutal DOOM yet.', tags: ['FPS', 'Action', 'Mature 17+'], friends: '4 friends have played recently' },
+  gp_deeprockgalactic: { studio: 'Ghost Ship Games', desc: 'Four dwarves, one cave, endless bugs. Mine, fight and drink together.', tags: ['Co-op', 'FPS', 'Mining'], friends: '3 friends have played recently' },
+  gp_chivalry2: { studio: 'Torn Banner Studios', desc: 'Massive medieval battlefields — sieges, catapults and a lot of yelling.', tags: ['Action', 'Multiplayer', 'Mature 17+'], friends: '2 friends have played recently' },
+  gp_warhammer40000darktide: { studio: 'Fatshark', desc: 'Co-op horde slaughter in the grim dark of the 41st millennium.', tags: ['Co-op FPS', 'Action', 'Mature 17+'], friends: '3 friends have played recently' },
+  gp_warhammervermintide2: { studio: 'Fatshark', desc: 'Four heroes hold the line against endless Skaven and Chaos hordes.', tags: ['Co-op', 'Melee', 'Action'], friends: '2 friends have played recently' },
+  gp_amongus: { studio: 'Innersloth', desc: 'Crew a spaceship, find the impostor, betray your friends. Repeat.', tags: ['Party', 'Social Deduction', 'Online'], friends: '5 friends have played recently' },
+  gp_hades: { studio: 'Supergiant Games', desc: 'A god-like roguelike — fight out of Hell one perfect run at a time.', tags: ['Roguelike', 'Action', 'Story Rich'], friends: 'Trending with 120+ players' },
+  gp_doom64: { studio: 'id Software', desc: 'The 1997 cult classic, restored — pure retro demon-blasting.', tags: ['FPS', 'Retro', 'Mature 17+'], friends: 'Rising in your communities' },
+  gp_vampiresurvivors: { studio: 'poncle', desc: 'One button, a thousand monsters. Absurdly moreish bullet-heaven.', tags: ['Roguelike', 'Bullet Hell', 'Casual'], friends: 'Everyone is playing this' },
+  gp_stardewvalley: { studio: 'ConcernedApe', desc: 'Inherit a farm, build a life, lose a hundred hours to it happily.', tags: ['Farming Sim', 'Co-op', 'Cozy'], friends: 'Blake rated this 5 stars' },
+  gp_oriandthewillofthewisps: { studio: 'Moon Studios', desc: 'A gorgeous, heartbreaking platformer with movement that just sings.', tags: ['Platformer', 'Metroidvania', 'Story Rich'], friends: 'Chloe rated this 5 stars' },
+  gp_batmanarkhamknight: { studio: 'Rocksteady', desc: 'Be the Batman across a stormy, open Gotham in the Arkham finale.', tags: ['Action', 'Open World', 'Mature 17+'], friends: '3 friends have played recently' },
+  gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends have played recently' },
+  gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends have played recently' },
+  gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '4 friends have played recently' },
+  gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: '1 friend has played recently' },
+  gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '2 friends have played recently' },
+  gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Daniel has played 3 hrs recently' },
+  gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'A calm pick for tonight' },
+  gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: 'Something a little different' },
+  gp_tunic: { studio: 'Andrew Shouldice', desc: 'A tiny fox, a huge secret-filled world, and a manual you decode as you go.', tags: ['Adventure', 'Puzzle', 'Souls-like'], friends: 'A hidden gem' },
+  gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Short and unforgettable' },
+  gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'A modern classic' },
+  gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Beloved by everyone' },
+}
+// PortraitCard props for a Starter game key.
+function pcard(k) {
+  const g = STARTER_BY_KEY[k]
+  const c = CATALOG[k] || {}
+  const d = STARTER_DESC[k] || {}
+  const p = g?.players
+  return {
+    image: starterCover(k),
+    title: c.title || g?.title,
+    publisher: d.studio || c.developer || 'Game Pass',
+    released: 'Game Pass Starter Edition',
+    description: d.desc || c.caption || `${g?.genre || 'Game'} — playable free with Game Pass Starter.`,
+    recommend: d.friends || '',
+    multiplayer: p === 'MMO' ? 'MMO' : p && p !== '1' ? `${p} players` : null,
+    tags: d.tags || [g?.genre].filter(Boolean),
+  }
+}
+// Which games fill each shelf (all Starter-catalog keys).
+const HOME_FRIENDS_PLAYING = ['gp_doometernal', 'gp_deeprockgalactic', 'gp_amongus', 'gp_chivalry2', 'gp_warhammer40000darktide', 'gp_warhammervermintide2']
+const HOME_TRENDING = ['gp_hades', 'gp_doom64', 'gp_vampiresurvivors']
+const HOME_HIGHLY_RATED = ['gp_stardewvalley', 'gp_oriandthewillofthewisps']
+const HOME_BECAUSE_PLAYED = ['gp_batmanarkhamknight', 'gp_controlultimateedition', 'gp_dishonored2', 'gp_fallout4', 'gp_hellbladesenuassacrifice', 'gp_fallout76']
+const HOME_CLOSER_LOOK = 'gp_firewatch'
+const HOME_DIFFERENT = ['gp_unpacking', 'gp_spiritfarer', 'gp_tunic', 'gp_inside', 'gp_celeste', 'gp_limbo']
+
+const ELLIPSIS_GLYPH = <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
+
+// "Trending in Your Communities" — a compact list of games (Figma 937:8591).
+function TrendingRow({ items, onOpen }) {
+  return (
+    <section className="mt-[56px]">
+      <p className="text-[24px] font-bold text-white">Trending in Your Communities</p>
+      <div className="mt-[16px] flex flex-col gap-[4px]">
+        {items.map((k) => {
+          const g = STARTER_BY_KEY[k]
+          const c = CATALOG[k] || {}
+          const d = STARTER_DESC[k] || {}
+          const title = c.title || g?.title
+          return (
+            <button key={k} data-game={title} onClick={() => onOpen?.(title)} className="group flex w-full items-center gap-[16px] rounded-[10px] p-[10px] text-left transition hover:bg-white/[0.03]">
+              <img alt="" src={starterHeader(k)} loading="lazy" className="h-[54px] w-[96px] shrink-0 rounded-[8px] object-cover" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[16px] font-semibold text-white">{title}</p>
+                <p className="truncate text-[13px] text-[#9a9ba3]">{d.desc || c.caption}</p>
+              </div>
+              <span className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-[#9a9ba3] opacity-0 transition group-hover:opacity-100">{ELLIPSIS_GLYPH}</span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// A flexible wide landscape card that plays its trailer on hover.
+function WideGameCard({ gkey, onOpen }) {
+  const [hover, setHover] = useState(false)
+  const g = STARTER_BY_KEY[gkey]
+  const title = (CATALOG[gkey] || {}).title || g?.title
+  return (
+    <button
+      data-game={title}
+      onClick={() => onOpen?.(title)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="group relative aspect-video min-w-0 flex-1 overflow-hidden rounded-[16px] bg-[#121214] text-left"
+    >
+      <img alt="" src={starterHeader(gkey)} loading="lazy" className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]" />
+      {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gkey)} />}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+      <p className="pointer-events-none absolute bottom-[14px] left-[16px] right-[16px] text-[22px] font-bold text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.7)]">{title}</p>
+    </button>
+  )
+}
+
+// "Highly Rated by Your Friends" — two wide cards side by side.
+function HighlyRatedRow({ items, onOpen }) {
+  return (
+    <section className="mt-[56px]">
+      <p className="text-[24px] font-bold text-white">Highly Rated by Your Friends</p>
+      <div className="mt-[20px] flex flex-col gap-[24px] sm:flex-row">
+        {items.map((k) => <WideGameCard key={k} gkey={k} onOpen={onOpen} />)}
+      </div>
+    </section>
+  )
+}
+
+// "Worth a Closer Look" — one featured game with a detail panel (Figma 937:8591).
+function WorthACloserLook({ gameKey, onOpen }) {
+  const [hover, setHover] = useState(false)
+  const g = STARTER_BY_KEY[gameKey]
+  const c = CATALOG[gameKey] || {}
+  const d = STARTER_DESC[gameKey] || {}
+  const title = c.title || g?.title
+  return (
+    <section className="mt-[56px]">
+      <p className="text-[24px] font-bold text-white">Worth a Closer Look</p>
+      <div className="mt-[20px] flex flex-col gap-[28px] lg:flex-row">
+        <button
+          data-game={title}
+          onClick={() => onOpen?.(title)}
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+          className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-[16px] bg-[#121214] lg:w-[56%]"
+        >
+          <img alt="" src={starterHeader(gameKey)} className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.02]" />
+          {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gameKey)} />}
+        </button>
+        <div className="flex flex-1 flex-col justify-center">
+          <div className="flex items-center gap-[10px]">
+            <div className="flex items-center">
+              {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((col, i) => (
+                <Avatar key={i} color={col} size={22} style={{ marginRight: i < 2 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+              ))}
+            </div>
+            <p className="text-[13px] font-semibold text-white">{d.friends || 'Recommended for you'}</p>
+          </div>
+          <h3 className="mt-[14px] text-[28px] font-bold leading-tight text-white">{title}</h3>
+          <p className="mt-[10px] max-w-[54ch] text-[15px] leading-relaxed text-[#9a9ba3]">{d.desc || c.caption}</p>
+          <button onClick={() => onOpen?.(title)} className="mt-[20px] w-fit rounded-[10px] bg-[#5765f2] px-[22px] py-[11px] text-[14px] font-semibold text-white transition hover:brightness-110">View details</button>
+        </div>
+      </div>
+    </section>
+  )
+}
 
 // One Library game: cover art (local → Steam → gradient fallback) that swaps to
 // the trailer on hover.
@@ -2184,7 +2338,7 @@ function WhosOnModal({ onClose, onCreated }) {
       <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
-            <p className="text-[22px] font-bold text-white">Who’s on PARTY</p>
+            <p className="text-[22px] font-bold text-white">Who’s on ARCADE</p>
             <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick who to start a Mix with.</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">

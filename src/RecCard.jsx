@@ -810,12 +810,12 @@ export function PortraitCard({ image, title, publisher, released, description, r
           <span className="text-[#e7e7e7]">{released}</span>
         </div>
         <p className="text-[12px] leading-[1.15] text-white">{description}</p>
-        <div className="flex items-start gap-[8px]">
-          <img alt="" src={thumbsUp} className="size-[20px] shrink-0" />
-          <p className="text-[12px] leading-[1.1] text-white">
-            <span className="font-semibold">{recommend}</span> for you and your friends
-          </p>
-        </div>
+        {recommend && (
+          <div className="flex items-center gap-[8px]">
+            <img alt="" src={thumbsUp} className="size-[20px] shrink-0" />
+            <p className="text-[12px] leading-[1.15] text-white">{recommend}</p>
+          </div>
+        )}
         <div className="mt-auto flex flex-col gap-[4px]">
           <p className="text-[10px] text-white">User Tags</p>
           {multiplayer && <Tag>{multiplayer}</Tag>}
