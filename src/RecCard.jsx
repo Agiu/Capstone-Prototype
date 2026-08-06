@@ -816,12 +816,12 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
     <div className="group/rec flex shrink-0 flex-col">
     {/* Profile pics above the cover — "who has played"; fades out on hover. */}
     {belowAvatars && (
-      <div className="mb-[10px] flex w-[200px] items-center gap-[7px] transition-opacity duration-300 group-hover/rec:opacity-0">
+      <div className="mb-[10px] flex w-[200px] items-center gap-[9px] transition-opacity duration-300 group-hover/rec:opacity-0">
         {recommend ? (
           <>
-            <div className="flex items-center">
+            <div className="flex shrink-0 items-center">
               {pair.map((c, i) => (
-                <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#0c0c0e]" style={{ marginRight: i < 1 ? -6 : 0, zIndex: 2 - i }} />
+                <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#0c0c0e]" style={{ marginRight: i < pair.length - 1 ? -6 : 0, zIndex: 2 - i }} />
               ))}
               {showPlus && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
             </div>
@@ -854,10 +854,10 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
         <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
         <div className="flex flex-col gap-[13px]">
           {recommend ? (
-            <div className="flex items-start gap-[6px]">
+            <div className="flex items-start gap-[9px]">
               <div className="mt-[1px] flex shrink-0 items-center">
                 {pair.map((c, i) => (
-                  <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#191919]" style={{ marginRight: i < 1 ? -6 : 0, zIndex: 2 - i }} />
+                  <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#191919]" style={{ marginRight: i < pair.length - 1 ? -6 : 0, zIndex: 2 - i }} />
                 ))}
                 {showPlus && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
               </div>
