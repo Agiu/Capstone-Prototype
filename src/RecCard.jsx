@@ -784,9 +784,12 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
  * slides in with title, publisher, release date, blurb, a recommendation line
  * and user-tag pills.
  */
-export function PortraitCard({ image, title, publisher, released, description, recommend, multiplayer, tags = [], onOpen, forceReveal }) {
+export function PortraitCard({ image, video, title, publisher, released, recommend, multiplayer, tags = [], onOpen, forceReveal }) {
+  // The cover swaps to the trailer while hovered (Figma 979:1206).
+  const [hover, setHover] = useState(false)
+  const showVid = (hover || forceReveal) && video?.youTubeId
   const Tag = ({ children }) => (
-    <span className="flex w-fit items-center justify-center whitespace-nowrap rounded-[20px] bg-[#4c5053] px-[8px] py-[2px] text-[10px] text-white">
+    <span className="flex w-fit items-center justify-center whitespace-nowrap rounded-[20px] bg-[#3a3d43] px-[9px] py-[3px] text-[11px] text-[#d7dade]">
       {children}
     </span>
   )
@@ -795,31 +798,41 @@ export function PortraitCard({ image, title, publisher, released, description, r
   // Spectate mirroring: force the expand + reveal on (a moderator can't hover).
   const F = forceReveal ? ' !opacity-100' : ''
   return (
-    <div data-game={title} onClick={() => onOpen?.(title)} className={'group relative flex h-[276px] w-[184px] shrink-0 cursor-pointer overflow-hidden rounded-[12px] bg-[#15181c] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[388px]' + (forceReveal ? ' !w-[388px]' : '')}>
-      {/* Portrait cover (left) */}
-      <div className="relative h-full w-[184px] shrink-0">
+    <div
+      data-game={title}
+      onClick={() => onOpen?.(title)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className={'group relative flex h-[300px] w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-[12px] bg-[#15181c] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[452px]' + (forceReveal ? ' !w-[452px]' : '')}
+    >
+      {/* Portrait cover (left) — becomes the trailer on hover */}
+      <div className="relative h-full w-[200px] shrink-0">
         <img alt="" src={image} loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
-        <div className={'absolute inset-0 bg-gradient-to-l from-[#15181c] to-transparent opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100' + F} />
+        {showVid && <VideoTrailer youTubeId={video.youTubeId} poster={image} />}
+        <div className={'pointer-events-none absolute inset-0 bg-gradient-to-l from-[#15181c] to-transparent opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100' + F} />
       </div>
 
-      {/* Info panel (right) — the whole panel just fades in and out */}
-      <div className={`${fade}${F} flex h-full w-[204px] shrink-0 flex-col gap-[8px] overflow-hidden bg-[#15181c] p-[12px] group-hover:delay-[100ms]`}>
-        <p className="text-[20px] font-semibold leading-none tracking-[0.1px] text-white">{title}</p>
-        <div className="flex flex-col text-[12px] leading-[1.1]">
-          <span className="text-[#2da000]">{publisher}</span>
-          <span className="text-[#e7e7e7]">{released}</span>
-        </div>
-        <p className="text-[12px] leading-[1.15] text-white">{description}</p>
+      {/* Info panel (right) — fades in as the card expands */}
+      <div className={`${fade}${F} flex h-full w-[252px] shrink-0 flex-col gap-[10px] overflow-hidden bg-[#15181c] p-[16px] group-hover:delay-[100ms]`}>
+        <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
         {recommend && (
           <div className="flex items-center gap-[8px]">
-            <img alt="" src={thumbsUp} className="size-[20px] shrink-0" />
-            <p className="text-[12px] leading-[1.15] text-white">{recommend}</p>
+            <div className="flex items-center">
+              {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((c, i) => (
+                <span key={i} className="size-[18px] rounded-full" style={{ backgroundColor: c, marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #15181c' }} />
+              ))}
+            </div>
+            <p className="text-[12px] leading-[1.2] text-white">{recommend}</p>
           </div>
         )}
-        <div className="mt-auto flex flex-col gap-[4px]">
-          <p className="text-[10px] text-white">User Tags</p>
+        <div className="flex flex-col text-[12px] leading-[1.3]">
+          {publisher && <span className="text-[#c7c9cb]">{publisher}</span>}
+          {released && <span className="text-[#9a9ba3]">{released}</span>}
+        </div>
+        <div className="mt-auto flex flex-col gap-[6px]">
+          <p className="text-[11px] font-semibold text-white">User Tags</p>
           {multiplayer && <Tag>{multiplayer}</Tag>}
-          <div className="flex flex-wrap gap-[4px]">
+          <div className="flex flex-wrap gap-[5px]">
             {tags.map((t, i) => <Tag key={i}>{t}</Tag>)}
           </div>
         </div>

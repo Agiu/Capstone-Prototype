@@ -1296,10 +1296,10 @@ function pcard(k) {
   const p = g?.players
   return {
     image: starterCover(k),
+    video: g?.youTubeId ? { youTubeId: g.youTubeId } : undefined,
     title: c.title || g?.title,
     publisher: d.studio || c.developer || 'Game Pass',
     released: 'Game Pass Starter Edition',
-    description: d.desc || c.caption || `${g?.genre || 'Game'} — playable free with Game Pass Starter.`,
     recommend: d.friends || '',
     multiplayer: p === 'MMO' ? 'MMO' : p && p !== '1' ? `${p} players` : null,
     tags: d.tags || [g?.genre].filter(Boolean),
