@@ -84,8 +84,10 @@ function RatingRow({ pct, line1, line2, line2Bold }) {
   )
 }
 
-/** Trailer that plays on hover. Pass `mp4` (preferred) or `youTubeId`. */
-export function VideoTrailer({ mp4, youTubeId, poster }) {
+/** Trailer/gameplay that plays on hover. Pass `mp4` (preferred) or `youTubeId`.
+ *  `bare` scales the iframe up so YouTube's title bar and end-screen cards fall
+ *  outside the crop — a clean, chrome-free background loop. */
+export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical }) {
   const frameRef = useRef(null)
 
   // `cc_load_policy=0` only sets the *default* — YouTube still turns captions
@@ -144,8 +146,8 @@ export function VideoTrailer({ mp4, youTubeId, poster }) {
       // min-dimensions push it to fill (like object-fit: cover for the iframe).
       <iframe
         ref={frameRef}
-        title="Game trailer"
-        className="pointer-events-none absolute left-1/2 top-1/2 aspect-video h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%]"
+        title="Game footage"
+        className={'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? ' [scale:1.45]' : '')}
         src={`https://www.youtube-nocookie.com/embed/${youTubeId}?${params}`}
         allow="autoplay; encrypted-media"
       />
@@ -805,10 +807,12 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
       onMouseLeave={() => setHover(false)}
       className={'group relative flex h-[300px] w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-[12px] bg-[#15181c] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[452px]' + (forceReveal ? ' !w-[452px]' : '')}
     >
-      {/* Portrait cover (left) — becomes the trailer on hover */}
-      <div className="relative h-full w-[200px] shrink-0">
+      {/* Portrait cover (left) — becomes the trailer on hover. overflow-hidden
+          keeps the 16:9 trailer cropped to the cover's width instead of
+          spilling into the info panel. */}
+      <div className="relative h-full w-[200px] shrink-0 overflow-hidden">
         <img alt="" src={image} loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
-        {showVid && <VideoTrailer youTubeId={video.youTubeId} poster={image} />}
+        {showVid && <VideoTrailer youTubeId={video.youTubeId} poster={image} bare vertical={video.vertical} />}
         <div className={'pointer-events-none absolute inset-0 bg-gradient-to-l from-[#15181c] to-transparent opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100' + F} />
       </div>
 
@@ -819,7 +823,7 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
           <div className="flex items-center gap-[8px]">
             <div className="flex items-center">
               {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((c, i) => (
-                <span key={i} className="size-[18px] rounded-full" style={{ backgroundColor: c, marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #15181c' }} />
+                <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#15181c]" style={{ marginRight: i < 2 ? -6 : 0, zIndex: 3 - i }} />
               ))}
             </div>
             <p className="text-[12px] leading-[1.2] text-white">{recommend}</p>
@@ -887,8 +891,8 @@ export function ShelfRow({ title, subtitle, gap = 24, children }) {
 
   return (
     <div className="mt-[56px] flex w-full shrink-0 flex-col">
-      <p className="text-[24px] font-bold text-white">{title}</p>
-      {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
+      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>{title}</p>
+      {subtitle && <p className="mt-[6px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
       <div className="relative">
         <div ref={rowRef} className="rec-row no-scrollbar flex w-full items-start overflow-x-auto py-[20px]" style={{ gap }}>
           {children}

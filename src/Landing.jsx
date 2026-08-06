@@ -916,9 +916,9 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           <div className="relative mx-auto w-full max-w-[1400px] px-[40px] pb-[8px] pt-[64px]">
             {/* Hero title — "Welcome to the XBOX ARCADE" (Figma 863:3749) */}
             <div className="flex flex-col items-center text-center">
-              <h1 className="flex flex-col items-center gap-[8px] leading-[1.085] text-white [text-shadow:0_4px_18px_rgba(0,0,0,0.55)]">
-                <span className="text-[clamp(32px,4.6vw,64px)] leading-[1.085] tracking-[0.005em]" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>Welcome to</span>
-                <span className="text-[clamp(64px,10.5vw,128px)] uppercase leading-[1.085] tracking-[0.005em]" style={{ fontFamily: '"Base Neue Black"' }}>XBOX ARCADE</span>
+              <h1 className="flex flex-col items-center gap-[8px] italic leading-[1.085] text-white [text-shadow:0_4px_18px_rgba(0,0,0,0.55)]">
+                <span className="text-[clamp(30px,3.4vw,48px)] leading-[1.085] tracking-[0.24px]" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>Welcome to</span>
+                <span className="text-[clamp(58px,6.8vw,96px)] uppercase leading-[1.085] tracking-[0.48px]" style={{ fontFamily: '"Base Neue Black"' }}>XBOX ARCADE</span>
               </h1>
               <p className="mt-[16px] max-w-[560px] text-[18px] leading-snug text-[#e7e7e7]">
                 Discover and play a curated collection of Xbox Game Pass titles through the cloud, right inside Discord.
@@ -1100,23 +1100,23 @@ const libNorm = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, '')
 const LIB_IDS = [
   { title: 'Among Us', steamAppId: 945360, youTubeId: 'NSJ4cESNQfE' },
   { title: 'Astroneer', steamAppId: 361420, youTubeId: 'UMLwzt5t9bs' },
-  { title: 'Batman: Arkham Knight', steamAppId: 208650, youTubeId: 'FX1uGqXD2n8' },
+  { title: 'Batman: Arkham Knight', steamAppId: 208650, youTubeId: 'gu_Cw_mzhRQ' },
   { title: 'Celeste', steamAppId: 504230, youTubeId: 'FqBj2IGg6Uw' },
-  { title: 'Chivalry 2', steamAppId: 1824220, youTubeId: 'x3MeDyOD6bg' },
+  { title: 'Chivalry 2', steamAppId: 1824220, youTubeId: 'HKlYVpCuab0' },
   { title: 'Cities: Skylines Remastered', steamAppId: 255710, youTubeId: 'yNKpOdq56nU' },
-  { title: 'Control Ultimate Edition', steamAppId: 870780, youTubeId: 'ZVfoOdLE418' },
+  { title: 'Control Ultimate Edition', steamAppId: 870780, youTubeId: 'hpzX0ItLF4Y' },
   { title: 'Crash Team Racing Nitro-Fueled', steamAppId: null, youTubeId: '-vR70ZDbOEw' },
   { title: 'DayZ', steamAppId: 221100, youTubeId: 'Z8YxinOKNss' },
   { title: 'Dead Cells', steamAppId: 588650, youTubeId: '02G3GUt6Nzo' },
   { title: 'Deep Rock Galactic', steamAppId: 548430, youTubeId: 'QcVUD-3LRsM' },
   { title: 'Descenders', steamAppId: 681280, youTubeId: 'zG-dBYtbPNA' },
-  { title: 'Dishonored 2', steamAppId: 403640, youTubeId: '4PmGRsA7bJk' },
+  { title: 'Dishonored 2', steamAppId: 403640, youTubeId: 'WFe0TgXhIrs' },
   { title: 'Disney Dreamlight Valley', steamAppId: 1401590, youTubeId: 'eLirE4E-nJI' },
-  { title: 'Doom 64', steamAppId: 1148590, youTubeId: '6L-4jUlN1ms' },
-  { title: 'Doom Eternal', steamAppId: 782330, youTubeId: '_UuktemkCFI' },
+  { title: 'Doom 64', steamAppId: 1148590, youTubeId: 'oXe6aTCp59Q' },
+  { title: 'Doom Eternal', steamAppId: 782330, youTubeId: 'qgvV4GE8vVA' },
   { title: 'Fable Anniversary', steamAppId: 288470, youTubeId: 'Awaa0OhDNj4' },
-  { title: 'Fallout 4', steamAppId: 377160, youTubeId: 'X5aJfebzkrM' },
-  { title: 'Fallout 76', steamAppId: 1151340, youTubeId: '275NOclc21s' },
+  { title: 'Fallout 4', steamAppId: 377160, youTubeId: '8VloZp3KlMM' },
+  { title: 'Fallout 76', steamAppId: 1151340, youTubeId: 'kYATmwTY6IU' },
   { title: 'Firewatch', steamAppId: 383870, youTubeId: 'd02lhvvVSy8' },
   { title: 'Gang Beasts', steamAppId: 285900, youTubeId: 'oW3XEObgZlY' },
   { title: 'Gears 5', steamAppId: 1097840, youTubeId: 'a8PB-O8aGeI' },
@@ -1125,7 +1125,7 @@ const LIB_IDS = [
   { title: 'Hades', steamAppId: 1145360, youTubeId: 'Bz8l935Bv0Y' },
   { title: 'Halo 5 Guardians', steamAppId: null, youTubeId: 'Rh_NXwqFvHc' },
   { title: 'Halo Wars 2', steamAppId: null, youTubeId: 'lnYuNXolf4Y' },
-  { title: "Hellblade Senua's Sacrifice", steamAppId: 414340, youTubeId: 'UB3dUICHaK4' },
+  { title: "Hellblade Senua's Sacrifice", steamAppId: 414340, youTubeId: 'F3aqyATJo7I' },
   { title: 'Human Fall Flat', steamAppId: 477160, youTubeId: 'maiYKaZNG7Y' },
   { title: 'Inside', steamAppId: 304430, youTubeId: '5ABy76KTMe8' },
   { title: 'Limbo', steamAppId: 48000, youTubeId: 'R1pwLq2-RV8' },
@@ -1152,8 +1152,8 @@ const LIB_IDS = [
   { title: 'Tunic', steamAppId: 553420, youTubeId: 'QVDwvfH9nfE' },
   { title: 'Unpacking', steamAppId: 1135690, youTubeId: 'pfCbkH10jmg' },
   { title: 'Vampire Survivors', steamAppId: 1794680, youTubeId: 'aS7JqyHdQQA' },
-  { title: 'Warhammer 40000 Darktide', steamAppId: 1361210, youTubeId: 'g8ZcITyPElc' },
-  { title: 'Warhammer Vermintide 2', steamAppId: 552500, youTubeId: 'JTlpd3O6-gE' },
+  { title: 'Warhammer 40000 Darktide', steamAppId: 1361210, youTubeId: 'oMUfKLLynWI' },
+  { title: 'Warhammer Vermintide 2', steamAppId: 552500, youTubeId: '9nDRryKVt_g' },
   { title: 'World War Z', steamAppId: 699130, youTubeId: 'NL-jBYtJmdI' },
   { title: 'Wreckfest', steamAppId: 228380, youTubeId: 'cbsDiIuI7KQ' },
 ]
@@ -1319,7 +1319,7 @@ const ELLIPSIS_GLYPH = <svg viewBox="0 0 24 24" className="size-[18px]" fill="cu
 function TrendingRow({ items, onOpen }) {
   return (
     <section className="mt-[56px]">
-      <p className="text-[24px] font-bold text-white">Trending in Your Communities</p>
+      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Trending in Your Communities</p>
       <div className="mt-[16px] flex flex-col gap-[4px]">
         {items.map((k) => {
           const g = STARTER_BY_KEY[k]
@@ -1327,11 +1327,11 @@ function TrendingRow({ items, onOpen }) {
           const d = STARTER_DESC[k] || {}
           const title = c.title || g?.title
           return (
-            <button key={k} data-game={title} onClick={() => onOpen?.(title)} className="group flex w-full items-center gap-[16px] rounded-[10px] p-[10px] text-left transition hover:bg-white/[0.03]">
-              <img alt="" src={starterHeader(k)} loading="lazy" className="h-[54px] w-[96px] shrink-0 rounded-[8px] object-cover" />
+            <button key={k} data-game={title} onClick={() => onOpen?.(title)} className="group flex w-full items-center gap-[20px] rounded-[12px] p-[12px] text-left transition hover:bg-white/[0.03]">
+              <img alt="" src={starterHeader(k)} loading="lazy" className="h-[104px] w-[185px] shrink-0 rounded-[10px] object-cover" />
               <div className="min-w-0 flex-1">
-                <p className="text-[16px] font-semibold text-white">{title}</p>
-                <p className="truncate text-[13px] text-[#9a9ba3]">{d.desc || c.caption}</p>
+                <p className="text-[18px] font-semibold text-white">{title}</p>
+                <p className="truncate text-[14px] text-[#9a9ba3]">{d.desc || c.caption}</p>
               </div>
               <span className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-[#9a9ba3] opacity-0 transition group-hover:opacity-100">{ELLIPSIS_GLYPH}</span>
             </button>
@@ -1356,7 +1356,7 @@ function WideGameCard({ gkey, onOpen }) {
       className="group relative aspect-video min-w-0 flex-1 overflow-hidden rounded-[16px] bg-[#121214] text-left"
     >
       <img alt="" src={starterHeader(gkey)} loading="lazy" className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]" />
-      {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gkey)} />}
+      {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gkey)} bare />}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
       <p className="pointer-events-none absolute bottom-[14px] left-[16px] right-[16px] text-[22px] font-bold text-white [text-shadow:0_2px_6px_rgba(0,0,0,0.7)]">{title}</p>
     </button>
@@ -1367,7 +1367,7 @@ function WideGameCard({ gkey, onOpen }) {
 function HighlyRatedRow({ items, onOpen }) {
   return (
     <section className="mt-[56px]">
-      <p className="text-[24px] font-bold text-white">Highly Rated by Your Friends</p>
+      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Highly Rated by Your Friends</p>
       <div className="mt-[20px] flex flex-col gap-[24px] sm:flex-row">
         {items.map((k) => <WideGameCard key={k} gkey={k} onOpen={onOpen} />)}
       </div>
@@ -1384,7 +1384,7 @@ function WorthACloserLook({ gameKey, onOpen }) {
   const title = c.title || g?.title
   return (
     <section className="mt-[56px]">
-      <p className="text-[24px] font-bold text-white">Worth a Closer Look</p>
+      <p className="text-[clamp(26px,2.4vw,34px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Worth a Closer Look</p>
       <div className="mt-[20px] flex flex-col gap-[28px] lg:flex-row">
         <button
           data-game={title}
@@ -1394,7 +1394,7 @@ function WorthACloserLook({ gameKey, onOpen }) {
           className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-[16px] bg-[#121214] lg:w-[56%]"
         >
           <img alt="" src={starterHeader(gameKey)} className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.02]" />
-          {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gameKey)} />}
+          {hover && g?.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={starterHeader(gameKey)} bare />}
         </button>
         <div className="flex flex-1 flex-col justify-center">
           <div className="flex items-center gap-[10px]">
@@ -1439,7 +1439,7 @@ function LibraryTile({ g, onClick }) {
             </div>
           </div>
         )}
-        {hover && g.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={typeof cover === 'string' ? cover : undefined} />}
+        {hover && g.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={typeof cover === 'string' ? cover : undefined} bare />}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         <span className="absolute bottom-[8px] left-[10px] right-[10px] flex items-center gap-[6px] opacity-0 transition group-hover:opacity-100">
           <span className="flex size-[26px] items-center justify-center rounded-full bg-[#107C10] text-white shadow-[0_2px_10px_rgba(16,124,16,0.5)]">
