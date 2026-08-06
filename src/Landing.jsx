@@ -1353,8 +1353,10 @@ const STEAM_HEADER = (id) => `https://cdn.cloudflare.steamstatic.com/steam/apps/
 // local art) keep their entry; the rest get a Steam-art entry under a gp_ key.
 STARTER_LIBRARY.forEach((g) => {
   const k = g.catKey
-  if (!CATALOG[k]) {
-    if (!g.steamAppId) return // no art / not on Steam — stays a Library-only tile
+  // Games that aren't on Steam have no art, so they stay out of CATALOG — and
+  // so out of Mixes, the wheel and recommendations, which all assume a cover.
+  // They still get everything below, so the Library can open their detail page.
+  if (!CATALOG[k] && g.steamAppId) {
     CATALOG[k] = {
       title: g.title,
       image: STEAM_HEADER(g.steamAppId),
@@ -1666,11 +1668,13 @@ function LibraryTile({ g, onClick }) {
         )}
         {hover && g.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={typeof cover === 'string' ? cover : undefined} bare />}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        {/* The tile opens the game's page, so it says so — the Play button
+            lives on that page, next to everything you'd want first. */}
         <span className="absolute bottom-[8px] left-[10px] right-[10px] flex items-center gap-[6px] opacity-0 transition group-hover:opacity-100">
           <span className="flex size-[26px] items-center justify-center rounded-full bg-[#107C10] text-white shadow-[0_2px_10px_rgba(16,124,16,0.5)]">
-            <svg viewBox="0 0 24 24" className="size-[13px] translate-x-[1px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+            <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13M12 6l6 6-6 6" /></svg>
           </span>
-          <span className="text-[12px] font-semibold text-white">Play</span>
+          <span className="text-[12px] font-semibold text-white">View game</span>
         </span>
       </div>
       <p className="mt-[8px] truncate text-[15px] font-semibold text-white">{g.title}</p>
@@ -1682,11 +1686,13 @@ function LibraryTile({ g, onClick }) {
 // ── Library tab — the full Game Pass Starter Edition catalog ────────────────
 function LibraryPage({ onHome, onMixes, onOpen }) {
   const [searchOpen, setSearchOpen] = useState(false)
-  const [launching, setLaunching] = useState(null)
   const [q, setQ] = useState('')
   const query = q.trim().toLowerCase()
   const shown = STARTER_LIBRARY.filter((g) => !query || g.title.toLowerCase().includes(query) || g.genre.toLowerCase().includes(query))
-  const open = (g) => { if (g.key && CATALOG[g.key]) onOpen(g.key); else setLaunching(g.title) }
+  // Every tile opens the game's detail page — playing is a decision you make
+  // there, not by clicking a cover. `catKey` is the key every Starter game has;
+  // `key` only exists on the handful with hand-authored art.
+  const open = (g) => onOpen(g.catKey)
   return (
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
@@ -1722,7 +1728,6 @@ function LibraryPage({ onHome, onMixes, onOpen }) {
         </div>
       </div>
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
-      {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
     </main>
   )
 }
@@ -1741,28 +1746,45 @@ function FeedRow({ who, text, when }) {
   )
 }
 
-// Xbox-green pill that opens the "decide a game" wheel — sits to the right of a
-// blend's title. The chevron points down when closed, up once the wheel is out.
-function XboxDecideButton({ onClick, open }) {
+// "Can't Decide?" — opens the wheel band, fronted by a ferris wheel. The funnel
+// beside it is the way into matching the group's preferences instead.
+function XboxDecideButton({ onClick, open, onPrefs }) {
   return (
-    <button
-      onClick={onClick}
-      aria-expanded={open}
-      className="group/dec flex shrink-0 items-center gap-[10px] rounded-[12px] bg-[#107C10] px-[20px] py-[12px] text-[15px] font-semibold text-white shadow-[0_4px_18px_rgba(16,124,16,0.45)] transition hover:-translate-y-[1px] hover:bg-[#0e8f0e]"
-    >
-      <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 7v5l3 2" />
-      </svg>
-      Decide a game
-      <svg
-        viewBox="0 0 24 24"
-        className="size-[16px] transition-transform duration-300"
-        style={{ transform: open ? 'rotate(180deg)' : 'none' }}
-        fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+    <div className="flex shrink-0 items-center gap-[14px]">
+      <button
+        onClick={onClick}
+        aria-expanded={open}
+        className="group/dec flex items-center gap-[9px] text-[#3fbf3f] transition hover:opacity-85"
       >
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </button>
+        <svg
+          viewBox="0 0 24 24"
+          className="size-[20px]"
+          fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <circle cx="12" cy="10" r="7.5" />
+          <circle cx="12" cy="10" r="1.5" />
+          <path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" />
+          <path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" />
+        </svg>
+        <span className="text-[17px] font-bold italic">Can&rsquo;t Decide?</span>
+        <svg
+          viewBox="0 0 24 24"
+          className="size-[14px] transition-transform duration-300"
+          style={{ transform: open ? 'rotate(180deg)' : 'none' }}
+          fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+        >
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      <button
+        onClick={onPrefs}
+        title="Match our preferences instead"
+        aria-label="Match our preferences instead"
+        className="text-white transition hover:text-[#3fbf3f]"
+      >
+        <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" /></svg>
+      </button>
+    </div>
   )
 }
 
@@ -2160,6 +2182,20 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
     const t = setTimeout(() => wheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 620)
     return () => clearTimeout(t)
   }, [wheelOpen])
+
+  // Header banner — the home page's footage, faded in on first play and back
+  // out over the last 1.5s so the loop seam never shows. Opacity is driven on
+  // the node rather than through props, so this page's frequent re-renders
+  // (votes, spins) don't reset the fade mid-loop.
+  const bannerRef = useRef(null)
+  useEffect(() => {
+    if (bannerRef.current) bannerRef.current.style.opacity = '0'
+  }, [])
+  const onBannerTime = (e) => {
+    const v = e.currentTarget
+    if (!v.duration) return
+    v.style.opacity = v.currentTime >= v.duration - 1.5 ? '0' : '1'
+  }
   function openMenu(e, title) {
     e.preventDefault()
     e.stopPropagation() // this page has its own PLAYlist-aware menu; don't also fire the global one
@@ -2260,8 +2296,30 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
   }
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
-      <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[28px]">
-        <div className="mx-auto w-full max-w-[1200px]">
+      {/* The gutters live on the inner wrappers (not the scroll container) so
+          the banner and the wheel band can bleed to the pane's edges. */}
+      <div className="no-scrollbar flex-1 overflow-y-auto pb-[80px]">
+        {/* Header banner — the same wireframe footage the home page runs on */}
+        <section className="relative overflow-hidden">
+          <video
+            ref={bannerRef}
+            onTimeUpdate={onBannerTime}
+            className="pointer-events-none absolute inset-0 size-full object-cover"
+            style={{ transition: 'opacity 1.5s ease-in-out' }}
+            src="/PartyHome.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+          />
+          {/* Darken the footage and settle it into the page background */}
+          <div
+            className="absolute inset-0"
+            style={{ background: 'linear-gradient(to bottom, rgba(12,12,14,0.5) 0%, rgba(12,12,14,0.62) 60%, #0c0c0e 100%)' }}
+          />
+          {/* Top gap matches the breathing room between this banner and the
+              PLAYlist below it, so the header isn't crowded against the frame. */}
+          <div className="relative mx-auto w-full max-w-[1280px] px-[40px] pb-[30px] pt-[74px]">
 
           {/* Header — cover quad + name + members + refresh note */}
           <div className="flex items-center gap-[28px]">
@@ -2289,53 +2347,54 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
                     <Avatar key={i} color={c} size={30} style={{ marginRight: i < blend.members.length - 1 ? -10 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
                   ))}
                 </span>
+                {/* Bring more people into the Mix */}
+                <button
+                  onClick={() => setInviteOpen(true)}
+                  title="Add players to this Mix"
+                  aria-label="Add players to this Mix"
+                  className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#23a55a] text-white shadow-[0_2px_8px_rgba(0,0,0,0.45)] transition hover:scale-105 hover:bg-[#1e9150]"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                </button>
               </div>
               <p className="mt-[10px] text-[15px] font-semibold text-white">Refreshes daily.</p>
-            </div>
 
-            {/* Decide-a-game entry point — off to the right of the title */}
-            <div className="ml-auto flex flex-col items-end gap-[10px] self-start pt-[6px]">
-              <XboxDecideButton open={eWheelOpen} onClick={() => setWheelOpen((v) => !v)} />
-              <button
-                onClick={onDecide}
-                className="text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white"
-              >
-                Match our preferences instead
-              </button>
-            </div>
-          </div>
-
-          {/* The wheel unfolds here and pushes the divider down with it. */}
-          <div
-            ref={wheelRef}
-            className="grid"
-            style={{
-              gridTemplateRows: eWheelOpen ? '1fr' : '0fr',
-              transition: 'grid-template-rows 560ms cubic-bezier(0.22,1,0.36,1)',
-            }}
-          >
-            <div className="overflow-hidden">
-              <div
-                className="pt-[28px]"
-                style={{
-                  opacity: eWheelOpen ? 1 : 0,
-                  transform: eWheelOpen ? 'none' : 'translateY(-12px)',
-                  transition: 'opacity 380ms ease 140ms, transform 420ms cubic-bezier(0.22,1,0.36,1) 140ms',
-                }}
-              >
-                <SpinPanel blend={blend} state={spin} onLaunch={launch} />
+              {/* Decide-a-game entry point — right under the refresh note */}
+              <div className="mt-[16px]">
+                <XboxDecideButton open={eWheelOpen} onClick={() => setWheelOpen((v) => !v)} onPrefs={onDecide} />
               </div>
             </div>
           </div>
 
-          <div
-            className="my-[28px] h-px"
-            style={{
-              backgroundColor: eWheelOpen ? '#107C10' : '#1c1d21',
-              boxShadow: eWheelOpen ? '0 0 14px rgba(16,124,16,0.55)' : 'none',
-              transition: 'background-color 520ms ease, box-shadow 520ms ease',
-            }}
-          />
+          </div>
+        </section>
+
+        {/* The wheel band unfolds here — full-bleed, pushing the divider down. */}
+        <div
+          ref={wheelRef}
+          className="grid"
+          style={{
+            gridTemplateRows: eWheelOpen ? '1fr' : '0fr',
+            transition: 'grid-template-rows 560ms cubic-bezier(0.22,1,0.36,1)',
+          }}
+        >
+          <div className="overflow-hidden">
+            <div
+              className="pt-[28px]"
+              style={{
+                opacity: eWheelOpen ? 1 : 0,
+                transform: eWheelOpen ? 'none' : 'translateY(-12px)',
+                transition: 'opacity 380ms ease 140ms, transform 420ms cubic-bezier(0.22,1,0.36,1) 140ms',
+              }}
+            >
+              <SpinPanel blend={blend} state={spin} onLaunch={launch} />
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto w-full max-w-[1280px] px-[40px]">
+          {/* The band carries its own green edges now, so this stays neutral. */}
+          <div className="my-[28px] h-px" style={{ backgroundColor: '#1c1d21' }} />
 
           {/* Group wishlist — numbered, drag to rank */}
           <section>
@@ -3154,8 +3213,8 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '')
 
   const n = games.length
-  const R = 168
-  const C = 176
+  const R = 198
+  const C = 210
   const seg = n ? 360 / n : 360
   // Point on the wheel at `deg` measured clockwise from the top (12 o'clock).
   const pt = (deg, rad = R) => {
@@ -3219,8 +3278,8 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
   return (
     <div className="relative" style={{ width: C * 2, height: C * 2 }}>
       {/* Pointer */}
-      <div className="absolute left-1/2 top-[-6px] z-10 -translate-x-1/2">
-        <svg viewBox="0 0 24 28" className="h-[28px] w-[24px] drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
+      <div className="absolute left-1/2 top-[-7px] z-10 -translate-x-1/2">
+        <svg viewBox="0 0 24 28" className="h-[34px] w-[29px] drop-shadow-[0_2px_3px_rgba(0,0,0,0.6)]">
           <path d="M12 26 L2 4 A14 14 0 0 1 22 4 Z" fill="#ffffff" />
         </svg>
       </div>
@@ -3230,6 +3289,7 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
         className="size-full"
         style={{
           transform: `rotate(${rotation}deg)`,
+          filter: 'drop-shadow(0 0 22px rgba(45,160,0,0.35))',
           // Off the line at full speed, braking only in the last stretch.
           transition: dur > 0 ? `transform ${dur}ms cubic-bezier(0.06,0.86,0.18,1)` : 'none',
         }}
@@ -3242,7 +3302,8 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
           ))}
         </defs>
 
-        <circle cx={C} cy={C} r={R + 6} fill="#0c0c0e" stroke="#26272b" strokeWidth="2" />
+        {/* Bright green rim, like the design's ring around the art. */}
+        <circle cx={C} cy={C} r={R + 5} fill="#0a0d08" stroke="#2DA000" strokeWidth="7" />
         {slices.map(({ g, i, wedge, clip, center, side }) => (
           <g key={g.key || i}>
             {/* Color underneath doubles as the fallback if art won't load. */}
@@ -3270,13 +3331,20 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
         ))}
       </svg>
 
-      {/* Center hub — click to spin */}
+      {/* Center hub — click to spin. Stays "SPIN ME" even mid-turn, per the
+          design; the disabled state is what says "not now". */}
       <button
         onClick={onSpin}
         disabled={disabled}
-        className="absolute left-1/2 top-1/2 flex size-[76px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-[15px] font-bold text-[#107C10] shadow-[0_2px_10px_rgba(0,0,0,0.5)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-70"
+        aria-label="Spin the wheel"
+        className="absolute left-1/2 top-1/2 flex size-[118px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white shadow-[0_2px_14px_rgba(0,0,0,0.55)] transition hover:scale-105 disabled:cursor-not-allowed disabled:hover:scale-100"
       >
-        {spinning ? '…' : 'SPIN'}
+        <span
+          className="text-center uppercase italic text-[#0c0c0e]"
+          style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: '31px', lineHeight: 0.85 }}
+        >
+          Spin<br />Me
+        </span>
       </button>
     </div>
   )
@@ -3496,12 +3564,25 @@ function SpinPanel({ blend, state, onLaunch }) {
   const iSpun = here?.spinner === SELF_NAME
   const cover = picked && here ? CATALOG[picked.key]?.image : null
 
+  // A spin here puts the panel under a spotlight: everything else on the page
+  // goes dark behind a scrim. The scrim outlives the spin by one fade so the
+  // page eases back to full brightness instead of snapping.
+  const spotlight = mid
+  const [scrim, setScrim] = useState(spotlight)
+  // The wheel's game list hides behind the "Add or delete Games" gear.
+  const [editOpen, setEditOpen] = useState(false)
+  useEffect(() => {
+    if (spotlight) { setScrim(true); return }
+    const t = setTimeout(() => setScrim(false), 480)
+    return () => clearTimeout(t)
+  }, [spotlight])
+
   function startSpin() {
     // Only a wheel that's mid-turn blocks a new spin — a finished one anywhere
     // just gets replaced, so nobody is ever stuck waiting on a stale result.
     if (games.length === 0 || phase === 'spinning') return
-    // Everyone online when the wheel is spun gets asked; the spinner is in by
-    // definition, since they're the one deciding.
+    // Everyone online when the wheel is spun gets asked — including the
+    // spinner, who has to ready up (or bail) like anyone else.
     const roster = [...new Set([SELF_NAME, ...online])]
     writeSpin({
       id: Date.now().toString(36),
@@ -3512,139 +3593,235 @@ function SpinPanel({ blend, state, onLaunch }) {
       ...rollSpin(games.length, here?.target),
       startedAt: Date.now(),
       roster,
-      votes: { [SELF_NAME]: 'yes' },
+      votes: {},
     })
   }
 
   return (
-    <section className="rounded-[20px] bg-[#121214] p-[28px] ring-1 ring-[#107C10]/25">
-      <div className="flex flex-col items-start gap-[24px] lg:flex-row lg:flex-wrap">
-        {/* Wheel */}
-        <div className="flex shrink-0 flex-col items-center">
-          <DecisionWheel
-            games={games}
-            spin={here}
-            remaining={remaining}
-            onSpin={startSpin}
-            spinning={!!here && phase === 'spinning'}
-            disabled={phase === 'spinning'}
-          />
-          <p className="mt-[18px] max-w-[340px] text-center text-[14px]" style={{ color: D.mute }}>
-            {phase === 'spinning'
-              ? here
-                ? 'Spinning… the whole server is watching.'
-                : `${capName(elsewhere.spinner)} is spinning in ${elsewhere.blendName} — hang on.`
-              : here
-                ? 'Spin again to re-roll for the group.'
-                : elsewhere
-                  ? `${elsewhere.blendName} picked ${elsewhere.games?.[elsewhere.target]?.title} — spin here to take over.`
-                  : 'Tap SPIN — everyone online gets pinged that a game is about to be chosen.'}
-          </p>
-        </div>
+    <section className="relative" style={{ zIndex: scrim ? 60 : 'auto' }}>
+      {/* Page-wide scrim: a fixed sheet slotted behind the band's own
+          background (negative z inside this stacking context), so the band
+          stays lit while everything around it goes dark. */}
+      {scrim && (
+        <div
+          aria-hidden
+          className="spin-scrim pointer-events-none fixed inset-0 -z-10"
+          style={{ opacity: spotlight ? 1 : 0 }}
+        />
+      )}
 
-        {/* Add / remove what the wheel spins over — wheel-only, never the blend */}
-        <WheelGameEditor
-          keys={wheelKeys}
-          onChange={setWheelKeys}
-          locked={mid}
-          isDefault={!custom}
-          onReset={() => setWheelKeys(null)}
+      {/* Full-bleed band: a bright green horizon along the top, green haze
+          falling away to black, and a faint green floor at the bottom. */}
+      <div
+        className="relative w-full"
+        style={{
+          background:
+            'linear-gradient(0deg, rgba(45,160,0,0.20), transparent 16%), radial-gradient(85% 75% at 50% 0%, rgba(45,160,0,0.30), transparent 62%), #080a07',
+        }}
+      >
+        <div
+          className="absolute inset-x-0 top-0 h-[3px]"
+          style={{
+            background: 'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))',
+            boxShadow: '0 0 18px rgba(61,191,30,0.8)',
+          }}
+        />
+        {/* Matching bottom edge — same horizon, no notch. */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-[3px]"
+          style={{
+            background: 'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))',
+            boxShadow: '0 0 18px rgba(61,191,30,0.8)',
+          }}
+        />
+        {/* The band goes near-black while the wheel is actually turning. */}
+        <div
+          className="pointer-events-none absolute inset-0 bg-black transition-opacity duration-500"
+          style={{ opacity: spotlight ? 0.45 : 0 }}
         />
 
-        {/* Result + who's in */}
-        <div className="w-full flex-1 self-stretch lg:min-w-[360px] lg:basis-[360px]">
-          {!here && (
-            <div className="flex h-full flex-col justify-center">
-              <h3 className="text-[24px] font-semibold text-white">Let the wheel decide</h3>
-              <p className="mt-[8px] max-w-[46ch] text-[15px] leading-snug" style={{ color: D.dim }}>
-                Spinning notifies everyone on the server. When it lands, they each say whether
-                they&rsquo;re in — and once everyone&rsquo;s in, the play button unlocks for the whole group.
-              </p>
-              <div className="mt-[18px] flex items-center gap-[8px]">
-                <span className="text-[13px]" style={{ color: D.mute }}>Online right now</span>
-                <span className="flex items-center">
-                  {[...new Set([SELF_NAME, ...online])].map((n, i) => (
-                    <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #121214', zIndex: 10 - i }} />
-                  ))}
-                </span>
-              </div>
-            </div>
-          )}
+        <div className="relative mx-auto w-full max-w-[1280px] px-[40px] pb-[46px] pt-[76px]">
+          {/* Notch pointing back up at the "Can't Decide?" control */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute left-[310px] top-[-9px] h-0 w-0"
+            style={{
+              borderLeft: '13px solid transparent',
+              borderRight: '13px solid transparent',
+              borderBottom: '10px solid #3dbf1e',
+              filter: 'drop-shadow(0 0 8px rgba(61,191,30,0.7))',
+            }}
+          />
 
-          {here && phase === 'spinning' && (
-            <div className="flex h-full min-h-[240px] flex-col items-center justify-center">
-              <SpinningText />
-            </div>
-          )}
-
-          {here && phase === 'result' && picked && (() => {
-            const anyOut = no.length > 0
-            const accent = allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#c5c6ca'
-            return (
-            <div className="flex h-full flex-col gap-[16px]">
-              {/* Top card — game art + status + big title (the whole card is the
-                  primary action: launch when everyone's in, re-spin when it failed) */}
-              <button
-                type="button"
-                onClick={allIn ? () => onLaunch(picked.title) : anyOut ? startSpin : undefined}
-                className={'group relative h-[210px] w-full shrink-0 overflow-hidden rounded-[12px] text-left ' + (allIn || anyOut ? 'cursor-pointer' : 'cursor-default')}
-              >
-                {cover && <img alt="" src={cover} className="absolute inset-0 size-full object-cover" />}
-                <div
-                  className="absolute inset-0"
-                  style={{ background: allIn
-                    ? 'linear-gradient(180deg, rgba(21,43,13,0.5), rgba(12,12,14,0.85)), rgba(21,43,13,0.35)'
-                    : anyOut
-                      ? 'linear-gradient(180deg, rgba(43,13,13,0.55), rgba(12,12,14,0.88)), rgba(43,13,13,0.4)'
-                      : 'linear-gradient(180deg, rgba(12,12,14,0.35), rgba(12,12,14,0.8))' }}
+          {/* The wheel's game list waits behind the gear, out of the way — set
+              off the band's top edge rather than tucked against it. */}
+          <div className="absolute left-[40px] top-[34px] z-20">
+            <button
+              onClick={() => setEditOpen((v) => !v)}
+              aria-expanded={editOpen}
+              className="flex items-center gap-[8px] text-[13px] font-semibold text-[#3fbf3f] transition hover:text-[#7aff46]"
+            >
+              <svg viewBox="0 0 24 24" className="size-[17px]" fill="currentColor">
+                <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z" />
+              </svg>
+              Add or delete Games
+            </button>
+            {editOpen && (
+              <div className="absolute left-0 top-[30px] w-[300px] rounded-[14px] shadow-[0_16px_48px_rgba(0,0,0,0.8)]">
+                <WheelGameEditor
+                  keys={wheelKeys}
+                  onChange={setWheelKeys}
+                  locked={mid}
+                  isDefault={!custom}
+                  onReset={() => setWheelKeys(null)}
                 />
-                <div className="relative z-10 flex h-full flex-col p-[24px]">
-                  <p className="text-[16px] font-semibold" style={{ color: accent }}>
-                    {allIn ? 'Vote Finished' : anyOut ? 'Vote Failed' : 'Game Picked'}
-                  </p>
-                  <p
-                    className="mt-[2px] uppercase leading-[0.95]"
-                    style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)', color: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#ffffff' }}
-                  >
-                    {allIn ? 'Launch Game' : anyOut ? 'Spin Again' : picked.title}
-                  </p>
-                  {allIn && (
-                    <svg viewBox="0 0 24 24" className="mt-auto size-[52px] transition-transform group-hover:translate-x-[6px]" fill="none" stroke="#7aff46" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
-                  )}
-                </div>
-              </button>
+              </div>
+            )}
+          </div>
 
-              {/* Non-spinner still has to weigh in */}
-              {!iSpun && !my && (
-                <div>
-                  <p className="mb-[8px] text-[14px]" style={{ color: D.dim }}>Are you in for {picked.title}?</p>
-                  <VoteButtons my={my} onVote={vote} />
+          <div className="flex flex-col items-center gap-[40px] lg:flex-row lg:gap-[56px]">
+            {/* Wheel */}
+            <div className="flex shrink-0 flex-col items-center">
+              <DecisionWheel
+                games={games}
+                spin={here}
+                remaining={remaining}
+                onSpin={startSpin}
+                spinning={!!here && phase === 'spinning'}
+                disabled={phase === 'spinning'}
+              />
+              {/* This Mix's own states need no narration — the wheel, the
+                  result card and the button already show them. The one thing
+                  nothing else on this page would tell you is that the spin is
+                  happening in a different Mix, so that alone gets a line. */}
+              {elsewhere && (
+                <p className="mt-[16px] max-w-[380px] text-center text-[13px]" style={{ color: D.mute }}>
+                  {phase === 'spinning'
+                    ? `${capName(elsewhere.spinner)} is spinning in ${elsewhere.blendName} — hang on.`
+                    : `${elsewhere.blendName} picked ${elsewhere.games?.[elsewhere.target]?.title} — spin here to take over.`}
+                </p>
+              )}
+            </div>
+
+            {/* Right half: pitch, the big SPINNNNNNING, or the result card */}
+            <div className="w-full flex-1 self-stretch lg:min-w-[380px]">
+              {!here && (
+                <div className="flex h-full flex-col justify-center">
+                  <h3 className="text-[24px] font-semibold text-white">Let the wheel decide</h3>
+                  <p className="mt-[8px] max-w-[46ch] text-[15px] leading-snug" style={{ color: D.dim }}>
+                    Spinning notifies everyone on the server. When it lands, they each say whether
+                    they&rsquo;re in — and once everyone&rsquo;s in, the play button unlocks for the whole group.
+                  </p>
+                  <div className="mt-[18px] flex items-center gap-[8px]">
+                    <span className="text-[13px]" style={{ color: D.mute }}>Online right now</span>
+                    <span className="flex items-center">
+                      {[...new Set([SELF_NAME, ...online])].map((n, i) => (
+                        <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #0a0c08', zIndex: 10 - i }} />
+                      ))}
+                    </span>
+                  </div>
                 </div>
               )}
 
-              {/* Who's playing panel */}
-              <div className="rounded-[12px] border p-[20px]" style={{ backgroundColor: '#272727', borderColor: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#3a3d41' }}>
-                <div className="flex items-start justify-between gap-[12px]">
-                  <div className="min-w-0">
-                    <p className="text-[18px] font-semibold text-white">Who&rsquo;s playing?</p>
-                    <p className="text-[14px]" style={{ color: D.dim }}>See who wants to play and who would rather not</p>
+              {here && phase === 'spinning' && (
+                <div className="flex h-full min-h-[280px] flex-col items-center justify-center">
+                  <SpinningText />
+                </div>
+              )}
+
+              {here && phase === 'result' && picked && (() => {
+                const anyOut = no.length > 0
+                const accent = allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#c5c6ca'
+                return (
+                <div className="flex h-full flex-col justify-center">
+                  {/* One card, like the design: game art + verdict on top (the
+                      whole art is the primary action — launch when everyone's
+                      in, re-spin when it failed), who's playing below. */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={allIn ? () => onLaunch(picked.title) : anyOut ? startSpin : undefined}
+                      className={'group relative block h-[238px] w-full overflow-hidden rounded-t-[10px] text-left ' + (allIn || anyOut ? 'cursor-pointer' : 'cursor-default')}
+                    >
+                      {cover && <img alt="" src={cover} className="absolute inset-0 size-full object-cover" />}
+                      <div
+                        className="absolute inset-0"
+                        style={{ background: allIn
+                          ? 'linear-gradient(180deg, rgba(21,43,13,0.5), rgba(12,12,14,0.85)), rgba(21,43,13,0.35)'
+                          : anyOut
+                            ? 'linear-gradient(180deg, rgba(43,13,13,0.55), rgba(12,12,14,0.88)), rgba(43,13,13,0.4)'
+                            : 'linear-gradient(180deg, rgba(12,12,14,0.35), rgba(12,12,14,0.8))' }}
+                      />
+                      {/* The verdict and game title sit at the top edge, so
+                          black falls from there to keep them readable however
+                          bright the cover art is. */}
+                      <div
+                        className="absolute inset-x-0 top-0 h-[75%]"
+                        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.88), rgba(0,0,0,0.5) 42%, transparent)' }}
+                      />
+                      {/* Extra bottom room so the arrow clears the panel that
+                          rides over the art's bottom edge. */}
+                      <div className="relative z-10 flex h-full flex-col p-[24px] pb-[38px]">
+                        <p className="text-[16px] font-semibold" style={{ color: accent }}>
+                          {allIn ? 'Vote Finished' : anyOut ? 'Vote Failed' : 'Game Picked'}
+                        </p>
+                        <p
+                          className="mt-[2px] uppercase leading-[0.95]"
+                          style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)', color: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#ffffff' }}
+                        >
+                          {allIn ? 'Launch Game' : anyOut ? 'Spin Again' : picked.title}
+                        </p>
+                        {allIn && (
+                          <svg viewBox="0 0 24 24" className="mt-auto size-[52px] transition-transform group-hover:translate-x-[6px]" fill="none" stroke="#7aff46" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Only this half carries the state stroke, all the way
+                        round. It rides up over the art's bottom edge, so the
+                        cover bleeds through its rounded top corners. Its pieces
+                        are always rendered — the vote row stays put once you've
+                        answered so you can switch — and the roster reserves two
+                        rows, so the panel never changes height mid-vote. */}
+                    <div
+                      className="relative z-10 -mt-[18px] rounded-[10px] p-[20px]"
+                      style={{
+                        backgroundColor: '#272727',
+                        border: '1px solid',
+                        borderColor: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : 'rgba(255,255,255,0.07)',
+                      }}
+                    >
+                      <div className="flex items-start justify-between gap-[12px]">
+                        <div className="min-w-0">
+                          <p className="text-[18px] font-semibold text-white">Who&rsquo;s playing?</p>
+                          <p className="text-[14px]" style={{ color: D.dim }}>See who wants to play and who would rather not</p>
+                        </div>
+                        <p className="shrink-0 whitespace-nowrap text-[14px] font-bold" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>
+                          {allIn ? <span style={{ color: '#7aff46' }}>{yes.length} in</span>
+                           : anyOut ? <span style={{ color: '#ff5a5a' }}>{no.length} out</span>
+                           : <><span style={{ color: '#7aff46' }}>{yes.length} in</span> <span style={{ color: '#ff5a5a' }}>{no.length} out</span></>}
+                        </p>
+                      </div>
+
+                      {/* Everyone weighs in — the spinner included */}
+                      <div className="mt-[14px]">
+                        <p className="mb-[8px] text-[14px]" style={{ color: D.dim }}>Are you in for {picked.title}?</p>
+                        <VoteButtons my={my} onVote={vote} />
+                      </div>
+
+                      <div className="mt-[16px] grid min-h-[80px] grid-cols-2 content-start gap-x-[16px] gap-y-[12px] xl:grid-cols-3">
+                        {people.map((n) => <StatusRow key={n} name={n} vote={votes[n]} />)}
+                      </div>
+                      {iSpun && (
+                        <button onClick={clear} className="mt-[6px] text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear votes</button>
+                      )}
+                    </div>
                   </div>
-                  <p className="shrink-0 whitespace-nowrap text-[14px] font-bold" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>
-                    {allIn ? <span style={{ color: '#7aff46' }}>{yes.length} in</span>
-                     : anyOut ? <span style={{ color: '#ff5a5a' }}>{no.length} out</span>
-                     : <><span style={{ color: '#7aff46' }}>{yes.length} in</span> <span style={{ color: '#ff5a5a' }}>{no.length} out</span></>}
-                  </p>
                 </div>
-                <div className="mt-[14px] flex flex-col gap-[10px]">
-                  {people.map((n) => <StatusRow key={n} name={n} vote={votes[n]} />)}
-                </div>
-                {iSpun && (
-                  <button onClick={clear} className="mt-[12px] text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear votes</button>
-                )}
-              </div>
+                )
+              })()}
             </div>
-            )
-          })()}
+          </div>
         </div>
       </div>
     </section>
@@ -3731,7 +3908,7 @@ function SpinNotification({ state, onLaunch, onOpenBlend, onParty }) {
                 <svg viewBox="0 0 24 24" className="size-[15px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
                 Play
               </button>
-            ) : iSpun ? (
+            ) : iSpun && my ? (
               <button
                 onClick={() => onOpenBlend(spin.blendId)}
                 className="ml-[6px] shrink-0 rounded-[10px] bg-[#2b2d31] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]"
@@ -4834,7 +5011,20 @@ const DETAIL_COPY = {
 // Merge catalog data + showcase copy into one view model, with fallbacks so any
 // game opens a sensible page even without bespoke copy.
 function detailFor(key) {
-  const g = CATALOG[key] || {}
+  // Library-only games (no Steam art, so never folded into CATALOG) fall back
+  // to their Starter entry, so every Library tile still opens a real page
+  // rather than an "Untitled" one.
+  const s = STARTER_BY_KEY[key]
+  const g = CATALOG[key] || (s
+    ? {
+        title: s.title,
+        players: s.players === 'MMO' ? '1+' : s.players,
+        genre: s.genre,
+        developer: 'Game Pass',
+        playtime: '~2hrs',
+        caption: `${s.genre} — playable free with Game Pass Starter.`,
+      }
+    : {})
   const c = DETAIL_COPY[key] || {}
   return {
     key,
@@ -4927,10 +5117,11 @@ const GALLERY = {}
 // Build the ordered media slides for a game's hero carousel: cover first, then
 // any bespoke screenshots, then the trailer (as a video slide) if one exists.
 function slidesFor(key, cover) {
-  const slides = [{ type: 'image', src: cover }]
+  const slides = cover ? [{ type: 'image', src: cover }] : []
   for (const src of GALLERY[key] || []) slides.push({ type: 'image', src })
   if (VIDEOS[key]) slides.push({ type: 'video', youTubeId: VIDEOS[key], poster: cover })
-  return slides
+  // A game with no art and no trailer still needs one slide to render against.
+  return slides.length ? slides : [{ type: 'image' }]
 }
 
 // Hero image/video carousel — arrow buttons wrap around, dots jump directly,
@@ -5234,7 +5425,10 @@ export default function Landing() {
   const openLibrary = () => { setLibraryTab(true); setMixesTab(false); setBlendId(null); setDmName(null); setDecide(null); setDetailKey(null) }
   // Cards hand back a game title; map it to a catalog key and open the detail page.
   const openGame = (titleOrKey) => {
-    const key = CATALOG[titleOrKey] ? titleOrKey : (KEY_OF_TITLE[titleOrKey] || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey))
+    // Starter keys count as known even without a CATALOG entry — the art-less
+    // Library games live only in STARTER_BY_KEY.
+    const known = CATALOG[titleOrKey] || STARTER_BY_KEY[titleOrKey]
+    const key = known ? titleOrKey : (KEY_OF_TITLE[titleOrKey] || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey))
     if (!key) return
     // Remember where we came from so the detail page's Back returns there.
     setDetailFrom(dmName ? { dm: dmName } : blendId ? { blend: blendId } : null)

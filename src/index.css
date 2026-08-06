@@ -130,3 +130,15 @@ body,
   transform-origin: center bottom;
   animation: spin-n 620ms ease-in-out infinite;
 }
+
+/* While the wheel turns, the rest of the page drops into the dark and only the
+   spin panel keeps the light. The animation covers the fade-in on mount; the
+   transition covers the fade-out once the spin resolves. */
+@keyframes spin-scrim {
+  from { opacity: 0; }
+}
+.spin-scrim {
+  background: rgba(0, 0, 0, 0.72);
+  animation: spin-scrim 420ms ease;
+  transition: opacity 420ms ease;
+}

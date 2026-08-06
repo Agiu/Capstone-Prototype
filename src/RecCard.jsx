@@ -854,8 +854,8 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
         <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
         <div className="flex flex-col gap-[13px]">
           {recommend ? (
-            <div className="flex items-start gap-[9px]">
-              <div className="mt-[1px] flex shrink-0 items-center">
+            <div className="flex items-center gap-[9px]">
+              <div className="flex shrink-0 items-center">
                 {pair.map((c, i) => (
                   <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#191919]" style={{ marginRight: i < pair.length - 1 ? -6 : 0, zIndex: 2 - i }} />
                 ))}
