@@ -920,15 +920,22 @@ function GiftArcadeButton() {
 }
 
 // Top-bar entry to the spin wheel — its own module now, not tied to a Mix.
-// Sits just left of the Gift ARCADE button on every page's nav.
+// Sits just left of the Gift ARCADE button on every page's nav. A green dot
+// shows when a wheel jam is live on the call.
 function WheelNavButton() {
-  const { openWheel } = useContext(NavCtx)
+  const { openWheel, wheelLive } = useContext(NavCtx)
   return (
     <button
       onClick={openWheel}
-      title="Spin the wheel"
-      className="flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
+      title={wheelLive ? 'A wheel jam is live on the call' : 'Spin the wheel'}
+      className="relative flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
     >
+      {wheelLive && (
+        <span className="absolute -right-[3px] -top-[3px] flex size-[10px]">
+          <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#3dbf1e] opacity-75" />
+          <span className="relative inline-flex size-[10px] rounded-full bg-[#3dbf1e] ring-2 ring-[#0c0c0e]" />
+        </span>
+      )}
       <svg viewBox="0 0 24 24" className="size-[18px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" />
         <path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" />
@@ -3821,12 +3828,18 @@ function SpinNotification({ state }) {
 // the party it starts when it lands — that snapshots whoever's on the call right
 // then, which is exactly why membership can keep changing without breaking it.
 const CALL_WHEEL_EXPIRY = 20 * 60 * 1000
-function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
-  // Two modes. Personal (default): your own list, local spin. Synced with the
-  // call: a shared board keyed to the room that everyone edits and watches spin
-  // together. Sync joins a live board if one exists, else starts empty.
+function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin }) {
+  // Two modes. Personal (default): your own list, local spin. Jam ("Sync with
+  // call"): a shared, hosted session keyed to the room — one person starts it
+  // empty, everyone else JOINS the live one (inheriting its games) and watches
+  // it spin together, like a Spotify Jam. It ends when the host ends it or the
+  // last person leaves; `lastActive` refreshes on every write so an in-use jam
+  // never expires from under everyone.
+  const jamNames = useNames()
   const [callWheel, setCallWheel] = useRoomNode('wheelCall', null)
-  const callLive = !!callWheel && Date.now() - (callWheel.startedAt || 0) < CALL_WHEEL_EXPIRY
+  const participants = callWheel?.participants || {}
+  const jamLive = !!callWheel && Object.keys(participants).length > 0 && Date.now() - (callWheel.lastActive || callWheel.startedAt || 0) < CALL_WHEEL_EXPIRY
+  const isHost = callWheel?.host === SELF_NAME
   const [synced, setSynced] = useState(false)
   const [localSpin, setLocalSpin] = useState(null) // { id, target, turns, jitter, games, startedAt, by }
   const [mixMenu, setMixMenu] = useState(false)
@@ -3834,12 +3847,36 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
   const [, tick] = useState(0)
   const handledRef = useRef(null)
 
-  // A live shared spin pulls everyone who has the wheel open into synced view so
-  // they watch it turn together.
+  const patchJam = (patch) => setCallWheel({ ...(callWheel || {}), ...patch, lastActive: Date.now() })
+  function startOrJoin() {
+    if (synced) return
+    if (jamLive) patchJam({ participants: { ...participants, [SELF_NAME]: true } }) // join the live one, keep its games
+    else setCallWheel({ host: SELF_NAME, participants: { [SELF_NAME]: true }, keys: [], spin: null, startedAt: Date.now(), lastActive: Date.now() }) // start fresh + empty
+    setSynced(true)
+  }
+  function leaveOrEnd() {
+    if (!synced) return
+    if (isHost) setCallWheel(null) // host ends it for everyone
+    else {
+      const p = { ...participants }; delete p[SELF_NAME]
+      if (Object.keys(p).length === 0) setCallWheel(null) // last one out ends it
+      else patchJam({ participants: p })
+    }
+    setSynced(false)
+  }
+
+  // A live shared spin pulls everyone who has the wheel open into the synced
+  // view so they watch it turn together.
   useEffect(() => {
     if (callWheel?.spin && !synced) setSynced(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callWheel?.spin?.id])
+
+  // Opened via the "Join" toast — drop straight into the live jam.
+  useEffect(() => {
+    if (autoJoin && !synced && jamLive) startOrJoin()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoJoin])
 
   const activeKeys = synced ? (callWheel?.keys || []) : (keys || [])
   const activeSpin = synced ? (callWheel?.spin || null) : localSpin
@@ -3860,10 +3897,10 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
     ? ALL_WHEEL_KEYS.filter((k) => !activeKeys.includes(k) && wheelTitle(k).toLowerCase().includes(query)).slice(0, 8)
     : []
 
-  // Write the active list to the right place (shared node vs personal state).
+  // Write the active list to the right place (shared jam vs personal state).
   function writeKeys(next) {
     const arr = typeof next === 'function' ? next(activeKeys) : next
-    if (synced) setCallWheel({ keys: arr, spin: callWheel?.spin ?? null, startedAt: callWheel?.startedAt || Date.now() })
+    if (synced) patchJam({ keys: arr })
     else setKeys(arr)
   }
   const addKey = (k) => { writeKeys([...new Set([...activeKeys, k])]); setQ('') }
@@ -3889,14 +3926,8 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
     if (!canSpin) return
     const roll = rollSpin(boardGames.length, activeSpin?.target)
     const s = { id: Date.now().toString(36), ...roll, games: boardGames, startedAt: Date.now(), by: SELF_NAME }
-    if (synced) setCallWheel({ keys: activeKeys, spin: s, startedAt: callWheel?.startedAt || Date.now() })
+    if (synced) patchJam({ spin: s })
     else setLocalSpin(s)
-  }
-
-  function toggleSync() {
-    if (synced) { setSynced(false); return }
-    if (!callLive) setCallWheel({ keys: [], spin: null, startedAt: Date.now() })
-    setSynced(true)
   }
 
   // On land, the spinner starts the party (host = them, invitees = the call).
@@ -3906,7 +3937,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
     handledRef.current = activeSpin.id
     const t = setTimeout(() => {
       onParty(picked)
-      if (synced) setCallWheel({ keys: activeKeys, spin: null, startedAt: callWheel?.startedAt || Date.now() })
+      if (synced) patchJam({ spin: null }) // keep the jam alive for another round
       else setLocalSpin(null)
       onClose()
     }, 1300)
@@ -3959,18 +3990,30 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
                   </div>
                 </div>
 
-                {/* Sync with the call — shared, watched-together wheel */}
-                <button
-                  onClick={toggleSync}
-                  className={'mt-[16px] flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
-                >
-                  <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
-                  {synced ? 'Synced with call · leave' : callLive ? 'Join the call wheel' : 'Sync with call'}
-                </button>
+                {/* Sync with the call — a shared, hosted "jam" everyone builds
+                    and watches together (start it empty, or join a live one). */}
+                <div className="mt-[16px] flex items-center gap-[12px]">
+                  <button
+                    onClick={synced ? leaveOrEnd : startOrJoin}
+                    className={'flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
+                  >
+                    <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
+                    {synced ? (isHost ? 'End wheel jam' : 'Leave wheel jam') : jamLive ? 'Join the call wheel' : 'Sync with call'}
+                  </button>
+                  {synced && (
+                    <span className="flex items-center">
+                      {Object.keys(participants).map((n, i) => (
+                        <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 10 - i }} />
+                      ))}
+                    </span>
+                  )}
+                </div>
                 <p className="mt-[8px] text-[12px] text-[#7e7f87]">
                   {synced
-                    ? 'Shared with everyone on the call — they see your edits and watch it spin.'
-                    : 'Starts a shared wheel the whole call builds and watches together.'}
+                    ? (isHost ? 'You started this jam — everyone on the call can join, edit and watch it spin.' : `Jam hosted by ${dispName(callWheel.host, jamNames)} — edits and spins are live for the whole call.`)
+                    : jamLive
+                      ? `${dispName(callWheel.host, jamNames)} has a wheel going — join to build and spin it together.`
+                      : 'Starts a shared wheel the whole call builds and watches together.'}
                 </p>
 
                 {/* Load a Mix's PLAYlist */}
@@ -4039,6 +4082,34 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  )
+}
+
+// "X started a wheel — Join" — the jam invite, top-right like the other toasts.
+function WheelJamToast({ host, count, onJoin, onDismiss }) {
+  const names = useNames()
+  return (
+    <div className="pointer-events-none fixed top-[24px] right-[24px] z-[88] flex justify-end px-4">
+      <div className="pointer-events-auto flex items-center gap-[14px] rounded-[14px] border border-[#1c1d21] bg-[#111214] px-[18px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+        <span className="relative flex size-[34px] shrink-0 items-center justify-center">
+          <span className="absolute inset-0 animate-ping rounded-full bg-[#3dbf1e]/40" />
+          <Avatar color={COLOR_OF[host] || D.raised} size={34} />
+        </span>
+        <p className="text-[15px] text-[#dbdee1]">
+          <span className="font-semibold text-white">{dispName(host, names)}</span> started a wheel on the call{count > 1 ? ` · ${count} in` : ''}
+        </p>
+        <button
+          onClick={onJoin}
+          className="ml-[6px] flex shrink-0 items-center gap-[7px] rounded-[10px] bg-[#2da000] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110"
+        >
+          <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
+          Join
+        </button>
+        <button onClick={onDismiss} aria-label="Dismiss" className="ml-[2px] shrink-0 text-[#7e7f87] transition hover:text-white">
+          <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
       </div>
     </div>
   )
@@ -5721,6 +5792,7 @@ export default function Landing() {
   const [whoOpen, setWhoOpen] = useState(false) // "See who's on PARTY" friends popup
   const [gameMenu, setGameMenu] = useState(null) // { x, y, title } — global right-click game menu
   const [wheelOpen, setWheelOpen] = useState(false) // the top-bar spin-wheel module
+  const [wheelAutoJoin, setWheelAutoJoin] = useState(false) // opened via the jam "Join" toast
   const [wheelKeys, setWheelKeys] = useState([]) // personal wheel game list (session-scoped)
   const [dmName, setDmName] = useState(null)
   const [mixesTab, setMixesTab] = useState(false) // the "Mixes" top-nav tab (Figma 926:4875)
@@ -5796,7 +5868,13 @@ export default function Landing() {
     if (!key) return
     setWheelKeys((ks) => (ks.includes(key) ? ks : [...ks, key]))
   }
-  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward, openWheel: () => setWheelOpen(true), addToWheel }
+  // Live "wheel jam" on the call — drives the top-bar dot + the Join toast.
+  const [callWheelRoot] = useRoomNode('wheelCall', null)
+  const jamParticipants = callWheelRoot?.participants || {}
+  const jamLive = !!callWheelRoot && Object.keys(jamParticipants).length > 0 && Date.now() - (callWheelRoot.lastActive || callWheelRoot.startedAt || 0) < CALL_WHEEL_EXPIRY
+  const inJam = !!jamParticipants[SELF_NAME]
+  const [jamDismissed, setJamDismissed] = useState(null) // startedAt of a dismissed jam invite
+  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward, openWheel: () => setWheelOpen(true), addToWheel, wheelLive: jamLive }
 
   // Observation plumbing. A live tester publishes their nav + pointer/scroll;
   // a spectator instance reads it back and drives the view read-only.
@@ -5866,7 +5944,6 @@ export default function Landing() {
 
   // A SYNCED wheel spin pulls everyone on the call into the wheel so they watch
   // it turn together. Personal spins never touch this node, so they stay local.
-  const [callWheelRoot] = useRoomNode('wheelCall', null)
   useEffect(() => {
     if (callWheelRoot?.spin && !wheelOpen) setWheelOpen(true)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -5984,7 +6061,17 @@ export default function Landing() {
             blends={blends}
             online={room.online}
             onParty={startWheelParty}
-            onClose={() => setWheelOpen(false)}
+            autoJoin={wheelAutoJoin}
+            onClose={() => { setWheelOpen(false); setWheelAutoJoin(false) }}
+          />
+        )}
+        {/* "X started a wheel — Join" — top-right, like the other toasts */}
+        {jamLive && !inJam && !wheelOpen && jamDismissed !== callWheelRoot.startedAt && (
+          <WheelJamToast
+            host={callWheelRoot.host}
+            count={Object.keys(jamParticipants).length}
+            onJoin={() => { setWheelAutoJoin(true); setWheelOpen(true) }}
+            onDismiss={() => setJamDismissed(callWheelRoot.startedAt)}
           />
         )}
         {/* Server-wide launch-party toast — follows you across pages */}
