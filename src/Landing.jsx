@@ -126,7 +126,7 @@ function RailIcon({ children, active, tint }) {
 
 // Global back/forward navigation, Discord-style. The root App drives a small
 // history stack and exposes it here so any page's arrows share one history.
-const NavCtx = createContext({ canBack: false, canForward: false, back: () => {}, forward: () => {} })
+const NavCtx = createContext({ canBack: false, canForward: false, back: () => {}, forward: () => {}, openWheel: () => {}, addToWheel: () => {} })
 
 // Discord-style back/forward arrows for the top-left of a page. Replaces the
 // old per-page "← Back" text button.
@@ -919,6 +919,26 @@ function GiftArcadeButton() {
   )
 }
 
+// Top-bar entry to the spin wheel — its own module now, not tied to a Mix.
+// Sits just left of the Gift ARCADE button on every page's nav.
+function WheelNavButton() {
+  const { openWheel } = useContext(NavCtx)
+  return (
+    <button
+      onClick={openWheel}
+      title="Spin the wheel"
+      className="flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
+    >
+      <svg viewBox="0 0 24 24" className="size-[18px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" />
+        <path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" />
+        <path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" />
+      </svg>
+      <span className="leading-none">Wheel</span>
+    </button>
+  )
+}
+
 function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onMixes, onLibrary }) {
   const { blends, setBlends } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.abby
@@ -999,6 +1019,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
         <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
+          <WheelNavButton />
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
@@ -1164,6 +1185,7 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
         <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
         <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
+          <WheelNavButton />
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
@@ -1387,6 +1409,11 @@ const STEAM_COVER = (id) => `https://cdn.cloudflare.steamstatic.com/steam/apps/$
 const STARTER_BY_KEY = Object.fromEntries(STARTER_LIBRARY.map((g) => [g.catKey, g]))
 const starterCover = (k) => { const g = STARTER_BY_KEY[k]; return g?.steamAppId ? STEAM_COVER(g.steamAppId) : CATALOG[k]?.image }
 const starterHeader = (k) => { const g = STARTER_BY_KEY[k]; return g?.steamAppId ? STEAM_HEADER(g.steamAppId) : CATALOG[k]?.image }
+// Every key the wheel can hold, searchable by title. Most have art (CATALOG);
+// a handful of Starter titles have none and ride as color-only slices.
+const ALL_WHEEL_KEYS = [...new Set([...Object.keys(CATALOG), ...STARTER_LIBRARY.map((g) => g.catKey)])].filter((k) => CATALOG[k] || STARTER_BY_KEY[k])
+const wheelTitle = (k) => CATALOG[k]?.title || STARTER_BY_KEY[k]?.title || k
+const wheelThumb = (k) => CATALOG[k]?.image || starterHeader(k) || null
 // Editorial copy for the games we feature on the homepage.
 const STARTER_DESC = {
   gp_doometernal: { studio: 'id Software', desc: 'Rip and tear through Hell in the fastest, most brutal DOOM yet.', tags: ['FPS', 'Action', 'Mature 17+'], friends: '4 friends have played recently' },
@@ -1701,6 +1728,7 @@ function LibraryPage({ onHome, onMixes, onOpen }) {
         <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Library</button>
         <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
+          <WheelNavButton />
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
@@ -2067,6 +2095,7 @@ function InviteMembersModal({ blend, onClose, onSave }) {
   )
 }
 const LINK_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
+const WHEEL_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
 
 // The full group PLAYlist (Figma 863:3952) — every game in the Mix's shared
 // list as a numbered, drag-to-rank grid, plus a search to add or remove games.
@@ -2092,7 +2121,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
       <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[600px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
-            <h3 className="text-[20px] font-bold text-white">Your Group PLAYlist</h3>
+            <h3 className="text-[20px] font-bold text-white">Your Mix PLAYlist</h3>
             <p className="mt-[2px] text-[13px] text-[#9a9ba3]">Drag to rank</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
@@ -2162,26 +2191,10 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
   )
 }
 
-function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
+function BlendPage({ blend, onBack, onDecide, onOpen, onPlay }) {
+  const { addToWheel } = useContext(NavCtx)
   const [menu, setMenu] = useState(null) // { x, y, title }
   const [launching, setLaunching] = useState(null)
-  // "Decide a game" drops the divider and unfolds the wheel above it.
-  const [wheelOpen, setWheelOpen] = useState(false)
-  const wheelRef = useRef(null)
-
-  // A spin started by anyone in this blend opens the area for everybody, so no
-  // one has to be told where to look.
-  const liveHere = spin.spin && spin.spin.blendId === blend.id
-  useEffect(() => {
-    if (liveHere) setWheelOpen(true)
-  }, [liveHere, spin.spin?.id])
-
-  // Scroll the wheel into view once the reveal has played out.
-  useEffect(() => {
-    if (!wheelOpen) return
-    const t = setTimeout(() => wheelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 620)
-    return () => clearTimeout(t)
-  }, [wheelOpen])
 
   // Header banner — the home page's footage, faded in on first play and back
   // out over the last 1.5s so the loop seam never shows. Opacity is driven on
@@ -2244,7 +2257,6 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
     if (!IS_LIVE) return
     writeRoomPath(`${SPECTATE_PATH}/blendUI`, {
       blendId: blend.id,
-      wheelOpen: !!wheelOpen,
       menu: menu ? { x: menu.x, y: menu.y, title: menu.title } : null,
       coverMenu: coverMenu ? { x: coverMenu.x, y: coverMenu.y } : null,
       coverPicker: !!coverPicker,
@@ -2252,10 +2264,9 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
       inviteOpen: !!inviteOpen,
       playlistOpen: !!playlistOpen,
     })
-  }, [blend.id, wheelOpen, menu, coverMenu, coverPicker, renameOpen, inviteOpen, playlistOpen])
+  }, [blend.id, menu, coverMenu, coverPicker, renameOpen, inviteOpen, playlistOpen])
   // Only trust the mirror when it's for the Mix currently being viewed.
   const bui = IS_SPECTATE && bUI?.blendId === blend.id ? bUI : null
-  const eWheelOpen = IS_SPECTATE ? !!bui?.wheelOpen : wheelOpen
   const eMenu = IS_SPECTATE ? (bui?.menu ?? null) : menu
   const eCoverMenu = IS_SPECTATE ? (bui?.coverMenu ?? null) : coverMenu
   const eCoverPicker = IS_SPECTATE ? !!bui?.coverPicker : coverPicker
@@ -2325,8 +2336,8 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
           <div className="flex items-center gap-[28px]">
             <div
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCoverMenu({ x: e.clientX, y: e.clientY }) }}
-              title="Right-click to edit this Mix"
-              className="size-[184px] shrink-0 cursor-pointer overflow-hidden rounded-[16px] bg-[#1a1a1d]"
+              title="Click the pencil (or right-click) to edit this Mix"
+              className="group/cover relative size-[184px] shrink-0 cursor-pointer overflow-hidden rounded-[16px] bg-[#1a1a1d]"
             >
               {blend.cover ? (
                 <img alt="" src={blend.cover} className="size-full object-cover" />
@@ -2337,6 +2348,15 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
                   ))}
                 </div>
               )}
+              {/* Explicit edit affordance — the right-click menu isn't discoverable. */}
+              <button
+                onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setCoverMenu({ x: r.left, y: r.bottom + 6 }) }}
+                title="Edit this Mix"
+                aria-label="Edit this Mix"
+                className="absolute bottom-[8px] right-[8px] flex size-[34px] items-center justify-center rounded-full bg-black/70 text-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.5)] backdrop-blur transition hover:bg-black/85 group-hover/cover:opacity-100"
+              >
+                <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+              </button>
             </div>
             <div>
               <h1 className="text-[52px] font-semibold leading-none tracking-tight text-white">{blend.name}</h1>
@@ -2359,38 +2379,22 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
               </div>
               <p className="mt-[10px] text-[15px] font-semibold text-white">Refreshes daily.</p>
 
-              {/* Decide-a-game entry point — right under the refresh note */}
+              {/* Decide-a-game entry point — matches the group's preferences.
+                  (The spin wheel now lives in the top bar as its own module.) */}
               <div className="mt-[16px]">
-                <XboxDecideButton open={eWheelOpen} onClick={() => setWheelOpen((v) => !v)} onPrefs={onDecide} />
+                <button
+                  onClick={onDecide}
+                  className="group/dec flex shrink-0 items-center gap-[9px] text-[#3fbf3f] transition hover:opacity-85"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" /></svg>
+                  <span className="text-[17px] font-bold italic">Can&rsquo;t Decide? Match our preferences</span>
+                </button>
               </div>
             </div>
           </div>
 
           </div>
         </section>
-
-        {/* The wheel band unfolds here — full-bleed, pushing the divider down. */}
-        <div
-          ref={wheelRef}
-          className="grid"
-          style={{
-            gridTemplateRows: eWheelOpen ? '1fr' : '0fr',
-            transition: 'grid-template-rows 560ms cubic-bezier(0.22,1,0.36,1)',
-          }}
-        >
-          <div className="overflow-hidden">
-            <div
-              className="pt-[28px]"
-              style={{
-                opacity: eWheelOpen ? 1 : 0,
-                transform: eWheelOpen ? 'none' : 'translateY(-12px)',
-                transition: 'opacity 380ms ease 140ms, transform 420ms cubic-bezier(0.22,1,0.36,1) 140ms',
-              }}
-            >
-              <SpinPanel blend={blend} state={spin} onLaunch={launch} />
-            </div>
-          </div>
-        </div>
 
         <div className="mx-auto w-full max-w-[1280px] px-[40px]">
           {/* The band carries its own green edges now, so this stays neutral. */}
@@ -2399,7 +2403,7 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
           {/* Group wishlist — numbered, drag to rank */}
           <section>
             <div className="mb-[18px] flex items-baseline gap-[14px]">
-              <h2 className="text-[28px] font-semibold text-white">Your XBOX PLAYlist</h2>
+              <h2 className="text-[28px] font-semibold text-white">Your Mix PLAYlist</h2>
               <span className="text-[12px] font-medium text-[#7e7f87]">drag to rank</span>
               <button onClick={() => setPlaylistOpen(true)} className="ml-auto text-[12px] font-semibold uppercase tracking-wide text-[#9a9ba3] transition hover:text-white">View entire PLAYlist</button>
             </div>
@@ -2496,6 +2500,7 @@ function BlendPage({ blend, onBack, onDecide, spin, onOpen, onPlay }) {
             (blend.wishlist || []).includes(KEY_OF_TITLE[eMenu.title] || eMenu.title)
               ? { label: 'Remove from PLAYlist', icon: REMOVE_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, false) }
               : { label: 'Add to PLAYlist', icon: BOOKMARK_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, true) },
+            { label: 'Add to Wheel', icon: WHEEL_MENU_GLYPH, onClick: () => { addToWheel(eMenu.title); setMenu(null) } },
             { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setMenu(null) },
           ]}
         />
@@ -3709,8 +3714,8 @@ function SpinPanel({ blend, state, onLaunch }) {
                 <div className="flex h-full flex-col justify-center">
                   <h3 className="text-[24px] font-semibold text-white">Let the wheel decide</h3>
                   <p className="mt-[8px] max-w-[46ch] text-[15px] leading-snug" style={{ color: D.dim }}>
-                    Spinning notifies everyone on the server. When it lands, they each say whether
-                    they&rsquo;re in — and once everyone&rsquo;s in, the play button unlocks for the whole group.
+                    Spinning notifies everyone on the server. When it lands, a party starts for the
+                    picked game — you host, and everyone on the call gets invited to ready up.
                   </p>
                   <div className="mt-[18px] flex items-center gap-[8px]">
                     <span className="text-[13px]" style={{ color: D.mute }}>Online right now</span>
@@ -3729,97 +3734,38 @@ function SpinPanel({ blend, state, onLaunch }) {
                 </div>
               )}
 
-              {here && phase === 'result' && picked && (() => {
-                const anyOut = no.length > 0
-                const accent = allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#c5c6ca'
-                return (
+              {here && phase === 'result' && picked && (
                 <div className="flex h-full flex-col justify-center">
-                  {/* One card, like the design: game art + verdict on top (the
-                      whole art is the primary action — launch when everyone's
-                      in, re-spin when it failed), who's playing below. */}
-                  <div className="relative">
-                    <button
-                      type="button"
-                      onClick={allIn ? () => onLaunch(picked.title) : anyOut ? startSpin : undefined}
-                      className={'group relative block h-[238px] w-full overflow-hidden rounded-t-[10px] text-left ' + (allIn || anyOut ? 'cursor-pointer' : 'cursor-default')}
-                    >
-                      {cover && <img alt="" src={cover} className="absolute inset-0 size-full object-cover" />}
-                      <div
-                        className="absolute inset-0"
-                        style={{ background: allIn
-                          ? 'linear-gradient(180deg, rgba(21,43,13,0.5), rgba(12,12,14,0.85)), rgba(21,43,13,0.35)'
-                          : anyOut
-                            ? 'linear-gradient(180deg, rgba(43,13,13,0.55), rgba(12,12,14,0.88)), rgba(43,13,13,0.4)'
-                            : 'linear-gradient(180deg, rgba(12,12,14,0.35), rgba(12,12,14,0.8))' }}
-                      />
-                      {/* The verdict and game title sit at the top edge, so
-                          black falls from there to keep them readable however
-                          bright the cover art is. */}
-                      <div
-                        className="absolute inset-x-0 top-0 h-[75%]"
-                        style={{ background: 'linear-gradient(180deg, rgba(0,0,0,0.88), rgba(0,0,0,0.5) 42%, transparent)' }}
-                      />
-                      {/* Extra bottom room so the arrow clears the panel that
-                          rides over the art's bottom edge. */}
-                      <div className="relative z-10 flex h-full flex-col p-[24px] pb-[38px]">
-                        <p className="text-[16px] font-semibold" style={{ color: accent }}>
-                          {allIn ? 'Vote Finished' : anyOut ? 'Vote Failed' : 'Game Picked'}
-                        </p>
-                        <p
-                          className="mt-[2px] uppercase leading-[0.95]"
-                          style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)', color: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : '#ffffff' }}
-                        >
-                          {allIn ? 'Launch Game' : anyOut ? 'Spin Again' : picked.title}
-                        </p>
-                        {allIn && (
-                          <svg viewBox="0 0 24 24" className="mt-auto size-[52px] transition-transform group-hover:translate-x-[6px]" fill="none" stroke="#7aff46" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg>
-                        )}
-                      </div>
-                    </button>
-
-                    {/* Only this half carries the state stroke, all the way
-                        round. It rides up over the art's bottom edge, so the
-                        cover bleeds through its rounded top corners. Its pieces
-                        are always rendered — the vote row stays put once you've
-                        answered so you can switch — and the roster reserves two
-                        rows, so the panel never changes height mid-vote. */}
+                  {/* The wheel landed — go straight to a party for the picked
+                      game (the spinner hosts, the call gets invited). No vote. */}
+                  <div className="relative overflow-hidden rounded-[10px] border border-[#7aff46]/40">
+                    {cover && <img alt="" src={cover} className="absolute inset-0 size-full object-cover" />}
                     <div
-                      className="relative z-10 -mt-[18px] rounded-[10px] p-[20px]"
-                      style={{
-                        backgroundColor: '#272727',
-                        border: '1px solid',
-                        borderColor: allIn ? '#7aff46' : anyOut ? '#ff5a5a' : 'rgba(255,255,255,0.07)',
-                      }}
-                    >
-                      <div className="flex items-start justify-between gap-[12px]">
-                        <div className="min-w-0">
-                          <p className="text-[18px] font-semibold text-white">Who&rsquo;s playing?</p>
-                          <p className="text-[14px]" style={{ color: D.dim }}>See who wants to play and who would rather not</p>
-                        </div>
-                        <p className="shrink-0 whitespace-nowrap text-[14px] font-bold" style={{ fontFamily: '"Base Neue Cond ExtBd"' }}>
-                          {allIn ? <span style={{ color: '#7aff46' }}>{yes.length} in</span>
-                           : anyOut ? <span style={{ color: '#ff5a5a' }}>{no.length} out</span>
-                           : <><span style={{ color: '#7aff46' }}>{yes.length} in</span> <span style={{ color: '#ff5a5a' }}>{no.length} out</span></>}
+                      className="absolute inset-0"
+                      style={{ background: 'linear-gradient(180deg, rgba(21,43,13,0.55), rgba(12,12,14,0.92))' }}
+                    />
+                    <div className="relative z-10 flex min-h-[238px] flex-col p-[24px]">
+                      <p className="text-[16px] font-semibold text-[#7aff46]">The wheel picked</p>
+                      <p
+                        className="mt-[2px] uppercase leading-[0.95] text-white"
+                        style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)' }}
+                      >
+                        {picked.title}
+                      </p>
+                      <div className="mt-auto flex items-center gap-[10px] pt-[20px]">
+                        <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#5765f2]">
+                          <svg viewBox="0 0 24 24" className="size-[15px] animate-spin text-white" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6" /></svg>
+                        </span>
+                        <p className="text-[15px] text-[#dbdee1]">
+                          {iSpun
+                            ? 'Starting a party with everyone on the call…'
+                            : `${capName(here.spinner)} is starting a party…`}
                         </p>
                       </div>
-
-                      {/* Everyone weighs in — the spinner included */}
-                      <div className="mt-[14px]">
-                        <p className="mb-[8px] text-[14px]" style={{ color: D.dim }}>Are you in for {picked.title}?</p>
-                        <VoteButtons my={my} onVote={vote} />
-                      </div>
-
-                      <div className="mt-[16px] grid min-h-[80px] grid-cols-2 content-start gap-x-[16px] gap-y-[12px] xl:grid-cols-3">
-                        {people.map((n) => <StatusRow key={n} name={n} vote={votes[n]} />)}
-                      </div>
-                      {iSpun && (
-                        <button onClick={clear} className="mt-[6px] text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear votes</button>
-                      )}
                     </div>
                   </div>
                 </div>
-                )
-              })()}
+              )}
             </div>
           </div>
         </div>
@@ -3833,95 +3779,30 @@ function SpinPanel({ blend, state, onLaunch }) {
  * who aren't on the blend — first "a game is about to be chosen", then the
  * pick, the in/out vote, and finally the shared play button.
  */
-function SpinNotification({ state, onLaunch, onOpenBlend, onParty }) {
+function SpinNotification({ state }) {
   const spinNames = useNames()
-  const { spin, phase, picked, vote } = state
+  const { spin, phase } = state
   const [dismissed, setDismissed] = useState(null)
-  const { votes, yes, no, allIn } = spinTally(spin)
-  const key = spin ? `${spin.id}:${phase}` : null
-  // Someone said no: the pick is dead, so the box shakes, goes red and clears
-  // itself rather than sitting there waiting on votes that can't save it.
-  const rejected = phase === 'result' && no.length > 0
+  const key = spin ? spin.id : null
 
-  useEffect(() => {
-    if (!rejected || dismissed === key) return
-    const t = setTimeout(() => setDismissed(key), 4200)
-    return () => clearTimeout(t)
-  }, [rejected, key, dismissed])
+  // Once the wheel lands the party flow takes over (the spinner's client starts
+  // a party for the picked game), so this heads-up only runs while it's turning.
+  if (!spin || phase !== 'spinning' || dismissed === key) return null
 
-  if (!spin || phase === 'idle' || dismissed === key) return null
-
-  const my = votes[SELF_NAME]
   const iSpun = spin.spinner === SELF_NAME
-  const cover = picked ? CATALOG[picked.key]?.image : null
 
   return (
     <div className="pointer-events-none fixed top-[24px] right-[24px] z-[90] flex justify-end px-4">
-      <div
-        className={
-          'pointer-events-auto flex max-w-[720px] items-center gap-[14px] rounded-[14px] border px-[18px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)] transition-colors duration-300 ' +
-          (rejected ? 'spin-reject border-[#f04747]/70 bg-[#2a1517]' : 'border-[#1c1d21] bg-[#111214]')
-        }
-      >
-        {phase === 'spinning' ? (
-          <>
-            <span className="relative flex size-[34px] shrink-0 items-center justify-center">
-              <span className="absolute inset-0 animate-ping rounded-full bg-[#107C10]/40" />
-              <Avatar color={COLOR_OF[spin.spinner] || D.raised} size={34} />
-            </span>
-            <p className="text-[15px] text-[#dbdee1]">
-              <span className="font-semibold text-white">{iSpun ? 'You' : dispName(spin.spinner, spinNames)}</span>
-              {iSpun ? ' spun the wheel in ' : ' is spinning the wheel in '}
-              <span className="font-semibold text-white">{spin.blendName}</span> — a game is about to be chosen.
-            </p>
-          </>
-        ) : (
-          <>
-            {cover && (
-              <img
-                alt=""
-                src={cover}
-                className="h-[44px] w-[78px] shrink-0 rounded-[8px] object-cover transition duration-300"
-                style={rejected ? { filter: 'grayscale(0.7)' } : undefined}
-              />
-            )}
-            <div className="min-w-0">
-              <p className="text-[15px] text-[#dbdee1]">
-                The game picked is{' '}
-                <span className={'font-semibold text-white ' + (rejected ? 'line-through decoration-[#f04747] decoration-2' : '')}>
-                  {picked?.title}
-                </span>
-              </p>
-              <p className="text-[12px]" style={{ color: rejected ? '#ff9a9a' : D.mute }}>
-                {allIn
-                  ? "Everyone's in."
-                  : rejected
-                    ? `${no.map(capName).join(', ')} passed — not everyone's in.`
-                    : `${yes.length} in · waiting on the rest`}
-              </p>
-            </div>
-            {rejected ? null : allIn ? (
-              <button
-                onClick={() => onParty?.(picked, spin)}
-                className="ml-[6px] flex shrink-0 items-center gap-[8px] rounded-[10px] bg-[#107C10] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#0e8f0e]"
-              >
-                <svg viewBox="0 0 24 24" className="size-[15px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-                Play
-              </button>
-            ) : iSpun && my ? (
-              <button
-                onClick={() => onOpenBlend(spin.blendId)}
-                className="ml-[6px] shrink-0 rounded-[10px] bg-[#2b2d31] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]"
-              >
-                See who&rsquo;s in
-              </button>
-            ) : (
-              <div className="ml-[6px] shrink-0">
-                <VoteButtons my={my} onVote={vote} compact />
-              </div>
-            )}
-          </>
-        )}
+      <div className="pointer-events-auto flex max-w-[720px] items-center gap-[14px] rounded-[14px] border border-[#1c1d21] bg-[#111214] px-[18px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+        <span className="relative flex size-[34px] shrink-0 items-center justify-center">
+          <span className="absolute inset-0 animate-ping rounded-full bg-[#107C10]/40" />
+          <Avatar color={COLOR_OF[spin.spinner] || D.raised} size={34} />
+        </span>
+        <p className="text-[15px] text-[#dbdee1]">
+          <span className="font-semibold text-white">{iSpun ? 'You' : dispName(spin.spinner, spinNames)}</span>
+          {iSpun ? ' spun the wheel in ' : ' is spinning the wheel in '}
+          <span className="font-semibold text-white">{spin.blendName}</span> — a game is about to be chosen.
+        </p>
         <button
           onClick={() => setDismissed(key)}
           aria-label="Dismiss"
@@ -3929,6 +3810,235 @@ function SpinNotification({ state, onLaunch, onOpenBlend, onParty }) {
         >
           <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
+      </div>
+    </div>
+  )
+}
+
+// ── The spin wheel, as a standalone module (opened from the top bar) ─────────
+// It's personal: you build it up with "Add to Wheel" or by loading a Mix's
+// PLAYlist, and the spin runs locally on your screen. The only synced moment is
+// the party it starts when it lands — that snapshots whoever's on the call right
+// then, which is exactly why membership can keep changing without breaking it.
+const CALL_WHEEL_EXPIRY = 20 * 60 * 1000
+function WheelModal({ keys, setKeys, blends, online, onParty, onClose }) {
+  // Two modes. Personal (default): your own list, local spin. Synced with the
+  // call: a shared board keyed to the room that everyone edits and watches spin
+  // together. Sync joins a live board if one exists, else starts empty.
+  const [callWheel, setCallWheel] = useRoomNode('wheelCall', null)
+  const callLive = !!callWheel && Date.now() - (callWheel.startedAt || 0) < CALL_WHEEL_EXPIRY
+  const [synced, setSynced] = useState(false)
+  const [localSpin, setLocalSpin] = useState(null) // { id, target, turns, jitter, games, startedAt, by }
+  const [mixMenu, setMixMenu] = useState(false)
+  const [q, setQ] = useState('')
+  const [, tick] = useState(0)
+  const handledRef = useRef(null)
+
+  // A live shared spin pulls everyone who has the wheel open into synced view so
+  // they watch it turn together.
+  useEffect(() => {
+    if (callWheel?.spin && !synced) setSynced(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callWheel?.spin?.id])
+
+  const activeKeys = synced ? (callWheel?.keys || []) : (keys || [])
+  const activeSpin = synced ? (callWheel?.spin || null) : localSpin
+  const spinRemaining = activeSpin ? activeSpin.startedAt + SPIN_MS - Date.now() : 0
+  const phase = !activeSpin ? 'idle' : spinRemaining > 0 ? 'spinning' : 'result'
+  const boardGames = activeKeys.map((k) => ({ key: k, title: wheelTitle(k) })).filter((g) => CATALOG[g.key] || STARTER_BY_KEY[g.key])
+  // Mid-spin the wheel is locked to the exact list the spin rolled against.
+  const games = phase !== 'idle' && activeSpin?.games ? activeSpin.games : boardGames
+  const picked = phase === 'result' && activeSpin?.games ? activeSpin.games[activeSpin.target] : null
+  const iSpun = activeSpin?.by === SELF_NAME
+  const canSpin = boardGames.length >= 2 && phase !== 'spinning'
+
+  const myMixes = (blends || []).filter((b) => (b.members || []).includes(SELF))
+  const mixGames = (b) => ((b.wishlist && b.wishlist.length ? b.wishlist : b.games) || []).filter((k) => CATALOG[k] || STARTER_BY_KEY[k])
+
+  const query = q.trim().toLowerCase()
+  const results = query
+    ? ALL_WHEEL_KEYS.filter((k) => !activeKeys.includes(k) && wheelTitle(k).toLowerCase().includes(query)).slice(0, 8)
+    : []
+
+  // Write the active list to the right place (shared node vs personal state).
+  function writeKeys(next) {
+    const arr = typeof next === 'function' ? next(activeKeys) : next
+    if (synced) setCallWheel({ keys: arr, spin: callWheel?.spin ?? null, startedAt: callWheel?.startedAt || Date.now() })
+    else setKeys(arr)
+  }
+  const addKey = (k) => { writeKeys([...new Set([...activeKeys, k])]); setQ('') }
+  const removeKey = (k) => { if (phase !== 'spinning') writeKeys(activeKeys.filter((x) => x !== k)) }
+  const clearAll = () => writeKeys([])
+  const loadMix = (b) => { writeKeys([...new Set([...activeKeys, ...mixGames(b)])]); setMixMenu(false) }
+
+  // Keep remaining/phase fresh while a spin is turning.
+  useEffect(() => {
+    if (!activeSpin) return
+    const id = setInterval(() => tick((t) => t + 1), 200)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeSpin?.id])
+
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape' && phase !== 'spinning') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose, phase])
+
+  function doSpin() {
+    if (!canSpin) return
+    const roll = rollSpin(boardGames.length, activeSpin?.target)
+    const s = { id: Date.now().toString(36), ...roll, games: boardGames, startedAt: Date.now(), by: SELF_NAME }
+    if (synced) setCallWheel({ keys: activeKeys, spin: s, startedAt: callWheel?.startedAt || Date.now() })
+    else setLocalSpin(s)
+  }
+
+  function toggleSync() {
+    if (synced) { setSynced(false); return }
+    if (!callLive) setCallWheel({ keys: [], spin: null, startedAt: Date.now() })
+    setSynced(true)
+  }
+
+  // On land, the spinner starts the party (host = them, invitees = the call).
+  useEffect(() => {
+    if (phase !== 'result' || !picked || !activeSpin || !iSpun) return
+    if (handledRef.current === activeSpin.id) return
+    handledRef.current = activeSpin.id
+    const t = setTimeout(() => {
+      onParty(picked)
+      if (synced) setCallWheel({ keys: activeKeys, spin: null, startedAt: callWheel?.startedAt || Date.now() })
+      else setLocalSpin(null)
+      onClose()
+    }, 1300)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, picked?.key, activeSpin?.id])
+
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/70 p-4" onClick={phase === 'spinning' ? undefined : onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="relative flex max-h-[92vh] w-[980px] max-w-full flex-col overflow-hidden rounded-[20px] border border-[#1c1d21] bg-[#0c0c0e] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))', boxShadow: '0 0 18px rgba(61,191,30,0.8)' }} />
+        <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(90% 60% at 28% 0%, rgba(45,160,0,0.18), transparent 60%)' }} />
+        <button onClick={onClose} aria-label="Close" className="absolute right-[16px] top-[16px] z-10 text-[#9a9ba3] transition hover:text-white">
+          <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+
+        <div className="no-scrollbar relative flex w-full flex-col gap-[28px] overflow-y-auto p-[32px] lg:flex-row lg:items-center">
+          {/* Wheel */}
+          <div className="flex shrink-0 flex-col items-center">
+            {games.length > 0 ? (
+              <DecisionWheel games={games} spin={activeSpin} remaining={Math.max(0, spinRemaining || SPIN_MS)} onSpin={doSpin} spinning={phase === 'spinning'} disabled={!canSpin} />
+            ) : (
+              <div className="flex size-[420px] items-center justify-center rounded-full border-2 border-dashed border-[#2b2d31] p-[40px] text-center">
+                <p className="max-w-[220px] text-[15px] text-[#7e7f87]">{synced ? 'The call wheel is empty. Anyone can add games or load a PLAYlist.' : 'Your wheel is empty. Add games or load a Mix’s PLAYlist.'}</p>
+              </div>
+            )}
+          </div>
+
+          {/* Right column: title / result, sync toggle, load-a-mix, search, list */}
+          <div className="min-w-0 flex-1">
+            {phase === 'result' && picked ? (
+              <div>
+                <p className="text-[16px] font-semibold text-[#7aff46]">The wheel picked</p>
+                <p className="mt-[2px] uppercase leading-[0.95] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)' }}>{picked.title}</p>
+                <p className="mt-[16px] text-[15px] text-[#dbdee1]">{iSpun ? 'Starting a party with everyone on the call…' : `${capName(activeSpin.by)} is starting a party…`}</p>
+              </div>
+            ) : phase === 'spinning' ? (
+              <div>
+                <h2 className="text-[28px] font-bold text-white">{synced ? 'The call is spinning…' : 'Spinning…'}</h2>
+                <p className="mt-[6px] text-[15px] text-[#9a9ba3]">Landing on a game — then a party starts.</p>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-[12px]">
+                  <div>
+                    <h2 className="text-[28px] font-bold text-white">Spin the Wheel</h2>
+                    <p className="mt-[6px] max-w-[46ch] text-[15px] leading-snug text-[#9a9ba3]">
+                      When it lands, a party starts for the picked game — the spinner hosts, and everyone on the call is invited to ready up.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Sync with the call — shared, watched-together wheel */}
+                <button
+                  onClick={toggleSync}
+                  className={'mt-[16px] flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
+                >
+                  <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
+                  {synced ? 'Synced with call · leave' : callLive ? 'Join the call wheel' : 'Sync with call'}
+                </button>
+                <p className="mt-[8px] text-[12px] text-[#7e7f87]">
+                  {synced
+                    ? 'Shared with everyone on the call — they see your edits and watch it spin.'
+                    : 'Starts a shared wheel the whole call builds and watches together.'}
+                </p>
+
+                {/* Load a Mix's PLAYlist */}
+                <div className="relative z-20 mt-[16px]">
+                  <button onClick={() => setMixMenu((v) => !v)} aria-expanded={mixMenu} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
+                    <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+                    Load a Mix&rsquo;s PLAYlist
+                    <svg viewBox="0 0 24 24" className={'size-[14px] transition-transform ' + (mixMenu ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                  {mixMenu && (
+                    <>
+                      <div className="fixed inset-0 z-[-1]" onClick={() => setMixMenu(false)} />
+                      <div className="absolute left-0 top-[48px] w-[300px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+                        {myMixes.length ? myMixes.map((b) => (
+                          <button key={b.id} onClick={() => loadMix(b)} className="flex w-full items-center justify-between gap-[10px] px-[14px] py-[9px] text-left text-[14px] text-[#dbdee1] transition hover:bg-white/5">
+                            <span className="truncate">{b.name}</span>
+                            <span className="shrink-0 text-[12px] text-[#7e7f87]">{mixGames(b).length} games</span>
+                          </button>
+                        )) : <p className="px-[14px] py-[8px] text-[13px] text-[#7e7f87]">You&rsquo;re not in any Mixes yet.</p>}
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Search any game to add */}
+                <div className="relative z-10 mt-[14px]">
+                  <div className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[12px] py-[10px] ring-1 ring-white/10">
+                    <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search any game to add" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+                    {q && <button onClick={() => setQ('')} aria-label="Clear search" className="text-[#7e7f87] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+                  </div>
+                  {query && (
+                    <div className="absolute left-0 right-0 top-[50px] z-30 max-h-[240px] overflow-y-auto rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+                      {results.length ? results.map((k) => (
+                        <button key={k} onClick={() => addKey(k)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left transition hover:bg-white/5">
+                          {wheelThumb(k) ? <img alt="" src={wheelThumb(k)} className="h-[26px] w-[46px] shrink-0 rounded-[4px] object-cover" /> : <span className="h-[26px] w-[46px] shrink-0 rounded-[4px] bg-[#2b2d31]" />}
+                          <span className="min-w-0 flex-1 truncate text-[14px] text-white">{wheelTitle(k)}</span>
+                          <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                        </button>
+                      )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">No games match &ldquo;{q}&rdquo;.</p>}
+                    </div>
+                  )}
+                </div>
+
+                {/* Games on the wheel */}
+                <div className="mt-[20px]">
+                  <div className="mb-[10px] flex items-center justify-between">
+                    <p className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">{synced ? 'Call wheel' : 'On the wheel'} · {boardGames.length}</p>
+                    {boardGames.length > 0 && <button onClick={clearAll} className="text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>}
+                  </div>
+                  <div className="no-scrollbar flex max-h-[140px] flex-wrap content-start gap-[8px] overflow-y-auto">
+                    {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Search above, right-click any game &rarr; &ldquo;Add to Wheel&rdquo;, or load a Mix&rsquo;s PLAYlist.</p>}
+                    {boardGames.map((g) => (
+                      <span key={g.key} className="flex items-center gap-[8px] rounded-[8px] bg-[#1c1c1f] py-[6px] pl-[8px] pr-[6px] text-[13px] text-white ring-1 ring-white/5">
+                        {wheelThumb(g.key) ? <img alt="" src={wheelThumb(g.key)} className="h-[22px] w-[38px] rounded-[4px] object-cover" /> : <span className="h-[22px] w-[38px] rounded-[4px] bg-[#2b2d31]" />}
+                        <span className="max-w-[150px] truncate">{g.title}</span>
+                        <button onClick={() => removeKey(g.key)} aria-label={`Remove ${g.title}`} className="text-[#7e7f87] transition hover:text-white">
+                          <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  {boardGames.length === 1 && <p className="mt-[10px] text-[12px] text-[#f0b232]">Add at least 2 games to spin.</p>}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -4139,7 +4249,7 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
   const iDeclined = !!(launch.declined || {})[SELF_NAME]
   if (isInvitee && !isHost && iDeclined) return null // I passed — toast gone
 
-  const { invitees, readyInvitees, allReady } = launchTally(launch)
+  const { invitees, readyInvitees, pending, allReady } = launchTally(launch)
   const cover = launch.game?.image || CATALOG[launch.game?.key]?.image
   const remaining = Math.max(0, Math.ceil((launch.startedAt + LAUNCH_RESPOND_MS - Date.now()) / 1000))
 
@@ -4199,9 +4309,14 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
           <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
         </div>
         <PartyAvatars launch={launch} />
+        {pending.length > 0 && (
+          <p className="text-[12px] text-[#9a9ba3]">Waiting for {pending.length} member{pending.length === 1 ? '' : 's'} to ready up…</p>
+        )}
         <div className="flex gap-[8px]">
           <button onClick={clear} className="rounded-[8px] bg-[#3a3c42] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
-          <button onClick={launchNow} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">{invitees.length === 1 && readyInvitees.length === 0 ? 'Launch Solo' : `Launch with ${readyInvitees.length} Ready`}</button>
+          <button onClick={launchNow} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">
+            {readyInvitees.length === 0 ? 'Launch Anyways' : `Launch with ${readyInvitees.length} Ready`}
+          </button>
         </div>
       </>
     )
@@ -5052,6 +5167,16 @@ const REVIEWS = [
   { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', thumb: 'up', body: 'I have never really been able to get into the AC Games for some reason, they should appeal to me since I tend to enjoy this type of game but despite trying many (I have several outside of the ones I have on Steam), they just never managed to hold my attention. At least until now that is . . .' },
   { name: 'Pastel_089', color: AVATAR.purple, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Ugh. Gross', thumb: 'down', body: 'Ass.' },
   { name: 'PastyBeans2021', color: AVATAR.green, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Nice Graphics', thumb: 'up', body: "I've never been able to get into AC Games. They should appeal to me, but despite trying many, they never held my attention until now. The graphics really pull you into the Golden Age of Piracy." },
+  { name: 'NovaTheWolf', color: AVATAR.red, joined: '11/02/2018', skill: 'Advanced', privacy: 'Friends Only', title: 'Best co-op night in ages', thumb: 'up', body: 'We ran a full lobby and nobody wanted to stop. The chaos ramps up perfectly the more people you cram in, and the learning curve is gentle enough that our least-gamer friend still had a blast.' },
+  { name: 'QuietStorm_42', color: AVATAR.blue, joined: '07/19/2021', skill: 'Beginner', privacy: 'Public', title: 'Good but grindy', thumb: 'up', body: 'Solid fun for the first several hours. It does start to feel repetitive once you have seen all the maps, but by then you have more than gotten your money’s worth.' },
+  { name: 'mossy_antler', color: AVATAR.green, joined: '03/30/2022', skill: 'Intermediate', privacy: 'Friends Only', title: 'Surprisingly deep', thumb: 'up', body: 'Looks casual on the surface, but there is real strategy once everyone knows what they are doing. Highly recommend playing with voice chat on.' },
+  { name: 'ByteSizedBrian', color: AVATAR.purple, joined: '09/12/2019', skill: 'Advanced', privacy: 'Public', title: 'Servers can be rough', thumb: 'down', body: 'The game itself is great, but I hit a few laggy sessions and one hard crash. When it works it is a 9/10; when it does not it is frustrating.' },
+  { name: 'Cloudberry', color: AVATAR.red, joined: '01/05/2023', skill: 'Beginner', privacy: 'Friends Only', title: 'My new comfort game', thumb: 'up', body: 'Perfect for unwinding after work with the group. Low stakes, lots of laughs, easy to hop in and out of.' },
+  { name: 'Grimlock_Prime', color: AVATAR.blue, joined: '05/28/2017', skill: 'Advanced', privacy: 'Public', title: 'Skill ceiling is real', thumb: 'up', body: 'Casual players will have fun, but there is a ton of room to master the mechanics. The gap between a new player and a veteran is huge, in a good way.' },
+  { name: 'peachy_keen', color: AVATAR.green, joined: '10/14/2020', skill: 'Intermediate', privacy: 'Friends Only', title: 'Wish there was more content', thumb: 'up', body: 'What is here is polished and great, I just burned through it faster than I expected. Hoping the devs keep adding maps and modes.' },
+  { name: 'V0idWalker', color: AVATAR.purple, joined: '06/06/2021', skill: 'Beginner', privacy: 'Public', title: 'Not for me', thumb: 'down', body: 'I can see why people love it, but the pacing did not click with me. Gave it a few sessions and just bounced off.' },
+  { name: 'SunnySideUp', color: AVATAR.red, joined: '02/11/2022', skill: 'Intermediate', privacy: 'Public', title: 'Great with strangers too', thumb: 'up', body: 'Even queuing solo I ended up in fun lobbies. The community is friendlier than most, which is rare these days.' },
+  { name: 'takoyaki_lord', color: AVATAR.blue, joined: '08/23/2019', skill: 'Advanced', privacy: 'Friends Only', title: 'Ran it for our game night', thumb: 'up', body: 'Hosted eight people and it handled the crowd better than expected. A couple of them bought it the next day. That is the best endorsement I can give.' },
 ]
 
 function DetailPill({ children }) {
@@ -5105,6 +5230,224 @@ function ReviewCard({ r }) {
         </div>
         <div className="flex shrink-0 items-center pr-[10px] text-white">
           <ThumbsUpGlyph size={46} className={down ? 'rotate-180' : undefined} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Reviews block on the game detail page: filter by audience (all / friends /
+// public), show the first page collapsed behind a "Show more" button, then
+// paginate the rest six at a time.
+const REVIEWS_PER_PAGE = 6
+const REVIEWS_PREVIEW = 3
+function ReviewsSection({ reviews = REVIEWS }) {
+  const [filter, setFilter] = useState('All') // 'All' | 'Friends Only' | 'Public'
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
+  const [page, setPage] = useState(1) // 1-based
+  const [writing, setWriting] = useState(false)
+  const [added, setAdded] = useState([]) // reviews written this session (newest first)
+
+  const all = [...added, ...reviews]
+  const shown = filter === 'All' ? all : all.filter((r) => r.privacy === filter)
+  const pageCount = Math.max(1, Math.ceil(shown.length / REVIEWS_PER_PAGE))
+  const safePage = Math.min(page, pageCount)
+  const visible = expanded
+    ? shown.slice((safePage - 1) * REVIEWS_PER_PAGE, safePage * REVIEWS_PER_PAGE)
+    : shown.slice(0, REVIEWS_PREVIEW)
+
+  // Changing the filter resets back to the collapsed first page.
+  const pickFilter = (f) => { setFilter(f); setFilterOpen(false); setExpanded(false); setPage(1) }
+
+  const FILTERS = ['All', 'Friends Only', 'Public']
+
+  return (
+    <section className="mt-[40px]">
+      <div className="flex items-center justify-between">
+        <div className="flex items-baseline gap-[12px]">
+          <h2 className="text-[26px] font-bold text-white">Reviews</h2>
+          {filter !== 'All' && (
+            <span className="text-[14px] font-semibold text-[#9a9ba3]">{filter} · {shown.length}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-[16px]">
+        {/* Write a review */}
+        <button
+          onClick={() => setWriting(true)}
+          className="flex items-center gap-[8px] rounded-[10px] bg-[#2da000] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110"
+        >
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+          Write a review
+        </button>
+        {/* Filter — All / Friends Only / Public */}
+        <div className="relative">
+          <button
+            onClick={() => setFilterOpen((v) => !v)}
+            aria-label="Filter reviews"
+            aria-expanded={filterOpen}
+            className="group relative flex items-center justify-center text-[#7aff46] transition hover:brightness-125"
+          >
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/80 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
+              Filter
+            </span>
+            <svg viewBox="0 0 30 30" className="size-[24px]" fill="currentColor">
+              <path d="M28.4375 21.875C28.4375 22.3875 28.0125 22.8125 27.5 22.8125H18.75V23.125C18.75 25 17.625 25.625 16.25 25.625H8.75C7.375 25.625 6.25 25 6.25 23.125V22.8125H2.5C1.9875 22.8125 1.5625 22.3875 1.5625 21.875C1.5625 21.3625 1.9875 20.9375 2.5 20.9375H6.25V20.625C6.25 18.75 7.375 18.125 8.75 18.125H16.25C17.625 18.125 18.75 18.75 18.75 20.625V20.9375H27.5C28.0125 20.9375 28.4375 21.3625 28.4375 21.875Z" />
+              <path d="M28.4375 8.125C28.4375 8.6375 28.0125 9.0625 27.5 9.0625H23.75V9.375C23.75 11.25 22.625 11.875 21.25 11.875H13.75C12.375 11.875 11.25 11.25 11.25 9.375V9.0625H2.5C1.9875 9.0625 1.5625 8.6375 1.5625 8.125C1.5625 7.6125 1.9875 7.1875 2.5 7.1875H11.25V6.875C11.25 5 12.375 4.375 13.75 4.375H21.25C22.625 4.375 23.75 5 23.75 6.875V7.1875H27.5C28.0125 7.1875 28.4375 7.6125 28.4375 8.125Z" />
+            </svg>
+          </button>
+          {filterOpen && (
+            <>
+              <div className="fixed inset-0 z-[40]" onClick={() => setFilterOpen(false)} />
+              <div className="absolute right-0 top-[34px] z-[50] w-[184px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+                {FILTERS.map((f) => (
+                  <button
+                    key={f}
+                    onClick={() => pickFilter(f)}
+                    className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (filter === f ? 'text-[#7aff46]' : 'text-[#dbdee1]')}
+                  >
+                    {f === 'All' ? 'All reviews' : f === 'Friends Only' ? 'Friends only' : 'Public'}
+                    {filter === f && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        </div>
+      </div>
+
+      <div className="mt-[16px] flex flex-col gap-[16px]">
+        {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} />)}
+        {visible.length === 0 && (
+          <p className="rounded-[8px] bg-[#1c1c1c] py-[28px] text-center text-[14px] text-[#9a9ba3]">No {filter === 'All' ? '' : filter.toLowerCase() + ' '}reviews yet.</p>
+        )}
+      </div>
+
+      {/* Collapsed: reveal the full first page. Expanded: page through the rest. */}
+      {!expanded && shown.length > REVIEWS_PREVIEW && (
+        <div className="mt-[20px] flex justify-center">
+          <button
+            onClick={() => { setExpanded(true); setPage(1) }}
+            className="flex items-center gap-[8px] rounded-[10px] border border-[#3a3d41] px-[24px] py-[11px] text-[15px] font-semibold text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46]"
+          >
+            Show more reviews
+            <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+        </div>
+      )}
+
+      {expanded && pageCount > 1 && (
+        <div className="mt-[24px] flex items-center justify-center gap-[8px]">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+            aria-label="Previous page"
+            className="flex size-[36px] items-center justify-center rounded-[8px] border border-[#3a3d41] text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#3a3d41] disabled:hover:text-white"
+          >
+            <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+          </button>
+          {Array.from({ length: pageCount }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              aria-current={p === safePage}
+              className={'flex size-[36px] items-center justify-center rounded-[8px] text-[15px] font-semibold transition ' + (p === safePage ? 'bg-[#7aff46] text-black' : 'border border-[#3a3d41] text-white hover:border-[#7aff46]/60 hover:text-[#7aff46]')}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+            disabled={safePage === pageCount}
+            aria-label="Next page"
+            className="flex size-[36px] items-center justify-center rounded-[8px] border border-[#3a3d41] text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#3a3d41] disabled:hover:text-white"
+          >
+            <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+          </button>
+        </div>
+      )}
+
+      {writing && (
+        <WriteReviewModal
+          onClose={() => setWriting(false)}
+          onSubmit={(r) => { setAdded((a) => [r, ...a]); setWriting(false); setFilter('All'); setExpanded(false); setPage(1) }}
+        />
+      )}
+    </section>
+  )
+}
+
+// Compose a review on the detail page — thumb up/down, title, body, and a
+// Friends Only / Public visibility toggle (mirrors the review privacy badges).
+function WriteReviewModal({ onClose, onSubmit }) {
+  const [thumb, setThumb] = useState('up')
+  const [privacy, setPrivacy] = useState('Public') // 'Public' | 'Friends Only'
+  const [title, setTitle] = useState('')
+  const [body, setBody] = useState('')
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  const canPost = title.trim() && body.trim()
+  const post = () => {
+    if (!canPost) return
+    onSubmit({
+      name: capName(SELF_NAME), color: SELF, joined: '01/01/2024', skill: 'Intermediate',
+      privacy, thumb, title: title.trim(), body: body.trim(),
+    })
+  }
+  const Vis = ({ value, glyph, label }) => (
+    <button
+      onClick={() => setPrivacy(value)}
+      className={'flex flex-1 items-center justify-center gap-[7px] rounded-[8px] border px-[12px] py-[9px] text-[13px] font-semibold transition ' + (privacy === value ? (value === 'Friends Only' ? 'border-[#7aff46] text-[#7aff46]' : 'border-white text-white') : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}
+    >
+      {glyph}{label}
+    </button>
+  )
+  return (
+    <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="flex w-[520px] max-w-full flex-col gap-[18px] rounded-[16px] border border-[#1c1d21] bg-[#1c1c1f] p-[24px] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+        <div className="flex items-center justify-between">
+          <h3 className="text-[22px] font-bold text-white">Write a review</h3>
+          <button onClick={onClose} aria-label="Close" className="text-[#9a9ba3] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+        </div>
+
+        {/* Recommend? — thumb up / down */}
+        <div>
+          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Do you recommend it?</p>
+          <div className="flex gap-[10px]">
+            <button onClick={() => setThumb('up')} className={'flex flex-1 items-center justify-center gap-[8px] rounded-[8px] border px-[12px] py-[10px] text-[14px] font-semibold transition ' + (thumb === 'up' ? 'border-[#7aff46] bg-[#107C10]/15 text-[#7aff46]' : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}>
+              <ThumbsUpGlyph size={18} /> Yes
+            </button>
+            <button onClick={() => setThumb('down')} className={'flex flex-1 items-center justify-center gap-[8px] rounded-[8px] border px-[12px] py-[10px] text-[14px] font-semibold transition ' + (thumb === 'down' ? 'border-[#f04747] bg-[#f04747]/15 text-[#ff8a8a]' : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}>
+              <ThumbsUpGlyph size={18} className="rotate-180" /> No
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Title</p>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Sum it up" maxLength={80} className="w-full rounded-[8px] bg-[#111214] px-[12px] py-[10px] text-[14px] text-white outline-none ring-1 ring-white/10 placeholder:text-[#6f7276] focus:ring-[#5765f2]" />
+        </div>
+        <div>
+          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Your review</p>
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What did you think?" rows={4} className="w-full resize-none rounded-[8px] bg-[#111214] px-[12px] py-[10px] text-[14px] leading-[1.5] text-white outline-none ring-1 ring-white/10 placeholder:text-[#6f7276] focus:ring-[#5765f2]" />
+        </div>
+
+        {/* Visibility — Public / Friends Only */}
+        <div>
+          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Who can see this?</p>
+          <div className="flex gap-[10px]">
+            <Vis value="Public" glyph={<PersonGlyph size={14} />} label="Public" />
+            <Vis value="Friends Only" glyph={<StarGlyph size={14} />} label="Friends only" />
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-[10px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#3a3c42] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
+          <button onClick={post} disabled={!canPost} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Post review</button>
         </div>
       </div>
     </div>
@@ -5215,6 +5558,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
         <button onClick={onLibrary} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
         <button onClick={onMixes} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
+          <WheelNavButton />
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
         </div>
       </header>
@@ -5273,14 +5617,6 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                 >
                   <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2 19c0-2.7 2.9-4.3 6.5-4.3s6.5 1.6 6.5 4.3v.5H2zm14.4-4.2c.3-.04.6-.05 1-.02 2.2.16 3.6 1.4 3.6 3.2V19h-3.9v-.5c0-1.6-.55-2.9-1.5-4z" /></svg>
                   Start a Party
-                </button>
-                {/* Play — gray secondary */}
-                <button
-                  onClick={() => onPlay?.(gameKey)}
-                  className="flex items-center gap-[9px] rounded-[8px] bg-[#3a3d41] px-[24px] py-[14px] text-[16px] font-bold text-white transition hover:bg-[#4c5053]"
-                >
-                  <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-                  PLAY
                 </button>
                 {/* Add to Mix — outlined */}
                 <button
@@ -5341,42 +5677,23 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your Mix and share what you think.</p>
             </section>
           ) : (
-            <section className="mt-[40px]">
-              <div className="flex items-center justify-between">
-                <h2 className="text-[26px] font-bold text-white">Reviews</h2>
-                <button aria-label="Filter" className="group relative flex items-center justify-center text-[#7aff46] transition hover:brightness-125">
-                  <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/80 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
-                    Filter
-                  </span>
-                  <svg viewBox="0 0 30 30" className="size-[24px]" fill="currentColor">
-                    <path d="M28.4375 21.875C28.4375 22.3875 28.0125 22.8125 27.5 22.8125H18.75V23.125C18.75 25 17.625 25.625 16.25 25.625H8.75C7.375 25.625 6.25 25 6.25 23.125V22.8125H2.5C1.9875 22.8125 1.5625 22.3875 1.5625 21.875C1.5625 21.3625 1.9875 20.9375 2.5 20.9375H6.25V20.625C6.25 18.75 7.375 18.125 8.75 18.125H16.25C17.625 18.125 18.75 18.75 18.75 20.625V20.9375H27.5C28.0125 20.9375 28.4375 21.3625 28.4375 21.875Z" />
-                    <path d="M28.4375 8.125C28.4375 8.6375 28.0125 9.0625 27.5 9.0625H23.75V9.375C23.75 11.25 22.625 11.875 21.25 11.875H13.75C12.375 11.875 11.25 11.25 11.25 9.375V9.0625H2.5C1.9875 9.0625 1.5625 8.6375 1.5625 8.125C1.5625 7.6125 1.9875 7.1875 2.5 7.1875H11.25V6.875C11.25 5 12.375 4.375 13.75 4.375H21.25C22.625 4.375 23.75 5 23.75 6.875V7.1875H27.5C28.0125 7.1875 28.4375 7.6125 28.4375 8.125Z" />
-                  </svg>
-                </button>
-              </div>
-              <div className="mt-[16px] flex flex-col gap-[16px]">
-                {REVIEWS.map((r, i) => <ReviewCard key={i} r={r} />)}
-              </div>
-              <div className="mt-[20px] flex justify-center">
-                <button className="flex items-center gap-[8px] rounded-[10px] border border-[#3a3d41] px-[24px] py-[11px] text-[15px] font-semibold text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46]">
-                  Show more
-                  <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
-                </button>
-              </div>
-            </section>
+            <ReviewsSection />
           )}
 
-          {/* Recommendation rows — portrait cover tiles, each opens its detail page */}
+          {/* Friends Also Liked — cinematic cards that always lead with friend
+              activity (avatars + what they did), like "Highly Rated by Friends". */}
           <div className="mt-[32px]">
             <ShelfRow title="Friends Also Liked">
               {recCinematic.map((c) => (
-                <PortraitCard key={c.id} {...pcard(c.id)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
+                <CinematicCard key={c.id} {...c} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
               ))}
             </ShelfRow>
           </div>
+          {/* Like This Game — portrait cards like "Something Different for You":
+              a friend's review when there is one, else "Be the first to suggest". */}
           <ShelfRow title="Like This Game">
             {recPortrait.map((c) => (
-              <PortraitCard key={c.id} {...c} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
+              <PortraitCard key={c.id} {...pcard(c.id)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
             ))}
           </ShelfRow>
         </div>
@@ -5403,6 +5720,8 @@ export default function Landing() {
   const [playKey, setPlayKey] = useState(null) // game key whose "Who's playing?" modal is open
   const [whoOpen, setWhoOpen] = useState(false) // "See who's on PARTY" friends popup
   const [gameMenu, setGameMenu] = useState(null) // { x, y, title } — global right-click game menu
+  const [wheelOpen, setWheelOpen] = useState(false) // the top-bar spin-wheel module
+  const [wheelKeys, setWheelKeys] = useState([]) // personal wheel game list (session-scoped)
   const [dmName, setDmName] = useState(null)
   const [mixesTab, setMixesTab] = useState(false) // the "Mixes" top-nav tab (Figma 926:4875)
   const [libraryTab, setLibraryTab] = useState(false) // the "Library" top-nav tab — all games
@@ -5470,7 +5789,14 @@ export default function Landing() {
   }
   const goBack = () => { if (hist.idx <= 0) return; const idx = hist.idx - 1; applyView(hist.stack[idx]); setHist((h) => ({ ...h, idx })) }
   const goForward = () => { if (hist.idx >= hist.stack.length - 1) return; const idx = hist.idx + 1; applyView(hist.stack[idx]); setHist((h) => ({ ...h, idx })) }
-  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward }
+  // Add a game (by title or key) to the personal wheel, then flash the wheel
+  // open so it's clear where it went. Deduped, and only real catalog games.
+  const addToWheel = (titleOrKey) => {
+    const key = CATALOG[titleOrKey] ? titleOrKey : (KEY_OF_TITLE[titleOrKey] || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey))
+    if (!key) return
+    setWheelKeys((ks) => (ks.includes(key) ? ks : [...ks, key]))
+  }
+  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward, openWheel: () => setWheelOpen(true), addToWheel }
 
   // Observation plumbing. A live tester publishes their nav + pointer/scroll;
   // a spectator instance reads it back and drives the view read-only.
@@ -5526,10 +5852,25 @@ export default function Landing() {
   const eMixesTab = IS_SPECTATE ? !!mv.mixesTab : mixesTab
   const eLibraryTab = IS_SPECTATE ? !!mv.libraryTab : libraryTab
 
-  // The live wheel spin — read here so the notification reaches every page.
-  const spin = useSpin()
-  // The live launch party — likewise shared, so its toast reaches every page.
+  // The live launch party — shared, so its ready-up toast reaches every page.
   const party = useLaunch()
+
+  // The wheel lands into a party: the spinner hosts the picked game and everyone
+  // on the call right then is invited. The wheel itself is personal/local (see
+  // WheelModal), so this is the single synced moment.
+  const startWheelParty = (game) => {
+    const g = CATALOG[game.key]
+    const invitees = [...new Set(room.online || [])].filter((n) => n !== SELF_NAME)
+    party.start({ key: game.key, title: game.title, image: g?.image }, invitees)
+  }
+
+  // A SYNCED wheel spin pulls everyone on the call into the wheel so they watch
+  // it turn together. Personal spins never touch this node, so they stay local.
+  const [callWheelRoot] = useRoomNode('wheelCall', null)
+  useEffect(() => {
+    if (callWheelRoot?.spin && !wheelOpen) setWheelOpen(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callWheelRoot?.spin?.id])
 
   const blend = byId(eBlendId)
   const prefsFor = byId(ePrefsForId)
@@ -5567,7 +5908,7 @@ export default function Landing() {
         ) : decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={eDecide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
-          <BlendPage key={blend.id} blend={blend} spin={spin} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} />
+          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} />
         ) : eDetailKey ? (
           <GameDetailPage
             key={eDetailKey}
@@ -5611,7 +5952,9 @@ export default function Landing() {
             game={{ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }}
             onClose={() => setPlayKey(null)}
             onStart={(invitees) => {
-              party.start({ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }, invitees)
+              // Solo (no one invited) launches straight away — no ready-up party.
+              if (!invitees.length) setLaunching(CATALOG[ePlayKey].title)
+              else party.start({ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }, invitees)
               setPlayKey(null)
             }}
           />
@@ -5627,27 +5970,24 @@ export default function Landing() {
               { label: 'Start a party', icon: PLAY_GLYPH, primary: true, onClick: () => { const k = KEY_OF_TITLE[eGameMenu.title]; setGameMenu(null); if (k) setPlayKey(k) } },
               { divider: true },
               { label: 'Add to Mix', icon: BOOKMARK_MENU_GLYPH, onClick: () => { setWishlistGame(eGameMenu.title); setGameMenu(null) } },
+              { label: 'Add to Wheel', icon: WHEEL_MENU_GLYPH, onClick: () => { addToWheel(eGameMenu.title); setGameMenu(null) } },
               { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setGameMenu(null) },
             ]}
           />
         )}
 
-        {/* Server-wide spin notification — follows you across every page */}
-        <SpinNotification
-          state={spin}
-          onLaunch={setLaunching}
-          onOpenBlend={(id) => { setDecide(null); setBlendId(id) }}
-          onParty={(picked, sp) => {
-            // Everyone who was "in" on the spin becomes an invitee (host aside);
-            // launching the party notifies them all, then the spin clears.
-            const { yes } = spinTally(sp)
-            const invitees = [...new Set([...(sp.roster || []), ...yes])].filter((n) => n !== SELF_NAME)
-            const g = CATALOG[picked.key]
-            party.start({ key: picked.key, title: picked.title, image: g?.image }, invitees)
-            spin.clear()
-          }}
-        />
-        {/* Server-wide launch-party toast — likewise follows you across pages */}
+        {/* The spin wheel — a standalone module opened from the top bar */}
+        {wheelOpen && (
+          <WheelModal
+            keys={wheelKeys}
+            setKeys={setWheelKeys}
+            blends={blends}
+            online={room.online}
+            onParty={startWheelParty}
+            onClose={() => setWheelOpen(false)}
+          />
+        )}
+        {/* Server-wide launch-party toast — follows you across pages */}
         <LaunchNotification
           launch={party.launch}
           readyUp={party.readyUp}
