@@ -2610,7 +2610,7 @@ function WhosOnModal({ onClose, onCreated }) {
     // Block making a second Mix with the exact same people.
     const dup = findDuplicateMix(blends, [SELF, ...chosen.map((f) => f.color)])
     if (dup) { setDupMix(dup); return }
-    const name = chosen.map((f) => capName(f.name)).join(', ')
+    const name = [capName(SELF_NAME), ...chosen.map((f) => capName(f.name))].join(', ')
     const games = STARTER_MIX_GAMES
     const newBlend = {
       id: slug(name) + '-' + Date.now().toString(36).slice(-4),
@@ -2797,7 +2797,8 @@ function CreateBlendModal({ onClose, onCreated }) {
   const selectedFriends = friends.filter((f) => sel[f.name])
   const selectedNames = selectedFriends.map((f) => cap(f.name))
   const anySelected = selectedNames.length > 0
-  const blendName = nameOverride !== null ? nameOverride : selectedNames.join(', ')
+  // The generated name includes you (the creator), not just the people invited.
+  const blendName = nameOverride !== null ? nameOverride : [cap(SELF_NAME), ...selectedNames].join(', ')
   function createBlend() {
     // Block making a second Mix with the exact same people.
     const dup = findDuplicateMix(blends, [SELF, ...selectedFriends.map((f) => f.color)])
@@ -3841,6 +3842,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const jamLive = !!callWheel && Object.keys(participants).length > 0 && Date.now() - (callWheel.lastActive || callWheel.startedAt || 0) < CALL_WHEEL_EXPIRY
   const isHost = callWheel?.host === SELF_NAME
   const [synced, setSynced] = useState(false)
+  const [inviting, setInviting] = useState(false) // choosing who to send the jam to
   const [localSpin, setLocalSpin] = useState(null) // { id, target, turns, jitter, games, startedAt, by }
   const [mixMenu, setMixMenu] = useState(false)
   const [q, setQ] = useState('')
@@ -3850,8 +3852,17 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const patchJam = (patch) => setCallWheel({ ...(callWheel || {}), ...patch, lastActive: Date.now() })
   function startOrJoin() {
     if (synced) return
-    if (jamLive) patchJam({ participants: { ...participants, [SELF_NAME]: true } }) // join the live one, keep its games
-    else setCallWheel({ host: SELF_NAME, participants: { [SELF_NAME]: true }, keys: [], spin: null, startedAt: Date.now(), lastActive: Date.now() }) // start fresh + empty
+    if (jamLive) { patchJam({ participants: { ...participants, [SELF_NAME]: true } }); setSynced(true) } // join the live one, keep its games
+    else setInviting(true) // pick who to send it to first (Spotify-Jam style)
+  }
+  function startJam(invitees) {
+    setCallWheel({
+      host: SELF_NAME,
+      participants: { [SELF_NAME]: true },
+      invited: Object.fromEntries((invitees || []).map((n) => [n, true])),
+      keys: [], spin: null, startedAt: Date.now(), lastActive: Date.now(),
+    })
+    setInviting(false)
     setSynced(true)
   }
   function leaveOrEnd() {
@@ -3954,6 +3965,9 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
           <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 
+        {inviting ? (
+          <WheelInviteStep online={online} blends={blends} onCancel={() => setInviting(false)} onStart={startJam} />
+        ) : (
         <div className="no-scrollbar relative flex w-full flex-col gap-[28px] overflow-y-auto p-[32px] lg:flex-row lg:items-center">
           {/* Wheel */}
           <div className="flex shrink-0 flex-col items-center">
@@ -3998,7 +4012,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                     className={'flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
                   >
                     <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
-                    {synced ? (isHost ? 'End wheel jam' : 'Leave wheel jam') : jamLive ? 'Join the call wheel' : 'Sync with call'}
+                    {synced ? (isHost ? 'End wheel jam' : 'Leave wheel jam') : jamLive ? 'Join the call wheel' : 'Start wheel jam'}
                   </button>
                   {synced && (
                     <span className="flex items-center">
@@ -4082,6 +4096,113 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
             )}
           </div>
         </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// The "who to send this jam to" step (Spotify-Jam style): pick people from the
+// call / friends, or copy a link. Choosing none is fine — a link still shares it.
+function WheelInviteStep({ online, blends, onCancel, onStart }) {
+  const hiddenP = useHidden()
+  const others = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
+  const inCall = others.filter((d) => online.includes(d.name))
+  const elsewhere = others.filter((d) => !online.includes(d.name))
+  const [sel, setSel] = useState(() => Object.fromEntries(inCall.map((d) => [d.name, true])))
+  const [q, setQ] = useState('')
+  const [copied, setCopied] = useState(false)
+  const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
+  const chosen = Object.keys(sel).filter((n) => sel[n])
+  const filtered = elsewhere.filter((d) => capName(d.name).toLowerCase().includes(q.toLowerCase()))
+
+  // Whole-Mix shortcuts: invite everyone in one of your Mixes at once.
+  const myMixes = (blends || []).filter((b) => (b.members || []).includes(SELF))
+  // A Mix's people live across members + invited (and may be stored as colors
+  // or names). Map either to a name and keep only real, invitable friends.
+  const mixMemberNames = (b) => [...new Set([...(b.members || []), ...(b.invited || [])].map((c) => NAME[c] || c))].filter((n) => n && n !== SELF_NAME && others.some((o) => o.name === n))
+  const mixAllIn = (b) => { const ns = mixMemberNames(b); return ns.length > 0 && ns.every((n) => sel[n]) }
+  const toggleMix = (b) => {
+    const ns = mixMemberNames(b)
+    const on = !mixAllIn(b)
+    setSel((s) => { const next = { ...s }; ns.forEach((n) => { next[n] = on }); return next })
+  }
+  const copyLink = () => { try { navigator.clipboard?.writeText(`${location.origin}/?jam=${Date.now().toString(36)}`) } catch {} setCopied(true) }
+
+  const Row = ({ d }) => (
+    <button onClick={() => toggle(d.name)} className="flex w-full items-center gap-[12px] py-[8px]">
+      <Avatar color={d.color} size={38} />
+      <span className="min-w-0 flex-1 truncate text-left text-[15px] font-semibold text-white">{capName(d.name)}</span>
+      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#2da000] bg-[#2da000]' : 'border-[#4a4d55]')}>
+        {sel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+      </span>
+    </button>
+  )
+
+  return (
+    <div className="no-scrollbar relative flex max-h-[92vh] w-full flex-col overflow-y-auto p-[32px]">
+      <h2 className="text-[28px] font-bold text-white">Start a wheel jam</h2>
+      <p className="mt-[6px] text-[15px] leading-snug text-[#9a9ba3]">Invite people to build the wheel and watch it spin with you — or copy a link to share.</p>
+
+      {/* Copy link */}
+      <button onClick={copyLink} className="mt-[18px] flex w-fit items-center gap-[9px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
+        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
+        {copied ? 'Link copied!' : 'Copy invite link'}
+      </button>
+
+      <div className="mt-[22px] flex items-center gap-[10px]">
+        <span className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">In your call</span>
+      </div>
+      <div className="mt-[2px]">
+        {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on the call right now — invite a Mix below or share the link.</p>}
+      </div>
+
+      {/* Invite a whole Mix at once */}
+      {myMixes.length > 0 && (
+        <>
+          <p className="mb-[8px] mt-[18px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">From a Mix</p>
+          <div className="flex flex-wrap gap-[8px]">
+            {myMixes.map((b) => {
+              const ns = mixMemberNames(b)
+              const on = mixAllIn(b)
+              return (
+                <button
+                  key={b.id}
+                  onClick={() => toggleMix(b)}
+                  disabled={ns.length === 0}
+                  className={'flex items-center gap-[8px] rounded-[10px] border px-[12px] py-[8px] text-[13px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ' + (on ? 'border-[#2da000] bg-[#2da000]/15 text-white' : 'border-[#3a3d41] text-[#dbdee1] hover:border-white/40')}
+                >
+                  <span className="flex items-center">
+                    {(b.members || []).filter((c) => c !== SELF).slice(0, 3).map((c, i) => (
+                      <Avatar key={i} color={c} size={20} style={{ marginRight: -6, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                    ))}
+                  </span>
+                  <span className="max-w-[160px] truncate">{b.name}</span>
+                  <span className="text-[12px] text-[#7e7f87]">{ns.length}</span>
+                  {on && <svg viewBox="0 0 24 24" className="size-[14px] text-[#2da000]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                </button>
+              )
+            })}
+          </div>
+        </>
+      )}
+
+      <p className="mb-[6px] mt-[18px] text-[15px] text-white">Invite someone else</p>
+      <div className="flex items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] py-[9px] ring-1 ring-white/10">
+        <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+      </div>
+      {q && (
+        <div className="mt-[4px] max-h-[160px] overflow-y-auto">
+          {filtered.length ? filtered.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one matches “{q}”.</p>}
+        </div>
+      )}
+
+      <div className="mt-[24px] flex justify-end gap-[10px]">
+        <button onClick={onCancel} className="rounded-[8px] bg-[#3a3c42] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
+        <button onClick={() => onStart(chosen)} className="rounded-[8px] bg-[#2da000] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110">
+          {chosen.length ? `Start jam · invite ${chosen.length}` : 'Start jam'}
+        </button>
       </div>
     </div>
   )
@@ -5346,7 +5467,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
         {/* Write a review */}
         <button
           onClick={() => setWriting(true)}
-          className="flex items-center gap-[8px] rounded-[10px] bg-[#2da000] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110"
+          className="flex items-center gap-[8px] rounded-[10px] bg-[#2b2d31] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]"
         >
           <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
           Write a review
@@ -5357,7 +5478,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
             onClick={() => setFilterOpen((v) => !v)}
             aria-label="Filter reviews"
             aria-expanded={filterOpen}
-            className="group relative flex items-center justify-center text-[#7aff46] transition hover:brightness-125"
+            className="group relative flex items-center justify-center text-[#9a9ba3] transition hover:text-white"
           >
             <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/80 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
               Filter
