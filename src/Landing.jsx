@@ -2070,6 +2070,9 @@ function InviteMembersModal({ blend, onClose, onSave }) {
   const [sel, setSel] = useState(() => new Set(blend.members))
   useEscClose(onClose)
   const toggle = (c) => setSel((s) => { const n = new Set(s); n.has(c) ? n.delete(c) : n.add(c); return n })
+  // People who've been sent an invite but haven't accepted/declined yet.
+  const invited = new Set(blend.invited || [])
+  const isMember = (c) => (blend.members || []).includes(c)
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
@@ -2079,12 +2082,20 @@ function InviteMembersModal({ blend, onClose, onSave }) {
           {ALL_COLORS.map((c) => {
             const on = sel.has(c)
             const isSelf = c === SELF
+            // Pending = invited, not yet a member, and the host hasn't force-added them here.
+            const pending = !isSelf && invited.has(c) && !isMember(c) && !on
             return (
               <button key={c} onClick={() => !isSelf && toggle(c)} className={'flex items-center gap-[12px] rounded-[8px] p-[8px] text-left transition ' + (isSelf ? 'opacity-70' : 'hover:bg-white/5')}>
                 <Avatar color={c} size={40} />
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white">{capName(NAME[c] || 'Member')}{isSelf ? ' (you)' : ''}</p>
                 </div>
+                {pending && (
+                  <span className="flex shrink-0 items-center gap-[6px] rounded-full bg-[#f0b232]/15 px-[10px] py-[4px] text-[12px] font-semibold text-[#f0b232]">
+                    <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+                    Pending
+                  </span>
+                )}
                 <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
                   {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
                 </span>
