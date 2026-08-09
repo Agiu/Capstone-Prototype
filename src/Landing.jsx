@@ -1965,7 +1965,6 @@ function mixMenuItems(blend, h) {
     { label: 'Notification Settings', icon: BELL_MENU_GLYPH, sub: notif, submenu: MIX_NOTIF_LEVELS.map((lvl) => ({ label: lvl, active: notif === lvl, onClick: () => h.onSetNotif(lvl) })) },
     { divider: true },
     { label: 'Leave Mix', icon: LEAVE_MENU_GLYPH, onClick: h.onLeave },
-    { label: 'Delete Mix', icon: TRASH_MENU_GLYPH, danger: true, onClick: h.onDelete },
   )
   return items
 }
