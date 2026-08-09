@@ -2113,6 +2113,7 @@ function InviteMembersModal({ blend, onClose, onSave }) {
 }
 const LINK_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
 const WHEEL_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
+const SHARE_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M16 6l-4-4-4 4M12 2v13" /></svg>
 
 // The full group PLAYlist (Figma 863:3952) — every game in the Mix's shared
 // list as a numbered, drag-to-rank grid, plus a search to add or remove games.
@@ -2208,7 +2209,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
   )
 }
 
-function BlendPage({ blend, onBack, onDecide, onOpen, onPlay }) {
+function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare }) {
   const { addToWheel } = useContext(NavCtx)
   const [menu, setMenu] = useState(null) // { x, y, title }
   const [launching, setLaunching] = useState(null)
@@ -2518,7 +2519,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay }) {
               ? { label: 'Remove from PLAYlist', icon: REMOVE_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, false) }
               : { label: 'Add to PLAYlist', icon: BOOKMARK_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, true) },
             { label: 'Add to Wheel', icon: WHEEL_MENU_GLYPH, onClick: () => { addToWheel(eMenu.title); setMenu(null) } },
-            { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setMenu(null) },
+            { label: 'Share', icon: SHARE_MENU_GLYPH, onClick: () => { onShare?.(eMenu.title); setMenu(null) } },
           ]}
         />
       )}
@@ -3911,7 +3912,8 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const canSpin = boardGames.length >= 2 && phase !== 'spinning'
 
   const myMixes = (blends || []).filter((b) => (b.members || []).includes(SELF))
-  const mixGames = (b) => ((b.wishlist && b.wishlist.length ? b.wishlist : b.games) || []).filter((k) => CATALOG[k] || STARTER_BY_KEY[k])
+  // Only the Mix's curated PLAYlist (wishlist) — not its daily recommended games.
+  const mixGames = (b) => (b.wishlist || []).filter((k) => CATALOG[k] || STARTER_BY_KEY[k])
 
   const query = q.trim().toLowerCase()
   const results = query
@@ -4699,13 +4701,13 @@ function DecidePage({ blend, prefs, onBack }) {
 }
 
 // ── Forward a game to chat (opened from a card's chat button) ──────────────
-function ShareModal({ game, onClose }) {
+function ShareModal({ game, initialFriend, onClose }) {
   const { blends, setBlends } = useRoomCtx()
   const hiddenP = useHidden()
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
   const friends = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const myGroups = blends.filter((b) => (b.members || []).includes(SELF))
-  const [selF, setSelF] = useState({})
+  const [selF, setSelF] = useState(() => (initialFriend ? { [initialFriend]: true } : {}))
   const [selG, setSelG] = useState({})
   const [message, setMessage] = useState('')
   const [mode, setMode] = useState('individual') // when 2+ friends and no group
@@ -5740,6 +5742,30 @@ function HeroCarousel({ slides, children }) {
   )
 }
 
+// A "Played By" / rating avatar that responds to hover, shows the person's name,
+// and on click opens a quick-share of this game straight to that person.
+function PlayerAvatar({ color, size, marginRight, gameTitle, onShare }) {
+  const name = NAME[color]
+  // The user (green) and any unmapped color aren't share targets.
+  if (color === SELF || !name) {
+    return <Avatar color={color} size={size} style={{ marginRight, boxShadow: '0 0 0 2px #0c0c0e' }} />
+  }
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onShare?.({ title: gameTitle, to: name }) }}
+      title={`Share ${gameTitle} with ${capName(name)}`}
+      className="group/av relative shrink-0 rounded-full transition hover:z-10 hover:-translate-y-[2px]"
+      style={{ marginRight }}
+    >
+      <span className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-black/85 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100">
+        {capName(name)}
+      </span>
+      <Avatar color={color} size={size} className="rounded-full ring-0 transition group-hover/av:ring-2 group-hover/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
+    </button>
+  )
+}
+
 function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlist, onShare, onOpen, onPlay }) {
   const d = detailFor(gameKey)
   const slides = slidesFor(gameKey, d.image)
@@ -5788,7 +5814,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                 ) : (
                   <span className="flex items-center">
                     {playedBy.map((c, i) => (
-                      <Avatar key={i} color={c} size={26} style={{ marginRight: i < playedBy.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                      <PlayerAvatar key={i} color={c} size={26} marginRight={i < playedBy.length - 1 ? -8 : 0} gameTitle={d.title} onShare={onShare} />
                     ))}
                   </span>
                 )}
@@ -5852,7 +5878,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                     <ThumbsUpGlyph size={24} className="text-[#7aff46]" />
                     <div className="flex items-center">
                       {playedBy.map((c, i) => (
-                        <Avatar key={i} color={c} size={30} style={{ marginRight: i < playedBy.length - 1 ? -9 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                        <PlayerAvatar key={i} color={c} size={30} marginRight={i < playedBy.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} />
                       ))}
                     </div>
                   </div>
@@ -6116,7 +6142,7 @@ export default function Landing() {
         ) : decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={eDecide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
-          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} />
+          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} onShare={setShareGame} />
         ) : eDetailKey ? (
           <GameDetailPage
             key={eDetailKey}
@@ -6145,7 +6171,7 @@ export default function Landing() {
         {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
         {eWhoOpen && <WhosOnModal onClose={() => setWhoOpen(false)} onCreated={(id) => { setWhoOpen(false); setBlendId(id) }} />}
         {eWishlistGame && <WishlistModal game={eWishlistGame} onClose={() => setWishlistGame(null)} />}
-        {eShareGame && <ShareModal game={eShareGame} onClose={() => setShareGame(null)} />}
+        {eShareGame && <ShareModal game={typeof eShareGame === 'string' ? eShareGame : eShareGame.title} initialFriend={typeof eShareGame === 'object' ? eShareGame.to : null} onClose={() => setShareGame(null)} />}
         {prefsFor && (
           <PreferenceModal
             blend={prefsFor}
@@ -6179,7 +6205,7 @@ export default function Landing() {
               { divider: true },
               { label: 'Add to Mix', icon: BOOKMARK_MENU_GLYPH, onClick: () => { setWishlistGame(eGameMenu.title); setGameMenu(null) } },
               { label: 'Add to Wheel', icon: WHEEL_MENU_GLYPH, onClick: () => { addToWheel(eGameMenu.title); setGameMenu(null) } },
-              { label: 'Copy store link', icon: LINK_GLYPH, onClick: () => setGameMenu(null) },
+              { label: 'Share', icon: SHARE_MENU_GLYPH, onClick: () => { setShareGame(eGameMenu.title); setGameMenu(null) } },
             ]}
           />
         )}
