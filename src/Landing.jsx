@@ -1458,6 +1458,20 @@ function pickAvatars(key) {
   const b = (a + 1 + ((h >>> 3) % (AV_POOL.length - 1))) % AV_POOL.length
   return [AV_POOL[a], AV_POOL[b]]
 }
+
+// One deterministic source of a game's FRIEND activity (never the current user),
+// so the same game shows the same friends, count and hours everywhere it appears
+// — cards, the "Similar to" row, and the detail page. Keyed by catalog key.
+const FRIEND_POOL = [AVATAR.blue, AVATAR.purple, AVATAR.red] // Blake, Chloe, Daniel
+function friendInfo(key) {
+  let h = 0
+  for (let i = 0; i < String(key).length; i++) h = (h * 31 + String(key).charCodeAt(i)) >>> 0
+  const count = 1 + (h % FRIEND_POOL.length) // 1..3 friends into this game
+  const start = h % FRIEND_POOL.length
+  const avatars = Array.from({ length: count }, (_, i) => FRIEND_POOL[(start + i) % FRIEND_POOL.length])
+  const hours = 4 + (h % 22) // avg hours played, 4..25
+  return { avatars, count, hours, recommend: `${count} friend${count > 1 ? 's' : ''} recommend${count > 1 ? '' : 's'} this` }
+}
 // Native-vertical (9:16) gameplay Shorts for the portrait hover cards. Keyed by
 // catKey. These play in the card's vertical cover, unlike the horizontal
 // trailers we keep for the game-detail carousel.
@@ -1510,8 +1524,10 @@ function pcard(k) {
     title: c.title || g?.title,
     publisher: d.studio || c.developer || 'Game Pass',
     released: STARTER_RELEASED[k] ? `Released on ${STARTER_RELEASED[k]}` : '',
-    recommend: d.friends || '',
-    avatars: pickAvatars(k),
+    // Friend recommend line + faces come from the one per-game source, so a
+    // game is never all "be the first" and always matches its cards elsewhere.
+    recommend: d.friends || friendInfo(k).recommend,
+    avatars: friendInfo(k).avatars,
     multiplayer: p === 'MMO' ? 'MMO' : p && p !== '1' ? `${p} players` : null,
     tags: d.tags || [g?.genre].filter(Boolean),
   }
@@ -1616,9 +1632,11 @@ function cineCard(k) {
   return {
     image: starterHeader(k),
     video: vid ? { youTubeId: vid, poster: starterHeader(k) } : undefined,
-    avatars: pickAvatars(k),
-    label: d.recFriends ? `${d.recFriends} friends recommend this` : (d.friends || 'highly rated by your friends'),
-    avatarsPlus: !!d.recFriends,
+    // Keep counts realistic (only 3 friends exist) and consistent with the
+    // faces: a curated friend quote if there is one, else the per-game count.
+    avatars: friendInfo(k).avatars,
+    label: d.friends || friendInfo(k).recommend,
+    avatarsPlus: false,
     players: g?.players && g.players !== '1' && g.players !== 'MMO' ? g.players : g?.players === 'MMO' ? 'MMO' : '1',
     genre: g?.genre,
     genre2: (d.tags || []).find((t) => t && t !== g?.genre) || null,
@@ -5769,11 +5787,15 @@ function WriteReviewModal({ onClose, onSubmit }) {
 const GALLERY = {}
 
 // Build the ordered media slides for a game's hero carousel: cover first, then
-// any bespoke screenshots, then the trailer (as a video slide) if one exists.
+// any bespoke screenshots, then the trailer, then the gameplay video (the same
+// clip the cards preview) — deduped so we never show the same video twice.
 function slidesFor(key, cover) {
   const slides = cover ? [{ type: 'image', src: cover }] : []
   for (const src of GALLERY[key] || []) slides.push({ type: 'image', src })
-  if (VIDEOS[key]) slides.push({ type: 'video', youTubeId: VIDEOS[key], poster: cover })
+  const seen = new Set()
+  for (const id of [VIDEOS[key], GAMEPLAY_LANDSCAPE[key]]) {
+    if (id && !seen.has(id)) { seen.add(id); slides.push({ type: 'video', youTubeId: id, poster: cover }) }
+  }
   // A game with no art and no trailer still needs one slide to render against.
   return slides.length ? slides : [{ type: 'image' }]
 }
@@ -5879,8 +5901,9 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
   // A game no friend has played yet ("Be the first" state) shows no friend
   // reviews or social proof.
   const unplayed = STARTER_DESC[gameKey]?.friends === ''
-  // Friends who've played it — never the current user.
-  const playedBy = [AVATAR.blue, AVATAR.purple, AVATAR.red]
+  // Friends who've played it — the same per-game friend set the cards use, so
+  // the faces here match "Recommended by Your Friends" etc. Never the user.
+  const playedBy = friendInfo(gameKey).avatars
   const recCinematic = CINEMATIC_ROW.filter((c) => c.id !== gameKey)
   const recPortrait = PORTRAIT_ROW.filter((c) => c.id !== gameKey)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -6021,7 +6044,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
           <div className="mt-[32px]">
             <ShelfRow title={`Friends who played ${d.title} also liked`}>
               {recCinematic.map((c) => (
-                <CinematicCard key={c.id} {...c} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
+                <CinematicCard key={c.id} {...cineCard(c.id)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
               ))}
             </ShelfRow>
           </div>
