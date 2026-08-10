@@ -4331,14 +4331,12 @@ function useLaunch() {
       host: SELF_NAME,
       invitees,
       ready: { [SELF_NAME]: true }, // the host is implicitly ready
-      roles: { [SELF_NAME]: 'play' }, // the host plays by default
       declined: {},
       startedAt: Date.now(),
       launched: false,
     })
-  // Ready up as a player or a stream-watcher (over-capacity overflow).
-  const readyUp = (role = 'play') => { writeRoomPath(`launch/roles/${SELF_NAME}`, role); writeRoomPath(`launch/ready/${SELF_NAME}`, true) }
-  const undoReady = () => { writeRoomPath(`launch/ready/${SELF_NAME}`, null); writeRoomPath(`launch/roles/${SELF_NAME}`, null) }
+  const readyUp = () => writeRoomPath(`launch/ready/${SELF_NAME}`, true)
+  const undoReady = () => writeRoomPath(`launch/ready/${SELF_NAME}`, null)
   const decline = () => writeRoomPath(`launch/declined/${SELF_NAME}`, true)
   const launchNow = () => writeRoomPath('launch/launched', true)
   const clear = () => writeLaunch(null)
@@ -4346,29 +4344,23 @@ function useLaunch() {
   return { launch, start, readyUp, undoReady, decline, launchNow, clear }
 }
 
-// A game's player cap parsed from its "1-4" / "1-8" / "MMO" / "1+" players text.
-function gameCap(launch) {
-  const p = launch?.game?.players || CATALOG[launch?.game?.key]?.players
-  if (!p || /mmo/i.test(p) || /\+/.test(p)) return Infinity
-  const nums = String(p).match(/\d+/g)
-  return nums ? Math.max(...nums.map(Number)) : Infinity
+// The game's player capacity, as clear display text ("1-4 players", "MMO").
+function capText(launch) {
+  const p = launch?.game?.players || CATALOG[launch?.game?.key]?.players || STARTER_BY_KEY[launch?.game?.key]?.players
+  if (!p) return null
+  if (/mmo/i.test(p)) return 'MMO'
+  return `${p} player${String(p) === '1' ? '' : 's'}`
 }
 
-// Who's ready / still pending, split into players vs stream-watchers.
+// Who's ready / still pending among the invited testers (the host aside).
 function launchTally(launch) {
   const invitees = launch?.invitees || []
   const ready = launch?.ready || {}
-  const roles = launch?.roles || {}
   const declined = launch?.declined || {}
   const readyInvitees = invitees.filter((n) => ready[n])
   const pending = invitees.filter((n) => !ready[n] && !declined[n])
   const allReady = invitees.length > 0 && pending.length === 0 && readyInvitees.length > 0
-  // Everyone in the game (host + ready 'play') vs those watching the stream.
-  const players = [launch?.host, ...invitees].filter((n) => n && (n === launch?.host ? roles[n] !== 'watch' : ready[n] && roles[n] !== 'watch'))
-  const watchers = invitees.filter((n) => ready[n] && roles[n] === 'watch')
-  const cap = gameCap(launch)
-  const seatsFull = players.length >= cap
-  return { invitees, ready, roles, declined, readyInvitees, pending, allReady, players, watchers, cap, seatsFull }
+  return { invitees, ready, declined, readyInvitees, pending, allReady }
 }
 
 // Step 1 — "Who's playing?" invite picker (Figma 863:4265). Online testers are
@@ -4447,23 +4439,18 @@ function WhosPlayingModal({ game, onClose, onStart }) {
 
 // The party roster row: each member's avatar with a green check once ready.
 function PartyAvatars({ launch }) {
-  const { ready, declined, roles } = launchTally(launch)
+  const { ready, declined } = launchTally(launch)
   const members = [launch.host, ...(launch.invitees || [])]
   return (
     <div className="flex items-center">
       {members.map((n, i) => {
         const isReady = n === launch.host || ready[n]
-        const isWatch = isReady && roles[n] === 'watch'
         const isDeclined = declined[n]
-        // playing → green check, watching → blue eye, declined → red X, deciding → blank.
+        // ready → green check, declined → red X, still deciding → no badge (dim).
         return (
           <span key={n} className="relative" style={{ marginRight: i < members.length - 1 ? -8 : 0 }}>
             <Avatar color={COLOR_OF[n] || '#4a4d55'} size={38} style={{ boxShadow: '0 0 0 2px #17181b', opacity: isReady ? 1 : isDeclined ? 0.45 : 0.55 }} />
-            {isWatch ? (
-              <span className="absolute -bottom-[1px] -right-[1px] flex size-[15px] items-center justify-center rounded-full bg-[#5765f2] ring-2 ring-[#17181b]">
-                <svg viewBox="0 0 24 24" className="size-[9px] text-white" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
-              </span>
-            ) : isReady ? (
+            {isReady ? (
               <span className="absolute -bottom-[1px] -right-[1px] flex size-[15px] items-center justify-center rounded-full bg-[#23a55a] ring-2 ring-[#17181b]">
                 <svg viewBox="0 0 24 24" className="size-[9px] text-white" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
               </span>
@@ -4519,11 +4506,18 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
   const iDeclined = !!(launch.declined || {})[SELF_NAME]
   if (isInvitee && !isHost && iDeclined) return null // I passed — toast gone
 
-  const { invitees, readyInvitees, pending, allReady, players, watchers, cap, seatsFull } = launchTally(launch)
-  const iRole = (launch.roles || {})[SELF_NAME]
-  const capLabel = cap === Infinity ? null : `${players.length}/${cap} playing${watchers.length ? ` · ${watchers.length} watching` : ''}`
+  const { invitees, readyInvitees, pending, allReady } = launchTally(launch)
+  const cap = capText(launch)
   const cover = launch.game?.image || CATALOG[launch.game?.key]?.image
   const remaining = Math.max(0, Math.ceil((launch.startedAt + LAUNCH_RESPOND_MS - Date.now()) / 1000))
+
+  // A clear player-capacity pill, shown under the game title on every screen.
+  const capPill = cap ? (
+    <span className="flex w-fit items-center gap-[6px] rounded-full border border-[#4e5058] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb]">
+      <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="9" cy="8" r="3" /><path d="M3 20a6 6 0 0 1 12 0" /><path d="M16 5a3 3 0 0 1 0 6M21 20a6 6 0 0 0-5-5.9" strokeLinecap="round" /></svg>
+      {cap}
+    </span>
+  ) : null
 
   // Pick the body for this viewer's role/state.
   let body
@@ -4531,23 +4525,18 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
     // Screen 2 — incoming invite.
     body = (
       <>
-        <div>
+        <div className="flex flex-col gap-[6px]">
           <p className="text-[13px] text-[#c7c9cb]"><span className="font-semibold text-white">{dispName(launch.host, launchNames)}</span> invited you to play</p>
           <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+          {capPill}
         </div>
         <div>
-          <p className="text-[13px] font-semibold text-white">{seatsFull ? 'All seats are taken — join as a viewer.' : 'Ready up to join this session.'}</p>
-          <p className="text-[12px] text-[#9a9ba3]">{capLabel ? `${capLabel} · respond in ${remaining}s` : `Respond in ${remaining}s`}</p>
+          <p className="text-[13px] font-semibold text-white">Ready up to join this session.</p>
+          <p className="text-[12px] text-[#9a9ba3]">Respond in {remaining}s</p>
         </div>
         <div className="flex gap-[8px]">
-          <button onClick={decline} className="rounded-[8px] bg-[#3a3c42] px-[14px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Not Now</button>
-          {!seatsFull && (
-            <button onClick={() => readyUp('play')} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Play</button>
-          )}
-          <button onClick={() => readyUp('watch')} className="flex flex-1 items-center justify-center gap-[7px] rounded-[8px] bg-[#3a3c42] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">
-            <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
-            Watch stream
-          </button>
+          <button onClick={decline} className="flex-1 rounded-[8px] bg-[#3a3c42] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Not Now</button>
+          <button onClick={readyUp} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Ready Up</button>
         </div>
       </>
     )
@@ -4555,24 +4544,25 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
     // Screen 4 — you're ready.
     body = (
       <>
-        <div>
-          <p className="flex items-center gap-[7px] text-[13px] text-[#c7c9cb]"><CheckBadge /> {iRole === 'watch' ? 'You’re watching the stream' : 'You’re in — ready to play'}</p>
+        <div className="flex flex-col gap-[6px]">
+          <p className="flex items-center gap-[7px] text-[13px] text-[#c7c9cb]"><CheckBadge /> You’re ready</p>
           <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+          {capPill}
         </div>
         <PartyAvatars launch={launch} />
-        <button onClick={undoReady} className="w-full rounded-[8px] bg-[#3a3c42] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">{iRole === 'watch' ? 'Leave stream' : 'Undo Ready Up'}</button>
+        <button onClick={undoReady} className="w-full rounded-[8px] bg-[#3a3c42] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Undo Ready Up</button>
       </>
     )
   } else if (allReady) {
     // Screen 5 — host, party ready.
     body = (
       <>
-        <div>
+        <div className="flex flex-col gap-[6px]">
           <p className="flex items-center gap-[7px] text-[13px] text-[#c7c9cb]"><CheckBadge /> Party is ready</p>
           <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+          {capPill}
         </div>
         <PartyAvatars launch={launch} />
-        {capLabel && <p className="text-[12px] text-[#9a9ba3]">{capLabel}</p>}
         <div className="flex gap-[8px]">
           <button onClick={clear} className="rounded-[8px] bg-[#3a3c42] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
           <button onClick={launchNow} className="flex-1 rounded-[8px] bg-[#5765f2] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Launch Game</button>
@@ -4583,12 +4573,12 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
     // Screen 3 — host, getting the party ready.
     body = (
       <>
-        <div>
+        <div className="flex flex-col gap-[6px]">
           <p className="text-[13px] text-[#c7c9cb]">Getting the party ready</p>
           <p className="text-[18px] font-bold leading-tight text-white">{launch.game?.title}</p>
+          {capPill}
         </div>
         <PartyAvatars launch={launch} />
-        {capLabel && <p className="text-[12px] text-[#9a9ba3]">{capLabel}</p>}
         {pending.length > 0 && (
           <p className="text-[12px] text-[#9a9ba3]">Waiting for {pending.length} member{pending.length === 1 ? '' : 's'} to respond…</p>
         )}
