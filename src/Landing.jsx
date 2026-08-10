@@ -1120,11 +1120,11 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
             ))}
           </ShelfRow>
 
-          {/* Trending in Your Communities — compact list */}
-          <TrendingRow items={HOME_TRENDING} onOpen={onOpen} />
-
           {/* Highly Rated by Your Friends — two wide cards */}
           <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
+
+          {/* Trending in Your Communities — compact list */}
+          <TrendingRow items={HOME_TRENDING} onOpen={onOpen} />
 
           {/* Because You Played… — vertical cards */}
           <ShelfRow title="Because You Played Deathloop">
@@ -1702,14 +1702,6 @@ function LibraryTile({ g, onClick }) {
         )}
         {hover && g.youTubeId && <VideoTrailer youTubeId={g.youTubeId} poster={typeof cover === 'string' ? cover : undefined} bare />}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        {/* The tile opens the game's page, so it says so — the Play button
-            lives on that page, next to everything you'd want first. */}
-        <span className="absolute bottom-[8px] left-[10px] right-[10px] flex items-center gap-[6px] opacity-0 transition group-hover:opacity-100">
-          <span className="flex size-[26px] items-center justify-center rounded-full bg-[#107C10] text-white shadow-[0_2px_10px_rgba(16,124,16,0.5)]">
-            <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h13M12 6l6 6-6 6" /></svg>
-          </span>
-          <span className="text-[12px] font-semibold text-white">View game</span>
-        </span>
       </div>
       <p className="mt-[8px] truncate text-[15px] font-semibold text-white">{g.title}</p>
       <p className="truncate text-[13px] text-[#7e7f87]">{g.players === 'MMO' ? 'MMO' : g.players === '1' ? '1 player' : `${g.players} players`} · {g.genre}</p>
@@ -2090,15 +2082,16 @@ function InviteMembersModal({ blend, onClose, onSave }) {
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white">{capName(NAME[c] || 'Member')}{isSelf ? ' (you)' : ''}</p>
                 </div>
-                {pending && (
+                {pending ? (
                   <span className="flex shrink-0 items-center gap-[6px] rounded-full bg-[#f0b232]/15 px-[10px] py-[4px] text-[12px] font-semibold text-[#f0b232]">
                     <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
                     Pending
                   </span>
+                ) : (
+                  <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+                    {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                  </span>
                 )}
-                <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
-                  {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
-                </span>
               </button>
             )
           })}
@@ -3853,20 +3846,24 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const jamLive = !!callWheel && Object.keys(participants).length > 0 && Date.now() - (callWheel.lastActive || callWheel.startedAt || 0) < CALL_WHEEL_EXPIRY
   const isHost = callWheel?.host === SELF_NAME
   const [synced, setSynced] = useState(false)
-  const [inviting, setInviting] = useState(false) // choosing who to send the jam to
+  const [inviting, setInviting] = useState(false) // the "Start a wheel jam" invite module
   const [localSpin, setLocalSpin] = useState(null) // { id, target, turns, jitter, games, startedAt, by }
   const [mixMenu, setMixMenu] = useState(false)
   const [q, setQ] = useState('')
+  const [copied, setCopied] = useState(false) // copy-invite-link feedback
   const [, tick] = useState(0)
   const handledRef = useRef(null)
+  const leftRef = useRef(false) // set when I explicitly leave, so I'm not auto-rejoined
 
   const patchJam = (patch) => setCallWheel({ ...(callWheel || {}), ...patch, lastActive: Date.now() })
   function startOrJoin() {
     if (synced) return
+    leftRef.current = false
     if (jamLive) { patchJam({ participants: { ...participants, [SELF_NAME]: true } }); setSynced(true) } // join the live one, keep its games
-    else setInviting(true) // pick who to send it to first (Spotify-Jam style)
+    else setInviting(true) // open the "Start a wheel jam" module to pick who to invite
   }
   function startJam(invitees) {
+    leftRef.current = false
     setCallWheel({
       host: SELF_NAME,
       participants: { [SELF_NAME]: true },
@@ -3876,8 +3873,10 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
     setInviting(false)
     setSynced(true)
   }
+  const copyInviteLink = () => { try { navigator.clipboard?.writeText(`${location.origin}/?jam=${callWheel?.startedAt || Date.now()}`) } catch {} setCopied(true); setTimeout(() => setCopied(false), 1600) }
   function leaveOrEnd() {
     if (!synced) return
+    leftRef.current = true
     if (isHost) setCallWheel(null) // host ends it for everyone
     else {
       const p = { ...participants }; delete p[SELF_NAME]
@@ -3887,6 +3886,14 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
     setSynced(false)
   }
 
+  // Once I'm a participant, I stay in the jam view every time I open the wheel —
+  // until I explicitly leave. (Also covers the "Join" toast: joining adds me to
+  // participants, which drops the toast and flips me in here.)
+  useEffect(() => {
+    if (!leftRef.current && jamLive && participants[SELF_NAME] && !synced) setSynced(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callWheel?.participants])
+
   // A live shared spin pulls everyone who has the wheel open into the synced
   // view so they watch it turn together.
   useEffect(() => {
@@ -3894,11 +3901,15 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callWheel?.spin?.id])
 
-  // Opened via the "Join" toast — drop straight into the live jam.
+  // Opened via the "Join" toast — join automatically as soon as the jam data is
+  // available (no second click), then stay joined.
   useEffect(() => {
-    if (autoJoin && !synced && jamLive) startOrJoin()
+    if (autoJoin && !synced && !leftRef.current && jamLive && !participants[SELF_NAME]) {
+      patchJam({ participants: { ...participants, [SELF_NAME]: true } })
+      setSynced(true)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoJoin])
+  }, [autoJoin, jamLive, callWheel?.participants])
 
   const activeKeys = synced ? (callWheel?.keys || []) : (keys || [])
   const activeSpin = synced ? (callWheel?.spin || null) : localSpin
@@ -3978,7 +3989,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
         </button>
 
         {inviting ? (
-          <WheelInviteStep online={online} blends={blends} onCancel={() => setInviting(false)} onStart={startJam} />
+          <WheelInviteStep online={online} onCancel={() => setInviting(false)} onStart={startJam} />
         ) : (
         <div className="no-scrollbar relative flex w-full flex-col gap-[28px] overflow-y-auto p-[32px] lg:flex-row lg:items-center">
           {/* Wheel */}
@@ -4016,16 +4027,38 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   </div>
                 </div>
 
-                {/* Sync with the call — a shared, hosted "jam" everyone builds
-                    and watches together (start it empty, or join a live one). */}
-                <div className="mt-[16px] flex items-center gap-[12px]">
-                  <button
-                    onClick={synced ? leaveOrEnd : startOrJoin}
-                    className={'flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
-                  >
-                    <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
-                    {synced ? (isHost ? 'End wheel jam' : 'Leave wheel jam') : jamLive ? 'Join the call wheel' : 'Start wheel jam'}
-                  </button>
+                {/* Sync with the call — a shared wheel everyone on the call
+                    builds and watches together. */}
+                <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
+                  {!synced && jamLive ? (
+                    // A jam I'm not in yet: who started it + who's joined, click to join.
+                    <button
+                      onClick={startOrJoin}
+                      className="flex items-center gap-[10px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[9px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]"
+                    >
+                      <span>{dispName(callWheel.host, jamNames)} started the call wheel</span>
+                      <span className="flex items-center">
+                        {Object.keys(participants).map((n, i) => (
+                          <Avatar key={n} color={COLOR_OF[n] || D.raised} size={24} style={{ marginRight: -7, boxShadow: '0 0 0 2px #1c1c1f', zIndex: 10 - i }} />
+                        ))}
+                      </span>
+                      <span className="text-[#3fbf3f]">Join</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={synced ? leaveOrEnd : startOrJoin}
+                      className={'flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
+                    >
+                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
+                      {synced ? (isHost ? 'End wheel jam' : 'Leave wheel jam') : 'Start wheel jam'}
+                    </button>
+                  )}
+                  {synced && (
+                    <button onClick={copyInviteLink} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
+                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
+                      {copied ? 'Link copied!' : 'Copy invite link'}
+                    </button>
+                  )}
                   {synced && (
                     <span className="flex items-center">
                       {Object.keys(participants).map((n, i) => (
@@ -4038,7 +4071,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   {synced
                     ? (isHost ? 'You started this jam — everyone on the call can join, edit and watch it spin.' : `Jam hosted by ${dispName(callWheel.host, jamNames)} — edits and spins are live for the whole call.`)
                     : jamLive
-                      ? `${dispName(callWheel.host, jamNames)} has a wheel going — join to build and spin it together.`
+                      ? 'Join to build and spin the wheel together.'
                       : 'Starts a shared wheel the whole call builds and watches together.'}
                 </p>
 
@@ -4116,7 +4149,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
 
 // The "who to send this jam to" step (Spotify-Jam style): pick people from the
 // call / friends, or copy a link. Choosing none is fine — a link still shares it.
-function WheelInviteStep({ online, blends, onCancel, onStart }) {
+function WheelInviteStep({ online, onCancel, onStart }) {
   const hiddenP = useHidden()
   const others = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const inCall = others.filter((d) => online.includes(d.name))
@@ -4127,18 +4160,6 @@ function WheelInviteStep({ online, blends, onCancel, onStart }) {
   const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
   const chosen = Object.keys(sel).filter((n) => sel[n])
   const filtered = elsewhere.filter((d) => capName(d.name).toLowerCase().includes(q.toLowerCase()))
-
-  // Whole-Mix shortcuts: invite everyone in one of your Mixes at once.
-  const myMixes = (blends || []).filter((b) => (b.members || []).includes(SELF))
-  // A Mix's people live across members + invited (and may be stored as colors
-  // or names). Map either to a name and keep only real, invitable friends.
-  const mixMemberNames = (b) => [...new Set([...(b.members || []), ...(b.invited || [])].map((c) => NAME[c] || c))].filter((n) => n && n !== SELF_NAME && others.some((o) => o.name === n))
-  const mixAllIn = (b) => { const ns = mixMemberNames(b); return ns.length > 0 && ns.every((n) => sel[n]) }
-  const toggleMix = (b) => {
-    const ns = mixMemberNames(b)
-    const on = !mixAllIn(b)
-    setSel((s) => { const next = { ...s }; ns.forEach((n) => { next[n] = on }); return next })
-  }
   const copyLink = () => { try { navigator.clipboard?.writeText(`${location.origin}/?jam=${Date.now().toString(36)}`) } catch {} setCopied(true) }
 
   const Row = ({ d }) => (
@@ -4166,38 +4187,8 @@ function WheelInviteStep({ online, blends, onCancel, onStart }) {
         <span className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">In your call</span>
       </div>
       <div className="mt-[2px]">
-        {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on the call right now — invite a Mix below or share the link.</p>}
+        {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on the call right now — invite someone below or share the link.</p>}
       </div>
-
-      {/* Invite a whole Mix at once */}
-      {myMixes.length > 0 && (
-        <>
-          <p className="mb-[8px] mt-[18px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">From a Mix</p>
-          <div className="flex flex-wrap gap-[8px]">
-            {myMixes.map((b) => {
-              const ns = mixMemberNames(b)
-              const on = mixAllIn(b)
-              return (
-                <button
-                  key={b.id}
-                  onClick={() => toggleMix(b)}
-                  disabled={ns.length === 0}
-                  className={'flex items-center gap-[8px] rounded-[10px] border px-[12px] py-[8px] text-[13px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ' + (on ? 'border-[#2da000] bg-[#2da000]/15 text-white' : 'border-[#3a3d41] text-[#dbdee1] hover:border-white/40')}
-                >
-                  <span className="flex items-center">
-                    {(b.members || []).filter((c) => c !== SELF).slice(0, 3).map((c, i) => (
-                      <Avatar key={i} color={c} size={20} style={{ marginRight: -6, boxShadow: '0 0 0 2px #0c0c0e' }} />
-                    ))}
-                  </span>
-                  <span className="max-w-[160px] truncate">{b.name}</span>
-                  <span className="text-[12px] text-[#7e7f87]">{ns.length}</span>
-                  {on && <svg viewBox="0 0 24 24" className="size-[14px] text-[#2da000]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
-                </button>
-              )
-            })}
-          </div>
-        </>
-      )}
 
       <p className="mb-[6px] mt-[18px] text-[15px] text-white">Invite someone else</p>
       <div className="flex items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] py-[9px] ring-1 ring-white/10">
@@ -4890,6 +4881,64 @@ function InviteMessage({ msg, mine, onRespond }) {
             {accepted ? '✓ You joined this Mix' : '✕ You declined'}
           </p>
         )}
+      </div>
+    </div>
+  )
+}
+
+// Quick share straight to one person (from a "Played By" avatar) — no picker,
+// just a compose box that forwards this game into their DM.
+function QuickShareModal({ game, to, onClose }) {
+  const [message, setMessage] = useState('')
+  const [sent, setSent] = useState(false)
+  useEffect(() => {
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+  const cover = CATALOG[KEY_OF_TITLE[game] || game]?.image
+  const send = () => {
+    putDM(to, { from: SELF_NAME, to, kind: 'game', game, text: message.trim(), ts: Date.now() })
+    setSent(true)
+    setTimeout(onClose, 700)
+  }
+  return (
+    <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div onClick={(e) => e.stopPropagation()} className="w-[440px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="flex items-start justify-between gap-[12px]">
+          <div className="flex items-center gap-[12px]">
+            <Avatar color={COLOR_OF[to] || D.raised} size={44} />
+            <div>
+              <p className="text-[13px] text-[#b5bac1]">Share with</p>
+              <p className="text-[18px] font-bold text-white">{capName(to)}</p>
+            </div>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+
+        <div className="mt-[16px] flex items-center gap-[12px] rounded-[10px] bg-[#1e1f22] p-[10px]">
+          {cover && <img alt="" src={cover} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" />}
+          <div className="min-w-0">
+            <p className="text-[12px] text-[#9a9ba3]">Sharing a game</p>
+            <p className="truncate text-[15px] font-semibold text-white">{game}</p>
+          </div>
+        </div>
+
+        <input
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={(e) => { if (e.key === 'Enter') send() }}
+          placeholder={`Add a message to ${capName(to)}…`}
+          className="mt-[14px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[10px] text-[14px] text-white outline-none ring-1 ring-white/10 placeholder:text-[#87898c] focus:ring-[#5765f2]"
+        />
+
+        <div className="mt-[16px] flex justify-end">
+          <button onClick={send} disabled={sent} className="flex items-center gap-[8px] rounded-[8px] bg-[#5765f2] px-[20px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:opacity-60">
+            {sent ? 'Sent ✓' : <>Send <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12h15M13 6l6 6-6 6" /></svg></>}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -5772,7 +5821,8 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
   // A game no friend has played yet ("Be the first" state) shows no friend
   // reviews or social proof.
   const unplayed = STARTER_DESC[gameKey]?.friends === ''
-  const playedBy = [AVATAR.blue, AVATAR.purple, AVATAR.green]
+  // Friends who've played it — never the current user.
+  const playedBy = [AVATAR.blue, AVATAR.purple, AVATAR.red]
   const recCinematic = CINEMATIC_ROW.filter((c) => c.id !== gameKey)
   const recPortrait = PORTRAIT_ROW.filter((c) => c.id !== gameKey)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -6171,7 +6221,9 @@ export default function Landing() {
         {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
         {eWhoOpen && <WhosOnModal onClose={() => setWhoOpen(false)} onCreated={(id) => { setWhoOpen(false); setBlendId(id) }} />}
         {eWishlistGame && <WishlistModal game={eWishlistGame} onClose={() => setWishlistGame(null)} />}
-        {eShareGame && <ShareModal game={typeof eShareGame === 'string' ? eShareGame : eShareGame.title} initialFriend={typeof eShareGame === 'object' ? eShareGame.to : null} onClose={() => setShareGame(null)} />}
+        {eShareGame && (typeof eShareGame === 'object' && eShareGame.to
+          ? <QuickShareModal game={eShareGame.title} to={eShareGame.to} onClose={() => setShareGame(null)} />
+          : <ShareModal game={typeof eShareGame === 'string' ? eShareGame : eShareGame.title} onClose={() => setShareGame(null)} />)}
         {prefsFor && (
           <PreferenceModal
             blend={prefsFor}
