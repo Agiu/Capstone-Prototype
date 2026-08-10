@@ -1429,16 +1429,16 @@ const STARTER_DESC = {
   gp_warhammer40000darktide: { studio: 'Fatshark', desc: 'Co-op horde slaughter in the grim dark of the 41st millennium.', tags: ['Co-op FPS', 'Action', 'Mature 17+'], friends: '3 friends have played recently' },
   gp_warhammervermintide2: { studio: 'Fatshark', desc: 'Four heroes hold the line against endless Skaven and Chaos hordes.', tags: ['Co-op', 'Melee', 'Action'], friends: '2 friends have played recently' },
   gp_amongus: { studio: 'Innersloth', desc: 'Crew a spaceship, find the impostor, betray your friends. Repeat.', tags: ['Party', 'Social Deduction', 'Online'], friends: '5 friends have played recently' },
-  gp_hades: { studio: 'Supergiant Games', desc: 'A god-like roguelike — fight out of Hell one perfect run at a time.', tags: ['Roguelike', 'Action', 'Story Rich'], friends: 'Trending with 120+ players' },
+  gp_hades: { studio: 'Supergiant Games', desc: 'A god-like roguelike — fight out of Hell one perfect run at a time.', tags: ['Roguelike', 'Action', 'Story Rich'], friends: 'Trending with 120+ players', rec: 97, recFriends: 4 },
   gp_doom64: { studio: 'id Software', desc: 'The 1997 cult classic, restored — pure retro demon-blasting.', tags: ['FPS', 'Retro', 'Mature 17+'], friends: 'Rising in your communities' },
   gp_vampiresurvivors: { studio: 'poncle', desc: 'One button, a thousand monsters. Absurdly moreish bullet-heaven.', tags: ['Roguelike', 'Bullet Hell', 'Casual'], friends: 'Everyone is playing this' },
   gp_stardewvalley: { studio: 'ConcernedApe', desc: 'Inherit a farm, build a life, lose a hundred hours to it happily.', tags: ['Farming Sim', 'Co-op', 'Cozy'], friends: 'Blake rated this 5 stars', rec: 96, recFriends: 5 },
   gp_oriandthewillofthewisps: { studio: 'Moon Studios', desc: 'A gorgeous, heartbreaking platformer with movement that just sings.', tags: ['Platformer', 'Metroidvania', 'Story Rich'], friends: 'Chloe rated this 5 stars', rec: 94, recFriends: 4 },
-  gp_batmanarkhamknight: { studio: 'Rocksteady', desc: 'Be the Batman across a stormy, open Gotham in the Arkham finale.', tags: ['Action', 'Open World', 'Mature 17+'], friends: '3 friends have played recently' },
-  gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends have played recently' },
-  gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends have played recently' },
-  gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '4 friends have played recently' },
-  gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: 'Daniel has played recently' },
+  gp_batmanarkhamknight: { studio: 'Rocksteady', desc: 'Be the Batman across a stormy, open Gotham in the Arkham finale.', tags: ['Action', 'Open World', 'Mature 17+'], friends: '3 friends recommend this' },
+  gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends recommend this' },
+  gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends recommend this' },
+  gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '4 friends recommend this' },
+  gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: 'Daniel recommends this' },
   gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '' },
   gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Daniel has played 3 hrs recently' },
   gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'Chloe said "oddly therapeutic, lost an hour"' },
@@ -1446,7 +1446,7 @@ const STARTER_DESC = {
   gp_tunic: { studio: 'Andrew Shouldice', desc: 'A tiny fox, a huge secret-filled world, and a manual you decode as you go.', tags: ['Adventure', 'Puzzle', 'Souls-like'], friends: 'Blake said "the secret manual blew my mind"' },
   gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Chloe said "still thinking about that ending"' },
   gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Blake said "creepy in the best way"' },
-  gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Daniel said "hardest game I love"' },
+  gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Daniel said "hardest game I love"', rec: 95, recFriends: 3 },
 }
 // A stable, per-game pair of friend avatars so different cards show different
 // profiles (varied but consistent for a given game).
@@ -1519,7 +1519,7 @@ function pcard(k) {
 // Which games fill each shelf (all Starter-catalog keys).
 const HOME_FRIENDS_PLAYING = ['gp_doometernal', 'gp_deeprockgalactic', 'gp_amongus', 'gp_chivalry2', 'gp_warhammer40000darktide', 'gp_warhammervermintide2']
 const HOME_TRENDING = ['gp_hades', 'gp_doom64', 'gp_vampiresurvivors']
-const HOME_HIGHLY_RATED = ['gp_stardewvalley', 'gp_oriandthewillofthewisps']
+const HOME_HIGHLY_RATED = ['gp_stardewvalley', 'gp_oriandthewillofthewisps', 'gp_hades', 'gp_celeste']
 const HOME_BECAUSE_PLAYED = ['gp_batmanarkhamknight', 'gp_controlultimateedition', 'gp_dishonored2', 'gp_fallout4', 'gp_hellbladesenuassacrifice', 'gp_fallout76']
 const HOME_CLOSER_LOOK = 'gp_firewatch'
 const HOME_DIFFERENT = ['gp_unpacking', 'gp_spiritfarer', 'gp_tunic', 'gp_inside', 'gp_celeste', 'gp_limbo']
@@ -3894,6 +3894,13 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [callWheel?.participants])
 
+  // The host ended the jam (or it expired) while I was in it — drop back to my
+  // personal wheel instead of leaving a dead shared view (which would blank out).
+  useEffect(() => {
+    if (synced && !callWheel) setSynced(false)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callWheel])
+
   // A live shared spin pulls everyone who has the wheel open into the synced
   // view so they watch it turn together.
   useEffect(() => {
@@ -4036,7 +4043,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                       onClick={startOrJoin}
                       className="flex items-center gap-[10px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[9px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]"
                     >
-                      <span>{dispName(callWheel.host, jamNames)} started the call wheel</span>
+                      <span>{dispName(callWheel?.host, jamNames)} started the call wheel</span>
                       <span className="flex items-center">
                         {Object.keys(participants).map((n, i) => (
                           <Avatar key={n} color={COLOR_OF[n] || D.raised} size={24} style={{ marginRight: -7, boxShadow: '0 0 0 2px #1c1c1f', zIndex: 10 - i }} />
@@ -4069,7 +4076,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 </div>
                 <p className="mt-[8px] text-[12px] text-[#7e7f87]">
                   {synced
-                    ? (isHost ? 'You started this jam — everyone on the call can join, edit and watch it spin.' : `Jam hosted by ${dispName(callWheel.host, jamNames)} — edits and spins are live for the whole call.`)
+                    ? (isHost ? 'You started this jam — everyone on the call can join, edit and watch it spin.' : `Jam hosted by ${dispName(callWheel?.host, jamNames)} — edits and spins are live for the whole call.`)
                     : jamLive
                       ? 'Join to build and spin the wheel together.'
                       : 'Starts a shared wheel the whole call builds and watches together.'}
@@ -5856,9 +5863,9 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
 
             <div className="flex min-w-0 flex-1 flex-col">
               <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-white">{d.title}</h1>
-              {/* Played By — right under the title */}
+              {/* Also Played By — right under the title */}
               <div className="mt-[14px] flex items-center gap-[10px] text-[16px] text-[#a2a4ae]">
-                Played By:
+                Also Played By:
                 {unplayed ? (
                   <span className="text-[15px] text-[#7e7f87]">No one in your Mix yet</span>
                 ) : (
