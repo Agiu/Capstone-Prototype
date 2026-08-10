@@ -2346,8 +2346,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare }) {
           {/* Header — cover quad + name + members + refresh note */}
           <div className="flex items-center gap-[28px]">
             <div
+              onClick={() => setCoverPicker(true)}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCoverMenu({ x: e.clientX, y: e.clientY }) }}
-              title="Click the pencil (or right-click) to edit this Mix"
+              title="Click to change the cover art (right-click for more)"
               className="group/cover relative size-[184px] shrink-0 cursor-pointer overflow-hidden rounded-[16px] bg-[#1a1a1d]"
             >
               {blend.cover ? (
@@ -2359,14 +2360,14 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare }) {
                   ))}
                 </div>
               )}
-              {/* Explicit edit affordance — the right-click menu isn't discoverable. */}
+              {/* Clicking the cover goes straight to Change cover art. */}
               <button
-                onClick={(e) => { e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); setCoverMenu({ x: r.left, y: r.bottom + 6 }) }}
-                title="Edit this Mix"
-                aria-label="Edit this Mix"
+                onClick={(e) => { e.stopPropagation(); setCoverPicker(true) }}
+                title="Change cover art"
+                aria-label="Change cover art"
                 className="absolute bottom-[8px] right-[8px] flex size-[34px] items-center justify-center rounded-full bg-black/70 text-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.5)] backdrop-blur transition hover:bg-black/85 group-hover/cover:opacity-100"
               >
-                <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" fill="currentColor" stroke="none" /><path d="M5 18l5-5 4 4 2-2 3 3" /></svg>
               </button>
             </div>
             <div>
@@ -2389,15 +2390,6 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare }) {
                     <Avatar key={i} color={c} size={30} style={{ marginRight: i < blend.members.length - 1 ? -10 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
                   ))}
                 </span>
-                {/* Bring more people into the Mix */}
-                <button
-                  onClick={() => setInviteOpen(true)}
-                  title="Add players to this Mix"
-                  aria-label="Add players to this Mix"
-                  className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#23a55a] text-white shadow-[0_2px_8px_rgba(0,0,0,0.45)] transition hover:scale-105 hover:bg-[#1e9150]"
-                >
-                  <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                </button>
               </div>
               <p className="mt-[10px] text-[15px] font-semibold text-white">Refreshes daily.</p>
 
