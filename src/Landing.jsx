@@ -4390,20 +4390,26 @@ function WhosPlayingModal({ game, onClose, onStart }) {
 
 // The party roster row: each member's avatar with a green check once ready.
 function PartyAvatars({ launch }) {
-  const { ready } = launchTally(launch)
+  const { ready, declined } = launchTally(launch)
   const members = [launch.host, ...(launch.invitees || [])]
   return (
     <div className="flex items-center">
       {members.map((n, i) => {
         const isReady = n === launch.host || ready[n]
+        const isDeclined = declined[n]
+        // ready → green check, declined → red X, still deciding → no badge (dim).
         return (
           <span key={n} className="relative" style={{ marginRight: i < members.length - 1 ? -8 : 0 }}>
-            <Avatar color={COLOR_OF[n] || '#4a4d55'} size={38} style={{ boxShadow: '0 0 0 2px #17181b', opacity: isReady ? 1 : 0.55 }} />
-            {isReady && (
+            <Avatar color={COLOR_OF[n] || '#4a4d55'} size={38} style={{ boxShadow: '0 0 0 2px #17181b', opacity: isReady ? 1 : isDeclined ? 0.45 : 0.55 }} />
+            {isReady ? (
               <span className="absolute -bottom-[1px] -right-[1px] flex size-[15px] items-center justify-center rounded-full bg-[#23a55a] ring-2 ring-[#17181b]">
                 <svg viewBox="0 0 24 24" className="size-[9px] text-white" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
               </span>
-            )}
+            ) : isDeclined ? (
+              <span className="absolute -bottom-[1px] -right-[1px] flex size-[15px] items-center justify-center rounded-full bg-[#f04747] ring-2 ring-[#17181b]">
+                <svg viewBox="0 0 24 24" className="size-[9px] text-white" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </span>
+            ) : null}
           </span>
         )
       })}
