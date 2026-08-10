@@ -4003,20 +4003,17 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
     else setLocalSpin(s)
   }
 
-  // On land, the spinner starts the party (host = them, invitees = the call).
-  useEffect(() => {
-    if (phase !== 'result' || !picked || !activeSpin || !iSpun) return
-    if (handledRef.current === activeSpin.id) return
-    handledRef.current = activeSpin.id
-    const t = setTimeout(() => {
-      onParty(picked)
-      if (synced) patchJam({ spin: null }) // keep the jam alive for another round
-      else setLocalSpin(null)
-      onClose()
-    }, 1300)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [phase, picked?.key, activeSpin?.id])
+  // The wheel no longer auto-starts a party on landing — the spinner reviews the
+  // result and taps "Start a party" (or spins again) from the module.
+  function startPartyNow() {
+    if (!picked) return
+    onParty(picked)
+    if (synced) patchJam({ spin: null }) // keep the jam alive for another round
+    else setLocalSpin(null)
+    onClose()
+  }
+  // Clear the result and return to the wheel-building view (no party started).
+  const backToWheel = () => { if (synced) patchJam({ spin: null }); else setLocalSpin(null) }
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/70 p-4" onClick={phase === 'spinning' ? undefined : onClose}>
@@ -4048,12 +4045,24 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
               <div>
                 <p className="text-[16px] font-semibold text-[#7aff46]">The wheel picked</p>
                 <p className="mt-[2px] uppercase leading-[0.95] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)' }}>{picked.title}</p>
-                <p className="mt-[16px] text-[15px] text-[#dbdee1]">{iSpun ? 'Starting a party with everyone on the call…' : `${capName(activeSpin.by)} is starting a party…`}</p>
+                <p className="mt-[14px] text-[15px] text-[#9a9ba3]">
+                  {synced && !iSpun ? `${capName(activeSpin.by)} spun it — anyone can start the party for ${picked.title}, or restart.` : `Ready when you are — start a party for ${picked.title}, or restart.`}
+                </p>
+                <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
+                  <button onClick={startPartyNow} className="flex items-center gap-[9px] rounded-[10px] bg-[#2da000] px-[20px] py-[11px] text-[15px] font-bold text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">
+                    <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2 19c0-2.7 2.9-4.3 6.5-4.3s6.5 1.6 6.5 4.3v.5H2zm14.4-4.2c.3-.04.6-.05 1-.02 2.2.16 3.6 1.4 3.6 3.2V19h-3.9v-.5c0-1.6-.55-2.9-1.5-4z" /></svg>
+                    Start a party
+                  </button>
+                  <button onClick={backToWheel} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[18px] py-[11px] text-[15px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
+                    <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
+                    Restart
+                  </button>
+                </div>
               </div>
             ) : phase === 'spinning' ? (
               <div>
                 <h2 className="text-[28px] font-bold text-white">{synced ? 'The call is spinning…' : 'Spinning…'}</h2>
-                <p className="mt-[6px] text-[15px] text-[#9a9ba3]">Landing on a game — then a party starts.</p>
+                <p className="mt-[6px] text-[15px] text-[#9a9ba3]">Landing on a game…</p>
               </div>
             ) : (
               <>
@@ -4061,7 +4070,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   <div>
                     <h2 className="text-[28px] font-bold text-white">Spin the Wheel</h2>
                     <p className="mt-[6px] max-w-[46ch] text-[15px] leading-snug text-[#9a9ba3]">
-                      When it lands, a party starts for the picked game — the spinner hosts, and everyone on the call is invited to ready up.
+                      When it lands, start a party for the picked game — you host, and everyone on the call is invited to ready up.
                     </p>
                   </div>
                 </div>
@@ -6227,7 +6236,8 @@ export default function Landing() {
   const startWheelParty = (game) => {
     const g = CATALOG[game.key]
     const invitees = [...new Set(room.online || [])].filter((n) => n !== SELF_NAME)
-    party.start({ key: game.key, title: game.title, image: g?.image }, invitees)
+    // No-art games have no image — send null (the room DB rejects undefined).
+    party.start({ key: game.key, title: game.title, image: g?.image || null }, invitees)
   }
 
   // A SYNCED wheel spin pulls everyone on the call into the wheel so they watch
