@@ -2202,7 +2202,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
   )
 }
 
-function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare }) {
+function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, onLibrary, onMixes }) {
   const { addToWheel } = useContext(NavCtx)
   const [menu, setMenu] = useState(null) // { x, y, title }
   const [launching, setLaunching] = useState(null)
@@ -2318,6 +2318,17 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare }) {
   }
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+      {/* Top nav — same Home / Library / Mixes header as the other pages */}
+      <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
+        <XboxLogo size={24} />
+        <button onClick={onHome} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Home</button>
+        <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
+        <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
+        <div className="flex flex-1 items-center justify-end gap-[20px]">
+          <WheelNavButton />
+          <GiftArcadeButton />
+        </div>
+      </header>
       {/* The gutters live on the inner wrappers (not the scroll container) so
           the banner and the wheel band can bleed to the pane's edges. */}
       <div className="no-scrollbar flex-1 overflow-y-auto pb-[80px]">
@@ -6008,15 +6019,15 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
           {/* Friends Also Liked — cinematic cards that always lead with friend
               activity (avatars + what they did), like "Highly Rated by Friends". */}
           <div className="mt-[32px]">
-            <ShelfRow title="Friends Also Liked">
+            <ShelfRow title={`Friends who played ${d.title} also liked`}>
               {recCinematic.map((c) => (
                 <CinematicCard key={c.id} {...c} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
               ))}
             </ShelfRow>
           </div>
-          {/* Like This Game — portrait cards like "Something Different for You":
+          {/* Similar games — portrait cards like "Something Different for You":
               a friend's review when there is one, else "Be the first to suggest". */}
-          <ShelfRow title="Like This Game">
+          <ShelfRow title={`Similar to ${d.title}`}>
             {recPortrait.map((c) => (
               <PortraitCard key={c.id} {...pcard(c.id)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
             ))}
@@ -6239,7 +6250,7 @@ export default function Landing() {
         ) : decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={eDecide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
-          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} onShare={setShareGame} />
+          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} onShare={setShareGame} onHome={goHome} onLibrary={openLibrary} onMixes={openMixes} />
         ) : eDetailKey ? (
           <GameDetailPage
             key={eDetailKey}
