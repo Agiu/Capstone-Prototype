@@ -927,7 +927,7 @@ function WheelNavButton() {
   return (
     <button
       onClick={openWheel}
-      title={wheelLive ? 'A wheel jam is live on the call' : 'Spin the wheel'}
+      title={wheelLive ? 'A wheel sync is live on the call' : 'Spin the wheel'}
       className="relative flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
     >
       {wheelLive && (
@@ -1874,7 +1874,7 @@ function ContextMenu({ x, y, items, onClose }) {
   const topY = Math.min(y, (typeof window !== 'undefined' ? window.innerHeight : 9999) - (items.length * 40 + 16))
   return (
     <div
-      className="fixed z-[70] w-[204px] rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
+      className="fixed z-[100] w-[204px] rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
       style={{ top: Math.max(8, topY), left: Math.max(8, left) }}
       onMouseDown={(e) => e.stopPropagation()}
       onContextMenu={(e) => { e.preventDefault(); e.stopPropagation() }}
@@ -2164,6 +2164,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
               {games.map((g, i) => (
                 <div
                   key={g.key}
+                  data-game={g.title}
                   draggable
                   onDragStart={() => setDragIdx(i)}
                   onDragOver={(e) => { e.preventDefault(); setOverIdx(i) }}
@@ -2421,18 +2422,6 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                 </span>
               </div>
               <p className="mt-[10px] text-[15px] font-semibold text-white">Refreshes daily.</p>
-
-              {/* Decide-a-game entry point — matches the group's preferences.
-                  (The spin wheel now lives in the top bar as its own module.) */}
-              <div className="mt-[16px]">
-                <button
-                  onClick={onDecide}
-                  className="group/dec flex shrink-0 items-center gap-[9px] text-[#3fbf3f] transition hover:opacity-85"
-                >
-                  <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><path d="M3 5h18l-7 8v5l-4 2v-7L3 5z" /></svg>
-                  <span className="text-[17px] font-bold italic">Can&rsquo;t Decide? Match our preferences</span>
-                </button>
-              </div>
             </div>
           </div>
 
@@ -4075,54 +4064,6 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   </div>
                 </div>
 
-                {/* Sync with the call — a shared wheel everyone on the call
-                    builds and watches together. */}
-                <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
-                  {!synced && jamLive ? (
-                    // A jam I'm not in yet: who started it + who's joined, click to join.
-                    <button
-                      onClick={startOrJoin}
-                      className="flex items-center gap-[10px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[9px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]"
-                    >
-                      <span>{dispName(callWheel?.host, jamNames)} started the call wheel</span>
-                      <span className="flex items-center">
-                        {Object.keys(participants).map((n, i) => (
-                          <Avatar key={n} color={COLOR_OF[n] || D.raised} size={24} style={{ marginRight: -7, boxShadow: '0 0 0 2px #1c1c1f', zIndex: 10 - i }} />
-                        ))}
-                      </span>
-                      <span className="text-[#3fbf3f]">Join</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={synced ? leaveOrEnd : startOrJoin}
-                      className={'flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
-                    >
-                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
-                      {synced ? (isHost ? 'End wheel jam' : 'Leave wheel jam') : 'Start wheel jam'}
-                    </button>
-                  )}
-                  {synced && (
-                    <button onClick={copyInviteLink} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
-                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
-                      {copied ? 'Link copied!' : 'Copy invite link'}
-                    </button>
-                  )}
-                  {synced && (
-                    <span className="flex items-center">
-                      {Object.keys(participants).map((n, i) => (
-                        <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 10 - i }} />
-                      ))}
-                    </span>
-                  )}
-                </div>
-                <p className="mt-[8px] text-[12px] text-[#7e7f87]">
-                  {synced
-                    ? (isHost ? 'You started this jam — everyone on the call can join, edit and watch it spin.' : `Jam hosted by ${dispName(callWheel?.host, jamNames)} — edits and spins are live for the whole call.`)
-                    : jamLive
-                      ? 'Join to build and spin the wheel together.'
-                      : 'Starts a shared wheel the whole call builds and watches together.'}
-                </p>
-
                 {/* Load a Mix's PLAYlist */}
                 <div className="relative z-20 mt-[16px]">
                   <button onClick={() => setMixMenu((v) => !v)} aria-expanded={mixMenu} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
@@ -4145,36 +4086,40 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   )}
                 </div>
 
-                {/* Search any game to add */}
-                <div className="relative z-10 mt-[14px]">
-                  <div className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[12px] py-[10px] ring-1 ring-white/10">
-                    <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search any game to add" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
-                    {q && <button onClick={() => setQ('')} aria-label="Clear search" className="text-[#7e7f87] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
-                  </div>
-                  {query && (
-                    <div className="absolute left-0 right-0 top-[50px] z-30 max-h-[240px] overflow-y-auto rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
-                      {results.length ? results.map((k) => (
-                        <button key={k} onClick={() => addKey(k)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left transition hover:bg-white/5">
-                          {wheelThumb(k) ? <img alt="" src={wheelThumb(k)} className="h-[26px] w-[46px] shrink-0 rounded-[4px] object-cover" /> : <span className="h-[26px] w-[46px] shrink-0 rounded-[4px] bg-[#2b2d31]" />}
-                          <span className="min-w-0 flex-1 truncate text-[14px] text-white">{wheelTitle(k)}</span>
-                          <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                        </button>
-                      )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">No games match &ldquo;{q}&rdquo;.</p>}
-                    </div>
-                  )}
-                </div>
-
-                {/* Games on the wheel */}
-                <div className="mt-[20px]">
+                {/* On the wheel — the search that ADDS to the wheel sits inside this
+                    same block, right above the (scrollable) list, so it's clear the
+                    two are connected. */}
+                <div className="relative z-10 mt-[16px] rounded-[12px] bg-[#141416] p-[14px] ring-1 ring-white/5">
                   <div className="mb-[10px] flex items-center justify-between">
                     <p className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">{synced ? 'Call wheel' : 'On the wheel'} · {boardGames.length}</p>
                     {boardGames.length > 0 && <button onClick={clearAll} className="text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>}
                   </div>
-                  <div className="no-scrollbar flex max-h-[140px] flex-wrap content-start gap-[8px] overflow-y-auto">
-                    {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Search above, right-click any game &rarr; &ldquo;Add to Wheel&rdquo;, or load a Mix&rsquo;s PLAYlist.</p>}
+
+                  {/* Add-a-game search */}
+                  <div className="relative">
+                    <div className="flex items-center gap-[8px] rounded-[10px] bg-[#0c0c0e] px-[12px] py-[10px] ring-1 ring-white/10">
+                      <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a game to add to the wheel" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+                      {q && <button onClick={() => setQ('')} aria-label="Clear search" className="text-[#7e7f87] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+                    </div>
+                    {query && (
+                      <div className="absolute left-0 right-0 top-[50px] z-30 max-h-[240px] overflow-y-auto rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+                        {results.length ? results.map((k) => (
+                          <button key={k} onClick={() => addKey(k)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left transition hover:bg-white/5">
+                            {wheelThumb(k) ? <img alt="" src={wheelThumb(k)} className="h-[26px] w-[46px] shrink-0 rounded-[4px] object-cover" /> : <span className="h-[26px] w-[46px] shrink-0 rounded-[4px] bg-[#2b2d31]" />}
+                            <span className="min-w-0 flex-1 truncate text-[14px] text-white">{wheelTitle(k)}</span>
+                            <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                          </button>
+                        )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">No games match &ldquo;{q}&rdquo;.</p>}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* The list — a scrollable container that grows with the games */}
+                  <div className="no-scrollbar mt-[12px] flex max-h-[184px] min-h-[56px] flex-wrap content-start gap-[8px] overflow-y-auto">
+                    {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Nothing yet — search above, load a Mix&rsquo;s PLAYlist, or right-click any game &rarr; &ldquo;Add to Wheel&rdquo;.</p>}
                     {boardGames.map((g) => (
-                      <span key={g.key} className="flex items-center gap-[8px] rounded-[8px] bg-[#1c1c1f] py-[6px] pl-[8px] pr-[6px] text-[13px] text-white ring-1 ring-white/5">
+                      <span key={g.key} className="flex h-fit items-center gap-[8px] rounded-[8px] bg-[#1c1c1f] py-[6px] pl-[8px] pr-[6px] text-[13px] text-white ring-1 ring-white/5">
                         {wheelThumb(g.key) ? <img alt="" src={wheelThumb(g.key)} className="h-[22px] w-[38px] rounded-[4px] object-cover" /> : <span className="h-[22px] w-[38px] rounded-[4px] bg-[#2b2d31]" />}
                         <span className="max-w-[150px] truncate">{g.title}</span>
                         <button onClick={() => removeKey(g.key)} aria-label={`Remove ${g.title}`} className="text-[#7e7f87] transition hover:text-white">
@@ -4185,6 +4130,54 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   </div>
                   {boardGames.length === 1 && <p className="mt-[10px] text-[12px] text-[#f0b232]">Add at least 2 games to spin.</p>}
                 </div>
+
+                {/* Wheel sync — below the wheel. A shared wheel the whole call
+                    builds and watches together. */}
+                <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
+                  {!synced && jamLive ? (
+                    // A sync I'm not in yet: who started it + who's joined, click to join.
+                    <button
+                      onClick={startOrJoin}
+                      className="flex items-center gap-[10px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[9px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]"
+                    >
+                      <span>{dispName(callWheel?.host, jamNames)} started the call wheel</span>
+                      <span className="flex items-center">
+                        {Object.keys(participants).map((n, i) => (
+                          <Avatar key={n} color={COLOR_OF[n] || D.raised} size={24} style={{ marginRight: -7, boxShadow: '0 0 0 2px #1c1c1f', zIndex: 10 - i }} />
+                        ))}
+                      </span>
+                      <span className="text-[#3fbf3f]">Join</span>
+                    </button>
+                  ) : (
+                    <button
+                      onClick={synced ? leaveOrEnd : startOrJoin}
+                      className={'flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
+                    >
+                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
+                      {synced ? (isHost ? 'End wheel sync' : 'Leave wheel sync') : 'Start wheel sync'}
+                    </button>
+                  )}
+                  {synced && (
+                    <button onClick={copyInviteLink} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
+                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
+                      {copied ? 'Link copied!' : 'Copy invite link'}
+                    </button>
+                  )}
+                  {synced && (
+                    <span className="flex items-center">
+                      {Object.keys(participants).map((n, i) => (
+                        <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 10 - i }} />
+                      ))}
+                    </span>
+                  )}
+                </div>
+                <p className="mt-[8px] text-[12px] text-[#7e7f87]">
+                  {synced
+                    ? (isHost ? 'You started this sync — everyone on the call can join, edit and watch it spin.' : `Synced by ${dispName(callWheel?.host, jamNames)} — edits and spins are live for the whole call.`)
+                    : jamLive
+                      ? 'Join to build and spin the wheel together.'
+                      : 'Syncs a shared wheel the whole call builds and watches together.'}
+                </p>
               </>
             )}
           </div>
@@ -4222,7 +4215,7 @@ function WheelInviteStep({ online, onCancel, onStart }) {
 
   return (
     <div className="no-scrollbar relative flex max-h-[92vh] w-full flex-col overflow-y-auto p-[32px]">
-      <h2 className="text-[28px] font-bold text-white">Start a wheel jam</h2>
+      <h2 className="text-[28px] font-bold text-white">Start a wheel sync</h2>
       <p className="mt-[6px] text-[15px] leading-snug text-[#9a9ba3]">Invite people to build the wheel and watch it spin with you — or copy a link to share.</p>
 
       {/* Copy link */}
@@ -4252,7 +4245,7 @@ function WheelInviteStep({ online, onCancel, onStart }) {
       <div className="mt-[24px] flex justify-end gap-[10px]">
         <button onClick={onCancel} className="rounded-[8px] bg-[#3a3c42] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
         <button onClick={() => onStart(chosen)} className="rounded-[8px] bg-[#2da000] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110">
-          {chosen.length ? `Start jam · invite ${chosen.length}` : 'Start jam'}
+          {chosen.length ? `Start sync · invite ${chosen.length}` : 'Start sync'}
         </button>
       </div>
     </div>
