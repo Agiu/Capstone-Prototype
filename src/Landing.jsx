@@ -1630,7 +1630,7 @@ function cineCard(k) {
 // "Highly Rated by Your Friends" — wide cards with the cinematic hover overlay.
 function HighlyRatedRow({ items, onOpen, onWishlist, onShare }) {
   return (
-    <ShelfRow title="Highly Rated by Your Friends">
+    <ShelfRow title="Recommended by Your Friends">
       {items.map((k) => <CinematicCard key={k} {...cineCard(k)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />)}
     </ShelfRow>
   )
