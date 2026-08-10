@@ -87,7 +87,7 @@ function RatingRow({ pct, line1, line2, line2Bold }) {
 /** Trailer/gameplay that plays on hover. Pass `mp4` (preferred) or `youTubeId`.
  *  `bare` scales the iframe up so YouTube's title bar and end-screen cards fall
  *  outside the crop — a clean, chrome-free background loop. */
-export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical, start = 30 }) {
+export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical, start = 30, controls = false }) {
   const frameRef = useRef(null)
 
   // `cc_load_policy=0` only sets the *default* — YouTube still turns captions
@@ -105,16 +105,22 @@ export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical, start = 3
       for (const mod of ['captions', 'cc']) {
         w.postMessage(JSON.stringify({ event: 'command', func: 'unloadModule', args: [mod] }), '*')
       }
-      // Keep it playing + muted so YouTube never parks the paused/"tap to play"
-      // overlay (the ‖ button) over the footage.
+      // Ambient previews stay muted + playing so YouTube never parks the paused/
+      // "tap to play" overlay over the footage. With controls on, the viewer is
+      // in charge — don't fight their pause/unmute, only keep captions dropped.
+      if (controls) return
       w.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*')
       w.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*')
     }
     send()
     const tick = setInterval(send, 400)
-    const stop = setTimeout(() => clearInterval(tick), 6000)
-    return () => { clearInterval(tick); clearTimeout(stop) }
-  }, [youTubeId])
+    // Interactive players only need the brief caption-drop window, then leave the
+    // viewer alone. Ambient previews keep the play/mute keep-alive running the
+    // whole time they're mounted (which is only while hovered) so YouTube never
+    // parks a paused ‖ overlay over the footage after the first few seconds.
+    const stop = controls ? setTimeout(() => clearInterval(tick), 6000) : null
+    return () => { clearInterval(tick); if (stop) clearTimeout(stop) }
+  }, [youTubeId, controls])
 
   if (mp4) {
     return (
@@ -135,19 +141,24 @@ export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical, start = 3
     const params = new URLSearchParams({
       autoplay: '1',
       mute: '1',
-      controls: '0', // no chrome, and no centre play button once autoplay takes
+      controls: controls ? '1' : '0', // ambient previews show no chrome; interactive slides get the full control bar
       loop: '1',
       playlist: youTubeId,
       start: String(start), // begin partway in — skips the trailer intro/logo
       modestbranding: '1',
       playsinline: '1',
       rel: '0',
-      disablekb: '1',
+      disablekb: controls ? '0' : '1',
       iv_load_policy: '3', // no annotations
       cc_load_policy: '0', // captions off by default; the effect above enforces it
-      fs: '0',
+      fs: controls ? '1' : '0',
       enablejsapi: '1', // opens the postMessage channel used to drop captions
     })
+    // Interactive mode: letterbox (contain) so the whole frame — and its control
+    // bar — is always on-screen, and let the pointer through to the player.
+    const fit = controls
+      ? 'absolute inset-0 size-full border-0'
+      : 'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? (vertical ? ' [scale:1.5]' : ' [scale:1.6]') : '')
     return (
       <>
         {/* Cover the container regardless of its aspect: force 16:9 and let both
@@ -155,14 +166,16 @@ export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical, start = 3
         <iframe
           ref={frameRef}
           title="Game footage"
-          className={'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? (vertical ? ' [scale:1.5]' : ' [scale:1.6]') : '')}
+          className={fit}
           src={`https://www.youtube-nocookie.com/embed/${youTubeId}?${params}`}
-          allow="autoplay; encrypted-media"
+          allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen={controls}
         />
         {/* Transparent shield so the player never sees the pointer — kills the
             hover play/pause button that YouTube shows despite controls=0. Clicks
-            still bubble to the card, and the card's hover state is unaffected. */}
-        <div className="absolute inset-0 z-[1]" />
+            still bubble to the card, and the card's hover state is unaffected.
+            Omitted in interactive mode so the viewer can actually use the player. */}
+        {!controls && <div className="absolute inset-0 z-[1]" />}
       </>
     )
   }

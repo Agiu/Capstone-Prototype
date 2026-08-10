@@ -1423,12 +1423,12 @@ const wheelTitle = (k) => CATALOG[k]?.title || STARTER_BY_KEY[k]?.title || k
 const wheelThumb = (k) => CATALOG[k]?.image || starterHeader(k) || null
 // Editorial copy for the games we feature on the homepage.
 const STARTER_DESC = {
-  gp_doometernal: { studio: 'id Software', desc: 'Rip and tear through Hell in the fastest, most brutal DOOM yet.', tags: ['FPS', 'Action', 'Mature 17+'], friends: '4 friends have played recently' },
+  gp_doometernal: { studio: 'id Software', desc: 'Rip and tear through Hell in the fastest, most brutal DOOM yet.', tags: ['FPS', 'Action', 'Mature 17+'], friends: '3 friends have played recently' },
   gp_deeprockgalactic: { studio: 'Ghost Ship Games', desc: 'Four dwarves, one cave, endless bugs. Mine, fight and drink together.', tags: ['Co-op', 'FPS', 'Mining'], friends: '3 friends have played recently' },
   gp_chivalry2: { studio: 'Torn Banner Studios', desc: 'Massive medieval battlefields — sieges, catapults and a lot of yelling.', tags: ['Action', 'Multiplayer', 'Mature 17+'], friends: '2 friends have played recently' },
   gp_warhammer40000darktide: { studio: 'Fatshark', desc: 'Co-op horde slaughter in the grim dark of the 41st millennium.', tags: ['Co-op FPS', 'Action', 'Mature 17+'], friends: '3 friends have played recently' },
   gp_warhammervermintide2: { studio: 'Fatshark', desc: 'Four heroes hold the line against endless Skaven and Chaos hordes.', tags: ['Co-op', 'Melee', 'Action'], friends: '2 friends have played recently' },
-  gp_amongus: { studio: 'Innersloth', desc: 'Crew a spaceship, find the impostor, betray your friends. Repeat.', tags: ['Party', 'Social Deduction', 'Online'], friends: '5 friends have played recently' },
+  gp_amongus: { studio: 'Innersloth', desc: 'Crew a spaceship, find the impostor, betray your friends. Repeat.', tags: ['Party', 'Social Deduction', 'Online'], friends: '3 friends have played recently' },
   gp_hades: { studio: 'Supergiant Games', desc: 'A god-like roguelike — fight out of Hell one perfect run at a time.', tags: ['Roguelike', 'Action', 'Story Rich'], friends: 'Trending with 120+ players', rec: 97, recFriends: 4 },
   gp_doom64: { studio: 'id Software', desc: 'The 1997 cult classic, restored — pure retro demon-blasting.', tags: ['FPS', 'Retro', 'Mature 17+'], friends: 'Rising in your communities' },
   gp_vampiresurvivors: { studio: 'poncle', desc: 'One button, a thousand monsters. Absurdly moreish bullet-heaven.', tags: ['Roguelike', 'Bullet Hell', 'Casual'], friends: 'Everyone is playing this' },
@@ -1437,7 +1437,7 @@ const STARTER_DESC = {
   gp_batmanarkhamknight: { studio: 'Rocksteady', desc: 'Be the Batman across a stormy, open Gotham in the Arkham finale.', tags: ['Action', 'Open World', 'Mature 17+'], friends: '3 friends recommend this' },
   gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends recommend this' },
   gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends recommend this' },
-  gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '4 friends recommend this' },
+  gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '3 friends recommend this' },
   gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: 'Daniel recommends this' },
   gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '' },
   gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Daniel has played 3 hrs recently' },
@@ -1463,14 +1463,37 @@ function pickAvatars(key) {
 // so the same game shows the same friends, count and hours everywhere it appears
 // — cards, the "Similar to" row, and the detail page. Keyed by catalog key.
 const FRIEND_POOL = [AVATAR.blue, AVATAR.purple, AVATAR.red] // Blake, Chloe, Daniel
+const FRIEND_NAMES = { [AVATAR.blue]: 'Blake', [AVATAR.purple]: 'Chloe', [AVATAR.red]: 'Daniel' }
 function friendInfo(key) {
   let h = 0
   for (let i = 0; i < String(key).length; i++) h = (h * 31 + String(key).charCodeAt(i)) >>> 0
-  const count = 1 + (h % FRIEND_POOL.length) // 1..3 friends into this game
+  // Single source of truth for a game's friend activity. Prefer an AUTHORED
+  // count — the Trending stats or a "N friends…" card label — so the faces and
+  // number stay identical everywhere the game appears (cards AND the detail
+  // page). Only games with no explicit number fall back to a stable hash count.
+  const trend = TRENDING_STATS[key]
+  const labelMatch = /^(\d+)\s+friends?\b/i.exec(STARTER_DESC[key]?.friends || '')
+  const r = h % 5
+  const authored = trend?.friends ?? (labelMatch ? parseInt(labelMatch[1], 10) : (r === 0 ? 1 : r <= 2 ? 2 : 3))
+  // Never claim more friends than actually exist — there are only FRIEND_POOL of them.
+  const count = Math.min(Math.max(authored, 1), FRIEND_POOL.length)
+  const avatars = avatarsForCount(key, count) // deterministic faces, capped at the friend pool
+  const hours = trend?.hours ?? (4 + (h % 22)) // avg hours played, 4..25
+  // A single friend gets named ("Blake recommends…"); multiples show the count.
+  const recommend = count === 1
+    ? `${FRIEND_NAMES[avatars[0]]} recommends this game`
+    : `${count} friends recommend this game`
+  return { avatars, count, hours, recommend }
+}
+// Deterministic set of `n` distinct friend faces for a game — used when a card's
+// label states an explicit count ("2 friends recommend this") so the avatars
+// shown always match the number in the text.
+function avatarsForCount(key, n) {
+  let h = 0
+  for (let i = 0; i < String(key).length; i++) h = (h * 31 + String(key).charCodeAt(i)) >>> 0
   const start = h % FRIEND_POOL.length
-  const avatars = Array.from({ length: count }, (_, i) => FRIEND_POOL[(start + i) % FRIEND_POOL.length])
-  const hours = 4 + (h % 22) // avg hours played, 4..25
-  return { avatars, count, hours, recommend: `${count} friend${count > 1 ? 's' : ''} recommend${count > 1 ? '' : 's'} this` }
+  const len = Math.min(Math.max(n, 1), FRIEND_POOL.length)
+  return Array.from({ length: len }, (_, i) => FRIEND_POOL[(start + i) % FRIEND_POOL.length])
 }
 // Native-vertical (9:16) gameplay Shorts for the portrait hover cards. Keyed by
 // catKey. These play in the card's vertical cover, unlike the horizontal
@@ -1500,6 +1523,27 @@ const GAMEPLAY_LANDSCAPE = {
   gp_stardewvalley: '_XfffJIzEtI',
   gp_oriandthewillofthewisps: 'fXUrR6EiEcY',
   gp_firewatch: 'T1bqemD7KPo',
+  gp_hades: 'xH8qHf5QxrU',
+  gp_celeste: 'gBByzDmJFgU',
+  gp_doometernal: '3CWzCwCmHho',
+  gp_deeprockgalactic: 'pWeYah0FZqU',
+  gp_amongus: 'uHqSPGIZIEA',
+  gp_batmanarkhamknight: 'Wx-P9Kp7eFg',
+  gp_controlultimateedition: 'lSmi5e4LL5U',
+  gp_dishonored2: 'k-LkH5A3oG4',
+  gp_fallout4: 'ETcYeakuFYs',
+  gp_vampiresurvivors: 'bzYEU3rBD-Y',
+  gp_tunic: '9NlMf_oVetI',
+  gp_inside: 'LqZa-8_avSQ',
+  gp_limbo: 'IXnrrwdD7Eo',
+  gp_chivalry2: 'brnJ611LkwY',
+  gp_warhammer40000darktide: 'EehS0H9f0jc',
+  gp_warhammervermintide2: '2PoYt9UaHWk',
+  gp_doom64: 'jswXuV30e1k',
+  gp_spiritfarer: 'PRzGApgrYd4',
+  gp_unpacking: '5SAV6weubRI',
+  gp_hellbladesenuassacrifice: 'MEUbYGlY7mE',
+  gp_fallout76: 'g15KbByVsCI',
 }
 // Release dates shown on the hover card.
 const STARTER_RELEASED = {
@@ -1527,6 +1571,8 @@ function pcard(k) {
     // Friend recommend line + faces come from the one per-game source, so a
     // game is never all "be the first" and always matches its cards elsewhere.
     recommend: d.friends || friendInfo(k).recommend,
+    // friendInfo already derives its faces from the same authored count that
+    // d.friends states, so the pics never contradict the number.
     avatars: friendInfo(k).avatars,
     multiplayer: p === 'MMO' ? 'MMO' : p && p !== '1' ? `${p} players` : null,
     tags: d.tags || [g?.genre].filter(Boolean),
@@ -1543,9 +1589,9 @@ const HOME_DIFFERENT = ['gp_unpacking', 'gp_spiritfarer', 'gp_tunic', 'gp_inside
 const ELLIPSIS_GLYPH = <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
 // Social proof for the "Trending in Your Communities" rows.
 const TRENDING_STATS = {
-  gp_hades: { friends: 5, hours: 12 },
+  gp_hades: { friends: 3, hours: 12 },
   gp_doom64: { friends: 3, hours: 4 },
-  gp_vampiresurvivors: { friends: 6, hours: 8 },
+  gp_vampiresurvivors: { friends: 3, hours: 8 },
 }
 
 // "Trending in Your Communities" — a compact list of games (Figma 937:8591).
@@ -1565,17 +1611,19 @@ function TrendingRow({ items, onOpen }) {
               <div className="min-w-0 flex-1">
                 <p className="text-[18px] font-semibold text-white">{title}</p>
                 {(() => {
-                  const st = TRENDING_STATS[k] || { friends: 4, hours: 6 }
-                  const avs = pickAvatars(k)
+                  // Same friend source as the cards + detail page, so the faces
+                  // and the count always agree (and never exceed the 3 friends).
+                  const fi = friendInfo(k)
+                  const avs = fi.avatars
                   return (
                     <div className="mt-[6px] flex items-center gap-[7px]">
                       <span className="flex items-center">
                         {avs.slice(0, 2).map((cc, i) => (
                           <Avatar key={i} color={cc} size={18} style={{ marginRight: i < 1 ? -6 : 0, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 2 - i }} />
                         ))}
-                        <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>
+                        {avs.length > 2 && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
                       </span>
-                      <p className="text-[13px] text-[#9a9ba3]">{st.friends} friends played this for avg. {st.hours} hours</p>
+                      <p className="text-[13px] text-[#9a9ba3]">{fi.count} {fi.count === 1 ? 'friend' : 'friends'} played this for avg. {fi.hours} hours</p>
                     </div>
                   )
                 })()}
@@ -1635,7 +1683,9 @@ function cineCard(k) {
     // Keep counts realistic (only 3 friends exist) and consistent with the
     // faces: a curated friend quote if there is one, else the per-game count.
     avatars: friendInfo(k).avatars,
-    label: d.friends || friendInfo(k).recommend,
+    // Always show the friend-count + faces ("N friends recommend this game"),
+    // never a single-person quote like "Blake rated this 5 stars".
+    label: friendInfo(k).recommend,
     avatarsPlus: false,
     players: g?.players && g.players !== '1' && g.players !== 'MMO' ? g.players : g?.players === 'MMO' ? 'MMO' : '1',
     genre: g?.genre,
@@ -1676,13 +1726,15 @@ function WorthACloserLook({ gameKey, onOpen }) {
           {hover && (GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && <VideoTrailer youTubeId={GAMEPLAY_LANDSCAPE[gameKey] || g.youTubeId} poster={starterHeader(gameKey)} bare />}
         </button>
         <div className="flex flex-1 flex-col justify-center">
-          <div className="flex items-center gap-[10px]">
-            <div className="flex items-center">
-              {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((col, i) => (
-                <Avatar key={i} color={col} size={22} style={{ marginRight: i < 2 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+          <div className="flex items-start gap-[10px]">
+            {/* Match the avatars' height to the text's first line so they sit
+                centered on that line (not the whole wrapped block). */}
+            <div className="flex h-[18px] items-center">
+              {FRIEND_POOL.map((col, i) => (
+                <Avatar key={i} color={col} size={22} style={{ marginRight: i < FRIEND_POOL.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
               ))}
             </div>
-            <p className="text-[13px] font-semibold text-white">{d.friends || 'Recommended for you'}</p>
+            <p className="text-[13px] font-semibold leading-[18px] text-white">{`Most-played by your friends · avg. ${friendInfo(gameKey).hours} hrs`}</p>
           </div>
           <h3 className="mt-[14px] text-[28px] font-bold leading-tight text-white">{title}</h3>
           <p className="mt-[10px] max-w-[54ch] text-[15px] leading-relaxed text-[#9a9ba3]">{d.desc || c.caption}</p>
@@ -3997,9 +4049,9 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   function startPartyNow() {
     if (!picked) return
     onParty(picked)
-    if (synced) patchJam({ spin: null }) // keep the jam alive for another round
-    else setLocalSpin(null)
-    onClose()
+    // Keep the modal open AND stay on the result view — don't auto-clear back to
+    // the wheel or close. The party toast pops up over the modal; use Restart to
+    // spin again for another round.
   }
   // Clear the result and return to the wheel-building view (no party started).
   const backToWheel = () => { if (synced) patchJam({ spin: null }); else setLocalSpin(null) }
@@ -4586,7 +4638,7 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
   }
 
   return (
-    <div className="pointer-events-auto fixed top-[24px] right-[24px] z-[85] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+    <div className="pointer-events-auto fixed top-[24px] right-[24px] z-[97] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
       <div className="flex">
         {cover && <img alt="" src={cover} className="w-[116px] shrink-0 self-stretch object-cover" />}
         <div className="flex min-w-0 flex-1 flex-col gap-[12px] p-[16px]">{body}</div>
@@ -5485,20 +5537,61 @@ function detailFor(key) {
 }
 
 const REVIEWS = [
-  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Friends Only', title: 'We should Play This Again', thumb: 'up', body: 'I have never really been able to get into the AC Games for some reason, they should appeal to me since I tend to enjoy this type of game but despite trying many (I have several outside of the ones I have on Steam), they just never managed to hold my attention. At least until now that is . . .' },
+  { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Public', title: 'We should Play This Again', thumb: 'up', body: 'I have never really been able to get into the AC Games for some reason, they should appeal to me since I tend to enjoy this type of game but despite trying many (I have several outside of the ones I have on Steam), they just never managed to hold my attention. At least until now that is . . .' },
   { name: 'Pastel_089', color: AVATAR.purple, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Ugh. Gross', thumb: 'down', body: 'Ass.' },
   { name: 'PastyBeans2021', color: AVATAR.green, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Nice Graphics', thumb: 'up', body: "I've never been able to get into AC Games. They should appeal to me, but despite trying many, they never held my attention until now. The graphics really pull you into the Golden Age of Piracy." },
-  { name: 'NovaTheWolf', color: AVATAR.red, joined: '11/02/2018', skill: 'Advanced', privacy: 'Friends Only', title: 'Best co-op night in ages', thumb: 'up', body: 'We ran a full lobby and nobody wanted to stop. The chaos ramps up perfectly the more people you cram in, and the learning curve is gentle enough that our least-gamer friend still had a blast.' },
+  { name: 'NovaTheWolf', color: AVATAR.red, joined: '11/02/2018', skill: 'Advanced', privacy: 'Public', title: 'Best co-op night in ages', thumb: 'up', body: 'We ran a full lobby and nobody wanted to stop. The chaos ramps up perfectly the more people you cram in, and the learning curve is gentle enough that our least-gamer friend still had a blast.' },
   { name: 'QuietStorm_42', color: AVATAR.blue, joined: '07/19/2021', skill: 'Beginner', privacy: 'Public', title: 'Good but grindy', thumb: 'up', body: 'Solid fun for the first several hours. It does start to feel repetitive once you have seen all the maps, but by then you have more than gotten your money’s worth.' },
-  { name: 'mossy_antler', color: AVATAR.green, joined: '03/30/2022', skill: 'Intermediate', privacy: 'Friends Only', title: 'Surprisingly deep', thumb: 'up', body: 'Looks casual on the surface, but there is real strategy once everyone knows what they are doing. Highly recommend playing with voice chat on.' },
+  { name: 'mossy_antler', color: AVATAR.green, joined: '03/30/2022', skill: 'Intermediate', privacy: 'Public', title: 'Surprisingly deep', thumb: 'up', body: 'Looks casual on the surface, but there is real strategy once everyone knows what they are doing. Highly recommend playing with voice chat on.' },
   { name: 'ByteSizedBrian', color: AVATAR.purple, joined: '09/12/2019', skill: 'Advanced', privacy: 'Public', title: 'Servers can be rough', thumb: 'down', body: 'The game itself is great, but I hit a few laggy sessions and one hard crash. When it works it is a 9/10; when it does not it is frustrating.' },
-  { name: 'Cloudberry', color: AVATAR.red, joined: '01/05/2023', skill: 'Beginner', privacy: 'Friends Only', title: 'My new comfort game', thumb: 'up', body: 'Perfect for unwinding after work with the group. Low stakes, lots of laughs, easy to hop in and out of.' },
+  { name: 'Cloudberry', color: AVATAR.red, joined: '01/05/2023', skill: 'Beginner', privacy: 'Public', title: 'My new comfort game', thumb: 'up', body: 'Perfect for unwinding after work with the group. Low stakes, lots of laughs, easy to hop in and out of.' },
   { name: 'Grimlock_Prime', color: AVATAR.blue, joined: '05/28/2017', skill: 'Advanced', privacy: 'Public', title: 'Skill ceiling is real', thumb: 'up', body: 'Casual players will have fun, but there is a ton of room to master the mechanics. The gap between a new player and a veteran is huge, in a good way.' },
-  { name: 'peachy_keen', color: AVATAR.green, joined: '10/14/2020', skill: 'Intermediate', privacy: 'Friends Only', title: 'Wish there was more content', thumb: 'up', body: 'What is here is polished and great, I just burned through it faster than I expected. Hoping the devs keep adding maps and modes.' },
+  { name: 'peachy_keen', color: AVATAR.green, joined: '10/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Wish there was more content', thumb: 'up', body: 'What is here is polished and great, I just burned through it faster than I expected. Hoping the devs keep adding maps and modes.' },
   { name: 'V0idWalker', color: AVATAR.purple, joined: '06/06/2021', skill: 'Beginner', privacy: 'Public', title: 'Not for me', thumb: 'down', body: 'I can see why people love it, but the pacing did not click with me. Gave it a few sessions and just bounced off.' },
   { name: 'SunnySideUp', color: AVATAR.red, joined: '02/11/2022', skill: 'Intermediate', privacy: 'Public', title: 'Great with strangers too', thumb: 'up', body: 'Even queuing solo I ended up in fun lobbies. The community is friendlier than most, which is rare these days.' },
-  { name: 'takoyaki_lord', color: AVATAR.blue, joined: '08/23/2019', skill: 'Advanced', privacy: 'Friends Only', title: 'Ran it for our game night', thumb: 'up', body: 'Hosted eight people and it handled the crowd better than expected. A couple of them bought it the next day. That is the best endorsement I can give.' },
+  { name: 'takoyaki_lord', color: AVATAR.blue, joined: '08/23/2019', skill: 'Advanced', privacy: 'Public', title: 'Ran it for our game night', thumb: 'up', body: 'Hosted eight people and it handled the crowd better than expected. A couple of them bought it the next day. That is the best endorsement I can give.' },
 ]
+
+// Short reviews attributed to the named friends (Blake/Chloe/Daniel). Picked
+// deterministically per game so the friend avatars shown by the score always
+// map to a real entry in the review list.
+const FRIEND_REVIEW_POOL = [
+  { title: 'Great with the crew', thumb: 'up', body: 'Got the whole group in and nobody wanted to log off. Runs great and it just clicks when you play with friends.' },
+  { title: 'Had a blast', thumb: 'up', body: 'Way more fun than I expected — easy to pick up, tough to put down. Would happily run it again this weekend.' },
+  { title: 'Solid pick for game night', thumb: 'up', body: 'Perfect for a full lobby. A couple of us bounced off at first but it grew on everyone fast.' },
+  { title: 'Won me over', thumb: 'up', body: 'Not usually my genre, but this one got me. Looks sharp and the pacing keeps you going one more round.' },
+]
+const FRIEND_REVIEW_DATES = ['03/12/2021', '07/08/2020', '11/24/2019']
+const FRIEND_REVIEW_SKILLS = ['Beginner', 'Intermediate', 'Advanced']
+const strHash = (s) => { let h = 0; for (let i = 0; i < String(s).length; i++) h = (h * 31 + String(s).charCodeAt(i)) >>> 0; return h }
+// The subset of a game's friends-who-played that actually left a review — not
+// everyone does. Returns review objects (name + color + copy) so the avatars by
+// the score and the entries in the reviews list are guaranteed to match.
+function friendReviewsFor(key) {
+  const players = friendInfo(key).avatars // friend colors who played this game
+  const out = []
+  players.forEach((color) => {
+    const h = strHash(key + ':' + color)
+    if (h % 3 === 0 && players.length > 1) return // ~1 in 3 skips leaving a review
+    const t = FRIEND_REVIEW_POOL[h % FRIEND_REVIEW_POOL.length]
+    out.push({
+      name: capName(FRIEND_NAMES[color] || 'Friend'),
+      color,
+      joined: FRIEND_REVIEW_DATES[h % FRIEND_REVIEW_DATES.length],
+      skill: FRIEND_REVIEW_SKILLS[h % FRIEND_REVIEW_SKILLS.length],
+      privacy: 'Friends Only',
+      title: t.title,
+      thumb: t.thumb,
+      body: t.body,
+    })
+  })
+  // At least one friend review whenever a friend has played it.
+  if (!out.length && players.length) {
+    const color = players[0], h = strHash(key + ':' + color), t = FRIEND_REVIEW_POOL[h % FRIEND_REVIEW_POOL.length]
+    out.push({ name: capName(FRIEND_NAMES[color] || 'Friend'), color, joined: FRIEND_REVIEW_DATES[h % FRIEND_REVIEW_DATES.length], skill: FRIEND_REVIEW_SKILLS[h % FRIEND_REVIEW_SKILLS.length], privacy: 'Friends Only', title: t.title, thumb: t.thumb, body: t.body })
+  }
+  return out
+}
 
 function DetailPill({ children }) {
   return (
@@ -5785,8 +5878,10 @@ function slidesFor(key, cover) {
   const slides = cover ? [{ type: 'image', src: cover }] : []
   for (const src of GALLERY[key] || []) slides.push({ type: 'image', src })
   const seen = new Set()
-  for (const id of [VIDEOS[key], GAMEPLAY_LANDSCAPE[key]]) {
-    if (id && !seen.has(id)) { seen.add(id); slides.push({ type: 'video', youTubeId: id, poster: cover }) }
+  // The catalog clip is the trailer; the bespoke landscape clip is gameplay —
+  // labeled so viewers can tell the two videos apart in the carousel.
+  for (const [id, badge] of [[VIDEOS[key], 'Trailer'], [GAMEPLAY_LANDSCAPE[key], 'Gameplay']]) {
+    if (id && !seen.has(id)) { seen.add(id); slides.push({ type: 'video', youTubeId: id, poster: cover, badge }) }
   }
   // A game with no art and no trailer still needs one slide to render against.
   return slides.length ? slides : [{ type: 'image' }]
@@ -5817,12 +5912,12 @@ function HeroCarousel({ slides, children }) {
         {slides.map((s, idx) => (
           <div key={idx} className="relative size-full shrink-0 basis-full bg-black">
             {s.type === 'video' && idx === i ? (
-              <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} start={0} />
+              <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} start={0} controls />
             ) : (
               <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
             )}
             {s.type === 'video' && (
-              <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">Trailer</span>
+              <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">{s.badge || 'Trailer'}</span>
             )}
           </div>
         ))}
@@ -5896,6 +5991,10 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
   // Friends who've played it — the same per-game friend set the cards use, so
   // the faces here match "Recommended by Your Friends" etc. Never the user.
   const playedBy = friendInfo(gameKey).avatars
+  // Only some of the friends who played leave a review; those reviewers show by
+  // the score AND appear (as themselves) in the reviews list below.
+  const friendReviews = unplayed ? [] : friendReviewsFor(gameKey)
+  const reviewers = friendReviews.map((r) => r.color)
   const recCinematic = CINEMATIC_ROW.filter((c) => c.id !== gameKey)
   const recPortrait = PORTRAIT_ROW.filter((c) => c.id !== gameKey)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -5929,8 +6028,9 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
 
             <div className="flex min-w-0 flex-1 flex-col">
               <h1 className="text-[44px] font-bold leading-[1.05] tracking-tight text-white">{d.title}</h1>
-              {/* Also Played By — right under the title */}
-              <div className="mt-[14px] flex items-center gap-[10px] text-[16px] text-[#a2a4ae]">
+              {/* Also Played By — right under the title. Avatars bottom-align with
+                  the label so they sit on its last line when it wraps. */}
+              <div className="mt-[14px] flex items-end gap-[10px] text-[16px] text-[#a2a4ae]">
                 Also Played By:
                 {unplayed ? (
                   <span className="text-[15px] text-[#7e7f87]">No one in your Mix yet</span>
@@ -6000,8 +6100,8 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                     <span className="text-[34px] font-semibold leading-none text-[#7aff46]">{d.recPct}</span>
                     <ThumbsUpGlyph size={24} className="text-[#7aff46]" />
                     <div className="flex items-center">
-                      {playedBy.map((c, i) => (
-                        <PlayerAvatar key={i} color={c} size={30} marginRight={i < playedBy.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} />
+                      {reviewers.map((c, i) => (
+                        <PlayerAvatar key={i} color={c} size={30} marginRight={i < reviewers.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} />
                       ))}
                     </div>
                   </div>
@@ -6028,7 +6128,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your Mix and share what you think.</p>
             </section>
           ) : (
-            <ReviewsSection />
+            <ReviewsSection reviews={[...friendReviews, ...REVIEWS]} />
           )}
 
           {/* Friends Also Liked — cinematic cards that always lead with friend
