@@ -87,7 +87,7 @@ function RatingRow({ pct, line1, line2, line2Bold }) {
 /** Trailer/gameplay that plays on hover. Pass `mp4` (preferred) or `youTubeId`.
  *  `bare` scales the iframe up so YouTube's title bar and end-screen cards fall
  *  outside the crop — a clean, chrome-free background loop. */
-export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical }) {
+export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical, start = 30 }) {
   const frameRef = useRef(null)
 
   // `cc_load_policy=0` only sets the *default* — YouTube still turns captions
@@ -126,6 +126,8 @@ export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical }) {
         muted
         loop
         playsInline
+        // Jump past the intro so the preview opens on gameplay, not a logo.
+        onLoadedMetadata={start > 0 ? (e) => { const v = e.currentTarget; if (v.duration && v.duration > start + 2) v.currentTime = start } : undefined}
       />
     )
   }
@@ -136,6 +138,7 @@ export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical }) {
       controls: '0', // no chrome, and no centre play button once autoplay takes
       loop: '1',
       playlist: youTubeId,
+      start: String(start), // begin partway in — skips the trailer intro/logo
       modestbranding: '1',
       playsinline: '1',
       rel: '0',

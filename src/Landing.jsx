@@ -5800,7 +5800,7 @@ function HeroCarousel({ slides, children }) {
         {slides.map((s, idx) => (
           <div key={idx} className="relative size-full shrink-0 basis-full bg-black">
             {s.type === 'video' && idx === i ? (
-              <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} />
+              <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} start={0} />
             ) : (
               <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
             )}
