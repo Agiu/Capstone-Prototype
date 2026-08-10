@@ -2370,7 +2370,18 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare }) {
               </button>
             </div>
             <div>
-              <h1 className="text-[52px] font-semibold leading-none tracking-tight text-white">{blend.name}</h1>
+              <div className="flex items-center gap-[14px]">
+                <h1 className="text-[52px] font-semibold leading-none tracking-tight text-white">{blend.name}</h1>
+                {/* Clear edit affordance right next to the title */}
+                <button
+                  onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setCoverMenu({ x: r.left, y: r.bottom + 6 }) }}
+                  title="Edit this Mix"
+                  aria-label="Edit this Mix"
+                  className="flex size-[36px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+                </button>
+              </div>
               <div className="mt-[16px] flex items-center gap-[10px] text-[18px] text-[#e7e7e7]">
                 A Mix of games for
                 <span className="flex items-center">
