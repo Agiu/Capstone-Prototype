@@ -1,5 +1,5 @@
 import { createContext, Fragment, useContext, useEffect, useId, useRef, useState } from 'react'
-import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR } from './RecCard.jsx'
+import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, TagCtx } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import {
   discordLogo,
@@ -29,12 +29,12 @@ import mixesHaloBg from './assets/figma/mixes-halo-matched.png'
 // ── Active tester profile, from the URL (?u=1|2|3|4) ────────────────────────
 // No login: each tester opens their own link and `SELF` is their identity.
 // The URL uses simple numbers; internally the four identities keep stable keys.
-const COLOR_OF = { abby: AVATAR.green, blake: AVATAR.blue, chloe: AVATAR.purple, daniel: AVATAR.red }
-const U_TO_NAME = { 1: 'abby', 2: 'blake', 3: 'chloe', 4: 'daniel' }
-const NAME_TO_U = { abby: 1, blake: 2, chloe: 3, daniel: 4 }
+const COLOR_OF = { clarisse: AVATAR.green, caleb: AVATAR.blue, sauhee: AVATAR.yellow, meera: AVATAR.red }
+const U_TO_NAME = { 1: 'clarisse', 2: 'caleb', 3: 'sauhee', 4: 'meera' }
+const NAME_TO_U = { clarisse: 1, caleb: 2, sauhee: 3, meera: 4 }
 const _u = new URLSearchParams(window.location.search).get('u')
-// Accept ?u=1..4 (preferred) or a legacy ?u=abby..daniel.
-const SELF_NAME = U_TO_NAME[_u] || (COLOR_OF[_u] ? _u : 'abby')
+// Accept ?u=1..4 (preferred) or a legacy ?u=clarisse..meera.
+const SELF_NAME = U_TO_NAME[_u] || (COLOR_OF[_u] ? _u : 'clarisse')
 const SELF = COLOR_OF[SELF_NAME]
 
 // ── Observation modes (for the moderator's live participant wall) ────────────
@@ -235,12 +235,12 @@ const NAV = [
 ]
 
 // The four test profiles (a/b/c/d), one per tester. `self` is set from the URL.
-// Blake / Chloe / Daniel are on Arcade.
+// Caleb / Sauhee / Meera are on Arcade.
 const DMS = [
-  { name: 'abby', color: AVATAR.green },
-  { name: 'blake', color: AVATAR.blue, status: 'Playing Sea of Thieves' },
-  { name: 'chloe', color: AVATAR.purple, status: 'Listening to Spotify' },
-  { name: 'daniel', color: AVATAR.red, status: 'Streaming Minecraft' },
+  { name: 'clarisse', color: AVATAR.green },
+  { name: 'caleb', color: AVATAR.blue, status: 'Playing Sea of Thieves' },
+  { name: 'sauhee', color: AVATAR.yellow, status: 'Listening to Spotify' },
+  { name: 'meera', color: AVATAR.red, status: 'Streaming Minecraft' },
 ]
 
 // Friends who don't have Arcade yet — surfaced in the "Not on ARCADE" lists so
@@ -289,10 +289,14 @@ function DmRow({ name, color, status, online, active, unread = 0, onClick }) {
       <div className="flex min-w-0 flex-col items-start leading-tight">
         <span className="truncate text-[15px] font-semibold" style={{ color: active || unread ? '#fff' : online ? '#fff' : D.text }}>{name}</span>
         {online ? (
+          // Actually in the Arcade voice call (same roster the wheel sync uses).
+          <span className="flex items-center gap-[5px] text-[12px] font-medium" style={{ color: D.green }}>
+            <svg viewBox="0 0 24 24" className="size-[13px]" fill="currentColor"><path d="M6.6 10.8a15.6 15.6 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.2 2.2z" /></svg>
+            In a call
+          </span>
+        ) : (
           <span className="text-[12px]" style={{ color: D.mute }}>Online</span>
-        ) : status ? (
-          <span className="truncate text-[12px]" style={{ color: D.mute }}>{status}</span>
-        ) : null}
+        )}
       </div>
       {unread > 0 && (
         <span className="ml-auto flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#f23f42] px-[5px] text-[11px] font-bold text-white">{unread}</span>
@@ -448,7 +452,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
                 key={d.name}
                 {...d}
                 name={dispName(d.name, names)}
-                online
+                online={(online || []).includes(d.name)}
                 active={activeDm === d.name}
                 unread={activeDm === d.name ? 0 : unread}
                 onClick={() => onOpenDm?.(d.name)}
@@ -487,31 +491,31 @@ const details = {
 }
 
 const shelfToday = [
-  { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, owners: [AVATAR.blue, AVATAR.green, AVATAR.purple] },
-  { featured: true, avatars: [AVATAR.purple], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red] },
-  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol, free: true, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red] },
-  { avatars: [AVATAR.red, AVATAR.purple], label: 'played this for 4 hours', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, owners: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red], shared: true },
-  { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, owners: [AVATAR.green, AVATAR.purple] },
+  { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, owners: [AVATAR.blue, AVATAR.green, AVATAR.yellow] },
+  { featured: true, avatars: [AVATAR.yellow], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, owners: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red] },
+  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol, free: true, owners: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red] },
+  { avatars: [AVATAR.red, AVATAR.yellow], label: 'played this for 4 hours', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, owners: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red], shared: true },
+  { avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, owners: [AVATAR.green, AVATAR.yellow] },
 ]
 
 const shelfFriends = [
   { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, owners: [AVATAR.green, AVATAR.red] },
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, owners: [AVATAR.blue, AVATAR.red], shared: true },
-  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-8', image: heroGangBeasts, video: { youTubeId: 'Lm3HDdLufmA', poster: heroGangBeasts }, details: details.gangBeasts, owners: [AVATAR.purple, AVATAR.red] },
-  { avatars: [AVATAR.purple], label: 'PLAYlisted this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: details.wildHearts, owners: [AVATAR.blue] },
-  { avatars: [AVATAR.red], label: 'recommends this game', players: '1-4', image: heroMinecraftDungeons, video: { youTubeId: 'TxNH6bapa3A', poster: heroMinecraftDungeons }, details: details.minecraftDungeons, owners: [AVATAR.red, AVATAR.purple] },
+  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-8', image: heroGangBeasts, video: { youTubeId: 'Lm3HDdLufmA', poster: heroGangBeasts }, details: details.gangBeasts, owners: [AVATAR.yellow, AVATAR.red] },
+  { avatars: [AVATAR.yellow], label: 'PLAYlisted this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: details.wildHearts, owners: [AVATAR.blue] },
+  { avatars: [AVATAR.red], label: 'recommends this game', players: '1-4', image: heroMinecraftDungeons, video: { youTubeId: 'TxNH6bapa3A', poster: heroMinecraftDungeons }, details: details.minecraftDungeons, owners: [AVATAR.red, AVATAR.yellow] },
 ]
 
 const shelfMore = [
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves },
-  { avatars: [AVATAR.purple], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft },
+  { avatars: [AVATAR.yellow], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft },
   { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol },
   { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat },
-  { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded },
+  { avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded },
 ]
 
 // Friend colors → display names (green is always the user).
-const NAME = { [AVATAR.green]: 'abby', [AVATAR.blue]: 'blake', [AVATAR.purple]: 'chloe', [AVATAR.red]: 'daniel' }
+const NAME = { [AVATAR.green]: 'clarisse', [AVATAR.blue]: 'caleb', [AVATAR.yellow]: 'sauhee', [AVATAR.red]: 'meera' }
 
 // Game catalog for the blend pages — cover art + a short caption. Reuses the
 // card `details` above for title/developer/genre/playtime.
@@ -541,7 +545,7 @@ const VIDEOS = {
   humanFallFlat: 'maiYKaZNG7Y', grounded: 'zBD-GS61Gto', monsterHunter: 'O0tc1ODHma8',
   gangBeasts: 'Lm3HDdLufmA', wildHearts: '8vw9PlFrrOk', minecraftDungeons: 'TxNH6bapa3A', lol: 'p4QG59y6FGE',
 }
-const ALL_COLORS = [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red]
+const ALL_COLORS = [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red]
 const capName = (s) => s.charAt(0).toUpperCase() + s.slice(1)
 // Display name for an identity key, honoring the moderator's name overrides.
 const dispName = (key, names) => (key && names && names[key]) || (key ? capName(key) : '')
@@ -625,22 +629,22 @@ function mkCard(key, i = 0, extra) {
 // Per-profile taste → different recommendation lists for each tester. Rows keep
 // the four hover styles (expand / overlay / steam flyout / always-expanded).
 const RECS = {
-  abby: {
+  clarisse: {
     rows: [
       { mode: 'overlay', title: 'You’d rather build than sleep', subtitle: 'Cozy craft-and-survive worlds, sized to your sessions.', games: ['grounded', 'gp_astroneer', 'gp_stardewvalley', 'gp_medievaldynasty', 'gp_snowrunner'] },
     ],
   },
-  blake: {
+  caleb: {
     rows: [
       { mode: 'overlay', title: 'One more night, one more base', subtitle: 'Craft-and-survive loops your hours say you can’t quit.', games: ['grounded', 'gp_stateofdecay2', 'gp_dayz', 'gp_medievaldynasty', 'gp_powerwashsimulator'] },
     ],
   },
-  chloe: {
+  sauhee: {
     rows: [
       { mode: 'overlay', title: 'Certified sweat, respectfully', subtitle: 'Combat-heavy picks to keep your reflexes honest.', games: ['gp_doometernal', 'gp_hades', 'gp_deeprockgalactic', 'gp_warhammer40000darktide', 'gp_chivalry2'] },
     ],
   },
-  daniel: {
+  meera: {
     rows: [
       { mode: 'overlay', title: 'Here for the beautiful chaos', subtitle: 'Loud, silly nights that end with everyone yelling.', games: ['humanFallFlat', 'gangBeasts', 'overcooked', 'gp_amongus', 'gp_golfwithyourfriends'] },
     ],
@@ -653,8 +657,8 @@ const RECS = {
 const CINEMATIC_ROW = [
   { key: 'seaOfThieves', avatars: [AVATAR.blue, AVATAR.green], label: 'PLAYlisted this game' },
   { key: 'monsterHunter', avatars: [AVATAR.blue], label: 'recommends this game' },
-  { key: 'grounded', avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours' },
-  { key: 'humanFallFlat', avatars: [AVATAR.red, AVATAR.purple], label: 'played this for 4 hours' },
+  { key: 'grounded', avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours' },
+  { key: 'humanFallFlat', avatars: [AVATAR.red, AVATAR.yellow], label: 'played this for 4 hours' },
   { key: 'minecraft', avatars: [AVATAR.green], label: 'recommends this game' },
   { key: 'gangBeasts', avatars: [AVATAR.red], label: 'PLAYlisted this game' },
 ].map(({ key, avatars, label }) => {
@@ -685,14 +689,14 @@ const PORTRAIT_ROW = [
 
 // "Your Blends" — colored playlist cards (palette from the Figma landing frame).
 // Green (the user, sauhee) is a member of every blend.
-// abby=green, blake=blue, chloe=purple, daniel=red. Each person is in exactly
+// clarisse=green, caleb=blue, sauhee=purple, meera=red. Each person is in exactly
 // two of these, so everyone sees two groups: the all-four group + their pair.
 const BLENDS = [
-  { name: 'The Squad', color: '#5765f2', when: 'Fri 8pm', members: [AVATAR.green, AVATAR.blue, AVATAR.purple, AVATAR.red],
+  { name: 'The Squad', color: '#5765f2', when: 'Fri 8pm', members: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red],
     games: ['seaOfThieves', 'minecraft', 'overcooked', 'humanFallFlat', 'grounded', 'monsterHunter'] },
-  { name: 'Abby & Blake', color: '#34a172', when: 'weeknights', members: [AVATAR.green, AVATAR.blue],
+  { name: 'Clarisse & Caleb', color: '#34a172', when: 'weeknights', members: [AVATAR.green, AVATAR.blue],
     games: ['seaOfThieves', 'grounded', 'monsterHunter', 'wildHearts', 'forHonor', 'minecraft'] },
-  { name: 'Chloe & Daniel', color: '#d64b7e', when: 'weekends', members: [AVATAR.purple, AVATAR.red],
+  { name: 'Sauhee & Meera', color: '#d64b7e', when: 'weekends', members: [AVATAR.yellow, AVATAR.red],
     games: ['overcooked', 'humanFallFlat', 'gangBeasts', 'minecraftDungeons', 'lol', 'ac'] },
 ]
 
@@ -890,8 +894,8 @@ const STEAM_ROW = [
   { avatars: [AVATAR.green], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, steam: { released: 'Nov 18, 2011', desc: 'Build, explore and survive in an infinite world of blocks — solo or with friends. Mine deep, craft anything, and make the world your own.', review: 'Overwhelmingly Positive', reviews: '2.4M', tags: ['Sandbox', 'Survival', 'Building', 'Multiplayer'] } },
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, steam: { released: 'Jun 3, 2020', desc: 'A shared-world pirate adventure — sail, fight and hunt treasure with your crew across an open ocean full of other real players.', review: 'Very Positive', reviews: '312K', tags: ['Adventure', 'Open World', 'Pirates', 'Co-op'] } },
   { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, steam: { released: 'Aug 7, 2018', desc: 'Chaotic co-op cooking across wobbling, falling-apart kitchens. Chop, cook and serve before the timer runs out.', review: 'Very Positive', reviews: '58K', tags: ['Co-op', 'Party', 'Casual', 'Local Multiplayer'] } },
-  { avatars: [AVATAR.purple], label: 'recommends this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, steam: { released: 'Jul 22, 2016', desc: 'Floppy physics puzzles in surreal dreamscapes. No skill floor at all, endless slapstick, and better with friends.', review: 'Overwhelmingly Positive', reviews: '180K', tags: ['Puzzle', 'Physics', 'Co-op', 'Funny'] } },
-  { avatars: [AVATAR.purple, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, steam: { released: 'Sep 27, 2022', desc: 'Shrunk to the size of an ant, survive the backyard: build bases, brew gear and fight off giant bugs with friends.', review: 'Very Positive', reviews: '96K', tags: ['Survival', 'Co-op', 'Crafting', 'Adventure'] } },
+  { avatars: [AVATAR.yellow], label: 'recommends this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, steam: { released: 'Jul 22, 2016', desc: 'Floppy physics puzzles in surreal dreamscapes. No skill floor at all, endless slapstick, and better with friends.', review: 'Overwhelmingly Positive', reviews: '180K', tags: ['Puzzle', 'Physics', 'Co-op', 'Funny'] } },
+  { avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, steam: { released: 'Sep 27, 2022', desc: 'Shrunk to the size of an ant, survive the backyard: build bases, brew gear and fight off giant bugs with friends.', review: 'Very Positive', reviews: '96K', tags: ['Survival', 'Co-op', 'Crafting', 'Adventure'] } },
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, steam: { released: 'Jan 12, 2022', desc: 'Hunt colossal monsters, craft mighty gear, and chain fluid aerial combat with the new Wirebug.', review: 'Very Positive', reviews: '110K', tags: ['Action RPG', 'Co-op', 'Hunting', 'Multiplayer'] } },
 ]
 
@@ -948,7 +952,7 @@ function WheelNavButton() {
 
 function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onMixes, onLibrary }) {
   const { blends, setBlends } = useRoomCtx()
-  const recs = RECS[SELF_NAME] || RECS.abby
+  const recs = RECS[SELF_NAME] || RECS.clarisse
 
   // Right-click menu for the Mix cards (same editor as the Mix page).
   const [mixMenu, setMixMenu] = useState(null) // { x, y, blend }
@@ -1073,7 +1077,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                 className="mt-[22px] flex items-center gap-[12px] rounded-full border border-white/10 bg-black/30 px-[18px] py-[8px] backdrop-blur-sm transition hover:border-white/25 hover:bg-black/45"
               >
                 <div className="flex items-center">
-                  {[AVATAR.blue, AVATAR.purple, AVATAR.green].map((c, i) => (
+                  {[AVATAR.blue, AVATAR.yellow, AVATAR.green].map((c, i) => (
                     <Avatar key={i} color={c} size={26} style={{ marginRight: i < 2 ? -10 : 0, boxShadow: '0 0 0 2px rgba(0,0,0,0.55)' }} />
                   ))}
                 </div>
@@ -1432,25 +1436,25 @@ const STARTER_DESC = {
   gp_hades: { studio: 'Supergiant Games', desc: 'A god-like roguelike — fight out of Hell one perfect run at a time.', tags: ['Roguelike', 'Action', 'Story Rich'], friends: 'Trending with 120+ players', rec: 97, recFriends: 4 },
   gp_doom64: { studio: 'id Software', desc: 'The 1997 cult classic, restored — pure retro demon-blasting.', tags: ['FPS', 'Retro', 'Mature 17+'], friends: 'Rising in your communities' },
   gp_vampiresurvivors: { studio: 'poncle', desc: 'One button, a thousand monsters. Absurdly moreish bullet-heaven.', tags: ['Roguelike', 'Bullet Hell', 'Casual'], friends: 'Everyone is playing this' },
-  gp_stardewvalley: { studio: 'ConcernedApe', desc: 'Inherit a farm, build a life, lose a hundred hours to it happily.', tags: ['Farming Sim', 'Co-op', 'Cozy'], friends: 'Blake rated this 5 stars', rec: 96, recFriends: 5 },
-  gp_oriandthewillofthewisps: { studio: 'Moon Studios', desc: 'A gorgeous, heartbreaking platformer with movement that just sings.', tags: ['Platformer', 'Metroidvania', 'Story Rich'], friends: 'Chloe rated this 5 stars', rec: 94, recFriends: 4 },
+  gp_stardewvalley: { studio: 'ConcernedApe', desc: 'Inherit a farm, build a life, lose a hundred hours to it happily.', tags: ['Farming Sim', 'Co-op', 'Cozy'], friends: 'Caleb rated this 5 stars', rec: 96, recFriends: 5 },
+  gp_oriandthewillofthewisps: { studio: 'Moon Studios', desc: 'A gorgeous, heartbreaking platformer with movement that just sings.', tags: ['Platformer', 'Metroidvania', 'Story Rich'], friends: 'Sauhee rated this 5 stars', rec: 94, recFriends: 4 },
   gp_batmanarkhamknight: { studio: 'Rocksteady', desc: 'Be the Batman across a stormy, open Gotham in the Arkham finale.', tags: ['Action', 'Open World', 'Mature 17+'], friends: '3 friends recommend this' },
   gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends recommend this' },
   gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends recommend this' },
   gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '3 friends recommend this' },
-  gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: 'Daniel recommends this' },
+  gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: 'Meera recommends this' },
   gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '' },
-  gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Daniel has played 3 hrs recently' },
-  gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'Chloe said "oddly therapeutic, lost an hour"' },
-  gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: 'Daniel said "I cried at the ending"' },
-  gp_tunic: { studio: 'Andrew Shouldice', desc: 'A tiny fox, a huge secret-filled world, and a manual you decode as you go.', tags: ['Adventure', 'Puzzle', 'Souls-like'], friends: 'Blake said "the secret manual blew my mind"' },
-  gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Chloe said "still thinking about that ending"' },
-  gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Blake said "creepy in the best way"' },
-  gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Daniel said "hardest game I love"', rec: 95, recFriends: 3 },
+  gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Meera has played 3 hrs recently' },
+  gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'Sauhee said "oddly therapeutic, lost an hour"' },
+  gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: 'Meera said "I cried at the ending"' },
+  gp_tunic: { studio: 'Andrew Shouldice', desc: 'A tiny fox, a huge secret-filled world, and a manual you decode as you go.', tags: ['Adventure', 'Puzzle', 'Souls-like'], friends: 'Caleb said "the secret manual blew my mind"' },
+  gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Sauhee said "still thinking about that ending"' },
+  gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Caleb said "creepy in the best way"' },
+  gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Meera said "hardest game I love"', rec: 95, recFriends: 3 },
 }
 // A stable, per-game pair of friend avatars so different cards show different
 // profiles (varied but consistent for a given game).
-const AV_POOL = [AVATAR.blue, AVATAR.purple, AVATAR.green, AVATAR.red]
+const AV_POOL = [AVATAR.blue, AVATAR.yellow, AVATAR.green, AVATAR.red]
 function pickAvatars(key) {
   let h = 0
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0
@@ -1462,8 +1466,8 @@ function pickAvatars(key) {
 // One deterministic source of a game's FRIEND activity (never the current user),
 // so the same game shows the same friends, count and hours everywhere it appears
 // — cards, the "Similar to" row, and the detail page. Keyed by catalog key.
-const FRIEND_POOL = [AVATAR.blue, AVATAR.purple, AVATAR.red] // Blake, Chloe, Daniel
-const FRIEND_NAMES = { [AVATAR.blue]: 'Blake', [AVATAR.purple]: 'Chloe', [AVATAR.red]: 'Daniel' }
+const FRIEND_POOL = [AVATAR.blue, AVATAR.yellow, AVATAR.red] // Caleb, Sauhee, Meera
+const FRIEND_NAMES = { [AVATAR.blue]: 'Caleb', [AVATAR.yellow]: 'Sauhee', [AVATAR.red]: 'Meera' }
 function friendInfo(key) {
   let h = 0
   for (let i = 0; i < String(key).length; i++) h = (h * 31 + String(key).charCodeAt(i)) >>> 0
@@ -1479,7 +1483,7 @@ function friendInfo(key) {
   const count = Math.min(Math.max(authored, 1), FRIEND_POOL.length)
   const avatars = avatarsForCount(key, count) // deterministic faces, capped at the friend pool
   const hours = trend?.hours ?? (4 + (h % 22)) // avg hours played, 4..25
-  // A single friend gets named ("Blake recommends…"); multiples show the count.
+  // A single friend gets named ("Caleb recommends…"); multiples show the count.
   const recommend = count === 1
     ? `${FRIEND_NAMES[avatars[0]]} recommends this game`
     : `${count} friends recommend this game`
@@ -1684,12 +1688,14 @@ function cineCard(k) {
     // faces: a curated friend quote if there is one, else the per-game count.
     avatars: friendInfo(k).avatars,
     // Always show the friend-count + faces ("N friends recommend this game"),
-    // never a single-person quote like "Blake rated this 5 stars".
+    // never a single-person quote like "Caleb rated this 5 stars".
     label: friendInfo(k).recommend,
     avatarsPlus: false,
-    players: g?.players && g.players !== '1' && g.players !== 'MMO' ? g.players : g?.players === 'MMO' ? 'MMO' : '1',
-    genre: g?.genre,
-    genre2: (d.tags || []).find((t) => t && t !== g?.genre) || null,
+    // Fall back to CATALOG for games not in the Starter list (e.g. Sea of
+    // Thieves) so their capacity + genre pills aren't blank.
+    players: (() => { const p = g?.players || c.players || '1'; return p === 'MMO' ? 'MMO' : p })(),
+    genre: capName(g?.genre || c.genre || ''),
+    genre2: (d.tags || []).find((t) => t && capName(t) !== capName(g?.genre || c.genre || '')) || null,
     title: c.title || g?.title,
     recommendPct: d.rec,
   }
@@ -1779,16 +1785,55 @@ function LibraryTile({ g, onClick }) {
   )
 }
 
+// ── Library filter facets ───────────────────────────────────────────────────
+// A game's max party size, derived from its `players` range ("1-4" → 4, "MMO" → 999).
+const maxPlayers = (p) => p === 'MMO' ? 999 : Math.max(1, ...String(p).split('-').map(Number).filter((n) => !isNaN(n)))
+// Every distinct genre in the catalog, for the genre filter chips.
+const ALL_GENRES = [...new Set(STARTER_LIBRARY.map((g) => g.genre))].sort((a, b) => a.localeCompare(b))
+// Descriptive tags a game carries (from its Starter blurb) — used by the generic
+// "tag" filter facet that clicked card tags land on when they aren't a genre.
+const gameTags = (g) => STARTER_DESC[g.catKey]?.tags || []
+// Compare two {kind,value} filter facets.
+const sameFacet = (a, b) => a.kind === b.kind && a.value === b.value
+// Human label for a filter facet — the player-capacity facet is a number ("N").
+const facetLabel = (f) => f.kind === 'cap' ? (f.value >= 999 ? 'MMO' : `Up to ${f.value} player${f.value === 1 ? '' : 's'}`) : f.value
+// Resolve a clicked card-tag string to a Library filter facet: a real genre, a
+// player-capacity number (the game's max), or otherwise a generic descriptive tag.
+const facetForTag = (text) => {
+  const t = String(text || '').trim()
+  if (!t) return null
+  if (ALL_GENRES.includes(t)) return { kind: 'genre', value: t }
+  const m = t.match(/^\d+(?:-\d+)?|MMO/)
+  if (m && (/player|MMO/i.test(t) || /^\d/.test(t))) return { kind: 'cap', value: maxPlayers(m[0]) }
+  return { kind: 'tag', value: t }
+}
+
 // ── Library tab — the full Game Pass Starter Edition catalog ────────────────
-function LibraryPage({ onHome, onMixes, onOpen }) {
+function LibraryPage({ onHome, onMixes, onOpen, initialFilter }) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [q, setQ] = useState('')
+  const [active, setActive] = useState(initialFilter || []) // [{kind:'cap'|'genre', value}]
+  const [filterOpen, setFilterOpen] = useState(false)
+  // Arriving from a clicked tag applies (replaces) the incoming filter.
+  useEffect(() => { if (initialFilter && initialFilter.length) setActive(initialFilter) }, [initialFilter])
+
   const query = q.trim().toLowerCase()
-  const shown = STARTER_LIBRARY.filter((g) => !query || g.title.toLowerCase().includes(query) || g.genre.toLowerCase().includes(query))
-  // Every tile opens the game's detail page — playing is a decision you make
-  // there, not by clicking a cover. `catKey` is the key every Starter game has;
-  // `key` only exists on the handful with hand-authored art.
+  const capFacet = active.find((a) => a.kind === 'cap') // player capacity is a single "up to N" number
+  const capMax = capFacet ? capFacet.value : null
+  const genres = active.filter((a) => a.kind === 'genre').map((a) => a.value)
+  const tagFacets = active.filter((a) => a.kind === 'tag').map((a) => a.value)
+  // Faceted: OR within a group, AND across groups, AND with the text search.
+  const shown = STARTER_LIBRARY.filter((g) =>
+    (!query || g.title.toLowerCase().includes(query) || g.genre.toLowerCase().includes(query)) &&
+    (capMax == null || maxPlayers(g.players) <= capMax) &&
+    (genres.length === 0 || genres.includes(g.genre)) &&
+    (tagFacets.length === 0 || tagFacets.some((t) => gameTags(g).includes(t))))
+  const isOn = (f) => active.some((a) => sameFacet(a, f))
+  const toggle = (f) => setActive((cur) => cur.some((a) => sameFacet(a, f)) ? cur.filter((a) => !sameFacet(a, f)) : [...cur, f])
+  // Set (or clear) the single "up to N players" capacity facet.
+  const setCap = (n) => setActive((cur) => { const rest = cur.filter((a) => a.kind !== 'cap'); return n == null ? rest : [...rest, { kind: 'cap', value: n }] })
   const open = (g) => onOpen(g.catKey)
+
   return (
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
@@ -1808,20 +1853,84 @@ function LibraryPage({ onHome, onMixes, onOpen }) {
               <h1 className="text-[clamp(30px,3vw,44px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Library</h1>
               <div className="mt-[6px] flex items-center gap-[8px] text-[15px] text-[#9a9ba3]">
                 <XboxLogo size={16} />
-                Game Pass Starter Edition · {STARTER_LIBRARY.length} games, playable in the cloud.
+                Game Pass Starter Edition · {shown.length} of {STARTER_LIBRARY.length} games{(active.length || query) ? '' : ', playable in the cloud.'}
               </div>
             </div>
-            {/* Quick in-page filter */}
-            <div className="flex h-[38px] w-[260px] max-w-full items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[12px]">
-              <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Filter your library" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+            <div className="flex flex-row-reverse items-center gap-[10px]">
+              {/* Filters — multi-select player-capacity + genre tags (sits to the right of search) */}
+              <div className="relative">
+                <button
+                  onClick={() => setFilterOpen((v) => !v)}
+                  className="flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[14px] text-[14px] font-semibold text-white transition hover:bg-[#232327]"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><path d="M3 5.5h18a1 1 0 0 1 .8 1.6l-6.3 8.2V20a1 1 0 0 1-1.45.9l-3-1.5A1 1 0 0 1 10.5 18.5v-3.2L2.2 7.1A1 1 0 0 1 3 5.5z" /></svg>
+                  Filters
+                  {active.length > 0 && <span className="rounded-full bg-white/15 px-[7px] py-[1px] text-[12px] font-bold">{active.length}</span>}
+                </button>
+                {filterOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[40]" onClick={() => setFilterOpen(false)} />
+                    <div className="absolute right-0 top-[46px] z-[50] max-h-[62vh] w-[340px] overflow-y-auto rounded-[12px] border border-[#2b2d31] bg-[#161618] p-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                      <p className="mb-[9px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Players</p>
+                      <div className="flex items-center gap-[8px]">
+                        <span className="text-[14px] text-[#c7c9cb]">Up to</span>
+                        <input
+                          type="number"
+                          min="1"
+                          inputMode="numeric"
+                          value={capFacet ? capFacet.value : ''}
+                          onChange={(e) => { const n = parseInt(e.target.value, 10); setCap(!e.target.value || isNaN(n) || n < 1 ? null : n) }}
+                          placeholder="any"
+                          className="h-[34px] w-[76px] rounded-[8px] bg-[#1f1f23] px-[10px] text-center text-[14px] font-semibold text-white outline-none ring-1 ring-white/10 placeholder:font-normal placeholder:text-[#87898c] focus:ring-[#7aff46] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                        />
+                        <span className="text-[14px] text-[#c7c9cb]">players</span>
+                        {capFacet && <button onClick={() => setCap(null)} className="text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear</button>}
+                      </div>
+                      <p className="mb-[9px] mt-[16px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Genre</p>
+                      <div className="flex flex-wrap gap-[8px]">
+                        {ALL_GENRES.map((gname) => {
+                          const f = { kind: 'genre', value: gname }
+                          return (
+                            <button key={gname} onClick={() => toggle(f)} className={'rounded-full px-[12px] py-[6px] text-[13px] font-semibold transition ' + (isOn(f) ? 'bg-white text-black' : 'bg-[#1f1f23] text-[#c7c9cb] hover:bg-[#2a2a2f] hover:text-white')}>{gname}</button>
+                          )
+                        })}
+                      </div>
+                      {active.length > 0 && (
+                        <button onClick={() => setActive([])} className="mt-[16px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all filters</button>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+              {/* Search box — text search, distinct from the tag filter above */}
+              <div className="flex h-[38px] w-[240px] max-w-full items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[12px]">
+                <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search your library" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+              </div>
             </div>
           </div>
 
-          <div className="mt-[28px] grid grid-cols-2 gap-x-[18px] gap-y-[24px] sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {/* Active filter chips — click to remove */}
+          {active.length > 0 && (
+            <div className="mt-[18px] flex flex-wrap items-center gap-[8px]">
+              {active.map((f, i) => (
+                <button key={i} onClick={() => toggle(f)} className="flex items-center gap-[6px] rounded-full bg-white px-[12px] py-[6px] text-[13px] font-semibold text-black transition hover:brightness-95">
+                  {facetLabel(f)}
+                  <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              ))}
+              {/* Add more tags — opens the filter panel */}
+              <button onClick={() => setFilterOpen(true)} aria-label="Add more tags" className="flex size-[30px] items-center justify-center rounded-full bg-[#1f1f23] text-[#c7c9cb] transition hover:bg-[#2a2a2f] hover:text-white">
+                <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+              </button>
+              <button onClick={() => setActive([])} className="ml-[2px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>
+            </div>
+          )}
+
+          <div className="mt-[24px] grid grid-cols-2 gap-x-[18px] gap-y-[24px] sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {shown.map((g) => <LibraryTile key={g.title} g={g} onClick={() => open(g)} />)}
           </div>
-          {shown.length === 0 && <p className="mt-[40px] text-center text-[15px] text-[#7e7f87]">No games match “{q}”.</p>}
+          {shown.length === 0 && <p className="mt-[40px] text-center text-[15px] text-[#7e7f87]">No games match your filters.</p>}
         </div>
       </div>
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
@@ -2674,7 +2783,7 @@ function WhosOnModal({ onClose, onCreated }) {
   const [gifted, setGifted] = useState({})
   const [q, setQ] = useState('')
   const query = q.trim().toLowerCase()
-  // Blake / Chloe / Daniel are on Arcade (selectable for a Mix); OFF_ARCADE
+  // Caleb / Sauhee / Meera are on Arcade (selectable for a Mix); OFF_ARCADE
   // friends aren't yet and get a Gift button.
   const sorted = friends.filter((d) => !query || capName(d.name).toLowerCase().includes(query))
   const offArcade = OFF_ARCADE_FRIENDS.filter((d) => !query || capName(d.name).toLowerCase().includes(query))
@@ -5330,18 +5439,24 @@ function ModeratorTile({ name, displayName, onRename, color, vp, online, view, s
           <Avatar color={color} size={24} />
           <span className="absolute -bottom-[1px] -right-[1px] size-[9px] rounded-full" style={{ backgroundColor: online ? '#23a55a' : '#5c5e66', border: '2px solid #111114' }} />
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           {/* Editable display name — the moderator can rename each participant;
-              the name syncs to the room and shows across that person's screens. */}
-          <input
-            key={displayName}
-            defaultValue={displayName}
-            onBlur={(e) => onRename(e.target.value.trim())}
-            onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
-            title="Rename this participant"
-            className="w-full rounded-[4px] bg-transparent px-[3px] py-[1px] text-[14px] font-semibold leading-tight text-white outline-none transition hover:bg-[#1c1d21] focus:bg-[#1c1d21]"
-          />
-          <div className="truncate px-[3px] text-[11px] text-[#80848e]">{online ? describeView(view) : 'offline'}</div>
+              the name syncs to the room and shows across that person's screens.
+              Styled as an obvious input (border + pencil) so it reads as editable. */}
+          <label className="mb-[2px] block text-[9px] font-bold uppercase tracking-wide text-[#6d7078]">Display name · click to edit</label>
+          <div className="group/name flex items-center gap-[6px] rounded-[6px] bg-[#1c1d21] px-[8px] py-[3px] ring-1 ring-white/15 transition hover:ring-white/30 focus-within:bg-[#26272b] focus-within:ring-[#5765f2]">
+            <input
+              key={displayName}
+              defaultValue={displayName}
+              onBlur={(e) => onRename(e.target.value.trim())}
+              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+              placeholder="Add a name…"
+              title="Rename this participant"
+              className="w-full min-w-0 bg-transparent text-[14px] font-semibold leading-tight text-white outline-none placeholder:font-normal placeholder:text-[#6d7078]"
+            />
+            <svg viewBox="0 0 24 24" className="size-[13px] shrink-0 text-[#80848e] transition group-hover/name:text-[#c7c9cb] group-focus-within/name:text-[#8b95f6]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+          </div>
+          <div className="mt-[3px] truncate px-[1px] text-[11px] text-[#80848e]">{online ? describeView(view) : 'offline'}</div>
         </div>
         <div className="ml-auto flex shrink-0 gap-[6px]">
           <button onClick={onHide} title={hidden ? 'Show this participant' : 'Hide this participant'} className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">{hidden ? 'Show' : 'Hide'}</button>
@@ -5538,21 +5653,21 @@ function detailFor(key) {
 
 const REVIEWS = [
   { name: 'ShinyPlastic_099', color: AVATAR.blue, joined: '02/23/2019', skill: 'Intermediate', privacy: 'Public', title: 'We should Play This Again', thumb: 'up', body: 'I have never really been able to get into the AC Games for some reason, they should appeal to me since I tend to enjoy this type of game but despite trying many (I have several outside of the ones I have on Steam), they just never managed to hold my attention. At least until now that is . . .' },
-  { name: 'Pastel_089', color: AVATAR.purple, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Ugh. Gross', thumb: 'down', body: 'Ass.' },
+  { name: 'Pastel_089', color: AVATAR.yellow, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Ugh. Gross', thumb: 'down', body: 'Ass.' },
   { name: 'PastyBeans2021', color: AVATAR.green, joined: '04/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Nice Graphics', thumb: 'up', body: "I've never been able to get into AC Games. They should appeal to me, but despite trying many, they never held my attention until now. The graphics really pull you into the Golden Age of Piracy." },
   { name: 'NovaTheWolf', color: AVATAR.red, joined: '11/02/2018', skill: 'Advanced', privacy: 'Public', title: 'Best co-op night in ages', thumb: 'up', body: 'We ran a full lobby and nobody wanted to stop. The chaos ramps up perfectly the more people you cram in, and the learning curve is gentle enough that our least-gamer friend still had a blast.' },
   { name: 'QuietStorm_42', color: AVATAR.blue, joined: '07/19/2021', skill: 'Beginner', privacy: 'Public', title: 'Good but grindy', thumb: 'up', body: 'Solid fun for the first several hours. It does start to feel repetitive once you have seen all the maps, but by then you have more than gotten your money’s worth.' },
   { name: 'mossy_antler', color: AVATAR.green, joined: '03/30/2022', skill: 'Intermediate', privacy: 'Public', title: 'Surprisingly deep', thumb: 'up', body: 'Looks casual on the surface, but there is real strategy once everyone knows what they are doing. Highly recommend playing with voice chat on.' },
-  { name: 'ByteSizedBrian', color: AVATAR.purple, joined: '09/12/2019', skill: 'Advanced', privacy: 'Public', title: 'Servers can be rough', thumb: 'down', body: 'The game itself is great, but I hit a few laggy sessions and one hard crash. When it works it is a 9/10; when it does not it is frustrating.' },
+  { name: 'ByteSizedBrian', color: AVATAR.yellow, joined: '09/12/2019', skill: 'Advanced', privacy: 'Public', title: 'Servers can be rough', thumb: 'down', body: 'The game itself is great, but I hit a few laggy sessions and one hard crash. When it works it is a 9/10; when it does not it is frustrating.' },
   { name: 'Cloudberry', color: AVATAR.red, joined: '01/05/2023', skill: 'Beginner', privacy: 'Public', title: 'My new comfort game', thumb: 'up', body: 'Perfect for unwinding after work with the group. Low stakes, lots of laughs, easy to hop in and out of.' },
   { name: 'Grimlock_Prime', color: AVATAR.blue, joined: '05/28/2017', skill: 'Advanced', privacy: 'Public', title: 'Skill ceiling is real', thumb: 'up', body: 'Casual players will have fun, but there is a ton of room to master the mechanics. The gap between a new player and a veteran is huge, in a good way.' },
   { name: 'peachy_keen', color: AVATAR.green, joined: '10/14/2020', skill: 'Intermediate', privacy: 'Public', title: 'Wish there was more content', thumb: 'up', body: 'What is here is polished and great, I just burned through it faster than I expected. Hoping the devs keep adding maps and modes.' },
-  { name: 'V0idWalker', color: AVATAR.purple, joined: '06/06/2021', skill: 'Beginner', privacy: 'Public', title: 'Not for me', thumb: 'down', body: 'I can see why people love it, but the pacing did not click with me. Gave it a few sessions and just bounced off.' },
+  { name: 'V0idWalker', color: AVATAR.yellow, joined: '06/06/2021', skill: 'Beginner', privacy: 'Public', title: 'Not for me', thumb: 'down', body: 'I can see why people love it, but the pacing did not click with me. Gave it a few sessions and just bounced off.' },
   { name: 'SunnySideUp', color: AVATAR.red, joined: '02/11/2022', skill: 'Intermediate', privacy: 'Public', title: 'Great with strangers too', thumb: 'up', body: 'Even queuing solo I ended up in fun lobbies. The community is friendlier than most, which is rare these days.' },
   { name: 'takoyaki_lord', color: AVATAR.blue, joined: '08/23/2019', skill: 'Advanced', privacy: 'Public', title: 'Ran it for our game night', thumb: 'up', body: 'Hosted eight people and it handled the crowd better than expected. A couple of them bought it the next day. That is the best endorsement I can give.' },
 ]
 
-// Short reviews attributed to the named friends (Blake/Chloe/Daniel). Picked
+// Short reviews attributed to the named friends (Caleb/Sauhee/Meera). Picked
 // deterministically per game so the friend avatars shown by the score always
 // map to a real entry in the review list.
 const FRIEND_REVIEW_POOL = [
@@ -5593,12 +5708,10 @@ function friendReviewsFor(key) {
   return out
 }
 
-function DetailPill({ children }) {
-  return (
-    <span className="flex items-center gap-[6px] whitespace-nowrap rounded-full border border-[#8e9297] px-[12px] py-[3px] text-[14px] font-semibold text-[#c7c9cb]">
-      {children}
-    </span>
-  )
+function DetailPill({ children, onClick, title }) {
+  const cls = 'flex items-center gap-[6px] whitespace-nowrap rounded-full bg-[#1f1f23] px-[13px] py-[5px] text-[14px] font-semibold text-[#c7c9cb]'
+  if (onClick) return <button type="button" onClick={onClick} title={title} className={cls + ' transition hover:bg-[#2a2a2f] hover:text-white'}>{children}</button>
+  return <span className={cls}>{children}</span>
 }
 
 function InfoLine({ label, children }) {
@@ -5641,6 +5754,13 @@ function ReviewCard({ r }) {
           >
             {r.body}
           </p>
+          {r.tags && r.tags.length > 0 && (
+            <div className="mt-[12px] flex flex-wrap gap-[6px]">
+              {r.tags.map((t, i) => (
+                <span key={i} className="rounded-full bg-[#26262a] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb]">{t}</span>
+              ))}
+            </div>
+          )}
         </div>
         <div className="flex shrink-0 items-center pr-[10px] text-white">
           <ThumbsUpGlyph size={46} className={down ? 'rotate-180' : undefined} />
@@ -5792,13 +5912,26 @@ function ReviewsSection({ reviews = REVIEWS }) {
   )
 }
 
-// Compose a review on the detail page — thumb up/down, title, body, and a
+// Descriptive tags a reviewer can attach (Steam-style), shown as chips on the
+// posted review.
+const REVIEW_TAG_OPTIONS = ['Best with friends', 'Story Rich', 'Relaxing', 'Challenging', 'Replayable', 'Great soundtrack', 'Funny', 'Beautiful', 'Addictive', 'Grindy', 'Short & sweet', 'Great co-op', 'Atmospheric', 'Casual', 'Competitive', 'Cozy', 'Emotional', 'Fast-paced', 'Immersive', 'Innovative', 'Nostalgic', 'Open world', 'Skill-based', 'Strategic', 'Tactical', 'Underrated', 'Well-optimized', 'Buggy', 'Steep learning curve', 'Family-friendly', 'Retro', 'Wholesome', 'Chaotic', 'Creepy', 'Satisfying', 'Difficult'].sort((a, b) => a.localeCompare(b))
+
+// Compose a review on the detail page — thumb up/down, title, body, tags, and a
 // Friends Only / Public visibility toggle (mirrors the review privacy badges).
 function WriteReviewModal({ onClose, onSubmit }) {
   const [thumb, setThumb] = useState('up')
   const [privacy, setPrivacy] = useState('Public') // 'Public' | 'Friends Only'
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
+  const [tags, setTags] = useState([])
+  const [tagQuery, setTagQuery] = useState('')
+  const toggleTag = (t) => setTags((cur) => cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t])
+  const addTag = (t) => { const v = t.trim(); if (v && !tags.includes(v)) setTags((cur) => [...cur, v]); setTagQuery('') }
+  const tq = tagQuery.trim().toLowerCase()
+  // Available (unselected) tags, filtered by the search box.
+  const tagMatches = REVIEW_TAG_OPTIONS.filter((t) => !tags.includes(t) && (!tq || t.toLowerCase().includes(tq)))
+  // Let the reviewer coin a tag that isn't in the preset list.
+  const canCoin = tq && !REVIEW_TAG_OPTIONS.some((t) => t.toLowerCase() === tq) && !tags.some((t) => t.toLowerCase() === tq)
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
     window.addEventListener('keydown', onKey)
@@ -5809,7 +5942,7 @@ function WriteReviewModal({ onClose, onSubmit }) {
     if (!canPost) return
     onSubmit({
       name: capName(SELF_NAME), color: SELF, joined: '01/01/2024', skill: 'Intermediate',
-      privacy, thumb, title: title.trim(), body: body.trim(),
+      privacy, thumb, title: title.trim(), body: body.trim(), tags,
     })
   }
   const Vis = ({ value, glyph, label }) => (
@@ -5850,6 +5983,50 @@ function WriteReviewModal({ onClose, onSubmit }) {
           <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What did you think?" rows={4} className="w-full resize-none rounded-[8px] bg-[#111214] px-[12px] py-[10px] text-[14px] leading-[1.5] text-white outline-none ring-1 ring-white/10 placeholder:text-[#6f7276] focus:ring-[#5765f2]" />
         </div>
 
+        {/* Tags — searchable, multi-select, with the option to coin your own */}
+        <div>
+          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Add tags <span className="font-normal normal-case text-[#6f7276]">(optional)</span></p>
+          {/* Selected tags — click to remove */}
+          {tags.length > 0 && (
+            <div className="mb-[10px] flex flex-wrap gap-[8px]">
+              {tags.map((t) => (
+                <button key={t} onClick={() => toggleTag(t)} className="flex items-center gap-[6px] rounded-full bg-white px-[11px] py-[5px] text-[13px] font-semibold text-black transition hover:brightness-95">
+                  {t}
+                  <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              ))}
+            </div>
+          )}
+          {/* Search box */}
+          <div className="flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] ring-1 ring-white/10 focus-within:ring-[#5765f2]">
+            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+            <input
+              value={tagQuery}
+              onChange={(e) => setTagQuery(e.target.value)}
+              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (tagMatches[0]) toggleTag(tagMatches[0]); else if (canCoin) addTag(tagQuery) } }}
+              placeholder="Search tags…"
+              className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#6f7276]"
+            />
+          </div>
+          {/* Matching + coin-your-own options */}
+          <div className="mt-[10px] flex max-h-[132px] flex-wrap gap-[8px] overflow-y-auto">
+            {canCoin && (
+              <button onClick={() => addTag(tagQuery)} className="flex items-center gap-[5px] rounded-full bg-[#1f1f23] px-[11px] py-[5px] text-[13px] font-semibold text-white ring-1 ring-white/25 transition hover:bg-[#2a2a2f]">
+                <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                Add “{tagQuery.trim()}”
+              </button>
+            )}
+            {tagMatches.map((t) => (
+              <button key={t} onClick={() => toggleTag(t)} className="rounded-full bg-[#1f1f23] px-[11px] py-[5px] text-[13px] font-semibold text-[#c7c9cb] transition hover:bg-[#2a2a2f] hover:text-white">
+                {t}
+              </button>
+            ))}
+            {tagMatches.length === 0 && !canCoin && (
+              <p className="py-[4px] text-[13px] text-[#6f7276]">No tags match “{tagQuery.trim()}”.</p>
+            )}
+          </div>
+        </div>
+
         {/* Visibility — Public / Friends Only */}
         <div>
           <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Who can see this?</p>
@@ -5870,6 +6047,9 @@ function WriteReviewModal({ onClose, onSubmit }) {
 
 // Extra screenshot slides per game (beyond the cover), extensible as art lands.
 const GALLERY = {}
+// A video's own YouTube still — so the Trailer and Gameplay thumbnails are
+// visually distinct from each other and from the cover art.
+const ytThumb = (id) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`
 
 // Build the ordered media slides for a game's hero carousel: cover first, then
 // any bespoke screenshots, then the trailer, then the gameplay video (the same
@@ -5904,55 +6084,74 @@ function HeroCarousel({ slides, children }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [n])
   return (
-    <div className="group relative w-full shrink-0 overflow-hidden rounded-[10px] bg-black shadow-[0_4px_20px_rgba(0,0,0,0.5)] lg:w-[560px]">
-      <div
-        className="flex aspect-[16/10] w-full transition-transform duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
-        style={{ transform: `translateX(-${i * 100}%)` }}
-      >
-        {slides.map((s, idx) => (
-          <div key={idx} className="relative size-full shrink-0 basis-full bg-black">
-            {s.type === 'video' && idx === i ? (
-              <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} start={0} controls />
-            ) : (
-              <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
-            )}
-            {s.type === 'video' && (
-              <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">{s.badge || 'Trailer'}</span>
-            )}
-          </div>
-        ))}
+    <div className="w-full shrink-0 lg:w-[560px]">
+      <div className="group relative w-full overflow-hidden rounded-[10px] bg-black shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+        <div
+          className="flex aspect-[16/10] w-full transition-transform duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+          style={{ transform: `translateX(-${i * 100}%)` }}
+        >
+          {slides.map((s, idx) => (
+            <div key={idx} className="relative size-full shrink-0 basis-full bg-black">
+              {s.type === 'video' && idx === i ? (
+                <VideoTrailer youTubeId={s.youTubeId} poster={s.poster} start={0} controls />
+              ) : (
+                <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
+              )}
+              {s.type === 'video' && (
+                <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">{s.badge || 'Trailer'}</span>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Overlay content (platform marks) passed by the parent */}
+        {children}
+
+        {n > 1 && (
+          <>
+            <button
+              onClick={() => go(-1)}
+              aria-label="Previous"
+              className="absolute left-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
+            >
+              <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
+            </button>
+            <button
+              onClick={() => go(1)}
+              aria-label="Next"
+              className="absolute right-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
+            >
+              <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+            </button>
+          </>
+        )}
       </div>
 
-      {/* Overlay content (platform marks) passed by the parent */}
-      {children}
-
+      {/* Thumbnail strip — jump to any slide; video thumbs carry a Trailer/Gameplay banner. */}
       {n > 1 && (
-        <>
-          <button
-            onClick={() => go(-1)}
-            aria-label="Previous"
-            className="absolute left-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
-          >
-            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
-          </button>
-          <button
-            onClick={() => go(1)}
-            aria-label="Next"
-            className="absolute right-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
-          >
-            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
-          </button>
-          <div className="absolute bottom-[14px] left-1/2 flex -translate-x-1/2 gap-[7px]">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setI(idx)}
-                aria-label={`Slide ${idx + 1}`}
-                className={'size-[7px] rounded-full transition ' + (idx === i ? 'scale-110 bg-white' : 'bg-white/40 hover:bg-white/70')}
-              />
-            ))}
-          </div>
-        </>
+        <div className="mt-[10px] flex gap-[8px]">
+          {slides.map((s, idx) => (
+            <button
+              key={idx}
+              onClick={() => setI(idx)}
+              aria-label={`${s.type === 'video' ? (s.badge || 'Trailer') : 'Screenshot'} ${idx + 1}`}
+              className={'group/th relative aspect-video min-w-0 flex-1 overflow-hidden rounded-[6px] transition ' + (idx === i ? 'ring-2 ring-[#7aff46]' : 'ring-1 ring-white/10 hover:ring-white/40')}
+            >
+              <img alt="" src={s.type === 'video' ? ytThumb(s.youTubeId) : s.src} className="absolute inset-0 size-full object-cover" />
+              <div className={'absolute inset-0 transition ' + (idx === i ? 'bg-transparent' : 'bg-black/45 group-hover/th:bg-black/15')} />
+              {s.type === 'video' && (
+                <span className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                  <span className="flex size-[22px] items-center justify-center rounded-full bg-black/55">
+                    <svg viewBox="0 0 24 24" className="ml-[1px] size-[12px]" fill="white"><path d="M8 5v14l11-7z" /></svg>
+                  </span>
+                </span>
+              )}
+              {s.type === 'video' && (
+                <span className="pointer-events-none absolute bottom-[3px] left-1/2 -translate-x-1/2 rounded-[3px] bg-black/75 px-[5px] py-[1px] text-[8px] font-semibold uppercase tracking-[0.04em] text-white">{s.badge || 'Trailer'}</span>
+              )}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -5982,9 +6181,12 @@ function PlayerAvatar({ color, size, marginRight, gameTitle, onShare }) {
   )
 }
 
-function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlist, onShare, onOpen, onPlay }) {
+function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlist, onShare, onOpen, onPlay, onLibraryTag }) {
   const d = detailFor(gameKey)
   const slides = slidesFor(gameKey, d.image)
+  // The game's Library facets, so its player + genre tags can jump into a
+  // filtered Library. Only Starter-catalog games have these.
+  const libGame = STARTER_BY_KEY[gameKey]
   // A game no friend has played yet ("Be the first" state) shows no friend
   // reviews or social proof.
   const unplayed = STARTER_DESC[gameKey]?.friends === ''
@@ -6044,12 +6246,18 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               </div>
               <p className="mt-[16px] max-w-[560px] text-[16px] leading-[1.5] text-[#a2a4ae]">{d.description}</p>
               <div className="mt-[20px] flex flex-wrap items-center gap-[8px]">
-                <DetailPill>
+                <DetailPill
+                  onClick={libGame && onLibraryTag ? () => onLibraryTag({ kind: 'cap', value: maxPlayers(libGame.players) }) : undefined}
+                  title={libGame ? `See games for up to ${maxPlayers(libGame.players)} players` : undefined}
+                >
                   <img alt="" src={userGroup} className="size-[15px] -scale-x-100" />
                   {d.players}
                 </DetailPill>
                 <DetailPill>{d.playtime}</DetailPill>
-                <DetailPill>{d.genre}</DetailPill>
+                <DetailPill
+                  onClick={libGame && onLibraryTag ? () => onLibraryTag({ kind: 'genre', value: libGame.genre }) : undefined}
+                  title={libGame ? `See ${libGame.genre} games` : undefined}
+                >{d.genre}</DetailPill>
                 <DetailPill>{d.difficulty}</DetailPill>
               </div>
             </div>
@@ -6177,6 +6385,7 @@ export default function Landing() {
   const [dmName, setDmName] = useState(null)
   const [mixesTab, setMixesTab] = useState(false) // the "Mixes" top-nav tab (Figma 926:4875)
   const [libraryTab, setLibraryTab] = useState(false) // the "Library" top-nav tab — all games
+  const [libraryFilter, setLibraryFilter] = useState([]) // active tag filter carried in from a clicked tag
 
   // Per-conversation "last read" timestamps drive the unread dots in the
   // sidebar. Persisted in localStorage so a reload doesn't re-flag old messages.
@@ -6193,7 +6402,12 @@ export default function Landing() {
   const openBlend = (id) => { setBlendId(id); setDmName(null); setDecide(null); setDetailKey(null); setMixesTab(false); setLibraryTab(false) }
   const goHome = () => { setBlendId(null); setDmName(null); setDecide(null); setDetailKey(null); setMixesTab(false); setLibraryTab(false) }
   const openMixes = () => { setMixesTab(true); setLibraryTab(false); setBlendId(null); setDmName(null); setDecide(null); setDetailKey(null) }
-  const openLibrary = () => { setLibraryTab(true); setMixesTab(false); setBlendId(null); setDmName(null); setDecide(null); setDetailKey(null) }
+  const openLibrary = () => { setLibraryFilter([]); setLibraryTab(true); setMixesTab(false); setBlendId(null); setDmName(null); setDecide(null); setDetailKey(null) }
+  // Open the Library pre-filtered by a clicked tag (a fresh array each time so the
+  // Library's effect re-applies it even when the same tag is clicked twice).
+  const openLibraryFiltered = (facet) => { setLibraryFilter([{ ...facet }]); setLibraryTab(true); setMixesTab(false); setBlendId(null); setDmName(null); setDecide(null); setDetailKey(null) }
+  // A clicked card tag (any pill on a game card) → resolve to a Library facet.
+  const handleCardTag = (text) => { const f = facetForTag(text); if (f) openLibraryFiltered(f) }
   // Cards hand back a game title; map it to a catalog key and open the detail page.
   const openGame = (titleOrKey) => {
     // Starter keys count as known even without a CATALOG entry — the art-less
@@ -6346,6 +6560,7 @@ export default function Landing() {
           if (el) setGameMenu({ x: e.clientX, y: e.clientY, title: el.getAttribute('data-game') })
         }}
       >
+        <TagCtx.Provider value={handleCardTag}>
         <NavCtx.Provider value={navCtx}>
         <TopBar />
         <div className="group/rail relative flex min-h-0 flex-1 overflow-hidden" style={{ backgroundColor: D.rail }}>
@@ -6379,9 +6594,10 @@ export default function Landing() {
             onShare={setShareGame}
             onOpen={openGame}
             onPlay={setPlayKey}
+            onLibraryTag={openLibraryFiltered}
           />
         ) : eLibraryTab ? (
-          <LibraryPage onHome={goHome} onMixes={openMixes} onOpen={openGame} />
+          <LibraryPage onHome={goHome} onMixes={openMixes} onOpen={openGame} initialFilter={libraryFilter} />
         ) : eMixesTab ? (
           <MixesPage onHome={goHome} onLibrary={openLibrary} onOpenBlend={(b) => openBlend(b.id)} onCreate={() => setCreateOpen(true)} onOpen={openGame} />
         ) : (
@@ -6472,6 +6688,7 @@ export default function Landing() {
         {/* Read-only mirror overlay: the participant's live cursor + click ripples */}
         {IS_SPECTATE && <SpectatorCursor pointer={mirror?.pointer} click={mirror?.click} />}
         </NavCtx.Provider>
+        </TagCtx.Provider>
       </div>
     </RoomProvider>
   )

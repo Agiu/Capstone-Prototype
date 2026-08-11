@@ -1,5 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/index.js'
+
+// Set by Landing to a handler(tagText) that opens the Library filtered by a
+// clicked card tag. null when no handler is provided (tags stay non-clickable).
+export const TagCtx = createContext(null)
 
 // Expanded (hover) card width — used to compute how far the row must scroll to
 // keep the whole card on-screen.
@@ -28,7 +32,7 @@ function smoothScrollLeft(el, to, duration = 600) {
 // (trailer on hover), metadata pills, and a hover details column.
 
 // Friend avatar colors (solid Discord-style circles). Green is the user (sauhee).
-export const AVATAR = { blue: '#5165F6', purple: '#9A45F7', red: '#FF3737', green: '#00A853' }
+export const AVATAR = { blue: '#5165F6', yellow: '#F5C518', red: '#FF3737', green: '#00A853' }
 
 /** A Discord-style avatar: colored circle with the white Discord logo. */
 function ProfileIcon({ color, className, style }) {
@@ -670,16 +674,20 @@ export function RecCard({ avatars, label, image, players, details, video, shared
 export function CinematicCard({ image, video, avatars, label, players, playtime, genre, genre2, title, recommendPct, avatarsPlus, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
   const open = () => (onViewDetails || onOpen)?.(title)
   const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
+  const onTag = useContext(TagCtx)
   // Spectate mirroring: force the hover reveal on (a moderator can't hover).
   const F = forceReveal ? ' !opacity-100 !translate-x-0 !translate-y-0' : ''
-  const LightPill = ({ children }) => (
-    <span
-      className="flex shrink-0 items-center gap-[3px] whitespace-nowrap rounded-[16px] border px-[7px] py-[2px] text-[12px] font-semibold"
-      style={{ borderColor: ACCENT, color: ACCENT }}
-    >
-      {children}
-    </span>
-  )
+  const LightPill = ({ children, tagValue }) => {
+    const cls = 'flex shrink-0 items-center gap-[4px] whitespace-nowrap rounded-full bg-black/55 px-[9px] py-[3px] text-[12px] font-semibold text-white ring-1 ring-white/15'
+    if (onTag && tagValue) {
+      return (
+        <button type="button" title={`See ${tagValue} games`} onClick={(e) => { e.stopPropagation(); onTag(tagValue) }} className={cls + ' pointer-events-auto transition hover:bg-black/75'}>
+          {children}
+        </button>
+      )
+    }
+    return <span className={cls}>{children}</span>
+  }
   const EASE = 'ease-[cubic-bezier(0.16,1,0.3,1)]'
   // Everything cross-fades in and out together — no slide, no stagger. One
   // shared duration and no delays so the whole overlay appears at once.
@@ -748,7 +756,7 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
           same band. Full width so it still covers the + and eye icons in the
           far corner without needing a separate pool there. */}
       <div
-        className={`${pool} bottom-0 left-0 flex w-full flex-col items-start gap-[16px] pb-[18px] pl-[24px] pt-[30px]`}
+        className={`${pool} bottom-0 left-0 z-[2] flex w-full flex-col items-start gap-[16px] pb-[18px] pl-[24px] pt-[30px]`}
         style={{ background: bottomBg }}
       >
         <div className={`${rise} flex items-center gap-[8px]`}>
@@ -757,12 +765,12 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
           <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
         </div>
         <div className={`${riseUp} flex items-center gap-[4px]`}>
-          <LightPill>
-            <UserGroupGlyph color={ACCENT} className="size-[16px] -scale-x-100" />
+          <LightPill tagValue={players}>
+            <UserGroupGlyph color="#ffffff" className="size-[16px] -scale-x-100" />
             {players}
           </LightPill>
-          <LightPill>{genre}</LightPill>
-          {genre2 && <LightPill>{genre2}</LightPill>}
+          {genre && <LightPill tagValue={genre}>{genre}</LightPill>}
+          {genre2 && <LightPill tagValue={genre2}>{genre2}</LightPill>}
         </div>
       </div>
 
@@ -810,20 +818,27 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
 export function PortraitCard({ image, video, title, publisher, released, recommend, avatars, multiplayer, tags = [], belowAvatars, onWishlist, onShare, onOpen, forceReveal }) {
   const shortRec = recommend ? recommend.replace(/ (have|has) played recently$/, '') : ''
   // "N friends…" shows up to 2 pics (with a "+" at 3+); a personal line like
-  // "Chloe said …" or "Daniel has played recently" shows a single profile pic.
+  // "Sauhee said …" or "Meera has played recently" shows a single profile pic.
   const friendCount = parseInt(recommend || '', 10)
   const isCount = Number.isFinite(friendCount)
   const shownCount = isCount ? Math.min(Math.max(friendCount, 1), 2) : 1
-  const pair = (avatars && avatars.length ? avatars : [AVATAR.blue, AVATAR.purple]).slice(0, shownCount)
+  const pair = (avatars && avatars.length ? avatars : [AVATAR.blue, AVATAR.yellow]).slice(0, shownCount)
   const showPlus = isCount && friendCount >= 3
   // The cover swaps to the trailer while hovered (Figma 979:1206).
   const [hover, setHover] = useState(false)
   const showVid = (hover || forceReveal) && video?.youTubeId
-  const Tag = ({ children, full }) => (
-    <span className={'flex items-center justify-center whitespace-nowrap rounded-[20px] bg-[#4c5053] px-[8px] py-[2px] text-[11px] text-white ' + (full ? 'w-full' : 'w-fit')}>
-      {children}
-    </span>
-  )
+  const onTag = useContext(TagCtx)
+  const Tag = ({ children, full }) => {
+    const cls = 'flex items-center justify-center whitespace-nowrap rounded-full bg-[#1f1f23] px-[9px] py-[3px] text-[11px] font-semibold text-[#c7c9cb] ' + (full ? 'w-full' : 'w-fit')
+    if (onTag && typeof children === 'string') {
+      return (
+        <button type="button" title={`See ${children} games`} onClick={(e) => { e.stopPropagation(); onTag(children) }} className={cls + ' transition hover:bg-[#2a2a2f] hover:text-white'}>
+          {children}
+        </button>
+      )
+    }
+    return <span className={cls}>{children}</span>
+  }
   // Info copy just fades in and out — no slide.
   const fade = 'opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100'
   // Spectate mirroring: force the expand + reveal on (a moderator can't hover).
