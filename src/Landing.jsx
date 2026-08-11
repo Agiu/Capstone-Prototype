@@ -1836,13 +1836,19 @@ const ratingHash = (key, salt) => { let h = 0; const s = key + ':' + salt; for (
 const friendsRating = (key) => { const a = STARTER_DESC[key]?.rec; return typeof a === 'number' ? a : 78 + (ratingHash(key, 'fr') % 21) } // 78..98
 const overallRating = (key) => 70 + (ratingHash(key, 'ov') % 26) // 70..95
 const avgFriendHours = (key) => friendInfo(key).hours
+// Per-friend playtime for a game — deterministic, spread around the game's avg
+// so each friend's avatar tooltip can read "Name · N hrs".
+const friendHours = (key, color) => {
+  let h = 0; const s = key + ':' + color; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return Math.max(1, friendInfo(key).hours - 3 + (h % 7))
+}
 // Friend-activity line for the default (Recommended) sort — same phrasing family
 // the game cards use: "N friends played it" / "Name played it" / be-the-first.
 const friendActivityLine = (key) => {
   if (STARTER_DESC[key]?.friends === '') return 'Be the first to play it!'
   const fi = friendInfo(key)
-  const who = fi.count === 1 ? (FRIEND_NAMES[fi.avatars[0]] || 'A friend') : `${fi.count} friends`
-  return `${who} · ${fi.hours} hrs`
+  if (fi.count === 1) return `${FRIEND_NAMES[fi.avatars[0]] || 'A friend'} played this`
+  return `${fi.count} friends played this`
 }
 const LIB_SORTS = [
   { id: 'default', label: 'Recommended', metric: (k) => friendActivityLine(k) },
@@ -6245,7 +6251,7 @@ function HeroCarousel({ slides, children }) {
 
 // A "Played By" / rating avatar that responds to hover, shows the person's name,
 // and on click opens a quick-share of this game straight to that person.
-function PlayerAvatar({ color, size, marginRight, gameTitle, onShare }) {
+function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs }) {
   const name = NAME[color]
   // The user (green) and any unmapped color aren't share targets.
   if (color === SELF || !name) {
@@ -6260,7 +6266,7 @@ function PlayerAvatar({ color, size, marginRight, gameTitle, onShare }) {
       style={{ marginRight }}
     >
       <span className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-black/85 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100">
-        {capName(name)}
+        {capName(name)}{hrs != null ? ` · ${hrs} hrs` : ''}
       </span>
       <Avatar color={color} size={size} className="rounded-full ring-0 transition group-hover/av:ring-2 group-hover/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
     </button>
@@ -6325,7 +6331,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                 ) : (
                   <span className="flex items-center">
                     {playedBy.map((c, i) => (
-                      <PlayerAvatar key={i} color={c} size={26} marginRight={i < playedBy.length - 1 ? -8 : 0} gameTitle={d.title} onShare={onShare} />
+                      <PlayerAvatar key={i} color={c} size={26} marginRight={i < playedBy.length - 1 ? -8 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} />
                     ))}
                   </span>
                 )}
@@ -6395,7 +6401,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                     <ThumbsUpGlyph size={24} className="text-[#7aff46]" />
                     <div className="flex items-center">
                       {reviewers.map((c, i) => (
-                        <PlayerAvatar key={i} color={c} size={30} marginRight={i < reviewers.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} />
+                        <PlayerAvatar key={i} color={c} size={30} marginRight={i < reviewers.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} />
                       ))}
                     </div>
                   </div>
