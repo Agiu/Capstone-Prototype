@@ -678,10 +678,11 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
   // Spectate mirroring: force the hover reveal on (a moderator can't hover).
   const F = forceReveal ? ' !opacity-100 !translate-x-0 !translate-y-0' : ''
   const LightPill = ({ children, tagValue }) => {
-    const cls = 'flex shrink-0 items-center gap-[4px] whitespace-nowrap rounded-full bg-black/55 px-[9px] py-[3px] text-[12px] font-semibold text-white ring-1 ring-white/15'
+    // Same look + hover as every other user tag, so it stays consistent.
+    const cls = 'flex shrink-0 items-center gap-[4px] whitespace-nowrap rounded-full bg-[#1f1f23] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb] ring-1 ring-white/10'
     if (onTag && tagValue) {
       return (
-        <button type="button" title={`See ${tagValue} games`} onClick={(e) => { e.stopPropagation(); onTag(tagValue) }} className={cls + ' pointer-events-auto transition hover:bg-black/75'}>
+        <button type="button" title={`See ${tagValue} games`} onClick={(e) => { e.stopPropagation(); onTag(tagValue) }} className={cls + ' pointer-events-auto cursor-pointer transition hover:bg-[#2a2a2f] hover:text-white'}>
           {children}
         </button>
       )
@@ -870,13 +871,14 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
       onMouseLeave={() => setHover(false)}
       className={'group relative flex h-[300px] w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-[12px] bg-[#191919] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[452px]' + (forceReveal ? ' !w-[452px]' : '')}
     >
-      {/* Portrait cover (left) — becomes the trailer on hover. overflow-hidden
-          keeps the 16:9 trailer cropped to the cover's width instead of
-          spilling into the info panel. */}
+      {/* Portrait cover (left) — becomes the trailer on hover. Keeps the cover-art
+          ratio; overflow-hidden stops it spilling into the info panel. */}
       <div className="relative h-full w-[200px] shrink-0 overflow-hidden">
         <img alt="" src={image} loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
         {showVid && <VideoTrailer youTubeId={video.youTubeId} poster={image} bare vertical={video.vertical} />}
-        <div className={'pointer-events-none absolute inset-0 bg-gradient-to-l from-[#191919] to-transparent opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100' + F} />
+        {video?.badge && (
+          <span className={'pointer-events-none absolute left-[8px] top-[8px] z-[2] rounded-[4px] bg-black/70 px-[7px] py-[2px] text-[10px] font-semibold uppercase tracking-wide text-white transition-opacity duration-[300ms] ease-out ' + (showVid ? 'opacity-100' : 'opacity-0')}>{video.badge}</span>
+        )}
       </div>
 
       {/* Info panel (right) — packs the copy at the top with even gaps; only the
@@ -885,14 +887,14 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
         <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
         <div className="flex flex-col gap-[13px]">
           {recommend ? (
-            <div className="flex items-center gap-[9px]">
-              <div className="flex shrink-0 items-center">
+            <div className="flex items-start gap-[9px]">
+              <div className="flex h-[18px] shrink-0 items-center">
                 {pair.map((c, i) => (
                   <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#191919]" style={{ marginRight: i < pair.length - 1 ? -6 : 0, zIndex: 2 - i }} />
                 ))}
                 {showPlus && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
               </div>
-              <p className="text-[12px] leading-[1.35] text-white">{recommend}</p>
+              <p className="text-[12px] leading-[1.5] text-white">{recommend}</p>
             </div>
           ) : (
             <div className="flex items-center gap-[7px]">

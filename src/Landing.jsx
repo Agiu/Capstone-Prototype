@@ -917,7 +917,7 @@ function GiftArcadeButton() {
         <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px] shrink-0">
           <path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" />
         </svg>
-        <span className="leading-none">Gift ARCADE</span>
+        <span className="leading-none">Gift Nitro</span>
       </button>
       {open && <GiftArcadeModal onClose={() => setOpen(false)} />}
     </>
@@ -1440,17 +1440,17 @@ const STARTER_DESC = {
   gp_stardewvalley: { studio: 'ConcernedApe', desc: 'Inherit a farm, build a life, lose a hundred hours to it happily.', tags: ['Farming Sim', 'Co-op', 'Cozy'], friends: 'Caleb rated this 5 stars', rec: 96, recFriends: 5 },
   gp_oriandthewillofthewisps: { studio: 'Moon Studios', desc: 'A gorgeous, heartbreaking platformer with movement that just sings.', tags: ['Platformer', 'Metroidvania', 'Story Rich'], friends: 'Sauhee rated this 5 stars', rec: 94, recFriends: 4 },
   gp_batmanarkhamknight: { studio: 'Rocksteady', desc: 'Be the Batman across a stormy, open Gotham in the Arkham finale.', tags: ['Action', 'Open World', 'Mature 17+'], friends: '3 friends recommend this' },
-  gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: '2 friends recommend this' },
+  gp_controlultimateedition: { studio: 'Remedy', desc: 'A brutalist secret agency, telekinetic combat and a shifting building.', tags: ['Action', 'Supernatural', 'Mature 17+'], friends: 'Caleb said "telekinetic combat never gets old"' },
   gp_dishonored2: { studio: 'Arkane', desc: 'Stealth, powers and a dozen ways through every level. Ghost it or gut it.', tags: ['Stealth', 'Action', 'Mature 17+'], friends: '2 friends recommend this' },
-  gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: '3 friends recommend this' },
+  gp_fallout4: { studio: 'Bethesda', desc: 'Build, scavenge and shoot your way across the Commonwealth wasteland.', tags: ['RPG', 'Open World', 'Mature 17+'], friends: 'Meera said "lost a whole weekend to the Commonwealth"' },
   gp_hellbladesenuassacrifice: { studio: 'Ninja Theory', desc: 'A harrowing descent into Norse myth and psychosis. Wear headphones.', tags: ['Action', 'Psychological', 'Mature 17+'], friends: 'Meera recommends this' },
   gp_fallout76: { studio: 'Bethesda', desc: 'Rebuild Appalachia with friends in a wide-open online wasteland.', tags: ['RPG', 'Online', 'Mature 17+'], friends: '' },
   gp_firewatch: { studio: 'Campo Santo', desc: 'Firewatch is a single-player mystery set in the Wyoming wilderness, where your only lifeline is the voice on the other end of a handheld radio.', tags: ['Adventure', 'Story Rich', 'Mystery'], friends: 'Meera has played 3 hrs recently' },
   gp_unpacking: { studio: 'Witch Beam', desc: 'Unpack boxes, arrange a life. A quiet, lovely game about moving house.', tags: ['Puzzle', 'Cozy', 'Relaxing'], friends: 'Sauhee said "oddly therapeutic, lost an hour"' },
-  gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: 'Meera said "I cried at the ending"' },
+  gp_spiritfarer: { studio: 'Thunder Lotus', desc: 'A cozy management game about ferrying spirits to their final rest.', tags: ['Adventure', 'Cozy', 'Story Rich'], friends: '3 friends recommend this' },
   gp_tunic: { studio: 'Andrew Shouldice', desc: 'A tiny fox, a huge secret-filled world, and a manual you decode as you go.', tags: ['Adventure', 'Puzzle', 'Souls-like'], friends: 'Caleb said "the secret manual blew my mind"' },
-  gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Sauhee said "still thinking about that ending"' },
-  gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Caleb said "creepy in the best way"' },
+  gp_inside: { studio: 'Playdead', desc: "A wordless, dread-soaked puzzle-platformer you won't stop thinking about.", tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: 'Sauhee recommends this' },
+  gp_limbo: { studio: 'Playdead', desc: 'Stark, monochrome and menacing — the puzzle-platformer that started it.', tags: ['Platformer', 'Puzzle', 'Atmospheric'], friends: '2 friends recommend this' },
   gp_celeste: { studio: 'Maddy Makes Games', desc: 'A razor-tight precision platformer about climbing a mountain — and yourself.', tags: ['Platformer', 'Precision', 'Story Rich'], friends: 'Meera said "hardest game I love"', rec: 95, recFriends: 3 },
 }
 // A stable, per-game pair of friend avatars so different cards show different
@@ -1569,7 +1569,7 @@ function pcard(k) {
   const p = g?.players
   return {
     image: starterCover(k),
-    video: GAMEPLAY_LANDSCAPE[k] ? { youTubeId: GAMEPLAY_LANDSCAPE[k] } : g?.youTubeId ? { youTubeId: g.youTubeId } : undefined,
+    video: GAMEPLAY_LANDSCAPE[k] ? { youTubeId: GAMEPLAY_LANDSCAPE[k], badge: 'Gameplay' } : g?.youTubeId ? { youTubeId: g.youTubeId, badge: 'Trailer' } : undefined,
     title: c.title || g?.title,
     publisher: d.studio || c.developer || 'Game Pass',
     released: STARTER_RELEASED[k] ? `Released on ${STARTER_RELEASED[k]}` : '',
@@ -1599,8 +1599,22 @@ const TRENDING_STATS = {
   gp_vampiresurvivors: { friends: 3, hours: 8 },
 }
 
+// Trending list thumbnail — cover art that swaps to the trailer while the row is
+// hovered (hover is driven by the whole row, not just the thumbnail).
+function TrendingThumb({ gameKey, hover }) {
+  const g = STARTER_BY_KEY[gameKey]
+  const vid = GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId
+  return (
+    <div className="relative h-[104px] w-[185px] shrink-0 overflow-hidden rounded-[10px] bg-black">
+      <img alt="" src={starterHeader(gameKey)} loading="lazy" className="absolute inset-0 size-full object-cover" />
+      {hover && vid && <VideoTrailer youTubeId={vid} poster={starterHeader(gameKey)} bare />}
+    </div>
+  )
+}
+
 // "Trending in Your Communities" — a compact list of games (Figma 937:8591).
 function TrendingRow({ items, onOpen }) {
+  const [hoverKey, setHoverKey] = useState(null)
   return (
     <section className="mt-[56px]">
       <p className="text-[24px] font-semibold text-white">Trending in Your Communities</p>
@@ -1611,8 +1625,8 @@ function TrendingRow({ items, onOpen }) {
           const d = STARTER_DESC[k] || {}
           const title = c.title || g?.title
           return (
-            <button key={k} data-game={title} onClick={() => onOpen?.(title)} className="group flex w-full items-center gap-[20px] rounded-[12px] p-[12px] text-left transition hover:bg-white/[0.03]">
-              <img alt="" src={starterHeader(k)} loading="lazy" className="h-[104px] w-[185px] shrink-0 rounded-[10px] object-cover" />
+            <button key={k} data-game={title} onClick={() => onOpen?.(title)} onMouseEnter={() => setHoverKey(k)} onMouseLeave={() => setHoverKey((v) => (v === k ? null : v))} className="group flex w-full items-center gap-[20px] rounded-[12px] p-[12px] text-left transition hover:bg-white/[0.03]">
+              <TrendingThumb gameKey={k} hover={hoverKey === k} />
               <div className="min-w-0 flex-1">
                 <p className="text-[18px] font-semibold text-white">{title}</p>
                 {(() => {
@@ -1628,7 +1642,7 @@ function TrendingRow({ items, onOpen }) {
                         ))}
                         {avs.length > 2 && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
                       </span>
-                      <p className="text-[13px] text-[#9a9ba3]">{fi.count} {fi.count === 1 ? 'friend' : 'friends'} played this for avg. {fi.hours} hours</p>
+                      <p className="text-[13px] text-white">{fi.count} {fi.count === 1 ? 'friend' : 'friends'} played this for avg. {fi.hours} hours</p>
                     </div>
                   )
                 })()}
@@ -1684,7 +1698,7 @@ function cineCard(k) {
   const vid = GAMEPLAY_LANDSCAPE[k] || g?.youTubeId
   return {
     image: starterHeader(k),
-    video: vid ? { youTubeId: vid, poster: starterHeader(k) } : undefined,
+    video: vid ? { youTubeId: vid, poster: starterHeader(k), badge: GAMEPLAY_LANDSCAPE[k] ? 'Gameplay' : 'Trailer' } : undefined,
     // Keep counts realistic (only 3 friends exist) and consistent with the
     // faces: a curated friend quote if there is one, else the per-game count.
     avatars: friendInfo(k).avatars,
@@ -1731,6 +1745,9 @@ function WorthACloserLook({ gameKey, onOpen }) {
         >
           <img alt="" src={starterHeader(gameKey)} className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.02]" />
           {hover && (GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && <VideoTrailer youTubeId={GAMEPLAY_LANDSCAPE[gameKey] || g.youTubeId} poster={starterHeader(gameKey)} bare />}
+          {(GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && (
+            <span className="pointer-events-none absolute left-[14px] top-[14px] z-[2] rounded-[4px] bg-black/70 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white opacity-0 transition-opacity duration-[300ms] ease-out group-hover:opacity-100">{GAMEPLAY_LANDSCAPE[gameKey] ? 'Gameplay' : 'Trailer'}</span>
+          )}
         </button>
         <div className="flex flex-1 flex-col justify-center">
           <div className="flex items-start gap-[10px]">
@@ -1754,11 +1771,13 @@ function WorthACloserLook({ gameKey, onOpen }) {
 
 // One Library game: cover art (local → Steam → gradient fallback) that swaps to
 // the trailer on hover.
-function LibraryTile({ g, onClick }) {
+function LibraryTile({ g, onClick, metric }) {
   const [hover, setHover] = useState(false)
   const [broken, setBroken] = useState(false)
   const localArt = g.key && CATALOG[g.key]?.image
-  const cover = broken ? null : (localArt || (g.steamAppId ? STEAM_COVER(g.steamAppId) : null))
+  // Cover: local art → Steam capsule → the game's YouTube still (for the handful
+  // of console-only games with no Steam page) → gradient fallback.
+  const cover = broken ? null : (localArt || (g.steamAppId ? STEAM_COVER(g.steamAppId) : null) || (g.youTubeId ? ytThumb(g.youTubeId) : null))
   return (
     <button
       onClick={onClick}
@@ -1782,6 +1801,7 @@ function LibraryTile({ g, onClick }) {
       </div>
       <p className="mt-[8px] truncate text-[15px] font-semibold text-white">{g.title}</p>
       <p className="truncate text-[13px] text-[#7e7f87]">{g.players === 'MMO' ? 'MMO' : g.players === '1' ? '1 player' : `${g.players} players`} · {g.genre}</p>
+      {metric && <p className="truncate text-[13px] font-semibold text-[#c7c9cb]">{metric}</p>}
     </button>
   )
 }
@@ -1809,12 +1829,36 @@ const facetForTag = (text) => {
   return { kind: 'tag', value: t }
 }
 
+// ── Library sort metrics ─────────────────────────────────────────────────────
+// Deterministic per-game numbers so the same value shows on the detail page and
+// drives the Library sort. friends' rating uses an authored `rec` when present.
+const ratingHash = (key, salt) => { let h = 0; const s = key + ':' + salt; for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0; return h }
+const friendsRating = (key) => { const a = STARTER_DESC[key]?.rec; return typeof a === 'number' ? a : 78 + (ratingHash(key, 'fr') % 21) } // 78..98
+const overallRating = (key) => 70 + (ratingHash(key, 'ov') % 26) // 70..95
+const avgFriendHours = (key) => friendInfo(key).hours
+// Friend-activity line for the default (Recommended) sort — same phrasing family
+// the game cards use: "N friends played it" / "Name played it" / be-the-first.
+const friendActivityLine = (key) => {
+  if (STARTER_DESC[key]?.friends === '') return 'Be the first to play it!'
+  const fi = friendInfo(key)
+  const who = fi.count === 1 ? (FRIEND_NAMES[fi.avatars[0]] || 'A friend') : `${fi.count} friends`
+  return `${who} · ${fi.hours} hrs`
+}
+const LIB_SORTS = [
+  { id: 'default', label: 'Recommended', metric: (k) => friendActivityLine(k) },
+  { id: 'hours', label: 'Avg friend playtime', metric: (k) => `${avgFriendHours(k)} hrs avg`, cmp: (a, b) => avgFriendHours(b.catKey) - avgFriendHours(a.catKey) },
+  { id: 'friends', label: "Friends' rating", metric: (k) => `${friendsRating(k)}% of friends`, cmp: (a, b) => friendsRating(b.catKey) - friendsRating(a.catKey) },
+  { id: 'overall', label: 'Overall rating', metric: (k) => `${overallRating(k)}% overall`, cmp: (a, b) => overallRating(b.catKey) - overallRating(a.catKey) },
+]
+
 // ── Library tab — the full Game Pass Starter Edition catalog ────────────────
 function LibraryPage({ onHome, onMixes, onOpen, initialFilter }) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(initialFilter || []) // [{kind:'cap'|'genre', value}]
   const [filterOpen, setFilterOpen] = useState(false)
+  const [sort, setSort] = useState('default')
+  const [sortOpen, setSortOpen] = useState(false)
   // Arriving from a clicked tag applies (replaces) the incoming filter.
   useEffect(() => { if (initialFilter && initialFilter.length) setActive(initialFilter) }, [initialFilter])
 
@@ -1824,11 +1868,13 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter }) {
   const genres = active.filter((a) => a.kind === 'genre').map((a) => a.value)
   const tagFacets = active.filter((a) => a.kind === 'tag').map((a) => a.value)
   // Faceted: OR within a group, AND across groups, AND with the text search.
-  const shown = STARTER_LIBRARY.filter((g) =>
+  const filtered = STARTER_LIBRARY.filter((g) =>
     (!query || g.title.toLowerCase().includes(query) || g.genre.toLowerCase().includes(query)) &&
     (capMax == null || maxPlayers(g.players) <= capMax) &&
     (genres.length === 0 || genres.includes(g.genre)) &&
     (tagFacets.length === 0 || tagFacets.some((t) => gameTags(g).includes(t))))
+  const activeSort = LIB_SORTS.find((s) => s.id === sort) || LIB_SORTS[0]
+  const shown = activeSort.cmp ? [...filtered].sort(activeSort.cmp) : filtered
   const isOn = (f) => active.some((a) => sameFacet(a, f))
   const toggle = (f) => setActive((cur) => cur.some((a) => sameFacet(a, f)) ? cur.filter((a) => !sameFacet(a, f)) : [...cur, f])
   // Set (or clear) the single "up to N players" capacity facet.
@@ -1903,6 +1949,33 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter }) {
                   </>
                 )}
               </div>
+              {/* Sort menu — order by friend playtime / friends' rating / overall */}
+              <div className="relative">
+                <button
+                  onClick={() => setSortOpen((v) => !v)}
+                  className="flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[14px] text-[14px] font-semibold text-white transition hover:bg-[#232327]"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h10M4 18h6" /></svg>
+                  {sort === 'default' ? 'Sort' : activeSort.label}
+                </button>
+                {sortOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[40]" onClick={() => setSortOpen(false)} />
+                    <div className="absolute right-0 top-[46px] z-[50] w-[230px] overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                      {LIB_SORTS.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => { setSort(s.id); setSortOpen(false) }}
+                          className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (sort === s.id ? 'font-semibold text-white' : 'text-[#c7c9cb]')}
+                        >
+                          {s.label}
+                          {sort === s.id && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
               {/* Search box — text search, distinct from the tag filter above */}
               <div className="flex h-[38px] w-[240px] max-w-full items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[12px]">
                 <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
@@ -1929,7 +2002,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter }) {
           )}
 
           <div className="mt-[24px] grid grid-cols-2 gap-x-[18px] gap-y-[24px] sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {shown.map((g) => <LibraryTile key={g.title} g={g} onClick={() => open(g)} />)}
+            {shown.map((g) => <LibraryTile key={g.title} g={g} onClick={() => open(g)} metric={activeSort.metric ? activeSort.metric(g.catKey) : null} />)}
           </div>
           {shown.length === 0 && <p className="mt-[40px] text-center text-[15px] text-[#7e7f87]">No games match your filters.</p>}
         </div>
@@ -2320,6 +2393,31 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
           </button>
         </div>
 
+        {/* Search — above the ranking grid */}
+        <div className="border-b border-black/30 px-[24px] py-[16px]">
+          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Search your PLAYlist</p>
+          <div className="mt-[8px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+          </div>
+          {query && (
+            <div className="no-scrollbar mt-[8px] max-h-[184px] overflow-y-auto">
+              {results.length ? results.map(([k, v]) => {
+                const on = keys.includes(k)
+                return (
+                  <button key={k} onClick={() => onToggle(k, !on)} className="flex w-full items-center gap-[10px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
+                    <img alt="" src={v.image} className="h-[36px] w-[64px] shrink-0 rounded-[6px] object-cover" />
+                    <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">{v.title}</span>
+                    <span className={'flex size-[22px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+                      {on && <svg viewBox="0 0 24 24" className="size-[13px] text-white" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                    </span>
+                  </button>
+                )
+              }) : <p className="py-[8px] text-[13px] text-[#6f7276]">No games match “{q}”.</p>}
+            </div>
+          )}
+        </div>
+
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] py-[18px]">
           {games.length ? (
             <div className="grid grid-cols-3 gap-[14px]">
@@ -2351,31 +2449,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
               ))}
             </div>
           ) : (
-            <p className="py-[28px] text-center text-[14px] text-[#7e7f87]">No games in this PLAYlist yet — search below to add some.</p>
-          )}
-        </div>
-
-        <div className="border-t border-black/30 px-[24px] py-[16px]">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Search your PLAYlist</p>
-          <div className="mt-[8px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
-            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
-          </div>
-          {query && (
-            <div className="no-scrollbar mt-[8px] max-h-[184px] overflow-y-auto">
-              {results.length ? results.map(([k, v]) => {
-                const on = keys.includes(k)
-                return (
-                  <button key={k} onClick={() => onToggle(k, !on)} className="flex w-full items-center gap-[10px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
-                    <img alt="" src={v.image} className="h-[36px] w-[64px] shrink-0 rounded-[6px] object-cover" />
-                    <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">{v.title}</span>
-                    <span className={'flex size-[22px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
-                      {on && <svg viewBox="0 0 24 24" className="size-[13px] text-white" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
-                    </span>
-                  </button>
-                )
-              }) : <p className="py-[8px] text-[13px] text-[#6f7276]">No games match “{q}”.</p>}
-            </div>
+            <p className="py-[28px] text-center text-[14px] text-[#7e7f87]">No games in this PLAYlist yet — search above to add some.</p>
           )}
         </div>
       </div>
@@ -2917,7 +2991,7 @@ function GiftArcadeModal({ onClose }) {
       <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
-            <p className="text-[22px] font-bold text-white">Gift ARCADE</p>
+            <p className="text-[22px] font-bold text-white">Gift Nitro</p>
             <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick friends who aren’t on Arcade yet.</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
@@ -5654,9 +5728,9 @@ function detailFor(key) {
     developer: c.developer || g.developer || 'Unknown',
     released: c.released || 'TBA',
     storage: c.storage || '16 GB',
-    ratingPct: c.ratingPct || '80%',
+    ratingPct: c.ratingPct || `${overallRating(key)}%`,
     ratingCount: c.ratingCount || '12K',
-    recPct: c.recPct || '75%',
+    recPct: c.recPct || `${friendsRating(key)}%`,
     lastSession: c.lastSession || '04/18/2026',
     sessionRecord: c.sessionRecord || '4.2 Hours',
     totalTime: c.totalTime || '14.8 Hours',
@@ -6110,7 +6184,7 @@ function HeroCarousel({ slides, children }) {
                 <img alt="" src={s.type === 'video' ? s.poster : s.src} className="absolute inset-0 size-full object-cover" />
               )}
               {s.type === 'video' && (
-                <span className="pointer-events-none absolute right-[12px] top-[12px] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">{s.badge || 'Trailer'}</span>
+                <span className="pointer-events-none absolute left-[12px] top-[12px] z-[2] rounded-[4px] bg-black/60 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white">{s.badge || 'Trailer'}</span>
               )}
             </div>
           ))}
@@ -6159,7 +6233,7 @@ function HeroCarousel({ slides, children }) {
                 </span>
               )}
               {s.type === 'video' && (
-                <span className="pointer-events-none absolute bottom-[3px] left-1/2 -translate-x-1/2 rounded-[3px] bg-black/75 px-[5px] py-[1px] text-[8px] font-semibold uppercase tracking-[0.04em] text-white">{s.badge || 'Trailer'}</span>
+                <span className="pointer-events-none absolute left-[4px] top-[4px] rounded-[3px] bg-black/75 px-[5px] py-[1px] text-[8px] font-semibold uppercase tracking-[0.04em] text-white">{s.badge || 'Trailer'}</span>
               )}
             </button>
           ))}
