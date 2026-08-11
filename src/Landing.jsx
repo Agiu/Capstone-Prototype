@@ -295,7 +295,8 @@ function DmRow({ name, color, status, online, active, unread = 0, onClick }) {
             In a call
           </span>
         ) : (
-          <span className="text-[12px]" style={{ color: D.mute }}>Online</span>
+          // Not heartbeating presence → their tab isn't open → Offline.
+          <span className="text-[12px]" style={{ color: D.mute }}>Offline</span>
         )}
       </div>
       {unread > 0 && (
@@ -5467,11 +5468,22 @@ function ModeratorTile({ name, displayName, onRename, color, vp, online, view, s
           </>}
         </div>
       </div>
-      <div className="min-h-0 flex-1">
+      <div className="relative min-h-0 flex-1">
         {hidden ? (
           <div className="flex size-full items-center justify-center text-[13px] text-[#80848e]">Hidden</div>
         ) : (
-          <FitFrame src={src} vp={vp} />
+          <>
+            <FitFrame src={src} vp={vp} />
+            {/* Their tab isn't open (no live heartbeat) — dim the stale preview. */}
+            {!online && (
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/70 backdrop-grayscale">
+                <span className="flex items-center gap-[6px] rounded-full bg-black/70 px-[12px] py-[5px] text-[12px] font-semibold text-[#b5bac1] ring-1 ring-white/10">
+                  <span className="size-[7px] rounded-full bg-[#5c5e66]" />
+                  Tab not open
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
