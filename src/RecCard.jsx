@@ -32,7 +32,7 @@ function smoothScrollLeft(el, to, duration = 600) {
 // (trailer on hover), metadata pills, and a hover details column.
 
 // Friend avatar colors (solid Discord-style circles). Green is the user (sauhee).
-export const AVATAR = { blue: '#5165F6', yellow: '#F5C518', red: '#FF3737', green: '#00A853' }
+export const AVATAR = { blue: '#5165F6', yellow: '#F5C518', red: '#FF3737', green: '#00A853', pink: '#EB459E' }
 
 /** A Discord-style avatar: colored circle with the white Discord logo. */
 function ProfileIcon({ color, className, style }) {
@@ -70,6 +70,53 @@ function AvatarStack({ colors }) {
           style={{ marginRight: i < colors.length - 1 ? -14 : 0, zIndex: i + 1 }}
         />
       ))}
+    </div>
+  )
+}
+
+// Like AvatarStack, but each face is a share target: hover reveals "name · hrs",
+// click forwards the game straight to them. `targets[i]` is {to, name, hrs}
+// parallel to `colors`. Shows at most 2 faces, then a "+" if there are more.
+// Falls back to plain avatars when no share handler.
+function ShareAvatars({ colors, targets, title, onShare }) {
+  const list = colors || []
+  const shown = list.slice(0, 2)
+  const more = list.length > 2
+  return (
+    <div className="flex items-center">
+      {shown.map((c, i) => {
+        const t = targets?.[i]
+        const mr = i < shown.length - 1 ? -8 : 0
+        if (!t || !t.to || !onShare) {
+          return <ProfileIcon key={i} color={c} className="size-[22px]" style={{ marginRight: mr, zIndex: i + 1, boxShadow: '0 0 0 2px #0c0c0e' }} />
+        }
+        return (
+          <button
+            key={i}
+            type="button"
+            title={`Share ${title} with ${t.name}`}
+            onClick={(e) => { e.stopPropagation(); onShare({ title, to: t.to, hrs: t.hrs }) }}
+            className="group/av pointer-events-auto relative shrink-0 rounded-full transition hover:z-10 hover:-translate-y-[2px]"
+            style={{ marginRight: mr, zIndex: i + 1 }}
+          >
+            {/* Tooltip sits ABOVE the face and extends rightward (left-anchored)
+                so the row's horizontal scroll clip never crops it on the left.
+                Highest z so nothing covers it; the row leaves top headroom. */}
+            <span className="pointer-events-none absolute bottom-[calc(100%+7px)] left-0 z-[200] inline-flex items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/90 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100">
+              <span>{t.name}{t.hrs != null ? ` · ${t.hrs} hrs` : ''}</span>
+              {/* Green thumbs-up only when this friend recommends the game. */}
+              {t.rec && (
+                <>
+                  <span aria-hidden className="text-white/60">·</span>
+                  <svg viewBox="0 0 24 24" className="size-[13px]" fill="#23a55d" aria-label="Recommends"><path d="M2 21h4V9H2v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" /></svg>
+                </>
+              )}
+            </span>
+            <ProfileIcon color={c} className="size-[22px] ring-2 ring-transparent transition group-hover/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
+          </button>
+        )
+      })}
+      {more && <span className="ml-[3px] text-[13px] font-semibold leading-none text-white">+</span>}
     </div>
   )
 }
@@ -671,8 +718,11 @@ export function RecCard({ avatars, label, image, players, details, video, shared
  *  · the trailer is revealed by an inset clip wiping leftward from the card's
  *    right edge — it never translates — and cross-fades up out of Xbox green
  */
-export function CinematicCard({ image, video, avatars, label, players, playtime, genre, genre2, title, recommendPct, avatarsPlus, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
+export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
   const open = () => (onViewDetails || onOpen)?.(title)
+  // `compact` scales the card down a notch (used for the denser home rows).
+  const CARD_W = compact ? 'w-[416px]' : 'w-[520px]'
+  const IMG_H = compact ? 'h-[234px]' : 'h-[292px]'
   const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
   const onTag = useContext(TagCtx)
   // Spectate mirroring: force the hover reveal on (a moderator can't hover).
@@ -713,14 +763,15 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
   const bottomBg =
     'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)'
   return (
-    <div className="group/rec flex w-[520px] shrink-0 flex-col gap-[12px]">
-    {/* Friend recommend info — above the card, fades out on hover */}
-    <div className="flex items-center gap-[8px] pl-[2px] transition-opacity duration-300 group-hover/rec:opacity-0">
-      <AvatarStack colors={avatars} />
-      {avatarsPlus && <span className="-ml-[2px] text-[16px] font-semibold leading-none text-white">+</span>}
-      <p className="whitespace-nowrap text-[15px] text-[#c7c9cb]">{label}</p>
+    <div className={`group/rec flex ${CARD_W} shrink-0 flex-col gap-[12px]`}>
+    {/* Friend social line — above the card, always visible. Each face is a share
+        target: hover shows the name, click forwards the game to that friend. */}
+    <div className="flex items-center gap-[10px] pl-[2px]">
+      <ShareAvatars colors={avatars} targets={avatarTargets} title={title} onShare={onShare} />
+      {avatarsPlus && <span className="-ml-[2px] text-[13px] font-semibold leading-none text-white">+</span>}
+      <p className="whitespace-nowrap text-[13px] font-semibold leading-[18px] text-white">{label}</p>
     </div>
-    <div data-game={title} onClick={open} className="group relative h-[292px] w-full cursor-pointer overflow-hidden rounded-[16px] bg-[#121214]">
+    <div data-game={title} onClick={open} className={`group relative ${IMG_H} w-full cursor-pointer overflow-hidden rounded-[16px] bg-[#121214]`}>
       {/* Cover — fills the whole card by default */}
       <img
         alt=""
@@ -730,28 +781,36 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
         className="absolute inset-0 size-full rounded-[16px] object-cover"
       />
 
-      {/* Trailer — full-bleed, cross-fades up out of Xbox green on hover. Rounded
-          to match the card so it never peeks past the rounded corners. */}
+      {/* Trailer — full-bleed, cross-fades straight from the cover on hover (no
+          color flash). Rounded to match the card so it never peeks past the
+          rounded corners. */}
       {video && (
         <div
-          className={`absolute inset-0 overflow-hidden rounded-[16px] bg-[#107C10] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
+          className={`absolute inset-0 overflow-hidden rounded-[16px] bg-[#121214] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
         >
           <div
             className={`absolute inset-0 opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
           >
-            <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+            {/* `bare` scales the iframe up so YouTube's title/chrome falls outside
+                the crop — a clean, UI-free loop. */}
+            <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} bare />
           </div>
         </div>
       )}
 
-      {/* Title — no scrim. Legibility comes from a plain drop shadow instead,
-          which keeps the letters true white on any footage. */}
-      <p
-        className={`pointer-events-none absolute left-0 top-0 w-[320px] pb-[28px] pl-[24px] pr-[32px] pt-[20px] text-[28px] font-bold leading-[1.1] text-white opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + F}
+      {/* Title + studio · release date — no scrim. Legibility comes from a plain
+          drop shadow, which keeps the text true white on any footage. */}
+      <div
+        className={`pointer-events-none absolute left-0 top-0 w-[340px] pb-[28px] pl-[24px] pr-[24px] pt-[20px] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + F}
         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))' }}
       >
-        {title}
-      </p>
+        <p className={`font-bold leading-[1.1] text-white ${compact ? 'text-[24px]' : 'text-[28px]'}`}>{title}</p>
+        {(studio || released) && (
+          <p className="mt-[6px] text-[13px] font-medium text-white/85">
+            {[studio, released && released.replace(/^Released on /, '')].filter(Boolean).join(' · ')}
+          </p>
+        )}
+      </div>
 
       {/* Bottom pool — avatars/label sit directly above the tags, both in the
           same band. Full width so it still covers the + and eye icons in the
@@ -760,11 +819,6 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
         className={`${pool} bottom-0 left-0 z-[2] flex w-full flex-col items-start gap-[16px] pb-[18px] pl-[24px] pt-[30px]`}
         style={{ background: bottomBg }}
       >
-        <div className={`${rise} flex items-center gap-[8px]`}>
-          <AvatarStack colors={avatars} />
-          {avatarsPlus && <span className="-ml-[2px] text-[16px] font-semibold leading-none text-white">+</span>}
-          <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
-        </div>
         <div className={`${riseUp} flex items-center gap-[4px]`}>
           <LightPill tagValue={players}>
             <UserGroupGlyph color="#ffffff" className="size-[16px] -scale-x-100" />
@@ -795,14 +849,21 @@ export function CinematicCard({ image, video, avatars, label, players, playtime,
         </button>
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); onShare?.(title) }}
-          aria-label="Share"
+          onClick={(e) => {
+            e.stopPropagation()
+            // Open the same menu as a right-click: dispatch a bubbling contextmenu
+            // event so the global game-card menu handler catches it (the card is
+            // tagged data-game), anchored to this button.
+            const r = e.currentTarget.getBoundingClientRect()
+            e.currentTarget.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: r.left, clientY: r.top }))
+          }}
+          aria-label="More"
           className={`${reveal} group/share relative flex size-[28px] items-center justify-center`}
         >
           <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/share:opacity-100">
-            Share
+            More
           </span>
-          <ShareUploadGlyph className={`size-[22px] transition-[scale,filter] duration-200 ${EASE} group-hover/share:scale-110 group-hover/share:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} style={{ color: ACCENT }} />
+          <svg viewBox="0 0 24 24" className={`size-[24px] transition-[scale,filter] duration-200 ${EASE} group-hover/share:scale-110 group-hover/share:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} fill="currentColor" style={{ color: ACCENT }}><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
         </button>
       </div>
     </div>
@@ -965,7 +1026,7 @@ function ChevronGlyph({ direction }) {
  *  card styles that don't go through RecCard. A left/right arrow appears over
  *  the row's edge whenever there are more cards scrolled out of view on that
  *  side, and disappears once scrolling reaches that end. */
-export function ShelfRow({ title, subtitle, gap = 24, children }) {
+export function ShelfRow({ title, subtitle, gap = 24, padTop = 20, children }) {
   const rowRef = useRef(null)
   const [canLeft, setCanLeft] = useState(false)
   const [canRight, setCanRight] = useState(false)
@@ -996,7 +1057,7 @@ export function ShelfRow({ title, subtitle, gap = 24, children }) {
       <p className="text-[24px] font-semibold text-white">{title}</p>
       {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
       <div className="relative">
-        <div ref={rowRef} className="rec-row no-scrollbar flex w-full items-start overflow-x-auto pb-[4px] pt-[20px]" style={{ gap }}>
+        <div ref={rowRef} className="rec-row no-scrollbar flex w-full items-start overflow-x-auto pb-[4px]" style={{ gap, paddingTop: padTop }}>
           {children}
           <div aria-hidden className="w-[40px] shrink-0" />
         </div>
