@@ -4,6 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Capstone Prototype — Discord × Xbox</title>
+    <!-- Preload the above-the-fold faces so first-time visitors render the real
+         fonts at first paint instead of briefly flashing a system fallback
+         (self-hosted from /public with stable names; crossorigin is required on
+         font preloads even same-origin). -->
+    <link rel="preload" href="/fonts/gg-sans-Regular.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/gg-sans-Semibold.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/gg-sans-Bold.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/BaseNeueTrial-CondBoldObliq.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="preload" href="/fonts/BaseNeueTrial-CondExtBdObliq.ttf" as="font" type="font/ttf" crossorigin />
   </head>
   <body>
     <div id="root"></div>

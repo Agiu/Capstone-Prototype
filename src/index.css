@@ -21,28 +21,28 @@ button:not(:disabled),
    font-medium (500), font-semibold (600) and font-bold (700) all render. */
 @font-face {
   font-family: "gg sans";
-  src: url("./assets/fonts/gg-sans-Regular.ttf") format("truetype");
+  src: url("/fonts/gg-sans-Regular.ttf") format("truetype");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "gg sans";
-  src: url("./assets/fonts/gg-sans-Medium.ttf") format("truetype");
+  src: url("/fonts/gg-sans-Medium.ttf") format("truetype");
   font-weight: 500;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "gg sans";
-  src: url("./assets/fonts/gg-sans-Semibold.ttf") format("truetype");
+  src: url("/fonts/gg-sans-Semibold.ttf") format("truetype");
   font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
   font-family: "gg sans";
-  src: url("./assets/fonts/gg-sans-Bold.ttf") format("truetype");
+  src: url("/fonts/gg-sans-Bold.ttf") format("truetype");
   font-weight: 700;
   font-style: normal;
   font-display: swap;
@@ -52,21 +52,21 @@ button:not(:disabled),
    (Figma 863:3726). Only the three faces the design uses are bundled. */
 @font-face {
   font-family: "Base Neue Cond ExtBd";
-  src: url("./assets/fonts/BaseNeueTrial-CondExtBdObliq.ttf") format("truetype");
+  src: url("/fonts/BaseNeueTrial-CondExtBdObliq.ttf") format("truetype");
   font-weight: 800;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: "Base Neue Black";
-  src: url("./assets/fonts/BaseNeueTrial-BlackOblique.ttf") format("truetype");
+  src: url("/fonts/BaseNeueTrial-BlackOblique.ttf") format("truetype");
   font-weight: 900;
   font-style: italic;
   font-display: swap;
 }
 @font-face {
   font-family: "Base Neue Cond Bold";
-  src: url("./assets/fonts/BaseNeueTrial-CondBoldObliq.ttf") format("truetype");
+  src: url("/fonts/BaseNeueTrial-CondBoldObliq.ttf") format("truetype");
   font-weight: 700;
   font-style: italic;
   font-display: swap;
