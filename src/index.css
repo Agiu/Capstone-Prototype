@@ -1,5 +1,22 @@
 @import "tailwindcss";
 
+/* Buttons and button-like controls show the hand cursor (top menu bar + everywhere). */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+/* Inner-page nav: the back button fades in while the logo + tabs slide right to
+   make room for it. */
+@keyframes navBackIn {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes navGroupSlide {
+  from { transform: translateX(-44px); }
+  to { transform: translateX(0); }
+}
+
 /* Discord's "gg sans" — mapped to standard weights so font-normal (400),
    font-medium (500), font-semibold (600) and font-bold (700) all render. */
 @font-face {

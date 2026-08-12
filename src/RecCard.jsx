@@ -108,7 +108,7 @@ function ShareAvatars({ colors, targets, title, onShare }) {
               {t.rec && (
                 <>
                   <span aria-hidden className="text-white/60">·</span>
-                  <svg viewBox="0 0 24 24" className="size-[13px]" fill="#23a55d" aria-label="Recommends"><path d="M2 21h4V9H2v12zM23 10c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z" /></svg>
+                  <svg viewBox="0 0 24 24" className="size-[13px]" fill="#7aff46" aria-label="Recommends"><path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" /></svg>
                 </>
               )}
             </span>
@@ -718,11 +718,11 @@ export function RecCard({ avatars, label, image, players, details, video, shared
  *  · the trailer is revealed by an inset clip wiping leftward from the card's
  *    right edge — it never translates — and cross-fades up out of Xbox green
  */
-export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
+export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, mini, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
   const open = () => (onViewDetails || onOpen)?.(title)
-  // `compact` scales the card down a notch (used for the denser home rows).
-  const CARD_W = compact ? 'w-[416px]' : 'w-[520px]'
-  const IMG_H = compact ? 'h-[234px]' : 'h-[292px]'
+  // `compact` scales the card down a notch; `mini` smaller still (denser rows).
+  const CARD_W = mini ? 'w-[300px]' : compact ? 'w-[416px]' : 'w-[520px]'
+  const IMG_H = mini ? 'h-[169px]' : compact ? 'h-[234px]' : 'h-[292px]'
   const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
   const onTag = useContext(TagCtx)
   // Spectate mirroring: force the hover reveal on (a moderator can't hover).
@@ -804,7 +804,7 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
         className={`pointer-events-none absolute left-0 top-0 w-[340px] pb-[28px] pl-[24px] pr-[24px] pt-[20px] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + F}
         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))' }}
       >
-        <p className={`font-bold leading-[1.1] text-white ${compact ? 'text-[24px]' : 'text-[28px]'}`}>{title}</p>
+        <p className={`font-bold leading-[1.1] text-white ${mini ? 'text-[20px]' : compact ? 'text-[24px]' : 'text-[28px]'}`}>{title}</p>
         {(studio || released) && (
           <p className="mt-[6px] text-[13px] font-medium text-white/85">
             {[studio, released && released.replace(/^Released on /, '')].filter(Boolean).join(' · ')}

@@ -789,10 +789,10 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
   // The hover ellipsis opens the same menu as right-click, anchored to itself.
   const openMenu = (e) => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); onMenu?.(r.left, r.bottom + 4) }
   return (
-    <div className="group flex w-[160px] shrink-0 flex-col text-left">
+    <div className="group flex w-[200px] shrink-0 flex-col text-left">
       <button onClick={onOpen} onContextMenu={onContext} className="block w-full text-left">
         <div
-          className="size-[160px] overflow-hidden rounded-[20px] transition-[translate] duration-200 group-hover:-translate-y-[3px]"
+          className="size-[200px] overflow-hidden rounded-[20px] transition-[translate] duration-200 group-hover:-translate-y-[3px]"
           style={{ backgroundColor: color }}
         >
           {cover ? (
@@ -816,14 +816,14 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
           </button>
         )}
       </div>
-      {/* Member profile images — up to 5, then a "+N" for the rest. */}
-      <div className="mt-[8px] flex items-center">
+      {/* Member profile images — spaced circles, up to 5 then a "+N" (Figma 1133:7885). */}
+      <div className="mt-[10px] flex items-center gap-[4px]">
         {members.slice(0, 5).map((c, i) => (
-          <Avatar key={i} color={c} size={20} style={{ marginLeft: i ? -6 : 0, boxShadow: '0 0 0 2px #0c0c0e', zIndex: members.length - i }} />
+          <Avatar key={i} color={c} size={28} style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
         ))}
         {members.length > 5 && (
           <span
-            className="ml-[4px] flex h-[20px] items-center justify-center rounded-full bg-white/12 px-[6px] text-[11px] font-semibold leading-none text-white"
+            className="flex h-[28px] items-center justify-center rounded-full bg-white/12 px-[8px] text-[12px] font-semibold leading-none text-white"
             style={{ boxShadow: '0 0 0 2px #0c0c0e' }}
           >
             +{members.length - 5}
@@ -837,10 +837,10 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
 // The blurple "create" card that leads the Blends row (Figma 550:979).
 function CreateBlendCard({ onClick }) {
   return (
-    <button onClick={onClick} className="group flex w-[160px] shrink-0 flex-col text-left">
+    <button onClick={onClick} className="group flex w-[200px] shrink-0 flex-col text-left">
       {/* Dark tile with a green ring + the same plus glyph as the "Add to Mix"
           button (Figma 1135:1711). */}
-      <div className="flex size-[160px] items-center justify-center rounded-[20px] bg-[#0f0f12] ring-[1.5px] ring-[#9BF00B]/35 transition duration-200 group-hover:-translate-y-[3px] group-hover:ring-[#9BF00B]/70">
+      <div className="flex size-[200px] items-center justify-center rounded-[20px] bg-[#0f0f12] ring-[1.5px] ring-[#9BF00B]/35 transition duration-200 group-hover:-translate-y-[3px] group-hover:ring-[#9BF00B]/70">
         <svg viewBox="0 0 17 18" className="size-[40px] transition group-hover:scale-110 group-hover:[filter:drop-shadow(0_0_10px_rgba(155,240,11,0.6))]" fill="none" style={{ color: '#9BF00B' }}>
           <path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
@@ -917,7 +917,7 @@ function GiftArcadeButton() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
+        className="flex items-center gap-[9px] rounded-[8px] bg-black/40 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/75"
       >
         <svg viewBox="0 0 24 24" fill="currentColor" className="size-[18px] shrink-0">
           <path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" />
@@ -938,7 +938,7 @@ function WheelNavButton() {
     <button
       onClick={openWheel}
       title={wheelLive ? 'A wheel sync is live on the call' : 'Spin the wheel'}
-      className="relative flex items-center gap-[9px] rounded-[8px] bg-black/35 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/50"
+      className="relative flex items-center gap-[9px] rounded-[8px] bg-black/40 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/75"
     >
       {wheelLive && (
         <span className="absolute -right-[3px] -top-[3px] flex size-[10px]">
@@ -956,7 +956,50 @@ function WheelNavButton() {
   )
 }
 
-function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onMixes, onLibrary, menuGame }) {
+// Tracks whether the inner-page back button was already showing on the page we
+// just came from, so moving between two inner pages (e.g. a Mix ↔ a game detail)
+// doesn't replay the emerge animation — it only plays when the button first
+// appears coming from a page without one (the Recommended home).
+let navBackWasShown = false
+
+// Shared top nav for the inner pages (Library / Mixes / detail). An Xbox-green
+// back button animates in while the logo + tabs slide right to make room, and
+// the logo is a link back to the Recommended home.
+function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
+  const showBack = !!onBack
+  // Only animate when the back button wasn't already on the previous page.
+  const [animate] = useState(() => showBack && !navBackWasShown)
+  useEffect(() => { navBackWasShown = showBack }, [showBack])
+  const anim = animate ? ' [animation:navBackIn_.4s_.06s_cubic-bezier(0.16,1,0.3,1)_both]' : ''
+  const groupAnim = animate ? ' [animation:navGroupSlide_.4s_cubic-bezier(0.16,1,0.3,1)_both]' : ''
+  const Tab = ({ label, isActive, onClick }) => (
+    <button onClick={onClick} className={'flex h-[56px] items-center border-b-2 text-[16px] font-medium transition ' + (isActive ? 'border-white text-white' : 'border-transparent text-[#c7c9cb] hover:text-white')}>{label}</button>
+  )
+  return (
+    <header className="flex h-[56px] shrink-0 items-center border-b border-[#1c1d21] px-[40px]">
+      {onBack && (
+        <button onClick={onBack} aria-label="Back" className={'mr-[14px] flex size-[30px] shrink-0 items-center justify-center rounded-full text-[#3fbf3f] transition hover:bg-white/10' + anim}>
+          <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+        </button>
+      )}
+      <div className={'flex items-center gap-[32px]' + groupAnim}>
+        <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
+        <Tab label="Recommended" isActive={active === 'recommended'} onClick={onHome} />
+        <Tab label="Library" isActive={active === 'library'} onClick={onLibrary} />
+        <Tab label="Mixes" isActive={active === 'mixes'} onClick={onMixes} />
+      </div>
+      <div className="flex flex-1 items-center justify-end gap-[20px]">
+        <WheelNavButton />
+        <GiftArcadeButton />
+      </div>
+    </header>
+  )
+}
+
+function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onHome, onMixes, onLibrary, menuGame }) {
+  // Home has no back button, so re-arm the inner-page emerge animation for the
+  // next time we drill into a page that does.
+  useEffect(() => { navBackWasShown = false }, [])
   // A card keeps its hover reveal while its right-click/More menu is open, so
   // moving the cursor onto the menu doesn't collapse the card.
   const titleOf = (k) => STARTER_BY_KEY[k]?.title || CATALOG[k]?.title
@@ -1035,7 +1078,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         <div className="pointer-events-none absolute inset-0 -z-10 bg-black/25 backdrop-blur-md" />
         {/* Discord-style thin divider under the nav */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
-        <XboxLogo size={24} />
+        <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
         <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Recommended</button>
         <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
         <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
@@ -1071,53 +1114,35 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
             style={{ background: 'linear-gradient(to bottom, rgba(12,12,14,0.35) 0%, rgba(12,12,14,0.55) 55%, #0c0c0e 100%)' }}
           />
           <div className="relative mx-auto w-full max-w-[1400px] px-[40px] pb-[8px] pt-[24px]">
-            {/* Hero title — left-aligned and compact at the top of the page, with
-                the Mixes list right below (Figma 1133:7914). */}
-            <div className="flex flex-col items-start pb-[8px] pt-[46px] text-left">
-              <h1 className="italic leading-[1.02] text-white [text-shadow:0_4px_18px_rgba(0,0,0,0.55)]">
-                <span className="text-[clamp(44px,6.6vw,96px)] uppercase tracking-[0.48px]" style={{ fontFamily: '"Base Neue Black"' }}>XBOX ARCADE</span>
-              </h1>
-              <p className="mt-[14px] max-w-[680px] text-[18px] leading-snug text-[#e7e7e7]">
-                Experience collection of game pass titles curated for you and your friends powered by cloud gaming.
-              </p>
-              {/* "See who's on PARTY" — opens the friends popup */}
-              <button
-                onClick={onWhosOn}
-                className="mt-[18px] flex items-center gap-[12px] rounded-full border border-white/10 bg-black/30 px-[18px] py-[8px] backdrop-blur-sm transition hover:border-white/25 hover:bg-black/45"
-              >
-                <div className="flex items-center">
-                  {[AVATAR.blue, AVATAR.yellow, AVATAR.green].map((c, i) => (
-                    <Avatar key={i} color={c} size={26} style={{ marginRight: i < 2 ? -10 : 0, boxShadow: '0 0 0 2px rgba(0,0,0,0.55)' }} />
-                  ))}
-                </div>
-                <span className="text-[15px] font-medium text-white">See who’s on</span>
-                <span className="flex items-center gap-[6px]">
-                  <XboxLogo size={16} />
-                  <span className="text-[13px] font-bold uppercase tracking-wide text-[#95ff00]">Arcade</span>
-                </span>
-              </button>
-            </div>
-
-            {/* Your Mixes — left-aligned, colored cards */}
-            <div className="relative mt-[72px] flex flex-col items-start">
-              {/* Halo Master Chief backdrop behind the Mixes (Figma 946:794) — full
-                  image, no crop; its own alpha fades out toward the bottom via a
-                  mask so it blends into whatever is behind it. Anchored left to
-                  sit behind the left-aligned Mixes. */}
-              <div aria-hidden className="pointer-events-none absolute left-[-120px] top-[-150px] w-[min(1180px,100%)]">
-                <img
-                  src={mixesHaloBg}
-                  alt=""
-                  className="w-full select-none [-webkit-mask-image:radial-gradient(78%_80%_at_58%_36%,black_30%,transparent_72%)] [mask-image:radial-gradient(78%_80%_at_58%_36%,black_30%,transparent_72%)]"
-                />
+            {/* Your Mixes — at the top, with "See who's on ARCADE" beside the heading.
+                mt gives a 56px gap below the nav bar. */}
+            <div className="relative mt-[88px] flex flex-col items-start">
+              <div className="relative flex w-full flex-wrap items-center gap-x-[24px] gap-y-[12px]">
+                <h2
+                  className="text-[clamp(40px,6vw,88px)] uppercase leading-[0.95] tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
+                  style={{ fontFamily: '"Base Neue Cond Bold"' }}
+                >
+                  Your Mixes
+                </h2>
+                {/* "See who's on ARCADE" — opens the friends popup (Figma 1148:1562):
+                    dark-green pill, 30px avatars, Xbox-green ARCADE. */}
+                <button
+                  onClick={onWhosOn}
+                  className="flex items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125"
+                >
+                  <div className="flex items-center">
+                    {[AVATAR.blue, AVATAR.pink, AVATAR.yellow].map((c, i) => (
+                      <Avatar key={i} color={c} size={30} style={{ marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #092000' }} />
+                    ))}
+                  </div>
+                  <span className="text-[16px] text-white">See who’s on</span>
+                  <span className="flex items-center gap-[3px]">
+                    <XboxLogo size={16} />
+                    <span className="text-[12px] font-bold uppercase tracking-wide text-[#107c10]">Arcade</span>
+                  </span>
+                </button>
               </div>
-              <h2
-                className="relative text-[clamp(26px,2.6vw,40px)] uppercase tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
-                style={{ fontFamily: '"Base Neue Cond Bold"' }}
-              >
-                Your Mixes
-              </h2>
-              <div className="relative mt-[24px] flex max-w-full flex-wrap justify-start gap-x-[16px] gap-y-[24px]">
+              <div className="relative mt-[24px] flex max-w-full flex-wrap justify-start gap-x-[24px] gap-y-[24px]">
                 <CreateBlendCard onClick={onCreateBlend} />
                 {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => <BlendCard key={b.id} {...b} onOpen={() => onOpenBlend(b)} onContext={(e) => openMixMenu(e, b)} onMenu={(x, y) => setMixMenu({ x, y, blend: b })} />)}
               </div>
@@ -1131,27 +1156,27 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} menuGame={menuGame} />
 
           {/* Trending in Your Communities — compact list */}
-          <TrendingRow items={HOME_TRENDING} onOpen={onOpen} />
+          <TrendingRow items={HOME_TRENDING} onOpen={onOpen} onShare={onShare} />
 
           {/* Friends Are Playing Now — horizontal cinematic cards (compact) */}
-          <ShelfRow title="Friends Are Playing Now" padTop={46}>
+          <ShelfRow title="Friends Are Playing Now" padTop={30}>
             {HOME_FRIENDS_PLAYING.map((k) => (
               <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={revealed(k)} />
             ))}
           </ShelfRow>
 
           {/* Because You Played… — horizontal cinematic cards (compact) */}
-          <ShelfRow title="Because You Played Deathloop" padTop={46}>
+          <ShelfRow title="Because You Played Deathloop" padTop={30}>
             {HOME_BECAUSE_PLAYED.map((k) => (
               <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={revealed(k)} />
             ))}
           </ShelfRow>
 
           {/* Worth a Closer Look — featured game + detail panel */}
-          <WorthACloserLook gameKey={HOME_CLOSER_LOOK} onOpen={onOpen} />
+          <WorthACloserLook gameKey={HOME_CLOSER_LOOK} onOpen={onOpen} onShare={onShare} />
 
           {/* Something Different for You — horizontal cinematic cards (compact) */}
-          <ShelfRow title="Something Different for You" padTop={46}>
+          <ShelfRow title="Something Different for You" padTop={30}>
             {HOME_DIFFERENT.map((k) => (
               <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={revealed(k)} />
             ))}
@@ -1200,16 +1225,7 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
   const mine = blends.filter((b) => (b.members || []).includes(SELF))
   return (
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
-      <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
-        <XboxLogo size={24} />
-        <button onClick={onHome} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Recommended</button>
-        <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Mixes</button>
-        <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <WheelNavButton />
-          <GiftArcadeButton onClick={() => setSearchOpen(true)} />
-        </div>
-      </header>
+      <PageNav active="mixes" onHome={onHome} onLibrary={onLibrary} onBack={onHome} />
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
         <div className="mx-auto w-full max-w-[1400px]">
           <h1 className="text-[clamp(30px,3vw,44px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Your Mixes</h1>
@@ -1670,7 +1686,7 @@ function TrendingThumb({ gameKey }) {
 }
 
 // "Trending in Your Communities" — a compact list of games (Figma 937:8591).
-function TrendingRow({ items, onOpen }) {
+function TrendingRow({ items, onOpen, onShare }) {
   return (
     <section className="mt-[56px]">
       <p className="text-[24px] font-semibold text-white">Trending in Your Communities</p>
@@ -1681,7 +1697,15 @@ function TrendingRow({ items, onOpen }) {
           const d = STARTER_DESC[k] || {}
           const title = c.title || g?.title
           return (
-            <button key={k} data-game={title} onClick={() => onOpen?.(title)} className="group flex w-full items-center gap-[20px] rounded-[12px] p-[12px] text-left transition hover:bg-white/[0.03]">
+            <div
+              key={k}
+              data-game={title}
+              role="button"
+              tabIndex={0}
+              onClick={() => onOpen?.(title)}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(title) } }}
+              className="group flex w-full cursor-pointer items-center gap-[20px] rounded-[12px] p-[12px] text-left transition hover:bg-white/[0.03]"
+            >
               <TrendingThumb gameKey={k} />
               <div className="min-w-0 flex-1">
                 <p className="text-[18px] font-semibold text-white">{title}</p>
@@ -1691,14 +1715,14 @@ function TrendingRow({ items, onOpen }) {
                   const fi = friendInfo(k)
                   const avs = fi.avatars
                   return (
-                    <div className="mt-[6px] flex items-center gap-[7px]">
+                    <div className="mt-[8px] flex items-center gap-[9px]">
                       <span className="flex items-center">
                         {avs.slice(0, 2).map((cc, i) => (
-                          <Avatar key={i} color={cc} size={18} style={{ marginRight: i < 1 ? -6 : 0, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 2 - i }} />
+                          <PlayerAvatar key={i} color={cc} size={22} marginRight={i < 1 ? -8 : 0} gameTitle={title} onShare={onShare} hrs={friendHours(k, cc)} />
                         ))}
-                        {avs.length > 2 && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
+                        {avs.length > 2 && <span className="ml-[3px] text-[13px] font-semibold leading-none text-white">+</span>}
                       </span>
-                      <p className="text-[13px] text-white">{fi.count} {fi.count === 1 ? 'friend' : 'friends'} played this for avg. {fi.hours} hours</p>
+                      <p className="text-[13px] font-semibold text-white">{fi.count} {fi.count === 1 ? 'friend' : 'friends'} played this for avg. {fi.hours} hours</p>
                     </div>
                   )
                 })()}
@@ -1716,7 +1740,7 @@ function TrendingRow({ items, onOpen }) {
                 }}
                 className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-[#9a9ba3] opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100"
               >{ELLIPSIS_GLYPH}</button>
-            </button>
+            </div>
           )
         })}
       </div>
@@ -1745,13 +1769,22 @@ function WideGameCard({ gkey, onOpen }) {
   )
 }
 
+// Release dates for the local-art CATALOG games (the detail-page rows), so their
+// cinematic cards show "studio · date" like the Recommended page.
+const CATALOG_RELEASED = {
+  minecraft: 'Nov 18, 2011', seaOfThieves: 'Jun 3, 2020', monsterHunter: 'Jan 12, 2022',
+  grounded: 'Sep 27, 2022', overcooked: 'Aug 7, 2018', forHonor: 'Feb 14, 2017',
+  humanFallFlat: 'Jul 22, 2016', gangBeasts: 'Dec 12, 2017',
+}
 // CinematicCard props for a Starter game — the rich horizontal hover overlay
 // (trailer + title + social proof + tag pills, no default title).
 function cineCard(k) {
   const g = STARTER_BY_KEY[k]
   const c = CATALOG[k] || {}
   const d = STARTER_DESC[k] || {}
-  const vid = GAMEPLAY_LANDSCAPE[k] || g?.youTubeId
+  // Prefer landscape gameplay, then the starter trailer, then the local-art
+  // catalog trailer (so the detail-page "Similar to" cards also play on hover).
+  const vid = GAMEPLAY_LANDSCAPE[k] || g?.youTubeId || VIDEOS[k]
   // A mix of social lines (recommend / avg hrs / a friend's review comment), with
   // faces that match the line (a quote shows just its speaker).
   const social = cineSocial(k)
@@ -1772,7 +1805,7 @@ function cineCard(k) {
     title: c.title || g?.title,
     // Persistent caption under the card — the studio and release date.
     studio: d.studio || c.developer || '',
-    released: d.released || '',
+    released: d.released || CATALOG_RELEASED[k] || '',
     recommendPct: d.rec,
   }
 }
@@ -1781,14 +1814,14 @@ function cineCard(k) {
 function HighlyRatedRow({ items, onOpen, onWishlist, onShare, menuGame }) {
   const titleOf = (k) => STARTER_BY_KEY[k]?.title || CATALOG[k]?.title
   return (
-    <ShelfRow title="Recommended by Your Friends" padTop={46}>
+    <ShelfRow title="Recommended by Your Friends" padTop={30}>
       {items.map((k) => <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={!!menuGame && menuGame === titleOf(k)} />)}
     </ShelfRow>
   )
 }
 
 // "Worth a Closer Look" — one featured game with a detail panel (Figma 937:8591).
-function WorthACloserLook({ gameKey, onOpen }) {
+function WorthACloserLook({ gameKey, onOpen, onShare }) {
   const [hover, setHover] = useState(false)
   const g = STARTER_BY_KEY[gameKey]
   const c = CATALOG[gameKey] || {}
@@ -1817,7 +1850,7 @@ function WorthACloserLook({ gameKey, onOpen }) {
                 centered on that line (not the whole wrapped block). */}
             <div className="flex h-[18px] items-center">
               {FRIEND_POOL.map((col, i) => (
-                <Avatar key={i} color={col} size={22} style={{ marginRight: i < FRIEND_POOL.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                <PlayerAvatar key={i} color={col} size={22} marginRight={i < FRIEND_POOL.length - 1 ? -8 : 0} gameTitle={title} onShare={onShare} hrs={friendHours(gameKey, col)} />
               ))}
             </div>
             <p className="text-[13px] font-semibold leading-[18px] text-white">{`Most-played by your friends · avg. ${friendInfo(gameKey).hours} hrs`}</p>
@@ -1975,16 +2008,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
 
   return (
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
-      <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
-        <XboxLogo size={24} />
-        <button onClick={onHome} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Recommended</button>
-        <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Library</button>
-        <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
-        <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <WheelNavButton />
-          <GiftArcadeButton onClick={() => setSearchOpen(true)} />
-        </div>
-      </header>
+      <PageNav active="library" onHome={onHome} onMixes={onMixes} onBack={onHome} />
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
         <div className="mx-auto w-full max-w-[1400px]">
           <div className="flex flex-wrap items-end justify-between gap-[16px]">
@@ -2105,13 +2129,23 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
 }
 
 // ── Blend group page (Figma node 489:2783) ─────────────────────────────────
-function FeedRow({ who, text, when }) {
+function FeedRow({ who, text, pre, game, post, when, onOpen }) {
   const names = useNames()
   return (
     <div className="flex items-start gap-[10px]">
       <Avatar color={who} size={28} />
       <p className="flex-1 text-[13px] leading-snug text-[#b5bac1]">
-        <span className="font-semibold text-white">{dispName(NAME[who], names)}</span> {text}
+        <span className="font-semibold text-white">{dispName(NAME[who], names)}</span>{' '}
+        {game ? (
+          <>
+            {pre}{' '}
+            <button
+              onClick={(e) => { e.stopPropagation(); onOpen?.(game) }}
+              className="font-semibold text-white underline decoration-white/30 underline-offset-2 transition hover:decoration-white"
+            >{game}</button>
+            {post}
+          </>
+        ) : text}
       </p>
       <span className="shrink-0 text-[11px]" style={{ color: when === 'live' ? '#95ff00' : '#7e7f87' }}>{when}</span>
     </div>
@@ -2639,10 +2673,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   const g = (i) => (games.length ? games[i % games.length] : { title: 'a game' })
   // Activity feed — includes you (green/sauhee) alongside the other members.
   const feed = [
-    { who: SELF, text: `PLAYlisted ${g(2).title}`, when: '1h' },
-    { who: m[1] || SELF, text: `finished ${g(0).title} and left it five stars`, when: '2h' },
-    { who: m[2] || m[1] || SELF, text: `is in a ${g(1).title} lobby — one seat open`, when: 'live' },
-    { who: SELF, text: `added ${g(3).title} to the group list`, when: 'yest' },
+    { who: SELF, pre: 'PLAYlisted', game: g(2).title, when: '1h' },
+    { who: m[1] || SELF, pre: 'finished', game: g(0).title, post: ' and left it five stars', when: '2h' },
+    { who: m[2] || m[1] || SELF, pre: 'is in a', game: g(1).title, post: ' lobby — one seat open', when: 'live' },
+    { who: SELF, pre: 'added', game: g(3).title, post: ' to the group list', when: 'yest' },
     { who: m[1] || SELF, text: `pinned ${blend.when} as their free window`, when: '2d' },
   ]
 
@@ -2653,6 +2687,23 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   const wish = wishKeys.map((k) => CATALOG[k]).filter(Boolean)
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
+  // Playlist display — grid (4 per row) or list, with an expand/collapse after
+  // four rows.
+  const [playlistView, setPlaylistView] = useState('grid')
+  const [playlistExpanded, setPlaylistExpanded] = useState(false)
+  const PLAYLIST_LIMIT = playlistView === 'grid' ? 16 : 4 // four rows either way
+  const wishShown = playlistExpanded ? wish : wish.slice(0, PLAYLIST_LIMIT)
+  // Search across all games: matching games already in the Mix get highlighted,
+  // matching games that aren't get an "Add" option.
+  const [playlistSearch, setPlaylistSearch] = useState('')
+  const q = playlistSearch.trim().toLowerCase()
+  const isHit = (title) => !!q && title.toLowerCase().includes(q)
+  const searchAddable = q
+    ? Object.entries(CATALOG)
+        .filter(([k, v]) => v.title.toLowerCase().includes(q) && !wishKeys.includes(k))
+        .slice(0, 6)
+        .map(([k, v]) => ({ key: k, title: v.title, image: v.image }))
+    : []
   function dropAt(i) {
     if (dragIdx !== null && dragIdx !== i) {
       const next = wishKeys.slice()
@@ -2666,16 +2717,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav — same Home / Library / Mixes header as the other pages */}
-      <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-white/5 px-[40px]">
-        <XboxLogo size={24} />
-        <button onClick={onHome} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Recommended</button>
-        <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
-        <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <WheelNavButton />
-          <GiftArcadeButton />
-        </div>
-      </header>
+      <PageNav onHome={onHome} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
       {/* The gutters live on the inner wrappers (not the scroll container) so
           the banner and the wheel band can bleed to the pane's edges. */}
       <div className="no-scrollbar flex-1 overflow-y-auto pb-[80px]">
@@ -2749,7 +2791,6 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                   ))}
                 </span>
               </div>
-              <p className="mt-[10px] text-[15px] font-semibold text-white">Refreshes daily.</p>
             </div>
           </div>
 
@@ -2760,91 +2801,143 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
           {/* The band carries its own green edges now, so this stays neutral. */}
           <div className="my-[28px] h-px" style={{ backgroundColor: '#1c1d21' }} />
 
-          {/* Group wishlist — numbered, drag to rank */}
-          <section>
-            <div className="mb-[18px] flex items-baseline gap-[14px]">
-              <h2 className="text-[28px] font-semibold text-white">Your Mix PLAYlist</h2>
-              <span className="text-[12px] font-medium text-[#7e7f87]">drag to rank</span>
-              <button onClick={() => setPlaylistOpen(true)} className="ml-auto text-[12px] font-semibold uppercase tracking-wide text-[#9a9ba3] transition hover:text-white">View entire PLAYlist</button>
-            </div>
-            {wish.length === 0 && (
-              <button onClick={() => setPlaylistOpen(true)} className="flex w-full items-center gap-[14px] rounded-[14px] border border-dashed border-[#2b2d31] px-[20px] py-[22px] text-left transition hover:border-[#5765f2] hover:bg-white/[0.02]">
-                <span className="flex size-[40px] shrink-0 items-center justify-center rounded-full bg-[#5765f2]/15 text-[#8b95ff]">
-                  <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                </span>
-                <span>
-                  <span className="block text-[16px] font-semibold text-white">Your PLAYlist is empty</span>
-                  <span className="block text-[13px] text-[#9a9ba3]">Right-click a game or open the full PLAYlist to add the ones your group wants to play.</span>
-                </span>
-              </button>
-            )}
-            <div className="no-scrollbar flex gap-[20px] overflow-x-auto pb-[8px]">
-              {wish.map((g, i) => (
-                <div
-                  key={g.title}
-                  draggable
-                  onDragStart={() => setDragIdx(i)}
-                  onDragOver={(e) => { e.preventDefault(); setOverIdx(i) }}
-                  onDragLeave={() => setOverIdx((v) => (v === i ? null : v))}
-                  onDrop={() => dropAt(i)}
-                  onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
-                  onClick={() => onOpen?.(g.title)}
-                  onContextMenu={(e) => openMenu(e, g.title)}
-                  className={
-                    'w-[320px] shrink-0 cursor-pointer select-none rounded-[14px] p-[6px] ring-2 transition ' +
-                    (dragIdx === i ? 'opacity-0 ' : '') +
-                    (overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')
-                  }
-                >
-                  <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#1a1a1d]">
-                    <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
-                    <span className="absolute left-[10px] top-[10px] flex size-[30px] items-center justify-center rounded-[8px] bg-black/70 text-[16px] font-bold text-white backdrop-blur">
-                      {i + 1}
-                    </span>
-                  </div>
-                  <p className="mt-[8px] text-[16px] font-semibold text-white">{g.title}</p>
-                  <p className="text-[13px] text-[#9a9ba3]">{g.caption}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Daily recommended list + group activity feed */}
-          <section className="mt-[44px] flex gap-[32px]">
+          <div className="flex gap-[32px]">
+            {/* Main column — the group's Mix (playlist) + daily recommended */}
             <div className="min-w-0 flex-1">
-              <h2 className="mb-[20px] text-[28px] font-semibold text-white">Daily Recommended Games</h2>
-              <div className="flex flex-col gap-[12px]">
-                {games.map((g, i) => (
-                  <button
-                    key={i}
-                    onClick={() => onOpen?.(g.title)}
-                    onContextMenu={(e) => openMenu(e, g.title)}
-                    className="group flex items-center gap-[20px] rounded-[14px] p-[10px] text-left transition hover:bg-[#151517]"
-                  >
-                    <div className="h-[120px] w-[214px] shrink-0 overflow-hidden rounded-[12px] bg-[#1a1a1d]">
-                      <img alt="" src={g.image} className="size-full object-cover" />
+              {/* The Mix (this group's playlist) — grid (4/row) or list, expandable */}
+              <section>
+                {/* Search — highlights matching games in the Mix, offers to add ones
+                    that aren't in it yet. */}
+                <div className="relative mb-[16px]">
+                  <div className="flex items-center gap-[10px] rounded-[10px] bg-[#151517] px-[14px] py-[10px] ring-1 ring-white/5 focus-within:ring-[#5765f2]">
+                    <svg viewBox="0 0 24 24" className="size-[18px] shrink-0 text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                    <input value={playlistSearch} onChange={(e) => setPlaylistSearch(e.target.value)} placeholder="Search games to find or add to this Mix" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+                    {playlistSearch && (
+                      <button onClick={() => setPlaylistSearch('')} aria-label="Clear search" className="shrink-0 text-[#87898c] transition hover:text-white">
+                        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                      </button>
+                    )}
+                  </div>
+                  {/* Add-a-game results for games not already in the Mix */}
+                  {q && searchAddable.length > 0 && (
+                    <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#1a1a1d] shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
+                      <p className="px-[14px] pb-[6px] pt-[10px] text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Not in this Mix — add one</p>
+                      {searchAddable.map((g) => (
+                        <button key={g.key} onClick={() => { setPlaylistMembership(g.title, true); setPlaylistSearch('') }} className="flex w-full items-center gap-[12px] px-[14px] py-[9px] text-left transition hover:bg-white/[0.05]">
+                          <img alt="" src={g.image} className="h-[36px] w-[64px] shrink-0 rounded-[6px] object-cover" />
+                          <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">{g.title}</span>
+                          <span className="flex items-center gap-[5px] text-[13px] font-semibold text-[#9BF00B]">
+                            <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                            Add
+                          </span>
+                        </button>
+                      ))}
                     </div>
-                    <div className="min-w-0">
-                      <p className="text-[20px] font-semibold text-white">{g.title}</p>
-                      <p className="mt-[2px] text-[13px] text-[#7e7f87]">{g.players} players · {g.playtime} · {g.genre}</p>
-                      <p className="mt-[8px] max-w-[52ch] text-[14px] leading-snug text-[#9a9ba3]">{g.caption}</p>
-                    </div>
+                  )}
+                </div>
+
+                <div className="mb-[18px] flex items-center gap-[14px]">
+                  <span className="text-[12px] font-medium text-[#7e7f87]">drag to rank</span>
+                  {/* List / grid view toggle */}
+                  <div className="ml-auto flex items-center gap-[2px] rounded-[9px] bg-[#151517] p-[3px]">
+                    <button onClick={() => setPlaylistView('list')} aria-label="List view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (playlistView === 'list' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
+                      <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
+                    </button>
+                    <button onClick={() => setPlaylistView('grid')} aria-label="Grid view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (playlistView === 'grid' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
+                      <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
+                    </button>
+                  </div>
+                </div>
+
+                {wish.length === 0 ? (
+                  <button onClick={() => setPlaylistOpen(true)} className="flex w-full items-center gap-[14px] rounded-[14px] border border-dashed border-[#2b2d31] px-[20px] py-[22px] text-left transition hover:border-[#5765f2] hover:bg-white/[0.02]">
+                    <span className="flex size-[40px] shrink-0 items-center justify-center rounded-full bg-[#5765f2]/15 text-[#8b95ff]">
+                      <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                    </span>
+                    <span>
+                      <span className="block text-[16px] font-semibold text-white">This Mix is empty</span>
+                      <span className="block text-[13px] text-[#9a9ba3]">Right-click a game below to add the ones your group wants to play.</span>
+                    </span>
                   </button>
-                ))}
-              </div>
+                ) : playlistView === 'grid' ? (
+                  <div className="grid grid-cols-4 gap-[16px]">
+                    {wishShown.map((g, i) => (
+                      <div
+                        key={g.title}
+                        draggable
+                        onDragStart={() => setDragIdx(i)}
+                        onDragOver={(e) => { e.preventDefault(); setOverIdx(i) }}
+                        onDragLeave={() => setOverIdx((v) => (v === i ? null : v))}
+                        onDrop={() => dropAt(i)}
+                        onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                        onClick={() => onOpen?.(g.title)}
+                        onContextMenu={(e) => openMenu(e, g.title)}
+                        className={'cursor-pointer select-none rounded-[14px] p-[6px] ring-2 transition ' + (dragIdx === i ? 'opacity-0 ' : '') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')}
+                      >
+                        <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#1a1a1d]">
+                          <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
+                          <span className="absolute left-[8px] top-[8px] flex size-[26px] items-center justify-center rounded-[8px] bg-black/70 text-[14px] font-bold text-white backdrop-blur">{i + 1}</span>
+                        </div>
+                        <p className="mt-[8px] truncate text-[15px] font-semibold text-white">{g.title}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-[10px]">
+                    {wishShown.map((g, i) => (
+                      <div
+                        key={g.title}
+                        draggable
+                        onDragStart={() => setDragIdx(i)}
+                        onDragOver={(e) => { e.preventDefault(); setOverIdx(i) }}
+                        onDragLeave={() => setOverIdx((v) => (v === i ? null : v))}
+                        onDrop={() => dropAt(i)}
+                        onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                        onClick={() => onOpen?.(g.title)}
+                        onContextMenu={(e) => openMenu(e, g.title)}
+                        className={'group flex cursor-pointer select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (dragIdx === i ? 'opacity-0 ' : '') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')}
+                      >
+                        <span className="flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">{i + 1}</span>
+                        <div className="h-[68px] w-[121px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]">
+                          <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-[16px] font-semibold text-white">{g.title}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {wish.length > PLAYLIST_LIMIT && (
+                  <button onClick={() => setPlaylistExpanded((v) => !v)} className="mt-[16px] flex items-center gap-[6px] rounded-[8px] border border-[#2b2d31] px-[16px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-white/[0.04]">
+                    {playlistExpanded ? 'Collapse' : `Expand (${wish.length - PLAYLIST_LIMIT} more)`}
+                    <svg viewBox="0 0 24 24" className={'size-[15px] transition ' + (playlistExpanded ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                  </button>
+                )}
+              </section>
+
+              {/* Daily Recommended — a carousel like the game detail page */}
+              <section className="mt-[44px]">
+                <ShelfRow title="Daily Recommended Games" padTop={30}>
+                  {blend.games.map((k) => (
+                    <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={(t) => setPlaylistMembership(t, true)} onShare={onShare} />
+                  ))}
+                </ShelfRow>
+              </section>
             </div>
 
-            {/* Group activity feed */}
+            {/* Group activity — sticky on the right */}
             <aside className="hidden w-[320px] shrink-0 lg:block">
-              <div className="rounded-[16px] bg-[#121214] p-[18px]">
+              <div className="sticky top-[20px] rounded-[16px] bg-[#121214] p-[18px]">
                 <p className="text-[16px] font-semibold text-white">What the group members are doing</p>
                 <p className="mt-[2px] text-[12px] text-[#7e7f87]">Activity only shows this group.</p>
                 <div className="mt-[18px] flex flex-col gap-[16px]">
-                  {feed.map((f, i) => <FeedRow key={i} {...f} />)}
+                  {feed.map((f, i) => <FeedRow key={i} {...f} onOpen={onOpen} />)}
                 </div>
               </div>
             </aside>
-          </section>
+          </div>
         </div>
       </div>
 
@@ -2957,12 +3050,14 @@ function WhosOnModal({ onClose, onCreated }) {
   useEscClose(onClose)
   const [dupMix, setDupMix] = useState(null)
   const toggle = (n) => { setDupMix(null); setSel((s) => ({ ...s, [n]: !s[n] })) }
-  const chosen = friends.filter((f) => sel[f.name])
+  // Both on-Arcade friends and not-yet-on-Arcade friends can be selected into a
+  // Mix; the not-yet ones just get a "get Nitro first" invite unless gifted.
+  const offSet = new Set(OFF_ARCADE_FRIENDS.map((f) => f.name))
+  const chosen = [...friends, ...OFF_ARCADE_FRIENDS].filter((f) => sel[f.name])
   function createMix() {
     if (!chosen.length) return
-    // Block making a second Mix with the exact same people.
-    const dup = findDuplicateMix(blends, [SELF, ...chosen.map((f) => f.color)])
-    if (dup) { setDupMix(dup); return }
+    // A group can have multiple Mixes (each is a separate playlist), so no
+    // duplicate-group check here.
     const name = [capName(SELF_NAME), ...chosen.map((f) => capName(f.name))].join(', ')
     const games = STARTER_MIX_GAMES
     const newBlend = {
@@ -2979,6 +3074,8 @@ function WhosOnModal({ onClose, onCreated }) {
     chosen.forEach((f) => putDM(f.name, {
       from: SELF_NAME, to: f.name, kind: 'invite',
       blendId: newBlend.id, blendName: name, status: 'pending', ts: Date.now(),
+      // Not on Arcade and not gifted → they need to get Nitro first.
+      needsNitro: offSet.has(f.name) && !gifted[f.name],
     }))
     onCreated?.(newBlend.id)
   }
@@ -3002,18 +3099,20 @@ function WhosOnModal({ onClose, onCreated }) {
         </div>
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[10px]">
           {sorted.length === 0 && offArcade.length === 0 && <p className="py-[6px] text-[13px] text-[#6f7276]">No friends match “{q}”.</p>}
-          {/* On ARCADE — selectable for a Mix */}
+          {/* On ARCADE — selectable for a Mix. The status dot is green only when
+              they're actually on a call (in the room); otherwise Offline. */}
           {sorted.map((f) => {
             const on = !!sel[f.name]
+            const isOnline = online.includes(f.name)
             return (
               <button key={f.name} onClick={() => toggle(f.name)} className="flex w-full items-center gap-[12px] py-[8px] text-left">
                 <span className="relative shrink-0">
                   <Avatar color={f.color} size={40} />
-                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: '#23a55a' }} />
+                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: isOnline ? '#23a55a' : '#80848e' }} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
-                  <p className="text-[13px]" style={{ color: '#23a55a' }}>On Arcade</p>
+                  <p className="text-[13px]" style={{ color: isOnline ? '#23a55a' : '#80848e' }}>{isOnline ? 'On Arcade' : 'Offline'}</p>
                 </div>
                 <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
                   {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
@@ -3025,26 +3124,33 @@ function WhosOnModal({ onClose, onCreated }) {
           {offArcade.length > 0 && (
             <p className="mb-[2px] mt-[14px] text-[12px] font-semibold uppercase tracking-wide text-[#80848e]">Not on ARCADE</p>
           )}
-          {offArcade.map((f) => (
-            <div key={f.name} className="flex w-full items-center gap-[12px] py-[8px]">
-              <span className="relative shrink-0">
-                <Avatar color={f.color} size={40} />
-                <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: '#80848e' }} />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
-                <p className="text-[13px]" style={{ color: '#80848e' }}>Offline</p>
+          {offArcade.map((f) => {
+            const on = !!sel[f.name]
+            return (
+              <div key={f.name} onClick={() => toggle(f.name)} className="flex w-full cursor-pointer items-center gap-[12px] py-[8px]">
+                <span className="relative shrink-0">
+                  <Avatar color={f.color} size={40} />
+                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: '#80848e' }} />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
+                  <p className="text-[13px]" style={{ color: gifted[f.name] ? '#23a55a' : '#80848e' }}>
+                    {gifted[f.name] ? 'Nitro gift sent' : on ? 'Will be asked to subscribe' : 'Not on Arcade'}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setGifted((g) => ({ ...g, [f.name]: !g[f.name] })) }}
+                  className={'flex shrink-0 items-center gap-[6px] rounded-[8px] px-[12px] py-[7px] text-[13px] font-semibold text-white transition ' + (gifted[f.name] ? 'bg-[#3a3d41]' : 'bg-[#5765f2] hover:brightness-110')}
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" className="size-[15px]"><path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" /></svg>
+                  {gifted[f.name] ? 'Gifting' : 'Gift'}
+                </button>
+                <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+                  {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                </span>
               </div>
-              <button
-                onClick={() => setGifted((g) => ({ ...g, [f.name]: true }))}
-                disabled={gifted[f.name]}
-                className={'flex shrink-0 items-center gap-[6px] rounded-[8px] px-[12px] py-[7px] text-[13px] font-semibold text-white transition ' + (gifted[f.name] ? 'bg-[#3a3d41]' : 'bg-[#5765f2] hover:brightness-110')}
-              >
-                <svg viewBox="0 0 24 24" fill="currentColor" className="size-[15px]"><path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" /></svg>
-                {gifted[f.name] ? 'Gifted' : 'Gift'}
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
         {dupMix && (
           <div className="mx-[24px] mb-[2px] mt-[4px] flex items-center justify-between gap-[10px] rounded-[8px] bg-[#f0505b]/12 px-[12px] py-[10px]">
@@ -3153,9 +3259,7 @@ function CreateBlendModal({ onClose, onCreated }) {
   // The generated name includes you (the creator), not just the people invited.
   const blendName = nameOverride !== null ? nameOverride : [cap(SELF_NAME), ...selectedNames].join(', ')
   function createBlend() {
-    // Block making a second Mix with the exact same people.
-    const dup = findDuplicateMix(blends, [SELF, ...selectedFriends.map((f) => f.color)])
-    if (dup) { setDupMix(dup); return }
+    // A group can have multiple Mixes (each is a separate playlist).
     const name = (blendName || 'New Mix').trim()
     const games = STARTER_MIX_GAMES
     const newBlend = {
@@ -4296,7 +4400,8 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const addKey = (k) => { writeKeys([...new Set([...activeKeys, k])]); setQ('') }
   const removeKey = (k) => { if (phase !== 'spinning') writeKeys(activeKeys.filter((x) => x !== k)) }
   const clearAll = () => writeKeys([])
-  const loadMix = (b) => { writeKeys([...new Set([...activeKeys, ...mixGames(b)])]); setMixMenu(false) }
+  // Load a Mix's games onto the wheel; keep the dropdown open so several can be added.
+  const loadMix = (b) => { writeKeys([...new Set([...activeKeys, ...mixGames(b)])]) }
 
   // Keep remaining/phase fresh while a spin is turning.
   useEffect(() => {
@@ -4341,9 +4446,6 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
           <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 
-        {inviting ? (
-          <WheelInviteStep online={online} onCancel={() => setInviting(false)} onStart={startJam} />
-        ) : (
         <div className="no-scrollbar relative flex w-full flex-col gap-[28px] overflow-y-auto p-[32px] lg:flex-row lg:items-center">
           {/* Wheel */}
           <div className="flex shrink-0 flex-col items-center">
@@ -4357,7 +4459,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
           </div>
 
           {/* Right column: title / result, sync toggle, load-a-mix, search, list */}
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 lg:pr-[24px]">
             {phase === 'result' && picked ? (
               <div>
                 <p className="text-[16px] font-semibold text-[#7aff46]">The wheel picked</p>
@@ -4383,29 +4485,35 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
               </div>
             ) : (
               <>
-                <div className="flex items-start justify-between gap-[12px]">
-                  <div>
-                    <h2 className="text-[28px] font-bold text-white">Spin the Wheel</h2>
-                    <p className="mt-[6px] max-w-[46ch] text-[15px] leading-snug text-[#9a9ba3]">
-                      When it lands, start a party for the picked game — you host, and everyone on the call is invited to ready up.
-                    </p>
-                  </div>
+                {/* Header — styled title + Invite (opens the wheel-sync invite) */}
+                <div className="flex items-center justify-between gap-[12px]">
+                  <h2 className="uppercase leading-[0.92] tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(28px,3vw,44px)' }}>Spin the Wheel</h2>
+                  <button onClick={() => setInviting(true)} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Invite</button>
                 </div>
 
-                {/* Load a Mix's PLAYlist */}
-                <div className="relative z-20 mt-[16px]">
-                  <button onClick={() => setMixMenu((v) => !v)} aria-expanded={mixMenu} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
-                    <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
-                    Load a Mix&rsquo;s PLAYlist
-                    <svg viewBox="0 0 24 24" className={'size-[14px] transition-transform ' + (mixMenu ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                {/* Load games from your Mix — a Select-Mix dropdown */}
+                <p className="mt-[22px] text-[16px] font-medium text-white">Load games from your Mix</p>
+                <div className="relative z-20 mt-[10px]">
+                  <button onClick={() => setMixMenu((v) => !v)} aria-expanded={mixMenu} className="flex w-full items-center justify-between gap-[8px] rounded-[10px] bg-[#141416] px-[16px] py-[12px] text-[14px] text-[#9a9ba3] ring-1 ring-white/10 transition hover:ring-white/20">
+                    <span>Select Mix</span>
+                    <svg viewBox="0 0 24 24" className={'size-[16px] transition-transform ' + (mixMenu ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
                   </button>
                   {mixMenu && (
                     <>
                       <div className="fixed inset-0 z-[-1]" onClick={() => setMixMenu(false)} />
-                      <div className="absolute left-0 top-[48px] w-[300px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+                      <div className="absolute left-0 right-0 top-[52px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
                         {myMixes.length ? myMixes.map((b) => (
-                          <button key={b.id} onClick={() => loadMix(b)} className="flex w-full items-center justify-between gap-[10px] px-[14px] py-[9px] text-left text-[14px] text-[#dbdee1] transition hover:bg-white/5">
-                            <span className="truncate">{b.name}</span>
+                          <button key={b.id} onClick={() => loadMix(b)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] text-[#dbdee1] transition hover:bg-white/5">
+                            <span className="size-[36px] shrink-0 overflow-hidden rounded-[6px] bg-[#2b2d31]" style={b.color ? { backgroundColor: b.color } : undefined}>
+                              {b.cover ? (
+                                <img alt="" src={b.cover} className="size-full object-cover" />
+                              ) : (
+                                <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">
+                                  {mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}
+                                </span>
+                              )}
+                            </span>
+                            <span className="min-w-0 flex-1 truncate">{b.name}</span>
                             <span className="shrink-0 text-[12px] text-[#7e7f87]">{mixGames(b).length} games</span>
                           </button>
                         )) : <p className="px-[14px] py-[8px] text-[13px] text-[#7e7f87]">You&rsquo;re not in any Mixes yet.</p>}
@@ -4417,35 +4525,34 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 {/* On the wheel — the search that ADDS to the wheel sits inside this
                     same block, right above the (scrollable) list, so it's clear the
                     two are connected. */}
-                <div className="relative z-10 mt-[16px] rounded-[12px] bg-[#141416] p-[14px] ring-1 ring-white/5">
+                <p className="mt-[18px] text-[16px] font-medium text-white">or search and add any game</p>
+                <div className="relative z-10 mt-[10px]">
+                  <div className="flex items-center gap-[8px] rounded-[10px] bg-[#141416] px-[14px] py-[11px] ring-1 ring-white/10">
+                    <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+                    {q && <button onClick={() => setQ('')} aria-label="Clear search" className="text-[#7e7f87] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+                  </div>
+                  {query && (
+                    <div className="absolute left-0 right-0 top-[52px] z-30 max-h-[240px] overflow-y-auto rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+                      {results.length ? results.map((k) => (
+                        <button key={k} onClick={() => addKey(k)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left transition hover:bg-white/5">
+                          {wheelThumb(k) ? <img alt="" src={wheelThumb(k)} className="h-[26px] w-[46px] shrink-0 rounded-[4px] object-cover" /> : <span className="h-[26px] w-[46px] shrink-0 rounded-[4px] bg-[#2b2d31]" />}
+                          <span className="min-w-0 flex-1 truncate text-[14px] text-white">{wheelTitle(k)}</span>
+                          <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                        </button>
+                      )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">No games match &ldquo;{q}&rdquo;.</p>}
+                    </div>
+                  )}
+                </div>
+
+                {/* On the wheel — an outlined (border-only) results box */}
+                <div className="mt-[12px] rounded-[12px] border border-white/12 p-[14px]">
                   <div className="mb-[10px] flex items-center justify-between">
                     <p className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">{synced ? 'Call wheel' : 'On the wheel'} · {boardGames.length}</p>
                     {boardGames.length > 0 && <button onClick={clearAll} className="text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>}
                   </div>
-
-                  {/* Add-a-game search */}
-                  <div className="relative">
-                    <div className="flex items-center gap-[8px] rounded-[10px] bg-[#0c0c0e] px-[12px] py-[10px] ring-1 ring-white/10">
-                      <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                      <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search a game to add to the wheel" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
-                      {q && <button onClick={() => setQ('')} aria-label="Clear search" className="text-[#7e7f87] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
-                    </div>
-                    {query && (
-                      <div className="absolute left-0 right-0 top-[50px] z-30 max-h-[240px] overflow-y-auto rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
-                        {results.length ? results.map((k) => (
-                          <button key={k} onClick={() => addKey(k)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left transition hover:bg-white/5">
-                            {wheelThumb(k) ? <img alt="" src={wheelThumb(k)} className="h-[26px] w-[46px] shrink-0 rounded-[4px] object-cover" /> : <span className="h-[26px] w-[46px] shrink-0 rounded-[4px] bg-[#2b2d31]" />}
-                            <span className="min-w-0 flex-1 truncate text-[14px] text-white">{wheelTitle(k)}</span>
-                            <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                          </button>
-                        )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">No games match &ldquo;{q}&rdquo;.</p>}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* The list — a scrollable container that grows with the games */}
-                  <div className="no-scrollbar mt-[12px] flex max-h-[184px] min-h-[56px] flex-wrap content-start gap-[8px] overflow-y-auto">
-                    {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Nothing yet — search above, load a Mix&rsquo;s PLAYlist, or right-click any game &rarr; &ldquo;Add to Wheel&rdquo;.</p>}
+                  <div className="no-scrollbar flex max-h-[168px] min-h-[64px] flex-wrap content-start gap-[8px] overflow-y-auto">
+                    {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Nothing yet — pick a Mix above, search a game, or right-click any game &rarr; &ldquo;Add to Wheel&rdquo;.</p>}
                     {boardGames.map((g) => (
                       <span key={g.key} className="flex h-fit items-center gap-[8px] rounded-[8px] bg-[#1c1c1f] py-[6px] pl-[8px] pr-[6px] text-[13px] text-white ring-1 ring-white/5">
                         {wheelThumb(g.key) ? <img alt="" src={wheelThumb(g.key)} className="h-[22px] w-[38px] rounded-[4px] object-cover" /> : <span className="h-[22px] w-[38px] rounded-[4px] bg-[#2b2d31]" />}
@@ -4459,9 +4566,14 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   {boardGames.length === 1 && <p className="mt-[10px] text-[12px] text-[#f0b232]">Add at least 2 games to spin.</p>}
                 </div>
 
-                {/* Wheel sync — below the wheel. A shared wheel the whole call
-                    builds and watches together. */}
-                <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
+                {/* Spin the wheel — the primary action */}
+                <button onClick={doSpin} disabled={!canSpin} className={'mt-[16px] w-full rounded-[10px] py-[13px] text-[15px] font-bold transition ' + (canSpin ? 'bg-[#2da000] text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] hover:brightness-110' : 'cursor-not-allowed bg-[#1c1c1f] text-[#7e7f87] ring-1 ring-white/5')}>
+                  Spin the wheel
+                </button>
+
+                {/* Wheel sync — a shared wheel the whole call builds together. */}
+                {(synced || jamLive) && (<>
+                <div className="mt-[14px] flex flex-wrap items-center gap-[10px]">
                   {!synced && jamLive ? (
                     // A sync I'm not in yet: who started it + who's joined, click to join.
                     <button
@@ -4476,15 +4588,15 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                       </span>
                       <span className="text-[#3fbf3f]">Join</span>
                     </button>
-                  ) : (
+                  ) : synced ? (
                     <button
-                      onClick={synced ? leaveOrEnd : startOrJoin}
-                      className={'flex items-center gap-[9px] rounded-[10px] px-[16px] py-[10px] text-[14px] font-semibold transition ' + (synced ? 'bg-[#2da000] text-white hover:brightness-110' : 'bg-[#1c1c1f] text-white ring-1 ring-white/10 hover:bg-[#26262a]')}
+                      onClick={leaveOrEnd}
+                      className="flex items-center gap-[9px] rounded-[10px] bg-[#2da000] px-[16px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110"
                     >
                       <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
-                      {synced ? (isHost ? 'End wheel sync' : 'Leave wheel sync') : 'Start wheel sync'}
+                      {isHost ? 'End wheel sync' : 'Leave wheel sync'}
                     </button>
-                  )}
+                  ) : null}
                   {synced && (
                     <button onClick={copyInviteLink} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
                       <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
@@ -4502,14 +4614,22 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 <p className="mt-[8px] text-[12px] text-[#7e7f87]">
                   {synced
                     ? (isHost ? 'You started this sync — everyone on the call can join, edit and watch it spin.' : `Synced by ${dispName(callWheel?.host, jamNames)} — edits and spins are live for the whole call.`)
-                    : jamLive
-                      ? 'Join to build and spin the wheel together.'
-                      : 'Syncs a shared wheel the whole call builds and watches together.'}
+                    : 'Join to build and spin the wheel together.'}
                 </p>
+                </>)}
               </>
             )}
           </div>
         </div>
+
+        {/* Invite — an overlay panel over the module (doesn't replace it) */}
+        {inviting && (
+          <>
+            <div className="absolute inset-0 z-[30] bg-black/55" onClick={() => setInviting(false)} />
+            <div className="absolute right-[24px] top-[60px] z-[40] flex max-h-[calc(92vh-84px)] w-[380px] max-w-[calc(100%-48px)] flex-col overflow-hidden rounded-[14px] border border-[#2b2d31] bg-[#141416] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+              <WheelInviteStep online={online} onCancel={() => setInviting(false)} onStart={startJam} popover />
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -4518,7 +4638,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
 
 // The "who to send this jam to" step (Spotify-Jam style): pick people from the
 // call / friends, or copy a link. Choosing none is fine — a link still shares it.
-function WheelInviteStep({ online, onCancel, onStart }) {
+function WheelInviteStep({ online, onCancel, onStart, popover }) {
   const hiddenP = useHidden()
   const others = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const inCall = others.filter((d) => online.includes(d.name))
@@ -4542,9 +4662,9 @@ function WheelInviteStep({ online, onCancel, onStart }) {
   )
 
   return (
-    <div className="no-scrollbar relative flex max-h-[92vh] w-full flex-col overflow-y-auto p-[32px]">
-      <h2 className="text-[28px] font-bold text-white">Start a wheel sync</h2>
-      <p className="mt-[6px] text-[15px] leading-snug text-[#9a9ba3]">Invite people to build the wheel and watch it spin with you — or copy a link to share.</p>
+    <div className={'no-scrollbar relative flex w-full flex-col overflow-y-auto ' + (popover ? 'p-[20px]' : 'max-h-[92vh] p-[32px]')}>
+      <h2 className={'font-bold text-white ' + (popover ? 'text-[20px]' : 'text-[28px]')}>Start a wheel sync</h2>
+      <p className={'mt-[6px] leading-snug text-[#9a9ba3] ' + (popover ? 'text-[13px]' : 'text-[15px]')}>Invite people to build the wheel and watch it spin with you — or copy a link to share.</p>
 
       {/* Copy link */}
       <button onClick={copyLink} className="mt-[18px] flex w-fit items-center gap-[9px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
@@ -5246,6 +5366,8 @@ function InviteMessage({ msg, mine, onRespond }) {
   const pending = (msg.status || 'pending') === 'pending'
   const accepted = msg.status === 'accepted'
   const declined = msg.status === 'declined'
+  // Invitee isn't on Arcade yet → the call-to-action is to subscribe first.
+  const needsNitro = !!msg.needsNitro
   return (
     <div className="mt-[6px] w-full max-w-[440px] overflow-hidden rounded-[10px] border border-[#3a3c42] bg-[#232428]">
       <div className="flex items-center gap-[10px] border-b border-[#2f3136] bg-[#1e1f22] px-[14px] py-[10px]">
@@ -5258,18 +5380,25 @@ function InviteMessage({ msg, mine, onRespond }) {
       <div className="px-[14px] py-[12px]">
         <p className="text-[14px] text-[#dbdee1]">
           {mine
-            ? <>You invited <span className="font-semibold text-white">{capName(msg.to)}</span> to join this Mix.</>
-            : <><span className="font-semibold text-white">{capName(msg.from)}</span> invited you to join this Mix.</>}
+            ? <>You invited <span className="font-semibold text-white">{capName(msg.to)}</span> to this Mix{needsNitro ? <> — they need to <span className="font-semibold text-white">get Nitro to join first</span>.</> : <> to join.</>}</>
+            : <><span className="font-semibold text-white">{capName(msg.from)}</span> invited you to this Mix.{needsNitro ? <> <span className="text-[#c7c9cb]">Subscribe to Arcade to join.</span></> : null}</>}
         </p>
         {msg.text ? <p className="mt-[6px] text-[13px] text-[#b5bac1]">“{msg.text}”</p> : null}
 
         {mine ? (
           <p className="mt-[10px] text-[13px] font-semibold" style={{ color: accepted ? D.green : declined ? '#f0787a' : D.mute }}>
-            {accepted ? '✓ Accepted' : declined ? '✕ Declined' : '• Waiting for a response…'}
+            {accepted ? '✓ Joined' : declined ? '✕ Declined' : needsNitro ? '• Waiting for them to subscribe…' : '• Waiting for a response…'}
           </p>
         ) : pending ? (
           <div className="mt-[12px] flex gap-[8px]">
-            <button onClick={() => onRespond(true)} className="flex-1 rounded-[8px] bg-[#248046] px-[14px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110">Accept</button>
+            {needsNitro ? (
+              <button onClick={() => onRespond(true)} className="flex flex-1 items-center justify-center gap-[7px] rounded-[8px] bg-[#8b46b0] px-[14px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110">
+                <svg viewBox="0 0 24 24" fill="currentColor" className="size-[15px]"><path d="M20 7h-2.18c.11-.31.18-.65.18-1a3 3 0 0 0-5.5-1.65l-.5.67-.5-.68A3 3 0 0 0 6 6c0 .35.07.69.18 1H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zm-6-2a1 1 0 1 1 1 1h-1V5zM9 4a1 1 0 0 1 1 1v1H9a1 1 0 1 1 0-2zm2 15H7v-6h4v6zm0-8H5V9h6v2zm6 8h-4v-6h4v6zm2-8h-6V9h6v2z" /></svg>
+                Subscribe to Arcade
+              </button>
+            ) : (
+              <button onClick={() => onRespond(true)} className="flex-1 rounded-[8px] bg-[#248046] px-[14px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110">Accept</button>
+            )}
             <button onClick={() => onRespond(false)} className="flex-1 rounded-[8px] bg-[#3a3c42] px-[14px] py-[8px] text-[14px] font-semibold text-white transition hover:bg-[#4a4c52]">Decline</button>
           </div>
         ) : (
@@ -6385,16 +6514,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav — same Home / Library / Mixes header as the homepage */}
-      <header className="flex h-[56px] shrink-0 items-center gap-[32px] border-b border-[#1c1d21] px-[40px]">
-        <XboxLogo size={24} />
-        <button onClick={onHome || onBack} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Recommended</button>
-        <button onClick={onLibrary} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button onClick={onMixes} className="pb-[2px] text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
-        <div className="flex flex-1 items-center justify-end gap-[20px]">
-          <WheelNavButton />
-          <GiftArcadeButton onClick={() => setSearchOpen(true)} />
-        </div>
-      </header>
+      <PageNav onHome={onHome || onBack} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
       {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[32px]">
@@ -6520,20 +6640,19 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
             <ReviewsSection reviews={[...friendReviews, ...REVIEWS]} />
           )}
 
-          {/* Friends Also Liked — cinematic cards that always lead with friend
-              activity (avatars + what they did), like "Highly Rated by Friends". */}
+          {/* Friends Also Liked — compact cinematic cards, consistent with the
+              Recommended page. */}
           <div className="mt-[32px]">
-            <ShelfRow title={`Friends who played ${d.title} also liked`}>
+            <ShelfRow title={`Friends who played ${d.title} also liked`} padTop={30}>
               {recCinematic.map((c) => (
-                <CinematicCard key={c.id} {...cineCard(c.id)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
+                <CinematicCard key={c.id} {...cineCard(c.id)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
               ))}
             </ShelfRow>
           </div>
-          {/* Similar games — portrait cards like "Something Different for You":
-              a friend's review when there is one, else "Be the first to suggest". */}
-          <ShelfRow title={`Similar to ${d.title}`}>
+          {/* Similar games — same compact cinematic cards as the Recommended page. */}
+          <ShelfRow title={`Similar to ${d.title}`} padTop={30}>
             {recPortrait.map((c) => (
-              <PortraitCard key={c.id} {...pcard(c.id)} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
+              <CinematicCard key={c.id} {...cineCard(c.id)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
             ))}
           </ShelfRow>
         </div>
@@ -7021,7 +7140,7 @@ export default function Landing() {
         ) : eMixesTab ? (
           <MixesPage onHome={goHome} onLibrary={openLibrary} onOpenBlend={(b) => openBlend(b.id)} onCreate={() => setCreateOpen(true)} onOpen={openGame} />
         ) : (
-          <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onMixes={openMixes} onLibrary={openLibrary} menuGame={eGameMenu?.title || null} />
+          <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onHome={goHome} onMixes={openMixes} onLibrary={openLibrary} menuGame={eGameMenu?.title || null} />
         )}
         </div>
         {/* Voice + user panel — a rounded card floating at the bottom-left,
