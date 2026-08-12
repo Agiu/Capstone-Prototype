@@ -1,5 +1,5 @@
 import { createContext, Fragment, useContext, useEffect, useId, useRef, useState } from 'react'
-import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, TagCtx } from './RecCard.jsx'
+import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, TagCtx, SpectateHoverCtx, SpectateAvCtx, avKey } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import {
   discordLogo,
@@ -1153,7 +1153,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         {/* Curated homepage shelves over the Starter catalog (Figma 937:8591) */}
         <div className="mx-auto w-full max-w-[1400px] px-[40px]">
           {/* Recommended by Your Friends — wide cinematic cards */}
-          <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} menuGame={menuGame} />
+          <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} menuGame={menuGame} revealTitle={eHover} />
 
           {/* Trending in Your Communities — compact list */}
           <TrendingRow items={HOME_TRENDING} onOpen={onOpen} onShare={onShare} />
@@ -1173,7 +1173,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           </ShelfRow>
 
           {/* Worth a Closer Look — featured game + detail panel */}
-          <WorthACloserLook gameKey={HOME_CLOSER_LOOK} onOpen={onOpen} onShare={onShare} />
+          <WorthACloserLook gameKey={HOME_CLOSER_LOOK} onOpen={onOpen} onShare={onShare} revealTitle={eHover} />
 
           {/* Something Different for You — horizontal cinematic cards (compact) */}
           <ShelfRow title="Something Different for You" padTop={30}>
@@ -1223,6 +1223,27 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
   const deleteMix = (b) => { if (window.confirm(`Delete ${b.name}? This removes it for everyone.`)) setBlends(blends.filter((x) => x.id !== b.id)) }
   const togglePin = (b) => patchMix(b, { pinned: !b.pinned })
   const mine = blends.filter((b) => (b.members || []).includes(SELF))
+
+  // ── Spectate/moderator fidelity ──────────────────────────────────────────
+  // Publish this page's right-click menu + modals so the moderator's mirror
+  // shows them (same pattern as the home Content page's contentUI).
+  const bybid = (id) => blends.find((b) => b.id === id) || null
+  const [mUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/mixesUI` : 'spectate/__nomui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/mixesUI`, {
+      mixMenu: mixMenu ? { x: mixMenu.x, y: mixMenu.y, blendId: mixMenu.blend?.id || null } : null,
+      coverForId: coverFor?.id || null,
+      renameForId: renameFor?.id || null,
+      inviteForId: inviteFor?.id || null,
+      searchOpen: !!searchOpen,
+    })
+  }, [mixMenu, coverFor, renameFor, inviteFor, searchOpen])
+  const eMixMenu = IS_SPECTATE ? (mUI?.mixMenu ? { x: mUI.mixMenu.x, y: mUI.mixMenu.y, blend: bybid(mUI.mixMenu.blendId) } : null) : mixMenu
+  const eCoverFor = IS_SPECTATE ? bybid(mUI?.coverForId) : coverFor
+  const eRenameFor = IS_SPECTATE ? bybid(mUI?.renameForId) : renameFor
+  const eInviteFor = IS_SPECTATE ? bybid(mUI?.inviteForId) : inviteFor
+  const eSearchOpen = IS_SPECTATE ? !!mUI?.searchOpen : searchOpen
   return (
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <PageNav active="mixes" onHome={onHome} onLibrary={onLibrary} onBack={onHome} />
@@ -1243,27 +1264,27 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
           </div>
         </div>
       </div>
-      {mixMenu && mixMenu.blend && (
+      {eMixMenu && eMixMenu.blend && (
         <ContextMenu
-          x={mixMenu.x}
-          y={mixMenu.y}
+          x={eMixMenu.x}
+          y={eMixMenu.y}
           onClose={() => setMixMenu(null)}
-          items={mixMenuItems(mixMenu.blend, {
-            onOpen: () => { onOpenBlend(mixMenu.blend); setMixMenu(null) },
-            onRename: () => { setRenameFor(mixMenu.blend); setMixMenu(null) },
-            onCover: () => { setCoverFor(mixMenu.blend); setMixMenu(null) },
-            onPin: () => { togglePin(mixMenu.blend); setMixMenu(null) },
-            onManage: () => { setInviteFor(mixMenu.blend); setMixMenu(null) },
-            onSetNotif: (lvl) => { patchMix(mixMenu.blend, { notif: lvl }); setMixMenu(null) },
-            onLeave: () => { const b = mixMenu.blend; setMixMenu(null); leaveMixCard(b) },
-            onDelete: () => { const b = mixMenu.blend; setMixMenu(null); deleteMix(b) },
+          items={mixMenuItems(eMixMenu.blend, {
+            onOpen: () => { onOpenBlend(eMixMenu.blend); setMixMenu(null) },
+            onRename: () => { setRenameFor(eMixMenu.blend); setMixMenu(null) },
+            onCover: () => { setCoverFor(eMixMenu.blend); setMixMenu(null) },
+            onPin: () => { togglePin(eMixMenu.blend); setMixMenu(null) },
+            onManage: () => { setInviteFor(eMixMenu.blend); setMixMenu(null) },
+            onSetNotif: (lvl) => { patchMix(eMixMenu.blend, { notif: lvl }); setMixMenu(null) },
+            onLeave: () => { const b = eMixMenu.blend; setMixMenu(null); leaveMixCard(b) },
+            onDelete: () => { const b = eMixMenu.blend; setMixMenu(null); deleteMix(b) },
           })}
         />
       )}
-      {coverFor && <CoverPickerModal blend={coverFor} games={(coverFor.games || []).map((k) => CATALOG[k]).filter(Boolean)} onClose={() => setCoverFor(null)} onSave={(patch) => patchMix(coverFor, patch)} />}
-      {renameFor && <RenameMixModal blend={renameFor} onClose={() => setRenameFor(null)} onSave={(patch) => patchMix(renameFor, patch)} />}
-      {inviteFor && <InviteMembersModal blend={inviteFor} onClose={() => setInviteFor(null)} onSave={(patch) => patchMix(inviteFor, patch)} />}
-      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
+      {eCoverFor && <CoverPickerModal blend={eCoverFor} games={(eCoverFor.games || []).map((k) => CATALOG[k]).filter(Boolean)} onClose={() => setCoverFor(null)} onSave={(patch) => patchMix(eCoverFor, patch)} />}
+      {eRenameFor && <RenameMixModal blend={eRenameFor} onClose={() => setRenameFor(null)} onSave={(patch) => patchMix(eRenameFor, patch)} />}
+      {eInviteFor && <InviteMembersModal blend={eInviteFor} onClose={() => setInviteFor(null)} onSave={(patch) => patchMix(eInviteFor, patch)} />}
+      {eSearchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
     </main>
   )
 }
@@ -1811,22 +1832,27 @@ function cineCard(k) {
 }
 
 // "Highly Rated by Your Friends" — wide cards with the cinematic hover overlay.
-function HighlyRatedRow({ items, onOpen, onWishlist, onShare, menuGame }) {
+function HighlyRatedRow({ items, onOpen, onWishlist, onShare, menuGame, revealTitle }) {
   const titleOf = (k) => STARTER_BY_KEY[k]?.title || CATALOG[k]?.title
+  // Force the hover reveal when the participant's mirrored pointer (revealTitle)
+  // or an open right-click menu (menuGame) is on this card.
   return (
     <ShelfRow title="Recommended by Your Friends" padTop={30}>
-      {items.map((k) => <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={!!menuGame && menuGame === titleOf(k)} />)}
+      {items.map((k) => <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={(!!menuGame && menuGame === titleOf(k)) || (!!revealTitle && revealTitle === titleOf(k))} />)}
     </ShelfRow>
   )
 }
 
 // "Worth a Closer Look" — one featured game with a detail panel (Figma 937:8591).
-function WorthACloserLook({ gameKey, onOpen, onShare }) {
+function WorthACloserLook({ gameKey, onOpen, onShare, revealTitle }) {
   const [hover, setHover] = useState(false)
   const g = STARTER_BY_KEY[gameKey]
   const c = CATALOG[gameKey] || {}
   const d = STARTER_DESC[gameKey] || {}
   const title = c.title || g?.title
+  // On the moderator's mirror there's no real hover, so drive the trailer +
+  // reveal from the participant's mirrored pointer (revealTitle).
+  const shown = hover || (!!revealTitle && revealTitle === title)
   return (
     <section className="mt-[56px]">
       <p className="text-[24px] font-semibold text-white">Worth a Closer Look</p>
@@ -1836,12 +1862,12 @@ function WorthACloserLook({ gameKey, onOpen, onShare }) {
           onClick={() => onOpen?.(title)}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
-          className="group relative aspect-video w-full shrink-0 overflow-hidden rounded-[16px] bg-[#121214] lg:w-[56%]"
+          className={'group relative aspect-video w-full shrink-0 overflow-hidden rounded-[16px] bg-[#121214] lg:w-[56%]' + (shown ? ' is-revealed' : '')}
         >
-          <img alt="" src={starterHeader(gameKey)} className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.02]" />
-          {hover && (GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && <VideoTrailer youTubeId={GAMEPLAY_LANDSCAPE[gameKey] || g.youTubeId} poster={starterHeader(gameKey)} bare />}
+          <img alt="" src={starterHeader(gameKey)} className={'absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.02]' + (shown ? ' scale-[1.02]' : '')} />
+          {shown && (GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && <VideoTrailer youTubeId={GAMEPLAY_LANDSCAPE[gameKey] || g.youTubeId} poster={starterHeader(gameKey)} bare />}
           {(GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && (
-            <span className="pointer-events-none absolute left-[14px] top-[14px] z-[2] rounded-[4px] bg-black/70 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white opacity-0 transition-opacity duration-[300ms] ease-out group-hover:opacity-100">{GAMEPLAY_LANDSCAPE[gameKey] ? 'Gameplay' : 'Trailer'}</span>
+            <span className={'pointer-events-none absolute left-[14px] top-[14px] z-[2] rounded-[4px] bg-black/70 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white opacity-0 transition-opacity duration-[300ms] ease-out group-hover:opacity-100' + (shown ? ' !opacity-100' : '')}>{GAMEPLAY_LANDSCAPE[gameKey] ? 'Gameplay' : 'Trailer'}</span>
           )}
         </button>
         <div className="flex flex-1 flex-col justify-center">
@@ -1868,6 +1894,10 @@ function WorthACloserLook({ gameKey, onOpen, onShare }) {
 // the trailer on hover.
 function LibraryTile({ g, onClick, metric, onWishlist }) {
   const [broken, setBroken] = useState(false)
+  // On the moderator's mirror, force this tile's hover reveal when it's the card
+  // the participant is hovering.
+  const spHover = useContext(SpectateHoverCtx)
+  const fr = !!spHover && spHover === g.title
   const localArt = g.key && CATALOG[g.key]?.image
   // Cover: local art → Steam capsule → the game's YouTube still (for the handful
   // of console-only games with no Steam page) → gradient fallback.
@@ -1888,9 +1918,9 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.() } }}
       className="group cursor-pointer text-left"
     >
-      <div className="relative aspect-[3/4] overflow-hidden rounded-[12px] bg-[#151518] ring-1 ring-white/5 transition group-hover:ring-white/25">
+      <div className={'relative aspect-[3/4] overflow-hidden rounded-[12px] bg-[#151518] ring-1 ring-white/5 transition group-hover:ring-white/25' + (fr ? ' !ring-white/25' : '')}>
         {cover ? (
-          <img alt="" src={cover} onError={() => setBroken(true)} className="size-full object-cover transition duration-300 group-hover:scale-[1.06]" />
+          <img alt="" src={cover} onError={() => setBroken(true)} className={'size-full object-cover transition duration-300 group-hover:scale-[1.06]' + (fr ? ' scale-[1.06]' : '')} />
         ) : (
           <div className="absolute inset-0 transition duration-300 group-hover:scale-[1.04]" style={{ background: `linear-gradient(150deg, ${g.colors[0]}, ${g.colors[1]})` }}>
             <div className="absolute inset-0 flex items-center justify-center p-[14px]">
@@ -1901,7 +1931,7 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         {/* Add-to-Mix + More — bottom-right, revealed on hover. Bare green glyphs
             with a hover glow + label, matching the horizontal cards. */}
-        <div className="absolute bottom-[14px] right-[16px] flex items-center gap-[16px] opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+        <div className={'absolute bottom-[14px] right-[16px] flex items-center gap-[16px] opacity-0 transition-opacity duration-200 group-hover:opacity-100' + (fr ? ' !opacity-100' : '')}>
           <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(g.title) }} aria-label="Add to Mix" className="group/add relative flex size-[28px] items-center justify-center">
             <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">Add to Mix</span>
             <svg viewBox="0 0 17 18" fill="none" className="size-[24px] transition-[scale,filter] duration-200 group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" style={{ color: '#9BF00B' }}><path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
@@ -1987,20 +2017,35 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
   // Arriving from a clicked tag applies (replaces) the incoming filter.
   useEffect(() => { if (initialFilter && initialFilter.length) setActive(initialFilter) }, [initialFilter])
 
-  const query = q.trim().toLowerCase()
-  const capFacet = active.find((a) => a.kind === 'cap') // player capacity is a single "up to N" number
+  // ── Spectate/moderator fidelity ──────────────────────────────────────────
+  // Publish the search text, active filters, sort and the two dropdowns so the
+  // moderator's mirror shows the same filtered/sorted grid and open menus.
+  const [lUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/libraryUI` : 'spectate/__nolui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/libraryUI`, { q: q || '', active: active || [], sort: sort || 'default', filterOpen: !!filterOpen, sortOpen: !!sortOpen, searchOpen: !!searchOpen })
+  }, [q, active, sort, filterOpen, sortOpen, searchOpen])
+  const eQ = IS_SPECTATE ? (lUI?.q || '') : q
+  const eActive = IS_SPECTATE ? (lUI?.active || []) : active
+  const eSort = IS_SPECTATE ? (lUI?.sort || 'default') : sort
+  const eFilterOpen = IS_SPECTATE ? !!lUI?.filterOpen : filterOpen
+  const eSortOpen = IS_SPECTATE ? !!lUI?.sortOpen : sortOpen
+  const eSearchOpen = IS_SPECTATE ? !!lUI?.searchOpen : searchOpen
+
+  const query = eQ.trim().toLowerCase()
+  const capFacet = eActive.find((a) => a.kind === 'cap') // player capacity is a single "up to N" number
   const capMax = capFacet ? capFacet.value : null
-  const genres = active.filter((a) => a.kind === 'genre').map((a) => a.value)
-  const tagFacets = active.filter((a) => a.kind === 'tag').map((a) => a.value)
+  const genres = eActive.filter((a) => a.kind === 'genre').map((a) => a.value)
+  const tagFacets = eActive.filter((a) => a.kind === 'tag').map((a) => a.value)
   // Faceted: OR within a group, AND across groups, AND with the text search.
   const filtered = STARTER_LIBRARY.filter((g) =>
     (!query || g.title.toLowerCase().includes(query) || g.genre.toLowerCase().includes(query)) &&
     (capMax == null || maxPlayers(g.players) <= capMax) &&
     (genres.length === 0 || genres.includes(g.genre)) &&
     (tagFacets.length === 0 || tagFacets.some((t) => gameTags(g).includes(t))))
-  const activeSort = LIB_SORTS.find((s) => s.id === sort) || LIB_SORTS[0]
+  const activeSort = LIB_SORTS.find((s) => s.id === eSort) || LIB_SORTS[0]
   const shown = activeSort.cmp ? [...filtered].sort(activeSort.cmp) : filtered
-  const isOn = (f) => active.some((a) => sameFacet(a, f))
+  const isOn = (f) => eActive.some((a) => sameFacet(a, f))
   const toggle = (f) => setActive((cur) => cur.some((a) => sameFacet(a, f)) ? cur.filter((a) => !sameFacet(a, f)) : [...cur, f])
   // Set (or clear) the single "up to N players" capacity facet.
   const setCap = (n) => setActive((cur) => { const rest = cur.filter((a) => a.kind !== 'cap'); return n == null ? rest : [...rest, { kind: 'cap', value: n }] })
@@ -2016,7 +2061,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
               <h1 className="text-[clamp(30px,3vw,44px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Library</h1>
               <div className="mt-[6px] flex items-center gap-[8px] text-[15px] text-[#9a9ba3]">
                 <XboxLogo size={16} />
-                Game Pass Starter Edition · {shown.length} of {STARTER_LIBRARY.length} games{(active.length || query) ? '' : ', playable in the cloud.'}
+                Game Pass Starter Edition · {shown.length} of {STARTER_LIBRARY.length} games{(eActive.length || query) ? '' : ', playable in the cloud.'}
               </div>
             </div>
             <div className="flex flex-row-reverse items-center gap-[10px]">
@@ -2028,9 +2073,9 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
                 >
                   <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><path d="M3 5.5h18a1 1 0 0 1 .8 1.6l-6.3 8.2V20a1 1 0 0 1-1.45.9l-3-1.5A1 1 0 0 1 10.5 18.5v-3.2L2.2 7.1A1 1 0 0 1 3 5.5z" /></svg>
                   Filters
-                  {active.length > 0 && <span className="rounded-full bg-white/15 px-[7px] py-[1px] text-[12px] font-bold">{active.length}</span>}
+                  {eActive.length > 0 && <span className="rounded-full bg-white/15 px-[7px] py-[1px] text-[12px] font-bold">{eActive.length}</span>}
                 </button>
-                {filterOpen && (
+                {eFilterOpen && (
                   <>
                     <div className="fixed inset-0 z-[40]" onClick={() => setFilterOpen(false)} />
                     <div className="absolute right-0 top-[46px] z-[50] max-h-[62vh] w-[340px] overflow-y-auto rounded-[12px] border border-[#2b2d31] bg-[#161618] p-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
@@ -2058,7 +2103,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
                           )
                         })}
                       </div>
-                      {active.length > 0 && (
+                      {eActive.length > 0 && (
                         <button onClick={() => setActive([])} className="mt-[16px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all filters</button>
                       )}
                     </div>
@@ -2072,9 +2117,9 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
                   className="flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[14px] text-[14px] font-semibold text-white transition hover:bg-[#232327]"
                 >
                   <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h10M4 18h6" /></svg>
-                  {sort === 'default' ? 'Sort' : activeSort.label}
+                  {eSort === 'default' ? 'Sort' : activeSort.label}
                 </button>
-                {sortOpen && (
+                {eSortOpen && (
                   <>
                     <div className="fixed inset-0 z-[40]" onClick={() => setSortOpen(false)} />
                     <div className="absolute right-0 top-[46px] z-[50] w-[230px] overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
@@ -2082,10 +2127,10 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
                         <button
                           key={s.id}
                           onClick={() => { setSort(s.id); setSortOpen(false) }}
-                          className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (sort === s.id ? 'font-semibold text-white' : 'text-[#c7c9cb]')}
+                          className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (eSort === s.id ? 'font-semibold text-white' : 'text-[#c7c9cb]')}
                         >
                           {s.label}
-                          {sort === s.id && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                          {eSort === s.id && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
                         </button>
                       ))}
                     </div>
@@ -2095,15 +2140,15 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
               {/* Search box — text search, distinct from the tag filter above */}
               <div className="flex h-[38px] w-[240px] max-w-full items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[12px]">
                 <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-                <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search your library" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+                <input value={eQ} onChange={(e) => setQ(e.target.value)} placeholder="Search your library" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
               </div>
             </div>
           </div>
 
           {/* Active filter chips — click to remove */}
-          {active.length > 0 && (
+          {eActive.length > 0 && (
             <div className="mt-[18px] flex flex-wrap items-center gap-[8px]">
-              {active.map((f, i) => (
+              {eActive.map((f, i) => (
                 <button key={i} onClick={() => toggle(f)} className="flex items-center gap-[6px] rounded-full bg-white px-[12px] py-[6px] text-[13px] font-semibold text-black transition hover:brightness-95">
                   {facetLabel(f)}
                   <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -2123,7 +2168,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
           {shown.length === 0 && <p className="mt-[40px] text-center text-[15px] text-[#7e7f87]">No games match your filters.</p>}
         </div>
       </div>
-      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
+      {eSearchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
     </main>
   )
 }
@@ -2691,12 +2736,31 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   // four rows.
   const [playlistView, setPlaylistView] = useState('grid')
   const [playlistExpanded, setPlaylistExpanded] = useState(false)
-  const PLAYLIST_LIMIT = playlistView === 'grid' ? 16 : 4 // four rows either way
-  const wishShown = playlistExpanded ? wish : wish.slice(0, PLAYLIST_LIMIT)
   // Search across all games: matching games already in the Mix get highlighted,
   // matching games that aren't get an "Add" option.
   const [playlistSearch, setPlaylistSearch] = useState('')
-  const q = playlistSearch.trim().toLowerCase()
+  // The card under the pointer, so the moderator's mirror can force-reveal it.
+  const [hover, setHover] = useState(null)
+
+  // Extend the spectate mirror with this page's PLAYlist view state + hovered
+  // card (published alongside the menus above via a second effect so both stay
+  // in sync). Read back below and used throughout the render in spectate.
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/blendUI2`, { blendId: blend.id, playlistView, playlistExpanded, playlistSearch: playlistSearch || '', hover: hover || null, launching: launching || null })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blend.id, playlistView, playlistExpanded, playlistSearch, hover, launching])
+  const [bUI2] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/blendUI2` : 'spectate/__nobui2', {})
+  const bui2 = IS_SPECTATE && bUI2?.blendId === blend.id ? bUI2 : null
+  const ePlaylistView = IS_SPECTATE ? (bui2?.playlistView || 'grid') : playlistView
+  const ePlaylistExpanded = IS_SPECTATE ? !!bui2?.playlistExpanded : playlistExpanded
+  const ePlaylistSearch = IS_SPECTATE ? (bui2?.playlistSearch || '') : playlistSearch
+  const eHover = IS_SPECTATE ? (bui2?.hover ?? null) : hover
+  const eLaunching = IS_SPECTATE ? (bui2?.launching ?? null) : launching
+
+  const PLAYLIST_LIMIT = ePlaylistView === 'grid' ? 16 : 4 // four rows either way
+  const wishShown = ePlaylistExpanded ? wish : wish.slice(0, PLAYLIST_LIMIT)
+  const q = ePlaylistSearch.trim().toLowerCase()
   const isHit = (title) => !!q && title.toLowerCase().includes(q)
   const searchAddable = q
     ? Object.entries(CATALOG)
@@ -2720,7 +2784,11 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
       <PageNav onHome={onHome} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
       {/* The gutters live on the inner wrappers (not the scroll container) so
           the banner and the wheel band can bleed to the pane's edges. */}
-      <div className="no-scrollbar flex-1 overflow-y-auto pb-[80px]">
+      <div
+        className="no-scrollbar flex-1 overflow-y-auto pb-[80px]"
+        onMouseOver={IS_LIVE ? (e) => { const el = e.target.closest?.('[data-game]'); setHover(el ? el.getAttribute('data-game') : null) } : undefined}
+        onMouseLeave={IS_LIVE ? () => setHover(null) : undefined}
+      >
         {/* Header banner — the same wireframe footage the home page runs on */}
         <section className="relative overflow-hidden">
           <video
@@ -2811,8 +2879,8 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                 <div className="relative mb-[16px]">
                   <div className="flex items-center gap-[10px] rounded-[10px] bg-[#151517] px-[14px] py-[10px] ring-1 ring-white/5 focus-within:ring-[#5765f2]">
                     <svg viewBox="0 0 24 24" className="size-[18px] shrink-0 text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-                    <input value={playlistSearch} onChange={(e) => setPlaylistSearch(e.target.value)} placeholder="Search games to find or add to this Mix" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
-                    {playlistSearch && (
+                    <input value={ePlaylistSearch} onChange={(e) => setPlaylistSearch(e.target.value)} placeholder="Search games to find or add to this Mix" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+                    {ePlaylistSearch && (
                       <button onClick={() => setPlaylistSearch('')} aria-label="Clear search" className="shrink-0 text-[#87898c] transition hover:text-white">
                         <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                       </button>
@@ -2840,10 +2908,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                   <span className="text-[12px] font-medium text-[#7e7f87]">drag to rank</span>
                   {/* List / grid view toggle */}
                   <div className="ml-auto flex items-center gap-[2px] rounded-[9px] bg-[#151517] p-[3px]">
-                    <button onClick={() => setPlaylistView('list')} aria-label="List view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (playlistView === 'list' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
+                    <button onClick={() => setPlaylistView('list')} aria-label="List view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (ePlaylistView === 'list' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
                       <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
                     </button>
-                    <button onClick={() => setPlaylistView('grid')} aria-label="Grid view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (playlistView === 'grid' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
+                    <button onClick={() => setPlaylistView('grid')} aria-label="Grid view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (ePlaylistView === 'grid' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
                       <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /></svg>
                     </button>
                   </div>
@@ -2859,7 +2927,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                       <span className="block text-[13px] text-[#9a9ba3]">Right-click a game below to add the ones your group wants to play.</span>
                     </span>
                   </button>
-                ) : playlistView === 'grid' ? (
+                ) : ePlaylistView === 'grid' ? (
                   <div className="grid grid-cols-4 gap-[16px]">
                     {wishShown.map((g, i) => (
                       <div
@@ -2911,8 +2979,8 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
 
                 {wish.length > PLAYLIST_LIMIT && (
                   <button onClick={() => setPlaylistExpanded((v) => !v)} className="mt-[16px] flex items-center gap-[6px] rounded-[8px] border border-[#2b2d31] px-[16px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-white/[0.04]">
-                    {playlistExpanded ? 'Collapse' : `Expand (${wish.length - PLAYLIST_LIMIT} more)`}
-                    <svg viewBox="0 0 24 24" className={'size-[15px] transition ' + (playlistExpanded ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                    {ePlaylistExpanded ? 'Collapse' : `Expand (${wish.length - PLAYLIST_LIMIT} more)`}
+                    <svg viewBox="0 0 24 24" className={'size-[15px] transition ' + (ePlaylistExpanded ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
                   </button>
                 )}
               </section>
@@ -2921,7 +2989,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
               <section className="mt-[44px]">
                 <ShelfRow title="Daily Recommended Games" padTop={30}>
                   {blend.games.map((k) => (
-                    <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={(t) => setPlaylistMembership(t, true)} onShare={onShare} />
+                    <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={(t) => setPlaylistMembership(t, true)} onShare={onShare} forceReveal={!!eHover && eHover === (CATALOG[k]?.title || STARTER_BY_KEY[k]?.title)} />
                   ))}
                 </ShelfRow>
               </section>
@@ -2988,7 +3056,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
           onToggle={(key, add) => { const cur = wishKeys; patchBlend({ wishlist: add ? (cur.includes(key) ? cur : [...cur, key]) : cur.filter((k) => k !== key) }) }}
         />
       )}
-      {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
+      {eLaunching && <LaunchToast title={eLaunching} onDone={() => setLaunching(null)} />}
     </main>
   )
 }
@@ -4294,7 +4362,9 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   // last person leaves; `lastActive` refreshes on every write so an in-use jam
   // never expires from under everyone.
   const jamNames = useNames()
-  const [callWheel, setCallWheel] = useRoomNode('wheelCall', null)
+  const [callWheel, setCallWheelRaw] = useRoomNode('wheelCall', null)
+  // A spectate/moderator mirror must never write to the shared jam.
+  const setCallWheel = IS_LIVE ? setCallWheelRaw : () => {}
   const participants = callWheel?.participants || {}
   const jamLive = !!callWheel && Object.keys(participants).length > 0 && Date.now() - (callWheel.lastActive || callWheel.startedAt || 0) < CALL_WHEEL_EXPIRY
   const isHost = callWheel?.host === SELF_NAME
@@ -4307,6 +4377,23 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const [, tick] = useState(0)
   const handledRef = useRef(null)
   const leftRef = useRef(false) // set when I explicitly leave, so I'm not auto-rejoined
+
+  // ── Spectate/moderator fidelity ──────────────────────────────────────────
+  // The wheel's personal (non-jam) state + its menus live only in this
+  // component, so a moderator watching the mirror can't see them. Publish them
+  // to this participant's spectate path; a spectate instance reads them back and
+  // renders the same wheel, dropdown, search and personal spin. (Jam state is
+  // already shared through `wheelCall`, so it mirrors on its own.)
+  const [wUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/wheelUI` : 'spectate/__nowui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/wheelUI`, { synced, inviting, mixMenu, q: q || '', localSpin: localSpin || null })
+  }, [synced, inviting, mixMenu, q, localSpin])
+  const eSynced = IS_SPECTATE ? !!wUI?.synced : synced
+  const eInviting = IS_SPECTATE ? !!wUI?.inviting : inviting
+  const eMixMenu = IS_SPECTATE ? !!wUI?.mixMenu : mixMenu
+  const eQ = IS_SPECTATE ? (wUI?.q || '') : q
+  const eLocalSpin = IS_SPECTATE ? (wUI?.localSpin ?? null) : localSpin
 
   const patchJam = (patch) => setCallWheel({ ...(callWheel || {}), ...patch, lastActive: Date.now() })
   function startOrJoin() {
@@ -4371,8 +4458,8 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoJoin, jamLive, callWheel?.participants])
 
-  const activeKeys = synced ? (callWheel?.keys || []) : (keys || [])
-  const activeSpin = synced ? (callWheel?.spin || null) : localSpin
+  const activeKeys = eSynced ? (callWheel?.keys || []) : (keys || [])
+  const activeSpin = eSynced ? (callWheel?.spin || null) : eLocalSpin
   const spinRemaining = activeSpin ? activeSpin.startedAt + SPIN_MS - Date.now() : 0
   const phase = !activeSpin ? 'idle' : spinRemaining > 0 ? 'spinning' : 'result'
   const boardGames = activeKeys.map((k) => ({ key: k, title: wheelTitle(k) })).filter((g) => CATALOG[g.key] || STARTER_BY_KEY[g.key])
@@ -4386,7 +4473,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   // Only the Mix's curated PLAYlist (wishlist) — not its daily recommended games.
   const mixGames = (b) => (b.wishlist || []).filter((k) => CATALOG[k] || STARTER_BY_KEY[k])
 
-  const query = q.trim().toLowerCase()
+  const query = eQ.trim().toLowerCase()
   const results = query
     ? ALL_WHEEL_KEYS.filter((k) => !activeKeys.includes(k) && wheelTitle(k).toLowerCase().includes(query)).slice(0, 8)
     : []
@@ -4493,12 +4580,12 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
 
                 {/* Load games from your Mix — a Select-Mix dropdown */}
                 <p className="mt-[22px] text-[16px] font-medium text-white">Load games from your Mix</p>
-                <div className="relative z-20 mt-[10px]">
-                  <button onClick={() => setMixMenu((v) => !v)} aria-expanded={mixMenu} className="flex w-full items-center justify-between gap-[8px] rounded-[10px] bg-[#141416] px-[16px] py-[12px] text-[14px] text-[#9a9ba3] ring-1 ring-white/10 transition hover:ring-white/20">
+                <div className="relative z-40 mt-[10px]">
+                  <button onClick={() => setMixMenu((v) => !v)} aria-expanded={eMixMenu} className="flex w-full items-center justify-between gap-[8px] rounded-[10px] bg-[#141416] px-[16px] py-[12px] text-[14px] text-[#9a9ba3] ring-1 ring-white/10 transition hover:ring-white/20">
                     <span>Select Mix</span>
-                    <svg viewBox="0 0 24 24" className={'size-[16px] transition-transform ' + (mixMenu ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
+                    <svg viewBox="0 0 24 24" className={'size-[16px] transition-transform ' + (eMixMenu ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
                   </button>
-                  {mixMenu && (
+                  {eMixMenu && (
                     <>
                       <div className="fixed inset-0 z-[-1]" onClick={() => setMixMenu(false)} />
                       <div className="absolute left-0 right-0 top-[52px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
@@ -4529,8 +4616,8 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 <div className="relative z-10 mt-[10px]">
                   <div className="flex items-center gap-[8px] rounded-[10px] bg-[#141416] px-[14px] py-[11px] ring-1 ring-white/10">
                     <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-                    <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
-                    {q && <button onClick={() => setQ('')} aria-label="Clear search" className="text-[#7e7f87] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+                    <input value={eQ} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+                    {eQ && <button onClick={() => setQ('')} aria-label="Clear search" className="text-[#7e7f87] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
                   </div>
                   {query && (
                     <div className="absolute left-0 right-0 top-[52px] z-30 max-h-[240px] overflow-y-auto rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
@@ -4540,7 +4627,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                           <span className="min-w-0 flex-1 truncate text-[14px] text-white">{wheelTitle(k)}</span>
                           <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                         </button>
-                      )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">No games match &ldquo;{q}&rdquo;.</p>}
+                      )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">No games match &ldquo;{eQ}&rdquo;.</p>}
                     </div>
                   )}
                 </div>
@@ -4572,23 +4659,25 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 </button>
 
                 {/* Wheel sync — a shared wheel the whole call builds together. */}
-                {(synced || jamLive) && (<>
+                {(eSynced || jamLive) && (<>
                 <div className="mt-[14px] flex flex-wrap items-center gap-[10px]">
-                  {!synced && jamLive ? (
+                  {!eSynced && jamLive ? (
                     // A sync I'm not in yet: who started it + who's joined, click to join.
                     <button
                       onClick={startOrJoin}
                       className="flex items-center gap-[10px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[9px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]"
                     >
                       <span>{dispName(callWheel?.host, jamNames)} started the call wheel</span>
-                      <span className="flex items-center">
+                      {/* `isolate` confines the avatars' overlap z-index to this row so
+                          it can never rise above the Select-Mix dropdown above. */}
+                      <span className="isolate flex items-center">
                         {Object.keys(participants).map((n, i) => (
                           <Avatar key={n} color={COLOR_OF[n] || D.raised} size={24} style={{ marginRight: -7, boxShadow: '0 0 0 2px #1c1c1f', zIndex: 10 - i }} />
                         ))}
                       </span>
                       <span className="text-[#3fbf3f]">Join</span>
                     </button>
-                  ) : synced ? (
+                  ) : eSynced ? (
                     <button
                       onClick={leaveOrEnd}
                       className="flex items-center gap-[9px] rounded-[10px] bg-[#2da000] px-[16px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110"
@@ -4597,14 +4686,16 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                       {isHost ? 'End wheel sync' : 'Leave wheel sync'}
                     </button>
                   ) : null}
-                  {synced && (
+                  {eSynced && (
                     <button onClick={copyInviteLink} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
                       <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
                       {copied ? 'Link copied!' : 'Copy invite link'}
                     </button>
                   )}
-                  {synced && (
-                    <span className="flex items-center">
+                  {eSynced && (
+                    /* `isolate` confines the avatars' overlap z-index to this row so
+                       it can never rise above the Select-Mix dropdown above. */
+                    <span className="isolate flex items-center">
                       {Object.keys(participants).map((n, i) => (
                         <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 10 - i }} />
                       ))}
@@ -4612,7 +4703,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   )}
                 </div>
                 <p className="mt-[8px] text-[12px] text-[#7e7f87]">
-                  {synced
+                  {eSynced
                     ? (isHost ? 'You started this sync — everyone on the call can join, edit and watch it spin.' : `Synced by ${dispName(callWheel?.host, jamNames)} — edits and spins are live for the whole call.`)
                     : 'Join to build and spin the wheel together.'}
                 </p>
@@ -4623,7 +4714,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
         </div>
 
         {/* Invite — an overlay panel over the module (doesn't replace it) */}
-        {inviting && (
+        {eInviting && (
           <>
             <div className="absolute inset-0 z-[30] bg-black/55" onClick={() => setInviting(false)} />
             <div className="absolute right-[24px] top-[60px] z-[40] flex max-h-[calc(92vh-84px)] w-[380px] max-w-[calc(100%-48px)] flex-col overflow-hidden rounded-[14px] border border-[#2b2d31] bg-[#141416] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
@@ -5507,6 +5598,16 @@ function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
     if (el) el.scrollTop = el.scrollHeight
   }, [msgs.length])
 
+  // ── Spectate/moderator fidelity ──────────────────────────────────────────
+  // The message history is already shared; publish the in-progress draft so the
+  // moderator's mirror shows what the participant is typing.
+  const [dmUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/dmUI` : 'spectate/__nodmui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/dmUI`, { name: friend.name, draft: draft || '' })
+  }, [friend.name, draft])
+  const eDraft = IS_SPECTATE ? (dmUI?.name === friend.name ? (dmUI?.draft || '') : '') : draft
+
   function sendText() {
     const text = draft.trim()
     if (!text) return
@@ -5594,13 +5695,13 @@ function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
       <div className="px-[24px] pb-[24px] pt-[4px]">
         <div className="mx-auto flex w-full max-w-[860px] items-center gap-[10px] rounded-[10px] bg-[#1e1f22] px-[16px] py-[4px]">
           <input
-            value={draft}
+            value={eDraft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') sendText() }}
             placeholder={`Message ${fname}`}
             className="min-w-0 flex-1 bg-transparent py-[12px] text-[15px] text-white outline-none placeholder:text-[#87898c]"
           />
-          <button onClick={sendText} disabled={!draft.trim()} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[16px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Send</button>
+          <button onClick={sendText} disabled={!eDraft.trim()} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[16px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Send</button>
         </div>
       </div>
     </main>
@@ -6093,11 +6194,26 @@ function ReviewsSection({ reviews = REVIEWS }) {
   const [writing, setWriting] = useState(false)
   const [added, setAdded] = useState([]) // reviews written this session (newest first)
 
-  const all = [...added, ...reviews]
-  const shown = filter === 'All' ? all : all.filter((r) => r.privacy === filter)
+  // ── Spectate/moderator fidelity ──────────────────────────────────────────
+  // Publish the reviews list state (filter, pagination, composer, session
+  // reviews) so the moderator's mirror matches what the participant sees.
+  const [rUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/reviewsUI` : 'spectate/__norui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/reviewsUI`, { filter, filterOpen: !!filterOpen, expanded: !!expanded, page, writing: !!writing, added: added || [] })
+  }, [filter, filterOpen, expanded, page, writing, added])
+  const eFilter = IS_SPECTATE ? (rUI?.filter || 'All') : filter
+  const eFilterOpen = IS_SPECTATE ? !!rUI?.filterOpen : filterOpen
+  const eExpanded = IS_SPECTATE ? !!rUI?.expanded : expanded
+  const ePage = IS_SPECTATE ? (rUI?.page || 1) : page
+  const eWriting = IS_SPECTATE ? !!rUI?.writing : writing
+  const eAdded = IS_SPECTATE ? (rUI?.added || []) : added
+
+  const all = [...eAdded, ...reviews]
+  const shown = eFilter === 'All' ? all : all.filter((r) => r.privacy === eFilter)
   const pageCount = Math.max(1, Math.ceil(shown.length / REVIEWS_PER_PAGE))
-  const safePage = Math.min(page, pageCount)
-  const visible = expanded
+  const safePage = Math.min(ePage, pageCount)
+  const visible = eExpanded
     ? shown.slice((safePage - 1) * REVIEWS_PER_PAGE, safePage * REVIEWS_PER_PAGE)
     : shown.slice(0, REVIEWS_PREVIEW)
 
@@ -6111,8 +6227,8 @@ function ReviewsSection({ reviews = REVIEWS }) {
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-[12px]">
           <h2 className="text-[26px] font-bold text-white">Reviews</h2>
-          {filter !== 'All' && (
-            <span className="text-[14px] font-semibold text-[#9a9ba3]">{filter} · {shown.length}</span>
+          {eFilter !== 'All' && (
+            <span className="text-[14px] font-semibold text-[#9a9ba3]">{eFilter} · {shown.length}</span>
           )}
         </div>
         <div className="flex items-center gap-[16px]">
@@ -6129,7 +6245,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
           <button
             onClick={() => setFilterOpen((v) => !v)}
             aria-label="Filter reviews"
-            aria-expanded={filterOpen}
+            aria-expanded={eFilterOpen}
             className="group relative flex items-center justify-center text-[#9a9ba3] transition hover:text-white"
           >
             <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/80 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
@@ -6140,7 +6256,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
               <path d="M28.4375 8.125C28.4375 8.6375 28.0125 9.0625 27.5 9.0625H23.75V9.375C23.75 11.25 22.625 11.875 21.25 11.875H13.75C12.375 11.875 11.25 11.25 11.25 9.375V9.0625H2.5C1.9875 9.0625 1.5625 8.6375 1.5625 8.125C1.5625 7.6125 1.9875 7.1875 2.5 7.1875H11.25V6.875C11.25 5 12.375 4.375 13.75 4.375H21.25C22.625 4.375 23.75 5 23.75 6.875V7.1875H27.5C28.0125 7.1875 28.4375 7.6125 28.4375 8.125Z" />
             </svg>
           </button>
-          {filterOpen && (
+          {eFilterOpen && (
             <>
               <div className="fixed inset-0 z-[40]" onClick={() => setFilterOpen(false)} />
               <div className="absolute right-0 top-[34px] z-[50] w-[184px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
@@ -6148,10 +6264,10 @@ function ReviewsSection({ reviews = REVIEWS }) {
                   <button
                     key={f}
                     onClick={() => pickFilter(f)}
-                    className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (filter === f ? 'text-[#7aff46]' : 'text-[#dbdee1]')}
+                    className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (eFilter === f ? 'text-[#7aff46]' : 'text-[#dbdee1]')}
                   >
                     {f === 'All' ? 'All reviews' : f === 'Friends Only' ? 'Friends only' : 'Public'}
-                    {filter === f && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                    {eFilter === f && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
                   </button>
                 ))}
               </div>
@@ -6164,12 +6280,12 @@ function ReviewsSection({ reviews = REVIEWS }) {
       <div className="mt-[16px] flex flex-col gap-[16px]">
         {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} />)}
         {visible.length === 0 && (
-          <p className="rounded-[8px] bg-[#1c1c1c] py-[28px] text-center text-[14px] text-[#9a9ba3]">No {filter === 'All' ? '' : filter.toLowerCase() + ' '}reviews yet.</p>
+          <p className="rounded-[8px] bg-[#1c1c1c] py-[28px] text-center text-[14px] text-[#9a9ba3]">No {eFilter === 'All' ? '' : eFilter.toLowerCase() + ' '}reviews yet.</p>
         )}
       </div>
 
       {/* Collapsed: reveal the full first page. Expanded: page through the rest. */}
-      {!expanded && shown.length > REVIEWS_PREVIEW && (
+      {!eExpanded && shown.length > REVIEWS_PREVIEW && (
         <div className="mt-[20px] flex justify-center">
           <button
             onClick={() => { setExpanded(true); setPage(1) }}
@@ -6181,7 +6297,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
         </div>
       )}
 
-      {expanded && pageCount > 1 && (
+      {eExpanded && pageCount > 1 && (
         <div className="mt-[24px] flex items-center justify-center gap-[8px]">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -6212,7 +6328,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
         </div>
       )}
 
-      {writing && (
+      {eWriting && (
         <WriteReviewModal
           onClose={() => setWriting(false)}
           onSubmit={(r) => { setAdded((a) => [r, ...a]); setWriting(false); setFilter('All'); setExpanded(false); setPage(1) }}
@@ -6469,22 +6585,33 @@ function HeroCarousel({ slides, children }) {
 
 // A "Played By" / rating avatar that responds to hover, shows the person's name,
 // and on click opens a quick-share of this game straight to that person.
-function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs }) {
+function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs, reviewed }) {
   const name = NAME[color]
+  const spAv = useContext(SpectateAvCtx)
   // The user (green) and any unmapped color aren't share targets.
   if (color === SELF || !name) {
     return <Avatar color={color} size={size} style={{ marginRight, boxShadow: '0 0 0 2px #0c0c0e' }} />
   }
+  const reveal = !!spAv && spAv === avKey(gameTitle, capName(name))
   return (
     <button
       type="button"
+      data-av={avKey(gameTitle, capName(name))}
       onClick={(e) => { e.stopPropagation(); onShare?.({ title: gameTitle, to: name }) }}
       title={`Share ${gameTitle} with ${capName(name)}`}
       className="group/av relative shrink-0 rounded-full transition hover:z-10 hover:-translate-y-[2px]"
-      style={{ marginRight }}
+      style={{ marginRight, zIndex: reveal ? 10 : undefined }}
     >
-      <span className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-black/85 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100">
-        {capName(name)}{hrs != null ? ` · ${hrs} hrs` : ''}
+      <span className={'pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-20 inline-flex -translate-x-1/2 items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/85 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100' + (reveal ? ' !opacity-100' : '')}>
+        <span>{capName(name)}{hrs != null ? ` · ${hrs} hrs` : ''}</span>
+        {/* Green thumbs-up when this friend has left a review of the game —
+            mirrors the recommends badge on the cinematic cards' ShareAvatars. */}
+        {reviewed && (
+          <>
+            <span aria-hidden className="text-white/60">·</span>
+            <svg viewBox="0 0 24 24" className="size-[13px]" fill="#7aff46" aria-label="Reviewed"><path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" /></svg>
+          </>
+        )}
       </span>
       <Avatar color={color} size={size} className="rounded-full ring-0 transition group-hover/av:ring-2 group-hover/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
     </button>
@@ -6510,12 +6637,19 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
   const recCinematic = CINEMATIC_ROW.filter((c) => c.id !== gameKey)
   const recPortrait = PORTRAIT_ROW.filter((c) => c.id !== gameKey)
   const [searchOpen, setSearchOpen] = useState(false)
+  // Mirror the search palette to the moderator's spectate view.
+  const [dUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/detailUI` : 'spectate/__nodui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/detailUI`, { searchOpen: !!searchOpen })
+  }, [searchOpen])
+  const eSearchOpen = IS_SPECTATE ? !!dUI?.searchOpen : searchOpen
 
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav — same Home / Library / Mixes header as the homepage */}
       <PageNav onHome={onHome || onBack} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
-      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
+      {eSearchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
 
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[32px]">
         <div className="mx-auto w-full max-w-[1240px]">
@@ -6540,7 +6674,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                 ) : (
                   <span className="flex items-center">
                     {playedBy.map((c, i) => (
-                      <PlayerAvatar key={i} color={c} size={26} marginRight={i < playedBy.length - 1 ? -8 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} />
+                      <PlayerAvatar key={i} color={c} size={26} marginRight={i < playedBy.length - 1 ? -8 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} reviewed={reviewers.includes(c)} />
                     ))}
                   </span>
                 )}
@@ -6610,7 +6744,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                     <ThumbsUpGlyph size={24} className="text-[#7aff46]" />
                     <div className="flex items-center">
                       {reviewers.map((c, i) => (
-                        <PlayerAvatar key={i} color={c} size={30} marginRight={i < reviewers.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} />
+                        <PlayerAvatar key={i} color={c} size={30} marginRight={i < reviewers.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} reviewed />
                       ))}
                     </div>
                   </div>
@@ -7011,10 +7145,37 @@ export default function Landing() {
 
   // Observation plumbing. A live tester publishes their nav + pointer/scroll;
   // a spectator instance reads it back and drives the view read-only.
-  const nav = { blendId, detailKey, dmName, decide, mixesTab, libraryTab, createOpen, wishlistGame, shareGame, prefsForId, playKey, whoOpen, gameMenu }
+  const nav = { blendId, detailKey, dmName, decide, mixesTab, libraryTab, createOpen, wishlistGame, shareGame, prefsForId, playKey, whoOpen, gameMenu, wheelOpen, wheelKeys }
   useMirrorPublish(nav)
   const [mirror] = useRoomNode(IS_SPECTATE ? SPECTATE_PATH : 'spectate/__none', null)
   const [cmd] = useRoomNode(IS_LIVE ? `${SPECTATE_PATH}/cmd` : 'spectate/__nocmd', null)
+
+  // ── Global card-hover mirror ─────────────────────────────────────────────
+  // One publisher for the whole app: the game title under the pointer (any page,
+  // any card tagged data-game). A spectate instance reads it and feeds it to
+  // SpectateHoverCtx, which every game card consults to force its hover reveal
+  // on (a moderator can't actually hover the mirror).
+  const hoverGameRef = useRef(null)
+  const publishHoverGame = (title) => {
+    if (!IS_LIVE || hoverGameRef.current === title) return
+    hoverGameRef.current = title
+    writeRoomPath(`${SPECTATE_PATH}/hoverGame`, title || null)
+  }
+  const [hoverGameNode] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/hoverGame` : 'spectate/__nohg', null)
+  const eHoverGame = IS_SPECTATE ? (hoverGameNode ?? null) : null
+
+  // The avatar name/label tooltips are :hover-only too. Publish the KEY of the
+  // hovered avatar chip (identity, not geometry — so it survives the row's
+  // horizontal scroll) and feed it to SpectateAvCtx, which each PlayerAvatar /
+  // ShareAvatars consults to force its own tooltip on.
+  const hoverAvRef = useRef(null)
+  const publishHoverAv = (key) => {
+    if (!IS_LIVE || hoverAvRef.current === key) return
+    hoverAvRef.current = key
+    writeRoomPath(`${SPECTATE_PATH}/hoverAv`, key || null)
+  }
+  const [hoverAvNode] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/hoverAv` : 'spectate/__nohav', null)
+  const eHoverAv = IS_SPECTATE ? (hoverAvNode ?? null) : null
 
   // Moderator "nudge" commands (only a live tester obeys them). A command is a
   // momentary signal, not persisted state, so it has to be consumed: the node is
@@ -7062,6 +7223,8 @@ export default function Landing() {
   const eGameMenu = IS_SPECTATE ? (mv.gameMenu ?? null) : gameMenu
   const eMixesTab = IS_SPECTATE ? !!mv.mixesTab : mixesTab
   const eLibraryTab = IS_SPECTATE ? !!mv.libraryTab : libraryTab
+  const eWheelOpen = IS_SPECTATE ? !!mv.wheelOpen : wheelOpen
+  const eWheelKeys = IS_SPECTATE ? (mv.wheelKeys || []) : wheelKeys
 
   // The live launch party — shared, so its ready-up toast reaches every page.
   const party = useLaunch()
@@ -7098,7 +7261,14 @@ export default function Landing() {
           const el = e.target.closest?.('[data-game]')
           if (el) setGameMenu({ x: e.clientX, y: e.clientY, title: el.getAttribute('data-game') })
         }}
+        onMouseOver={IS_LIVE ? (e) => {
+          const gEl = e.target.closest?.('[data-game]'); publishHoverGame(gEl ? gEl.getAttribute('data-game') : null)
+          const aEl = e.target.closest?.('[data-av]'); publishHoverAv(aEl ? aEl.getAttribute('data-av') : null)
+        } : undefined}
+        onMouseLeave={IS_LIVE ? () => { publishHoverGame(null); publishHoverAv(null) } : undefined}
       >
+        <SpectateHoverCtx.Provider value={eHoverGame}>
+        <SpectateAvCtx.Provider value={eHoverAv}>
         <TagCtx.Provider value={handleCardTag}>
         <NavCtx.Provider value={navCtx}>
         <TopBar />
@@ -7191,15 +7361,17 @@ export default function Landing() {
           />
         )}
 
-        {/* The spin wheel — a standalone module opened from the top bar */}
-        {wheelOpen && (
+        {/* The spin wheel — a standalone module opened from the top bar. In
+            spectate the moderator sees the participant's wheel (open state + its
+            games mirrored); it renders read-only like the rest of the mirror. */}
+        {eWheelOpen && (
           <WheelModal
-            keys={wheelKeys}
+            keys={eWheelKeys}
             setKeys={setWheelKeys}
             blends={blends}
             online={room.online}
             onParty={startWheelParty}
-            autoJoin={wheelAutoJoin}
+            autoJoin={IS_SPECTATE ? false : wheelAutoJoin}
             onClose={() => { setWheelOpen(false); setWheelAutoJoin(false) }}
           />
         )}
@@ -7228,6 +7400,8 @@ export default function Landing() {
         {IS_SPECTATE && <SpectatorCursor pointer={mirror?.pointer} click={mirror?.click} />}
         </NavCtx.Provider>
         </TagCtx.Provider>
+        </SpectateAvCtx.Provider>
+        </SpectateHoverCtx.Provider>
       </div>
     </RoomProvider>
   )

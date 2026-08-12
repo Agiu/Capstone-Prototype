@@ -5,6 +5,17 @@ import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/inde
 // clicked card tag. null when no handler is provided (tags stay non-clickable).
 export const TagCtx = createContext(null)
 
+// On a moderator's mirror, set to the game TITLE the participant is hovering, so
+// any game card can force its hover reveal on even though the moderator can't
+// actually hover it. null on a live tester (real :hover drives the reveal).
+export const SpectateHoverCtx = createContext(null)
+
+// Same idea for profile-pic tooltips: the KEY (`${title}::${name}`) of the
+// avatar chip the participant is hovering, so its name/label tooltip shows on
+// the mirror. Identity-based (not geometry) so it survives row scrolling.
+export const SpectateAvCtx = createContext(null)
+export const avKey = (title, name) => `${title || ''}::${name || ''}`
+
 // Expanded (hover) card width — used to compute how far the row must scroll to
 // keep the whole card on-screen.
 const CARD_EXPANDED_W = 718
@@ -82,6 +93,7 @@ function ShareAvatars({ colors, targets, title, onShare }) {
   const list = colors || []
   const shown = list.slice(0, 2)
   const more = list.length > 2
+  const spAv = useContext(SpectateAvCtx)
   return (
     <div className="flex items-center">
       {shown.map((c, i) => {
@@ -90,19 +102,21 @@ function ShareAvatars({ colors, targets, title, onShare }) {
         if (!t || !t.to || !onShare) {
           return <ProfileIcon key={i} color={c} className="size-[22px]" style={{ marginRight: mr, zIndex: i + 1, boxShadow: '0 0 0 2px #0c0c0e' }} />
         }
+        const reveal = !!spAv && spAv === avKey(title, t.name)
         return (
           <button
             key={i}
             type="button"
+            data-av={avKey(title, t.name)}
             title={`Share ${title} with ${t.name}`}
             onClick={(e) => { e.stopPropagation(); onShare({ title, to: t.to, hrs: t.hrs }) }}
             className="group/av pointer-events-auto relative shrink-0 rounded-full transition hover:z-10 hover:-translate-y-[2px]"
-            style={{ marginRight: mr, zIndex: i + 1 }}
+            style={{ marginRight: mr, zIndex: reveal ? 10 : i + 1 }}
           >
             {/* Tooltip sits ABOVE the face and extends rightward (left-anchored)
                 so the row's horizontal scroll clip never crops it on the left.
                 Highest z so nothing covers it; the row leaves top headroom. */}
-            <span className="pointer-events-none absolute bottom-[calc(100%+7px)] left-0 z-[200] inline-flex items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/90 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100">
+            <span className={'pointer-events-none absolute bottom-[calc(100%+7px)] left-0 z-[200] inline-flex items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/90 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100' + (reveal ? ' !opacity-100' : '')}>
               <span>{t.name}{t.hrs != null ? ` · ${t.hrs} hrs` : ''}</span>
               {/* Green thumbs-up only when this friend recommends the game. */}
               {t.rec && (
@@ -720,6 +734,10 @@ export function RecCard({ avatars, label, image, players, details, video, shared
  */
 export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, mini, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
   const open = () => (onViewDetails || onOpen)?.(title)
+  // On the moderator's mirror, force the reveal when this card is the one the
+  // participant is hovering (there's no real :hover on the mirror).
+  const spHover = useContext(SpectateHoverCtx)
+  forceReveal = forceReveal || (!!spHover && spHover === title)
   // `compact` scales the card down a notch; `mini` smaller still (denser rows).
   const CARD_W = mini ? 'w-[300px]' : compact ? 'w-[416px]' : 'w-[520px]'
   const IMG_H = mini ? 'h-[169px]' : compact ? 'h-[234px]' : 'h-[292px]'
@@ -878,6 +896,9 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
  * and user-tag pills.
  */
 export function PortraitCard({ image, video, title, publisher, released, recommend, avatars, multiplayer, tags = [], belowAvatars, onWishlist, onShare, onOpen, forceReveal }) {
+  // On the moderator's mirror, force the reveal for the hovered card.
+  const spHoverP = useContext(SpectateHoverCtx)
+  forceReveal = forceReveal || (!!spHoverP && spHoverP === title)
   const shortRec = recommend ? recommend.replace(/ (have|has) played recently$/, '') : ''
   // "N friends…" shows up to 2 pics (with a "+" at 3+); a personal line like
   // "Sauhee said …" or "Meera has played recently" shows a single profile pic.
