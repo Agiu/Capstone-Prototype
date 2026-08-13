@@ -30,6 +30,15 @@ button:not(:disabled),
 html[data-kbd] .kbd-ring:focus-within {
   --tw-ring-color: #5765f2;
 }
+/* Text inputs match :focus-visible even on a mouse click, so the global focus
+   outline would appear when clicking into a field. Suppress it unless the user
+   arrived by keyboard (data-kbd). Buttons/links are unaffected — they only match
+   :focus-visible on real keyboard focus. */
+:root:not([data-kbd]) input:focus-visible,
+:root:not([data-kbd]) textarea:focus-visible,
+:root:not([data-kbd]) [contenteditable]:focus-visible {
+  outline: none;
+}
 /* A stronger, inset-safe ring for controls sitting on artwork/photos where a
    thin blue line would wash out. */
 .focus-ring-strong:focus-visible {

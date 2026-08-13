@@ -1310,7 +1310,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                         dark-green pill, 30px avatars, Xbox-green ARCADE. */}
                     <button
                       onClick={onWhosOn}
-                      className="flex items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125"
+                      className="flex items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125 sm:ml-auto"
                     >
                       <div className="flex items-center">
                         {[AVATAR.blue, AVATAR.pink, AVATAR.yellow].map((c, i) => (
@@ -1320,7 +1320,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                       <span className="text-[16px] text-white">See who’s on</span>
                       <span className="flex items-center gap-[3px]">
                         <XboxLogo size={16} />
-                        <span className="text-[12px] font-bold uppercase tracking-wide text-[#107c10]">Arcade</span>
+                        <span className="text-[12px] font-bold uppercase tracking-wide text-[#9BF00B]">Arcade</span>
                       </span>
                     </button>
                   </div>
@@ -1332,8 +1332,8 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                         onClick={onStartParty}
                         className="group flex items-center gap-[18px] rounded-[20px] border-2 border-[#9BF00B]/55 bg-[#0d1a06] px-[28px] py-[22px] text-left transition hover:border-[#9BF00B] hover:bg-[#112407]"
                       >
-                        <span className="flex size-[54px] shrink-0 items-center justify-center rounded-full bg-[#9BF00B] shadow-[0_2px_12px_rgba(45,160,0,0.45)] transition group-hover:scale-105">
-                          <PartyGlyph size={26} className="text-[#0c0c0e]" />
+                        <span className="flex size-[54px] shrink-0 items-center justify-center transition group-hover:scale-105">
+                          <PartyGlyph size={40} className="text-[#9BF00B]" />
                         </span>
                         <span>
                           <span className="block text-[24px] font-bold text-white">Start a party</span>
@@ -2286,6 +2286,7 @@ function PlayerRangeInputs({ min, max, onChange }) {
 
 // ── Library tab — the full Game Pass Starter Edition catalog ────────────────
 function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onShare }) {
+  const { addToWheel } = useContext(NavCtx)
   const [searchOpen, setSearchOpen] = useState(false)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(initialFilter || []) // [{kind:'cap'|'genre', value}]
@@ -2356,7 +2357,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
               <h1 className="text-[clamp(30px,3vw,44px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Library</h1>
               <div className="mt-[6px] flex items-center gap-[8px] text-[15px] text-[#9a9ba3]">
                 <XboxLogo size={16} />
-                Game Pass Starter Edition · {shown.length} of {STARTER_LIBRARY.length} games{(eActive.length || query) ? '' : ', playable in the cloud.'}
+                Game Pass Starter Edition · {shown.length} / {STARTER_LIBRARY.length} games{(eActive.length || query) ? '' : ', playable in the cloud.'}
               </div>
             </div>
             <div className="flex flex-row-reverse items-center gap-[10px]">
@@ -2443,7 +2444,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
           {eActive.length > 0 && (
             <div className="mt-[18px] flex flex-wrap items-center gap-[8px]">
               {eActive.map((f, i) => (
-                <button key={i} onClick={() => toggle(f)} className="flex items-center gap-[6px] rounded-full bg-white px-[12px] py-[6px] text-[13px] font-semibold text-black transition hover:brightness-95">
+                <button key={i} onClick={() => toggle(f)} className="flex items-center gap-[6px] rounded-full bg-[#9BF00B]/12 px-[12px] py-[6px] text-[13px] font-semibold text-[#9BF00B] ring-1 ring-inset ring-[#9BF00B]/25 transition hover:bg-[#9BF00B]/20">
                   {facetLabel(f)}
                   <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                 </button>
@@ -2453,6 +2454,12 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
                 <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
               </button>
               <button onClick={() => setActive([])} className="ml-[2px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>
+              {/* Bulk actions on the filtered set. */}
+              <span className="mx-[2px] h-[18px] w-px bg-white/10" />
+              <button onClick={() => shown.forEach((g) => addToWheel(g.title))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
+                <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
+                Add {shown.length} to Wheel
+              </button>
             </div>
           )}
 
@@ -3537,6 +3544,40 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                   </div>
                 </div>
 
+                {/* Active filter pills (on-brand, subtle) + bulk Add-to-Wheel. */}
+                {plFilterCount > 0 && (
+                  <div className="mb-[12px] flex flex-wrap items-center gap-[8px]">
+                    {plGenres.map((gn) => (
+                      <button key={gn} onClick={() => setPlGenres((cur) => cur.filter((x) => x !== gn))} className="flex items-center gap-[6px] rounded-full bg-[#9BF00B]/12 px-[12px] py-[6px] text-[13px] font-semibold text-[#9BF00B] ring-1 ring-inset ring-[#9BF00B]/25 transition hover:bg-[#9BF00B]/20">
+                        {gn}
+                        <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                      </button>
+                    ))}
+                    {plRange && (
+                      <button onClick={() => setPlRange(null)} className="flex items-center gap-[6px] rounded-full bg-[#9BF00B]/12 px-[12px] py-[6px] text-[13px] font-semibold text-[#9BF00B] ring-1 ring-inset ring-[#9BF00B]/25 transition hover:bg-[#9BF00B]/20">
+                        {facetLabel({ kind: 'range', min: plRange.min, max: plRange.max })}
+                        <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                      </button>
+                    )}
+                    {plSession && (
+                      <button onClick={() => setPlSession(null)} className="flex items-center gap-[6px] rounded-full bg-[#9BF00B]/12 px-[12px] py-[6px] text-[13px] font-semibold text-[#9BF00B] ring-1 ring-inset ring-[#9BF00B]/25 transition hover:bg-[#9BF00B]/20">
+                        ≤ {plSession} hrs / session
+                        <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                      </button>
+                    )}
+                    <button onClick={() => { setPlGenres([]); setPlRange(null); setPlSession(null) }} className="ml-[2px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>
+                    <span className="mx-[2px] h-[18px] w-px bg-white/10" />
+                    <button onClick={() => plList.forEach((g) => addToWheel(g.title))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
+                      <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
+                      Add {plList.length} to Wheel
+                    </button>
+                  </div>
+                )}
+                {wish.length > 0 && (
+                  <p className="mb-[14px] text-[13px] text-[#7e7f87]">
+                    {plList.length === wish.length ? `${wish.length} games` : `${plList.length} / ${wish.length} games`}
+                  </p>
+                )}
                 {wish.length === 0 ? (
                   <button onClick={() => setPlaylistOpen(true)} className="flex w-full items-center gap-[14px] rounded-[14px] border border-dashed border-[#2b2d31] px-[20px] py-[22px] text-left transition hover:border-[#5765f2] hover:bg-white/[0.02]">
                     <span className="flex size-[40px] shrink-0 items-center justify-center rounded-full bg-[#5765f2]/15 text-[#8b95ff]">
@@ -3645,8 +3686,8 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
 
               {/* Recommended carousel — extra top gap separates it from the
                   PlayList grid above. */}
-              <section className="mt-[112px]">
-                <ShelfRow title="Recommended for the group" padTop={30}>
+              <section className="mt-[148px]">
+                <ShelfRow title="Recommended for this PlayList" padTop={30}>
                   {blend.games.map((k) => (
                     <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={!!eHover && eHover === (CATALOG[k]?.title || STARTER_BY_KEY[k]?.title)} />
                   ))}
@@ -5342,10 +5383,11 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                     >
                       <span>{dispName(callWheel?.host, jamNames)} started the call wheel</span>
                       {/* `isolate` confines the avatars' overlap z-index to this row so
-                          it can never rise above the Select-Mix dropdown above. */}
+                          it can never rise above the Select-Mix dropdown above. Each
+                          avatar is hoverable for the member's name. */}
                       <span className="isolate flex items-center">
                         {Object.keys(participants).map((n, i) => (
-                          <Avatar key={n} color={COLOR_OF[n] || D.raised} size={24} style={{ marginRight: -7, boxShadow: '0 0 0 2px #1c1c1f', zIndex: 10 - i }} />
+                          <MemberChip key={n} color={COLOR_OF[n] || D.raised} size={24} marginRight={-7} />
                         ))}
                       </span>
                       <span className="text-[#3fbf3f]">Join</span>
@@ -5367,15 +5409,20 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   )}
                   {eSynced && (
                     /* `isolate` confines the avatars' overlap z-index to this row so
-                       it can never rise above the Select-Mix dropdown above. */
+                       it can never rise above the Select-Mix dropdown above. Each
+                       avatar is hoverable for the member's name. */
                     <span className="isolate flex items-center">
                       {Object.keys(participants).map((n, i) => (
-                        <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #0c0c0e', zIndex: 10 - i }} />
+                        <MemberChip key={n} color={COLOR_OF[n] || D.raised} size={26} marginRight={-8} />
                       ))}
                     </span>
                   )}
                 </div>
-                <p className="mt-[8px] text-[12px] text-[#7e7f87]">
+                {/* Total members, clearly stated below the avatars. */}
+                {eSynced && (
+                  <p className="mt-[8px] text-[13px] font-semibold text-white">{Object.keys(participants).length} {Object.keys(participants).length === 1 ? 'member' : 'members'} in the wheel</p>
+                )}
+                <p className="mt-[6px] text-[12px] text-[#7e7f87]">
                   {eSynced
                     ? (isHost ? 'You started this sync — everyone on the call can join, edit and watch it spin.' : `Synced by ${dispName(callWheel?.host, jamNames)} — edits and spins are live for the whole call.`)
                     : 'Join to build and spin the wheel together.'}
@@ -5640,7 +5687,7 @@ function WhosPlayingModal({ game, onClose, onStart }) {
 
 // Start a party from the home page: pick a game (search/select), invite friends,
 // then launch a ready-up party. One modal for the whole flow.
-function StartPartyModal({ onClose, onStart, initialGame }) {
+function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGame }) {
   const { online } = useRoomCtx()
   const hiddenP = useHidden()
   const others = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
@@ -5655,8 +5702,10 @@ function StartPartyModal({ onClose, onStart, initialGame }) {
   const chosen = Object.keys(sel).filter((n) => sel[n])
   const gameQuery = gameQ.trim().toLowerCase()
   const gameResults = Object.entries(CATALOG)
-    .filter(([, v]) => !gameQuery || v.title.toLowerCase().includes(gameQuery) || (v.genre || '').toLowerCase().includes(gameQuery))
+    .filter(([, v]) => gameQuery && (v.title.toLowerCase().includes(gameQuery) || (v.genre || '').toLowerCase().includes(gameQuery)))
     .slice(0, 6)
+  // Recently opened games — quick picks shown before the user types.
+  const recentEntries = recent.map((k) => [k, CATALOG[k] || STARTER_BY_KEY[k]]).filter(([, v]) => v)
   // Resolve the picked game from the local-art catalog OR the Starter catalog so
   // cards from any shelf can start a party.
   const selected = gameKey ? (CATALOG[gameKey] || STARTER_BY_KEY[gameKey] || (initialGame?.key === gameKey ? initialGame : null)) : null
@@ -5712,18 +5761,42 @@ function StartPartyModal({ onClose, onStart, initialGame }) {
                 <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
                 <input data-autofocus value={gameQ} onChange={(e) => setGameQ(e.target.value)} placeholder="Search games" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
               </div>
-              <div className="mt-[8px] flex flex-col gap-[2px]">
-                {gameResults.map(([k, v]) => (
-                  <button key={k} onClick={() => setGameKey(k)} className="flex w-full items-center gap-[12px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
-                    <img alt="" src={v.image} className="h-[40px] w-[71px] shrink-0 rounded-[6px] object-cover" />
-                    <div className="min-w-0">
-                      <p className="truncate text-[14px] font-semibold text-white">{v.title}</p>
-                      <p className="truncate text-[12px] text-[#9a9ba3]">{capName(v.genre || 'game')} · {v.players} players</p>
+              {gameQuery ? (
+                /* Typed a query — pick a game for the party. */
+                <div className="mt-[8px] flex flex-col gap-[2px]">
+                  {gameResults.map(([k, v]) => (
+                    <button key={k} onClick={() => setGameKey(k)} className="flex w-full items-center gap-[12px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
+                      <img alt="" src={v.image} className="h-[40px] w-[71px] shrink-0 rounded-[6px] object-cover" />
+                      <div className="min-w-0">
+                        <p className="truncate text-[14px] font-semibold text-white">{v.title}</p>
+                        <p className="truncate text-[12px] text-[#9a9ba3]">{capName(v.genre || 'game')} · {v.players} players</p>
+                      </div>
+                    </button>
+                  ))}
+                  {gameResults.length === 0 && <p className="px-[6px] py-[10px] text-[13px] text-[#6f7276]">No games match “{gameQ}”.</p>}
+                </div>
+              ) : (
+                /* No query — show recent searches (up to 3 visible, scrollable). Each
+                   opens that game's detail page; the modal reopens on Back. */
+                <>
+                  <p className="mb-[6px] mt-[12px] text-[12px] font-semibold tracking-wide text-[#87898c]">Recent searches</p>
+                  {recentEntries.length === 0 ? (
+                    <p className="px-[6px] py-[10px] text-[13px] text-[#6f7276]">No recent search.</p>
+                  ) : (
+                    <div className="no-scrollbar flex max-h-[168px] flex-col gap-[2px] overflow-y-auto">
+                      {recentEntries.map(([k, v]) => (
+                        <button key={k} onClick={() => onOpenGame?.(k)} className="flex w-full items-center gap-[12px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
+                          {v.image ? <img alt="" src={v.image} className="h-[40px] w-[71px] shrink-0 rounded-[6px] object-cover" /> : <span className="h-[40px] w-[71px] shrink-0 rounded-[6px] bg-white/10" />}
+                          <div className="min-w-0">
+                            <p className="truncate text-[14px] font-semibold text-white">{v.title}</p>
+                            <p className="truncate text-[12px] text-[#9a9ba3]">{capName(v.genre || 'game')} · {v.players} players</p>
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ))}
-                {gameResults.length === 0 && <p className="px-[6px] py-[10px] text-[13px] text-[#6f7276]">No games match “{gameQ}”.</p>}
-              </div>
+                  )}
+                </>
+              )}
             </>
           )}
 
@@ -7887,20 +7960,32 @@ export default function Landing() {
   // A clicked card tag (any pill on a game card) → resolve to a Library facet.
   const handleCardTag = (text) => { const f = facetForTag(text); if (f) openLibraryFiltered(f) }
   // Cards hand back a game title; map it to a catalog key and open the detail page.
-  const openGame = (titleOrKey) => {
+  const openGame = (titleOrKey, fromOverride) => {
     // Starter keys count as known even without a CATALOG entry — the art-less
     // Library games live only in STARTER_BY_KEY.
     const known = CATALOG[titleOrKey] || STARTER_BY_KEY[titleOrKey]
     const key = known ? titleOrKey : (KEY_OF_TITLE[titleOrKey] || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey))
     if (!key) return
-    // Remember where we came from so the detail page's Back returns there.
-    setDetailFrom(dmName ? { dm: dmName } : blendId ? { blend: blendId } : null)
+    recordRecent(key)
+    // Remember where we came from so the detail page's Back returns there. A
+    // caller can override (the Start-a-party modal wants Back to reopen it).
+    setDetailFrom(fromOverride || (dmName ? { dm: dmName } : blendId ? { blend: blendId } : null))
     setDetailKey(key); setDmName(null); setBlendId(null); setDecide(null); setMixesTab(false); setLibraryTab(false)
   }
+  // Recently opened games — persisted per identity, powers the Start-a-party
+  // modal's "Recent searches" quick picks.
+  const RECENT_KEY = `recentGames:${SELF_NAME}`
+  const [recentGames, setRecentGames] = useState(() => { try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]') } catch { return [] } })
+  const recordRecent = (key) => setRecentGames((cur) => {
+    const next = [key, ...cur.filter((k) => k !== key)].slice(0, 12)
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(next)) } catch {}
+    return next
+  })
   const closeDetail = () => {
     setDetailKey(null)
     if (detailFrom?.dm) setDmName(detailFrom.dm)
     else if (detailFrom?.blend) setBlendId(detailFrom.blend)
+    else if (detailFrom?.party) setStartPartyOpen(true)
     setDetailFrom(null)
   }
 
@@ -7908,12 +7993,14 @@ export default function Landing() {
   // The primary view is a snapshot of these five nav vars. Every change pushes
   // onto a stack; the arrows walk it. `applying` suppresses the push while a
   // snapshot is being re-applied by back()/forward().
-  const [hist, setHist] = useState(() => ({ stack: [{ blendId: null, detailKey: null, dmName: null, decide: null, mixesTab: false, libraryTab: false }], idx: 0 }))
+  const [hist, setHist] = useState(() => ({ stack: [{ blendId: null, detailKey: null, dmName: null, decide: null, mixesTab: false, libraryTab: false, startPartyOpen: false }], idx: 0 }))
   const applying = useRef(false)
   useEffect(() => {
     if (IS_SPECTATE) return
     if (applying.current) { applying.current = false; return }
-    const cur = { blendId, detailKey, dmName, decide, mixesTab, libraryTab }
+    // startPartyOpen rides in the snapshot so navigating to a game's detail from
+    // the modal and pressing Back restores the open modal.
+    const cur = { blendId, detailKey, dmName, decide, mixesTab, libraryTab, startPartyOpen }
     setHist((h) => {
       if (JSON.stringify(h.stack[h.idx]) === JSON.stringify(cur)) return h
       const stack = h.stack.slice(0, h.idx + 1)
@@ -7921,7 +8008,7 @@ export default function Landing() {
       return { stack, idx: stack.length - 1 }
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blendId, detailKey, dmName, decide, mixesTab, libraryTab])
+  }, [blendId, detailKey, dmName, decide, mixesTab, libraryTab, startPartyOpen])
   // ── Input modality flag ──────────────────────────────────────────────────
   // Text inputs match :focus-visible even on a mouse click, so that pseudo alone
   // can't tell keyboard focus from a click. Track the last interaction and stamp
@@ -7929,7 +8016,9 @@ export default function Landing() {
   // blue focus ring off this so a click never paints one.
   useEffect(() => {
     const root = document.documentElement
-    const onKey = (e) => { if (e.key === 'Tab' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') root.setAttribute('data-kbd', '') }
+    // Tab is the true focus-navigation signal. Arrow keys are excluded so typing
+    // (or arrowing) inside a text field doesn't suddenly paint a focus ring.
+    const onKey = (e) => { if (e.key === 'Tab') root.setAttribute('data-kbd', '') }
     const onPointer = () => root.removeAttribute('data-kbd')
     window.addEventListener('keydown', onKey, true)
     window.addEventListener('pointerdown', onPointer, true)
@@ -7964,6 +8053,7 @@ export default function Landing() {
     setDecide(v.decide ?? null)
     setMixesTab(!!v.mixesTab)
     setLibraryTab(!!v.libraryTab)
+    setStartPartyOpen(!!v.startPartyOpen)
   }
   const goBack = () => { if (hist.idx <= 0) return; const idx = hist.idx - 1; applyView(hist.stack[idx]); setHist((h) => ({ ...h, idx })) }
   const goForward = () => { if (hist.idx >= hist.stack.length - 1) return; const idx = hist.idx + 1; applyView(hist.stack[idx]); setHist((h) => ({ ...h, idx })) }
@@ -8173,6 +8263,8 @@ export default function Landing() {
         {startPartyOpen && !IS_SPECTATE && (
           <StartPartyModal
             initialGame={partyGameInit}
+            recent={recentGames}
+            onOpenGame={(k) => { setStartPartyOpen(false); setPartyGameInit(null); openGame(k, { party: true }) }}
             onClose={() => { setStartPartyOpen(false); setPartyGameInit(null) }}
             onStart={(game, invitees) => {
               if (!invitees.length) setLaunching(game.title)
@@ -8200,6 +8292,8 @@ export default function Landing() {
           // recommended cards, with the game pre-selected.
           <StartPartyModal
             initialGame={{ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }}
+            recent={recentGames}
+            onOpenGame={(k) => { setPlayKey(null); openGame(k) }}
             onClose={() => setPlayKey(null)}
             onStart={(game, invitees) => {
               // Solo (no one invited) launches straight away — no ready-up party.
