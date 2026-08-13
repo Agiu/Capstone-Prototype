@@ -4285,9 +4285,10 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
   const dlg = useDialog(onClose, { label: 'Add to PlayList' })
   // Open centered on the clicked game card (falls back to the pointer, then the
-  // screen center) so it lands right where the user is looking.
+  // screen center). Frozen once on open so toggling playlists inside doesn't move
+  // it (each click updates LAST_POINTER, which must not re-anchor the modal).
   const W = 380, H = 300
-  const pos = (() => {
+  const [pos] = useState(() => {
     if (typeof window === 'undefined') return null
     const vw = window.innerWidth, vh = window.innerHeight
     if (LAST_POINTER.cardX != null) {
@@ -4297,7 +4298,7 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
     }
     if (LAST_POINTER.x == null) return null
     return { left: Math.min(Math.max(LAST_POINTER.x - 40, 12), vw - W - 12), top: Math.min(Math.max(LAST_POINTER.y - 20, 12), vh - 360) }
-  })()
+  })
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
     const wishlist = has ? b.wishlist.filter((x) => x !== key) : [...(b.wishlist || []), key]
@@ -6161,7 +6162,7 @@ function WheelNotification({ spin, onOpenWheel, onStartParty, onRestart, onDismi
   const iSpun = by === SELF_NAME
   const cover = picked && (CATALOG[picked.key]?.image || STARTER_BY_KEY[picked.key]?.image)
   return (
-    <div className="pointer-events-auto fixed right-[24px] top-[24px] z-[190] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+    <div className="pointer-events-auto fixed right-[24px] top-[72px] z-[190] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
       <div className="flex">
         {!spinning && (cover ? <img alt="" src={cover} className="w-[116px] shrink-0 self-stretch object-cover" /> : <span className="w-[116px] shrink-0 self-stretch bg-[#2b2d31]" />)}
         <div className="flex min-w-0 flex-1 flex-col gap-[12px] p-[16px]">
