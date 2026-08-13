@@ -1305,7 +1305,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                       the pill lands on the visual baseline, not the line-box bottom. */}
                   <div className="relative flex w-full items-end justify-between gap-[24px]">
                     <h2
-                      className="mb-[0.11em] min-w-0 text-[clamp(40px,6vw,88px)] uppercase leading-[0.95] tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
+                      className="-mb-[0.13em] whitespace-nowrap text-[clamp(40px,6vw,88px)] uppercase leading-[0.95] tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
                       style={{ fontFamily: '"Base Neue Cond Bold"' }}
                     >
                       Jump in
@@ -1318,7 +1318,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                     >
                       <div className="flex items-center">
                         {[AVATAR.blue, AVATAR.pink, AVATAR.yellow].map((c, i) => (
-                          <Avatar key={i} color={c} size={30} style={{ marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #092000' }} />
+                          <Avatar key={i} color={c} size={22} style={{ marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #092000' }} />
                         ))}
                       </div>
                       <span className="text-[16px] text-white">See who’s on</span>
@@ -3102,17 +3102,29 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
 
 // Up/down vote control for a PlayList game — taps adjust the net score, which
 // re-ranks the list. `mine` is this member's current vote (1/-1/0).
-function VoteControl({ score, mine, onUp, onDown }) {
+function VoteControl({ score, mine, onUp, onDown, upVoters = [], downVoters = [] }) {
   const btn = (active, activeCls) => 'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] transition ' + (active ? activeCls : 'text-[#9a9ba3] hover:bg-white/10 hover:text-white')
+  // Hover tooltip listing who voted this way.
+  const tip = (voters, label) => (
+    <span className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-[80] w-max max-w-[180px] -translate-x-1/2 rounded-[7px] bg-black/90 px-[9px] py-[6px] text-left text-[12px] leading-snug text-white opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.6)] transition-opacity duration-150 group-hover/v:opacity-100">
+      {voters.length ? (<><span className="font-semibold">{voters.length} {label}</span><br />{voters.join(', ')}</>) : <span className="text-[#b5bac1]">No {label} yet</span>}
+    </span>
+  )
   return (
     <div className="flex items-center gap-[3px]" onClick={(e) => e.stopPropagation()}>
-      <button onClick={(e) => { e.stopPropagation(); onUp() }} aria-label="Upvote" aria-pressed={mine === 1} className={btn(mine === 1, 'bg-[#9BF00B]/25 text-[#9BF00B]')}>
-        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M6 11l6-6 6 6" /></svg>
-      </button>
+      <span className="group/v relative">
+        <button onClick={(e) => { e.stopPropagation(); onUp() }} aria-label="Upvote" aria-pressed={mine === 1} className={btn(mine === 1, 'bg-[#9BF00B]/25 text-[#9BF00B]')}>
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M6 11l6-6 6 6" /></svg>
+        </button>
+        {tip(upVoters, upVoters.length === 1 ? 'upvote' : 'upvotes')}
+      </span>
       <span className={'min-w-[20px] text-center text-[14px] font-bold tabular-nums ' + (score > 0 ? 'text-[#9BF00B]' : score < 0 ? 'text-[#f0505b]' : 'text-white')}>{score}</span>
-      <button onClick={(e) => { e.stopPropagation(); onDown() }} aria-label="Downvote" aria-pressed={mine === -1} className={btn(mine === -1, 'bg-[#f0505b]/20 text-[#f0505b]')}>
-        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 13l6 6 6-6" /></svg>
-      </button>
+      <span className="group/v relative">
+        <button onClick={(e) => { e.stopPropagation(); onDown() }} aria-label="Downvote" aria-pressed={mine === -1} className={btn(mine === -1, 'bg-[#f0505b]/20 text-[#f0505b]')}>
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 13l6 6 6-6" /></svg>
+        </button>
+        {tip(downVoters, downVoters.length === 1 ? 'downvote' : 'downvotes')}
+      </span>
     </div>
   )
 }
@@ -3153,7 +3165,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
     const key = KEY_OF_TITLE[title] || title
     const cur = blend.wishlist || []
     const next = add ? (cur.includes(key) ? cur : [...cur, key]) : cur.filter((k) => k !== key)
-    setBlends(blends.map((b) => (b.id === blend.id ? { ...b, wishlist: next } : b)))
+    // Record who added each game so the card can credit the real adder.
+    const addedBy = { ...(blend.addedBy || {}) }
+    if (add) { if (!addedBy[key]) addedBy[key] = SELF_NAME } else { delete addedBy[key] }
+    setBlends(blends.map((b) => (b.id === blend.id ? { ...b, wishlist: next, addedBy } : b)))
     setMenu(null)
   }
   // Mix cover right-click menu + its editor modals.
@@ -3298,10 +3313,19 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
     : plSort === 'overall' ? (overallRating(b.key) - overallRating(a.key))
     : (scoreOf(b.key) - scoreOf(a.key)))
   const wishShown = ePlaylistExpanded ? plList : plList.slice(0, PLAYLIST_LIMIT)
-  // Who added each game — deterministic per (blend, game) so it's stable across
-  // renders. Drawn from the group's members (always includes you).
-  const adderColor = (key) => { const pool = m.length ? m : [SELF]; return pool[ratingHash(blend.id + key, 'addedby') % pool.length] }
-  const adderName = (key) => capName(NAME[adderColor(key)] || 'a member')
+  // Who added each game. Prefer the recorded adder (blend.addedBy, written on add);
+  // fall back to a stable per-(blend,game) guess from the members for legacy games.
+  const guessColor = (key) => { const pool = m.length ? m : [SELF]; return pool[ratingHash(blend.id + key, 'addedby') % pool.length] }
+  const adderColor = (key) => { const rec = blend.addedBy?.[key]; return rec ? (COLOR_OF[rec] || guessColor(key)) : guessColor(key) }
+  const adderName = (key) => { const rec = blend.addedBy?.[key]; return capName((rec || NAME[guessColor(key)]) || 'a member') }
+  // Who voted which way — deterministic pseudo-voters from the group (other than
+  // you), plus you based on your live vote. Powers the vote hover tooltips.
+  const votePeople = [...new Set((m || []).map((c) => NAME[c]).filter(Boolean).filter((n) => n !== SELF_NAME))]
+  const voterNames = (key, dir) => {
+    const base = votePeople.filter((n) => { const h = ratingHash(key + ':' + n, 'voter') % 3; return (h === 0 ? 1 : h === 1 ? -1 : 0) === dir })
+    const withSelf = (myVote[key] || 0) === dir ? ['you', ...base] : base
+    return withSelf.map((n) => (n === 'you' ? 'You' : capName(n)))
+  }
   // When the list is ranked by a play-stat, surface that stat on each card.
   const showSortMeta = plSort === 'hours' || plSort === 'session' || plSort === 'friends' || plSort === 'overall'
   const sortRating = (key) => plSort === 'overall' ? `${overallRating(key)}% overall` : `${friendsRating(key)}% friends`
@@ -3618,7 +3642,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         </div>
                         <div className="mt-[10px] flex items-center gap-[8px]">
                           <p className="min-w-0 flex-1 truncate text-[17px] font-semibold text-white">{g.title}</p>
-                          <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} />
+                          <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
                         </div>
                         {/* Ranked-by stat: session length, or avg friend playtime + rating. */}
                         {showSortMeta && (
@@ -3674,7 +3698,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                             )}
                           </div>
                         )}
-                        <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} />
+                        <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
                       </div>
                     ))}
                   </div>
