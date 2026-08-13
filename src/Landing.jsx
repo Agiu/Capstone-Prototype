@@ -3524,13 +3524,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                   const pend = (blend.invited || []).filter((c) => !(blend.members || []).includes(c))
                   if (!pend.length) return null
                   return (
-                    <span className="flex items-center gap-[8px] text-[13px] text-[#7e7f87]">
-                      <span className="flex items-center">
-                        {pend.map((c, i) => (
-                          <MemberChip key={i} color={c} size={30} marginRight={i < pend.length - 1 ? -10 : 0} pending />
-                        ))}
-                      </span>
-                      <span>pending</span>
+                    <span className="flex items-center">
+                      {pend.map((c, i) => (
+                        <MemberChip key={i} color={c} size={30} marginRight={i < pend.length - 1 ? -10 : 0} pending />
+                      ))}
                     </span>
                   )
                 })()}
@@ -6141,6 +6138,65 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
   )
 }
 
+// Cross-page toast for a SYNCED wheel spin — replaces auto-opening the full modal
+// for everyone on the call. Shows who's spinning live, then the result with
+// actions (start a party for the pick, open the wheel, or restart).
+function WheelNotification({ spin, onOpenWheel, onStartParty, onRestart, onDismiss }) {
+  const [, tick] = useState(0)
+  useEffect(() => { const t = setInterval(() => tick((v) => v + 1), 200); return () => clearInterval(t) }, [])
+  if (!spin) return null
+  const spinning = Date.now() < (spin.startedAt + SPIN_MS)
+  const picked = spin.games?.[spin.target]
+  const by = spin.by
+  const iSpun = by === SELF_NAME
+  const cover = picked && (CATALOG[picked.key]?.image || STARTER_BY_KEY[picked.key]?.image)
+  return (
+    <div className="pointer-events-auto fixed right-[24px] top-[24px] z-[190] w-[380px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, rgba(155,240,11,0), #9BF00B 15%, #9BF00B 85%, rgba(155,240,11,0))' }} />
+      <div className="p-[16px]">
+        <div className="flex items-start justify-between gap-[10px]">
+          <div className="flex items-center gap-[9px]">
+            <Avatar color={COLOR_OF[by] || '#4a4d55'} size={30} />
+            <p className="text-[14px] leading-snug text-white">
+              <span className="font-semibold">{iSpun ? 'You' : capName(by)}</span>{spinning ? (iSpun ? ' are spinning the wheel…' : ' is spinning the wheel…') : ' spun the wheel'}
+            </p>
+          </div>
+          <button onClick={onDismiss} aria-label="Dismiss" className="mt-[1px] shrink-0 text-[#9a9ba3] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+        {spinning ? (
+          <div className="mt-[12px] flex items-center gap-[10px] text-[#9a9ba3]">
+            <svg viewBox="0 0 24 24" className="size-[18px] animate-spin text-[#9BF00B]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6" /></svg>
+            <span className="text-[14px]">Landing on a game…</span>
+          </div>
+        ) : picked ? (
+          <>
+            <div className="mt-[12px] flex items-center gap-[12px]">
+              {cover ? <img alt="" src={cover} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" /> : <span className="h-[46px] w-[82px] shrink-0 rounded-[6px] bg-[#2b2d31]" />}
+              <div className="min-w-0">
+                <p className="text-[12px] font-semibold text-[#9BF00B]">The wheel picked</p>
+                <p className="truncate text-[17px] font-bold leading-tight text-white">{picked.title}</p>
+              </div>
+            </div>
+            <div className="mt-[12px] flex flex-wrap gap-[8px]">
+              <button onClick={() => onStartParty(picked)} className="flex items-center gap-[7px] rounded-[8px] bg-[#9BF00B] px-[14px] py-[8px] text-[13px] font-bold text-[#0c0c0e] transition hover:brightness-110">
+                <PartyGlyph size={15} />
+                Start a party
+              </button>
+              <button onClick={onOpenWheel} className="rounded-[8px] bg-[#2b2d31] px-[14px] py-[8px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#34363c]">Go to wheel</button>
+              <button onClick={onRestart} className="flex items-center gap-[6px] rounded-[8px] bg-[#2b2d31] px-[14px] py-[8px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#34363c]">
+                <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
+                Restart
+              </button>
+            </div>
+          </>
+        ) : null}
+      </div>
+    </div>
+  )
+}
+
 // ── Decision page — wheel + preference-matched game list ────────────────────
 function DecidePage({ blend, prefs, onBack }) {
   const [launching, setLaunching] = useState(null)
@@ -8327,12 +8383,9 @@ export default function Landing() {
     party.start({ key: game.key, title: game.title, image: g?.image || null }, invitees)
   }
 
-  // A SYNCED wheel spin pulls everyone on the call into the wheel so they watch
-  // it turn together. Personal spins never touch this node, so they stay local.
-  useEffect(() => {
-    if (callWheelRoot?.spin && !wheelOpen) setWheelOpen(true)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [callWheelRoot?.spin?.id])
+  // A SYNCED wheel spin surfaces as a cross-page notification (below) rather than
+  // yanking everyone into the full modal. Track which spin's toast was dismissed.
+  const [wheelNotifDismissed, setWheelNotifDismissed] = useState(null)
 
   const blend = byId(eBlendId)
   const prefsFor = byId(ePrefsForId)
@@ -8489,6 +8542,17 @@ export default function Landing() {
             count={Object.keys(jamParticipants).length}
             onJoin={() => { setWheelAutoJoin(true); setWheelOpen(true) }}
             onDismiss={() => setJamDismissed(callWheelRoot.startedAt)}
+          />
+        )}
+        {/* Synced-wheel toast — who's spinning, then the pick + actions. Hidden
+            while the full wheel modal is open (you already see it there). */}
+        {!IS_SPECTATE && inJam && !wheelOpen && callWheelRoot?.spin && wheelNotifDismissed !== callWheelRoot.spin.id && (
+          <WheelNotification
+            spin={callWheelRoot.spin}
+            onOpenWheel={() => setWheelOpen(true)}
+            onStartParty={(picked) => { startWheelParty(picked); setWheelNotifDismissed(callWheelRoot.spin.id) }}
+            onRestart={() => { setWheelAutoJoin(true); setWheelOpen(true) }}
+            onDismiss={() => setWheelNotifDismissed(callWheelRoot.spin.id)}
           />
         )}
         {/* Server-wide launch-party toast — follows you across pages */}
