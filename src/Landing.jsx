@@ -4284,13 +4284,13 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
   const { blends, setBlends } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
   const dlg = useDialog(onClose, { label: 'Add to PlayList' })
-  // A compact context-menu-style popover anchored at the click point (frozen on
-  // open so toggling a playlist inside never re-anchors it).
-  const W = 288, H = 340
+  // A compact context-menu-style popover whose BOTTOM-RIGHT is anchored at the
+  // click point, so it opens upward and right-aligned exactly like the "+"
+  // button's hover menu. Frozen on open so toggling inside never re-anchors it.
   const [pos] = useState(() => {
     if (typeof window === 'undefined' || LAST_POINTER.x == null) return null
     const vw = window.innerWidth, vh = window.innerHeight
-    return { left: Math.min(Math.max(LAST_POINTER.x, 12), vw - W - 12), top: Math.min(Math.max(LAST_POINTER.y, 12), vh - H - 12) }
+    return { right: Math.min(Math.max(vw - LAST_POINTER.x, 12), vw - 300), bottom: Math.min(Math.max(vh - LAST_POINTER.y, 12), vh - 60) }
   })
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
@@ -4305,7 +4305,7 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
       <div
         ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()}
         className="absolute w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]"
-        style={pos ? { left: pos.left, top: pos.top } : { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
+        style={pos ? { right: pos.right, bottom: pos.bottom } : { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
       >
         <p className="px-[14px] pb-[6px] pt-[6px] text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Add “{game}” to</p>
         <div className="no-scrollbar flex max-h-[300px] flex-col overflow-y-auto">
@@ -5562,11 +5562,12 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
           </div>
         </div>
 
-        {/* Invite — an overlay panel over the module (doesn't replace it) */}
+        {/* Invite — a viewport-level panel (fixed + high z-index) so the wheel
+            modal's overflow can never clip it; its body scrolls. */}
         {eInviting && (
           <>
-            <div className="absolute inset-0 z-[30] bg-black/55" onClick={() => setInviting(false)} />
-            <div className="absolute right-[24px] top-[60px] z-[40] flex max-h-[calc(92vh-84px)] w-[380px] max-w-[calc(100%-48px)] flex-col overflow-hidden rounded-[14px] border border-[#2b2d31] bg-[#141416] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+            <div className="fixed inset-0 z-[110] bg-black/60" onClick={() => setInviting(false)} />
+            <div className="fixed left-1/2 top-1/2 z-[120] flex max-h-[85vh] w-[400px] max-w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-[16px] border border-[#2b2d31] bg-[#141416] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
               <WheelInviteStep online={online} onCancel={() => setInviting(false)} onStart={startJam} popover />
             </div>
           </>
@@ -5602,7 +5603,7 @@ function WheelInviteStep({ online, onCancel, onStart, popover }) {
   )
 
   return (
-    <div className={'relative flex w-full flex-col ' + (popover ? 'max-h-[calc(92vh-84px)] p-[20px]' : 'max-h-[92vh] p-[32px]')}>
+    <div className={'relative flex w-full min-h-0 flex-col ' + (popover ? 'flex-1 p-[20px]' : 'max-h-[92vh] p-[32px]')}>
       {/* Fixed header */}
       <div className="shrink-0">
         <h2 className={'font-bold text-white ' + (popover ? 'text-[20px]' : 'text-[28px]')}>Start a wheel sync</h2>
