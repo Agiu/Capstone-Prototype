@@ -1299,9 +1299,13 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
               const myParty = launch && !launch.launched && (launch.host === SELF_NAME || (launch.invitees || []).includes(SELF_NAME)) ? launch : null
               return (
                 <div className="relative mt-[88px] flex flex-col items-start">
-                  <div className="relative flex w-full flex-wrap items-end gap-x-[24px] gap-y-[12px]">
+                  {/* One flex row, no wrap: the heading and the pill share a single
+                      line and `items-end` sits them on the same bottom edge. The
+                      heading's font-relative `mb` trims its sub-baseline descent so
+                      the pill lands on the visual baseline, not the line-box bottom. */}
+                  <div className="relative flex w-full items-end justify-between gap-[24px]">
                     <h2
-                      className="mb-[0.11em] text-[clamp(40px,6vw,88px)] uppercase leading-[0.95] tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
+                      className="mb-[0.11em] min-w-0 text-[clamp(40px,6vw,88px)] uppercase leading-[0.95] tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
                       style={{ fontFamily: '"Base Neue Cond Bold"' }}
                     >
                       Jump in
@@ -1310,7 +1314,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                         dark-green pill, 30px avatars, Xbox-green ARCADE. */}
                     <button
                       onClick={onWhosOn}
-                      className="flex items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125 sm:ml-auto"
+                      className="flex shrink-0 items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125"
                     >
                       <div className="flex items-center">
                         {[AVATAR.blue, AVATAR.pink, AVATAR.yellow].map((c, i) => (
