@@ -848,11 +848,10 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
   const [peek, setPeek] = useState(false)
   const gameTitles = games.map((k) => CATALOG[k]?.title || STARTER_BY_KEY[k]?.title).filter(Boolean)
   return (
-    <div
-      className="group relative flex w-[200px] shrink-0 flex-col text-left"
-      onMouseEnter={() => setPeek(true)}
-      onMouseLeave={() => setPeek(false)}
-    >
+    <div className="group relative flex w-[200px] shrink-0 flex-col text-left">
+      {/* The game-list popover only opens while hovering the thumbnail or title —
+          not the member avatars below. */}
+      <div className="relative" onMouseEnter={() => setPeek(true)} onMouseLeave={() => setPeek(false)}>
       {/* Peek popover: the games inside this PlayList — anchored to the right of
           the cover so it never gets clipped by the page's top scroll edge. The
           `pl-[10px]` bridges the gap to the cover so the pointer can travel onto
@@ -912,6 +911,7 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
           </button>
         )}
       </div>
+      </div>{/* end hover zone (thumbnail + title) */}
       {/* Member profile images — spaced circles, up to 5 then a "+N" (Figma 1133:7885).
           Each is hoverable/focusable and shows the member's name. */}
       <div className="mt-[10px] flex items-center gap-[4px]">
@@ -2291,6 +2291,9 @@ function PlayerRangeInputs({ min, max, onChange }) {
 // ── Library tab — the full Game Pass Starter Edition catalog ────────────────
 function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onShare }) {
   const { addToWheel } = useContext(NavCtx)
+  const { blends, setBlends } = useRoomCtx()
+  const [addPlOpen, setAddPlOpen] = useState(false)
+  const myLibBlends = (blends || []).filter((b) => (b.members || []).includes(SELF))
   const [searchOpen, setSearchOpen] = useState(false)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(initialFilter || []) // [{kind:'cap'|'genre', value}]
@@ -2350,6 +2353,15 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
     return n == null ? rest : [...rest, { kind: 'session', value: n }]
   })
   const open = (g) => onOpen(g.catKey)
+  // Bulk-add the currently filtered games to a chosen playlist.
+  const addAllToBlend = (b) => {
+    const keys = shown.map((g) => g.catKey)
+    const wl = [...new Set([...(b.wishlist || []), ...keys])]
+    const addedBy = { ...(b.addedBy || {}) }
+    keys.forEach((k) => { if (!addedBy[k]) addedBy[k] = SELF_NAME })
+    setBlends((blends || []).map((x) => (x.id === b.id ? { ...x, wishlist: wl, addedBy } : x)))
+    setAddPlOpen(false)
+  }
 
   return (
     <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
@@ -2460,6 +2472,27 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
               <button onClick={() => setActive([])} className="ml-[2px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>
               {/* Bulk actions on the filtered set. */}
               <span className="mx-[2px] h-[18px] w-px bg-white/10" />
+              <div className="relative">
+                <button onClick={() => setAddPlOpen((v) => !v)} aria-haspopup="menu" aria-expanded={addPlOpen} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
+                  <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+                  Add {shown.length} to PlayList
+                </button>
+                {addPlOpen && (
+                  <>
+                    <div className="fixed inset-0 z-[40]" onClick={() => setAddPlOpen(false)} />
+                    <div role="menu" className="absolute left-0 top-[40px] z-[50] max-h-[240px] w-[240px] overflow-y-auto rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                      {myLibBlends.length ? myLibBlends.map((b) => (
+                        <button key={b.id} role="menuitem" onClick={() => addAllToBlend(b)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] text-[#dbdee1] transition hover:bg-white/5">
+                          <span className="size-[28px] shrink-0 overflow-hidden rounded-[6px] bg-[#2b2d31]" style={b.color ? { backgroundColor: b.color } : undefined}>
+                            {b.cover ? <img alt="" src={b.cover} className="size-full object-cover" /> : <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">{mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}</span>}
+                          </span>
+                          <span className="min-w-0 flex-1 truncate">{b.name}</span>
+                        </button>
+                      )) : <p className="px-[12px] py-[8px] text-[13px] text-[#7e7f87]">You&rsquo;re not in any PlayLists yet.</p>}
+                    </div>
+                  </>
+                )}
+              </div>
               <button onClick={() => shown.forEach((g) => addToWheel(g.title))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
                 <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
                 Add {shown.length} to Wheel
@@ -5306,7 +5339,15 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
             ) : phase === 'spinning' ? (
               <div>
                 <h2 className="text-[28px] font-bold text-white">{synced ? 'The call is spinning…' : 'Spinning…'}</h2>
-                <p className="mt-[6px] text-[15px] text-[#9a9ba3]">Landing on a game…</p>
+                {/* Who's spinning — shown live during the spin, with their avatar. */}
+                {synced && activeSpin?.by ? (
+                  <div className="mt-[10px] flex items-center gap-[9px]">
+                    <Avatar color={COLOR_OF[activeSpin.by] || D.raised} size={26} />
+                    <p className="text-[15px] text-white"><span className="font-semibold">{iSpun ? 'You are' : `${capName(activeSpin.by)} is`}</span> spinning the wheel…</p>
+                  </div>
+                ) : (
+                  <p className="mt-[6px] text-[15px] text-[#9a9ba3]">Landing on a game…</p>
+                )}
               </div>
             ) : (
               <>
