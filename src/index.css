@@ -6,6 +6,44 @@ button:not(:disabled),
   cursor: pointer;
 }
 
+/* ── Keyboard focus indicator (WCAG 2.4.7) ─────────────────────────────────
+   Only :focus-visible so a mouse click never paints a ring, but any element
+   reached by keyboard — buttons, links, inputs, role=button, roving-tabindex
+   items, dialog containers — gets a clear, high-contrast focus ring that reads
+   on the dark UI. `focus:not(:focus-visible)` suppresses the legacy outline for
+   pointer users. Components may opt out of the ring with `.focus-ring-none`
+   when they paint their own focus treatment. */
+:focus-visible {
+  outline: 2px solid #7c9dff;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
+}
+.focus-ring-none:focus-visible {
+  outline: none;
+}
+/* A stronger, inset-safe ring for controls sitting on artwork/photos where a
+   thin blue line would wash out. */
+.focus-ring-strong:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.85);
+}
+/* Respect users who ask the OS to minimize motion: drop the app's transitions
+   and animations rather than forcing them through reduced-motion journeys. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Inner-page nav: the back button fades in while the logo + tabs slide right to
    make room for it. */
 @keyframes navBackIn {

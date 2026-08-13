@@ -94,6 +94,8 @@ function ShareAvatars({ colors, targets, title, onShare }) {
   const shown = list.slice(0, 2)
   const more = list.length > 2
   const spAv = useContext(SpectateAvCtx)
+  // Keyboard parity: focusing an avatar shows its name tooltip like hover.
+  const [kbFocus, setKbFocus] = useState(null)
   return (
     <div className="flex items-center">
       {shown.map((c, i) => {
@@ -102,13 +104,15 @@ function ShareAvatars({ colors, targets, title, onShare }) {
         if (!t || !t.to || !onShare) {
           return <ProfileIcon key={i} color={c} className="size-[22px]" style={{ marginRight: mr, zIndex: i + 1, boxShadow: '0 0 0 2px #0c0c0e' }} />
         }
-        const reveal = !!spAv && spAv === avKey(title, t.name)
+        const reveal = kbFocus === i || (!!spAv && spAv === avKey(title, t.name))
         return (
           <button
             key={i}
             type="button"
             data-av={avKey(title, t.name)}
             title={`Share ${title} with ${t.name}`}
+            onFocus={() => setKbFocus(i)}
+            onBlur={() => setKbFocus((f) => (f === i ? null : f))}
             onClick={(e) => { e.stopPropagation(); onShare({ title, to: t.to, hrs: t.hrs }) }}
             className="group/av pointer-events-auto relative shrink-0 rounded-full transition hover:z-10 hover:-translate-y-[2px]"
             style={{ marginRight: mr, zIndex: reveal ? 10 : i + 1 }}
@@ -116,7 +120,7 @@ function ShareAvatars({ colors, targets, title, onShare }) {
             {/* Tooltip sits ABOVE the face and extends rightward (left-anchored)
                 so the row's horizontal scroll clip never crops it on the left.
                 Highest z so nothing covers it; the row leaves top headroom. */}
-            <span className={'pointer-events-none absolute bottom-[calc(100%+7px)] left-0 z-[200] inline-flex items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/90 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100' + (reveal ? ' !opacity-100' : '')}>
+            <span className={'pointer-events-none absolute bottom-[calc(100%+7px)] left-0 z-[200] inline-flex items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/90 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100 group-focus-within/av:opacity-100' + (reveal ? ' !opacity-100' : '')}>
               <span>{t.name}{t.hrs != null ? ` · ${t.hrs} hrs` : ''}</span>
               {/* Green thumbs-up only when this friend recommends the game. */}
               {t.rec && (
@@ -126,7 +130,7 @@ function ShareAvatars({ colors, targets, title, onShare }) {
                 </>
               )}
             </span>
-            <ProfileIcon color={c} className="size-[22px] ring-2 ring-transparent transition group-hover/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
+            <ProfileIcon color={c} className="size-[22px] ring-2 ring-transparent transition group-hover/av:ring-[#5765f2] group-focus-within/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
           </button>
         )
       })}
@@ -737,7 +741,10 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
   // On the moderator's mirror, force the reveal when this card is the one the
   // participant is hovering (there's no real :hover on the mirror).
   const spHover = useContext(SpectateHoverCtx)
-  forceReveal = forceReveal || (!!spHover && spHover === title)
+  // Keyboard parity: focusing the card (or any control inside it) forces the same
+  // reveal a mouse hover gives — the trailer + overlay cross-fade in on focus.
+  const [kbFocus, setKbFocus] = useState(false)
+  forceReveal = forceReveal || kbFocus || (!!spHover && spHover === title)
   // `compact` scales the card down a notch; `mini` smaller still (denser rows).
   const CARD_W = mini ? 'w-[300px]' : compact ? 'w-[416px]' : 'w-[520px]'
   const IMG_H = mini ? 'h-[169px]' : compact ? 'h-[234px]' : 'h-[292px]'
@@ -762,16 +769,16 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
   // shared duration and no delays so the whole overlay appears at once.
   const reveal =
     `opacity-0 transition-opacity duration-[300ms] ${EASE}` +
-    ' group-hover:opacity-100 group-hover:duration-[400ms]' + F
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + F
   const rise =
     `opacity-0 transition-opacity duration-[300ms] ${EASE}` +
-    ' group-hover:opacity-100 group-hover:duration-[400ms]' + F
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + F
   const riseUp =
     `opacity-0 transition-opacity duration-[300ms] ${EASE}` +
-    ' group-hover:opacity-100 group-hover:duration-[400ms]' + F
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + F
   const pool =
     `pointer-events-none absolute opacity-0 transition-opacity duration-[300ms] ${EASE}` +
-    ' group-hover:opacity-100 group-hover:duration-[400ms]' + (forceReveal ? ' !opacity-100' : '')
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + (forceReveal ? ' !opacity-100' : '')
   // The tags' own pool runs the full width as a flat horizontal band, which is
   // what lets it cover the + as well — no separate pool needed in that corner.
   // Recipe matched to the overlay card's hover scrim ("Because you love to
@@ -789,7 +796,17 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
       {avatarsPlus && <span className="-ml-[2px] text-[13px] font-semibold leading-none text-white">+</span>}
       <p className="whitespace-nowrap text-[13px] font-semibold leading-[18px] text-white">{label}</p>
     </div>
-    <div data-game={title} onClick={open} className={`group relative ${IMG_H} w-full cursor-pointer overflow-hidden rounded-[16px] bg-[#121214]`}>
+    <div
+      data-game={title}
+      onClick={open}
+      role="button"
+      tabIndex={0}
+      aria-label={title ? `${title} — open game` : 'Open game'}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open() } }}
+      onFocus={() => setKbFocus(true)}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setKbFocus(false) }}
+      className={`group relative ${IMG_H} w-full cursor-pointer overflow-hidden rounded-[16px] bg-[#121214] focus-ring-strong`}
+    >
       {/* Cover — fills the whole card by default */}
       <img
         alt=""
@@ -804,10 +821,10 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
           rounded corners. */}
       {video && (
         <div
-          className={`absolute inset-0 overflow-hidden rounded-[16px] bg-[#121214] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
+          className={`absolute inset-0 overflow-hidden rounded-[16px] bg-[#121214] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
         >
           <div
-            className={`absolute inset-0 opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
+            className={`absolute inset-0 opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
           >
             {/* `bare` scales the iframe up so YouTube's title/chrome falls outside
                 the crop — a clean, UI-free loop. */}
@@ -819,7 +836,7 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
       {/* Title + studio · release date — no scrim. Legibility comes from a plain
           drop shadow, which keeps the text true white on any footage. */}
       <div
-        className={`pointer-events-none absolute left-0 top-0 w-[340px] pb-[28px] pl-[24px] pr-[24px] pt-[20px] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms]` + F}
+        className={`pointer-events-none absolute left-0 top-0 w-[340px] pb-[28px] pl-[24px] pr-[24px] pt-[20px] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]` + F}
         style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))' }}
       >
         <p className={`font-bold leading-[1.1] text-white ${mini ? 'text-[20px]' : compact ? 'text-[24px]' : 'text-[28px]'}`}>{title}</p>

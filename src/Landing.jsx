@@ -973,8 +973,17 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
   const anim = animate ? ' [animation:navBackIn_.4s_.06s_cubic-bezier(0.16,1,0.3,1)_both]' : ''
   const groupAnim = animate ? ' [animation:navGroupSlide_.4s_cubic-bezier(0.16,1,0.3,1)_both]' : ''
   const Tab = ({ label, isActive, onClick }) => (
-    <button onClick={onClick} className={'flex h-[56px] items-center border-b-2 text-[16px] font-medium transition ' + (isActive ? 'border-white text-white' : 'border-transparent text-[#c7c9cb] hover:text-white')}>{label}</button>
+    <button onClick={onClick} data-tab aria-current={isActive ? 'page' : undefined} className={'flex h-[56px] items-center border-b-2 text-[16px] font-medium transition ' + (isActive ? 'border-white text-white' : 'border-transparent text-[#c7c9cb] hover:text-white')}>{label}</button>
   )
+  // Left/Right arrow moves between the nav tabs (horizontal layout → ←/→).
+  const onTabsKeyDown = (e) => {
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+    const tabs = [...e.currentTarget.querySelectorAll('[data-tab]')]
+    const i = tabs.indexOf(document.activeElement)
+    if (i === -1) return
+    e.preventDefault()
+    tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length]?.focus()
+  }
   return (
     <header className="flex h-[56px] shrink-0 items-center border-b border-[#1c1d21] px-[40px]">
       {onBack && (
@@ -982,7 +991,7 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
           <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
         </button>
       )}
-      <div className={'flex items-center gap-[32px]' + groupAnim}>
+      <div className={'flex items-center gap-[32px]' + groupAnim} onKeyDown={onTabsKeyDown}>
         <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
         <Tab label="Recommended" isActive={active === 'recommended'} onClick={onHome} />
         <Tab label="Library" isActive={active === 'library'} onClick={onLibrary} />
@@ -1074,14 +1083,24 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
       {/* Top nav — layered blur over the hero video (Figma 882:4898). The blur
           lives on its own masked layer so it fades out toward the bottom while
           the nav content stays crisp. */}
-      <header className="absolute inset-x-0 top-0 z-20 flex h-[56px] shrink-0 items-center gap-[32px] px-[40px]">
+      <header
+        className="absolute inset-x-0 top-0 z-20 flex h-[56px] shrink-0 items-center gap-[32px] px-[40px]"
+        onKeyDown={(e) => {
+          if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+          const tabs = [...e.currentTarget.querySelectorAll('[data-tab]')]
+          const i = tabs.indexOf(document.activeElement)
+          if (i === -1) return
+          e.preventDefault()
+          tabs[(i + (e.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length]?.focus()
+        }}
+      >
         <div className="pointer-events-none absolute inset-0 -z-10 bg-black/25 backdrop-blur-md" />
         {/* Discord-style thin divider under the nav */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
         <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
-        <button className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Recommended</button>
-        <button onClick={onLibrary} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button onClick={onMixes} className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
+        <button data-tab aria-current="page" className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Recommended</button>
+        <button onClick={onLibrary} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
+        <button onClick={onMixes} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
           <WheelNavButton />
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
@@ -1759,7 +1778,7 @@ function TrendingRow({ items, onOpen, onShare }) {
                   const r = e.currentTarget.getBoundingClientRect()
                   e.currentTarget.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: r.left, clientY: r.bottom }))
                 }}
-                className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-[#9a9ba3] opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100"
+                className="flex size-[28px] shrink-0 items-center justify-center rounded-full text-[#9a9ba3] opacity-0 transition hover:bg-white/10 hover:text-white group-hover:opacity-100 focus-visible:opacity-100"
               >{ELLIPSIS_GLYPH}</button>
             </div>
           )
@@ -1780,6 +1799,8 @@ function WideGameCard({ gkey, onOpen }) {
       onClick={() => onOpen?.(title)}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
+      onFocus={() => setHover(true)}
+      onBlur={() => setHover(false)}
       className="group relative aspect-video min-w-0 flex-1 overflow-hidden rounded-[16px] bg-[#121214] text-left"
     >
       <img alt="" src={starterHeader(gkey)} loading="lazy" className="absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.03]" />
@@ -1862,12 +1883,14 @@ function WorthACloserLook({ gameKey, onOpen, onShare, revealTitle }) {
           onClick={() => onOpen?.(title)}
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
+          onFocus={() => setHover(true)}
+          onBlur={() => setHover(false)}
           className={'group relative aspect-video w-full shrink-0 overflow-hidden rounded-[16px] bg-[#121214] lg:w-[56%]' + (shown ? ' is-revealed' : '')}
         >
           <img alt="" src={starterHeader(gameKey)} className={'absolute inset-0 size-full object-cover transition duration-300 group-hover:scale-[1.02]' + (shown ? ' scale-[1.02]' : '')} />
           {shown && (GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && <VideoTrailer youTubeId={GAMEPLAY_LANDSCAPE[gameKey] || g.youTubeId} poster={starterHeader(gameKey)} bare />}
           {(GAMEPLAY_LANDSCAPE[gameKey] || g?.youTubeId) && (
-            <span className={'pointer-events-none absolute left-[14px] top-[14px] z-[2] rounded-[4px] bg-black/70 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white opacity-0 transition-opacity duration-[300ms] ease-out group-hover:opacity-100' + (shown ? ' !opacity-100' : '')}>{GAMEPLAY_LANDSCAPE[gameKey] ? 'Gameplay' : 'Trailer'}</span>
+            <span className={'pointer-events-none absolute left-[14px] top-[14px] z-[2] rounded-[4px] bg-black/70 px-[8px] py-[3px] text-[11px] font-semibold uppercase tracking-wide text-white opacity-0 transition-opacity duration-[300ms] ease-out group-hover:opacity-100 group-focus-within:opacity-100' + (shown ? ' !opacity-100' : '')}>{GAMEPLAY_LANDSCAPE[gameKey] ? 'Gameplay' : 'Trailer'}</span>
           )}
         </button>
         <div className="flex flex-1 flex-col justify-center">
@@ -1897,7 +1920,10 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
   // On the moderator's mirror, force this tile's hover reveal when it's the card
   // the participant is hovering.
   const spHover = useContext(SpectateHoverCtx)
-  const fr = !!spHover && spHover === g.title
+  // Keyboard parity: focusing the tile (or a control in it) forces the same
+  // reveal a mouse hover gives (Add-to-Mix / More buttons + ring).
+  const [kbFocus, setKbFocus] = useState(false)
+  const fr = kbFocus || (!!spHover && spHover === g.title)
   const localArt = g.key && CATALOG[g.key]?.image
   // Cover: local art → Steam capsule → the game's YouTube still (for the handful
   // of console-only games with no Steam page) → gradient fallback.
@@ -1916,6 +1942,8 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.() } }}
+      onFocus={() => setKbFocus(true)}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setKbFocus(false) }}
       className="group cursor-pointer text-left"
     >
       <div className={'relative aspect-[3/4] overflow-hidden rounded-[12px] bg-[#151518] ring-1 ring-white/5 transition group-hover:ring-white/25' + (fr ? ' !ring-white/25' : '')}>
@@ -1931,13 +1959,13 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         {/* Add-to-Mix + More — bottom-right, revealed on hover. Bare green glyphs
             with a hover glow + label, matching the horizontal cards. */}
-        <div className={'absolute bottom-[14px] right-[16px] flex items-center gap-[16px] opacity-0 transition-opacity duration-200 group-hover:opacity-100' + (fr ? ' !opacity-100' : '')}>
+        <div className={'absolute bottom-[14px] right-[16px] flex items-center gap-[16px] opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100' + (fr ? ' !opacity-100' : '')}>
           <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(g.title) }} aria-label="Add to Mix" className="group/add relative flex size-[28px] items-center justify-center">
-            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">Add to Mix</span>
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100 group-focus-within/add:opacity-100">Add to Mix</span>
             <svg viewBox="0 0 17 18" fill="none" className="size-[24px] transition-[scale,filter] duration-200 group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" style={{ color: '#9BF00B' }}><path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
           </button>
           <button type="button" onClick={openMenu} aria-label="More" className="group/more relative flex size-[28px] items-center justify-center">
-            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/more:opacity-100">More</span>
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/more:opacity-100 group-focus-within/more:opacity-100">More</span>
             <svg viewBox="0 0 24 24" className="size-[24px] transition-[scale,filter] duration-200 group-hover/more:scale-110 group-hover/more:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" fill="currentColor" style={{ color: '#9BF00B' }}><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
           </button>
         </div>
@@ -2030,6 +2058,8 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
   const eSort = IS_SPECTATE ? (lUI?.sort || 'default') : sort
   const eFilterOpen = IS_SPECTATE ? !!lUI?.filterOpen : filterOpen
   const eSortOpen = IS_SPECTATE ? !!lUI?.sortOpen : sortOpen
+  const filterPop = usePopover(eFilterOpen, () => setFilterOpen(false))
+  const sortPop = usePopover(eSortOpen, () => setSortOpen(false), { menu: true })
   const eSearchOpen = IS_SPECTATE ? !!lUI?.searchOpen : searchOpen
 
   const query = eQ.trim().toLowerCase()
@@ -2069,6 +2099,8 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
               <div className="relative">
                 <button
                   onClick={() => setFilterOpen((v) => !v)}
+                  aria-haspopup="dialog"
+                  aria-expanded={eFilterOpen}
                   className="flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[14px] text-[14px] font-semibold text-white transition hover:bg-[#232327]"
                 >
                   <svg viewBox="0 0 24 24" className="size-[16px]" fill="currentColor"><path d="M3 5.5h18a1 1 0 0 1 .8 1.6l-6.3 8.2V20a1 1 0 0 1-1.45.9l-3-1.5A1 1 0 0 1 10.5 18.5v-3.2L2.2 7.1A1 1 0 0 1 3 5.5z" /></svg>
@@ -2078,7 +2110,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
                 {eFilterOpen && (
                   <>
                     <div className="fixed inset-0 z-[40]" onClick={() => setFilterOpen(false)} />
-                    <div className="absolute right-0 top-[46px] z-[50] max-h-[62vh] w-[340px] overflow-y-auto rounded-[12px] border border-[#2b2d31] bg-[#161618] p-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                    <div ref={filterPop} role="dialog" aria-label="Filters" className="absolute right-0 top-[46px] z-[50] max-h-[62vh] w-[340px] overflow-y-auto rounded-[12px] border border-[#2b2d31] bg-[#161618] p-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
                       <p className="mb-[9px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Players</p>
                       <div className="flex items-center gap-[8px]">
                         <span className="text-[14px] text-[#c7c9cb]">Up to</span>
@@ -2114,6 +2146,8 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
               <div className="relative">
                 <button
                   onClick={() => setSortOpen((v) => !v)}
+                  aria-haspopup="menu"
+                  aria-expanded={eSortOpen}
                   className="flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#1a1a1d] px-[14px] text-[14px] font-semibold text-white transition hover:bg-[#232327]"
                 >
                   <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h10M4 18h6" /></svg>
@@ -2122,10 +2156,11 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
                 {eSortOpen && (
                   <>
                     <div className="fixed inset-0 z-[40]" onClick={() => setSortOpen(false)} />
-                    <div className="absolute right-0 top-[46px] z-[50] w-[230px] overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                    <div ref={sortPop} role="menu" aria-label="Sort" aria-orientation="vertical" className="absolute right-0 top-[46px] z-[50] w-[230px] overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
                       {LIB_SORTS.map((s) => (
                         <button
                           key={s.id}
+                          role="menuitem"
                           onClick={() => { setSort(s.id); setSortOpen(false) }}
                           className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (eSort === s.id ? 'font-semibold text-white' : 'text-[#c7c9cb]')}
                         >
@@ -2258,6 +2293,8 @@ function PlayButton({ onClick, size = 48, title = 'Launch game' }) {
 // (mousedown fires for both buttons, before contextmenu — so it never races the
 // open), scroll, or Escape.
 function ContextMenu({ x, y, items, onClose }) {
+  const menuRef = useRef(null)
+  const [openSub, setOpenSub] = useState(null) // index of the submenu opened via keyboard
   useEffect(() => {
     const close = () => onClose()
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
@@ -2268,18 +2305,42 @@ function ContextMenu({ x, y, items, onClose }) {
       window.addEventListener('keydown', onKey)
       window.addEventListener('blur', close)
     }, 0)
+    // Move focus onto the first item so the menu is operable by keyboard the
+    // moment it opens (it can be opened from a card's "More" button).
+    const raf = requestAnimationFrame(() => { menuRef.current?.querySelector('[data-mi]')?.focus() })
     return () => {
       clearTimeout(id)
+      cancelAnimationFrame(raf)
       window.removeEventListener('mousedown', close)
       window.removeEventListener('scroll', close, true)
       window.removeEventListener('keydown', onKey)
       window.removeEventListener('blur', close)
     }
   }, [onClose])
+  // Roving Up/Down/Home/End across the top-level items (data-mi).
+  const onMenuKeyDown = (e) => {
+    if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return
+    const els = [...(menuRef.current?.querySelectorAll('[data-mi]') || [])]
+    if (!els.length) return
+    e.preventDefault()
+    const i = els.indexOf(document.activeElement)
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? els.length - 1
+      : (i + (e.key === 'ArrowDown' ? 1 : -1) + els.length) % els.length
+    els[next]?.focus()
+  }
+  // Open submenu i and move focus into its first option.
+  const enterSub = (i) => {
+    setOpenSub(i)
+    requestAnimationFrame(() => menuRef.current?.querySelector(`[data-sub="${i}"] [role="menuitem"]`)?.focus())
+  }
   const left = Math.min(x, (typeof window !== 'undefined' ? window.innerWidth : 9999) - 220)
   const topY = Math.min(y, (typeof window !== 'undefined' ? window.innerHeight : 9999) - (items.length * 40 + 16))
   return (
     <div
+      ref={menuRef}
+      role="menu"
+      aria-orientation="vertical"
+      onKeyDown={onMenuKeyDown}
       className="fixed z-[100] w-[204px] rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]"
       style={{ top: Math.max(8, topY), left: Math.max(8, left) }}
       onMouseDown={(e) => e.stopPropagation()}
@@ -2306,17 +2367,48 @@ function ContextMenu({ x, y, items, onClose }) {
             )}
           </>
         )
-        // A submenu opens to the right on hover (Notification Settings, etc.).
+        // A submenu opens to the right — on hover (mouse) or via the keyboard
+        // (ArrowRight / Enter to open + enter it, ArrowLeft to step back out).
         if (it.submenu) {
+          const open = openSub === i
           return (
-            <div key={i} className="group/sub relative">
-              <button className={cls}>{content}</button>
-              <div className="invisible absolute left-full top-[-6px] z-[71] pl-[6px] opacity-0 transition group-hover/sub:visible group-hover/sub:opacity-100">
-                <div className="w-[190px] rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+            <div
+              key={i}
+              className="group/sub relative"
+              onMouseEnter={() => setOpenSub(i)}
+              onMouseLeave={() => setOpenSub((v) => (v === i ? null : v))}
+            >
+              <button
+                data-mi
+                role="menuitem"
+                aria-haspopup="menu"
+                aria-expanded={open}
+                className={cls}
+                onClick={() => (open ? setOpenSub(null) : enterSub(i))}
+                onKeyDown={(e) => {
+                  if (e.key === 'ArrowRight' || e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enterSub(i) }
+                  else if (e.key === 'ArrowLeft') { e.preventDefault(); setOpenSub(null) }
+                }}
+              >{content}</button>
+              <div
+                data-sub={i}
+                className={(open ? 'visible opacity-100 ' : 'invisible opacity-0 ') + 'absolute left-full top-[-6px] z-[71] pl-[6px] transition group-hover/sub:visible group-hover/sub:opacity-100'}
+              >
+                <div role="menu" aria-orientation="vertical" className="w-[190px] rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
                   {it.submenu.map((opt, j) => (
                     <button
                       key={j}
+                      role="menuitem"
                       onClick={opt.onClick}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowLeft') { e.preventDefault(); setOpenSub(null); menuRef.current?.querySelectorAll('[data-mi]')[i]?.focus() }
+                        else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                          e.preventDefault(); e.stopPropagation()
+                          const opts = [...e.currentTarget.parentElement.querySelectorAll('[role="menuitem"]')]
+                          const k = opts.indexOf(e.currentTarget)
+                          opts[(k + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length]?.focus()
+                        }
+                      }}
                       className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] text-[#dbdee1] transition hover:bg-white/5"
                     >
                       <span className="flex size-[16px] shrink-0 items-center justify-center text-[#3fbf3f]">
@@ -2330,7 +2422,7 @@ function ContextMenu({ x, y, items, onClose }) {
             </div>
           )
         }
-        return <button key={i} onClick={it.onClick} className={cls}>{content}</button>
+        return <button key={i} data-mi role="menuitem" onClick={it.onClick} className={cls}>{content}</button>
       })}
     </div>
   )
@@ -2401,11 +2493,100 @@ function useEscClose(onClose) {
   }, [onClose])
 }
 
+// Everything the browser will land Tab focus on. Used by the dialog focus trap
+// and by the roving-tabindex widgets to find their members.
+const FOCUSABLE_SEL =
+  'a[href],area[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),[tabindex]:not([tabindex="-1"])'
+// Visible focusables only — a display:none control (e.g. a not-yet-revealed
+// hover button) must never be a trap boundary.
+function focusablesIn(node) {
+  if (!node) return []
+  return [...node.querySelectorAll(FOCUSABLE_SEL)].filter(
+    (el) => el.offsetWidth > 0 || el.offsetHeight > 0 || el === document.activeElement,
+  )
+}
+
+// Turns any overlay container into an accessible modal dialog:
+//   • labels it role="dialog" aria-modal (spread {...dlg.props} on the panel),
+//   • moves focus inside on open (to [data-autofocus], else the first control),
+//   • traps Tab within it so focus can't wander to the page behind,
+//   • closes on Escape,
+//   • restores focus to whatever was focused before it opened (the trigger).
+// Attach the returned ref to the dialog PANEL (not the backdrop).
+function useDialog(onClose, { label, labelledBy } = {}) {
+  const ref = useRef(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  useEffect(() => {
+    const node = ref.current
+    const restore = document.activeElement
+    // Focus the requested element, else the first control, else the panel.
+    const target = node?.querySelector('[data-autofocus]') || focusablesIn(node)[0] || node
+    target?.focus?.()
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); onCloseRef.current?.(); return }
+      if (e.key !== 'Tab' || !node) return
+      const els = focusablesIn(node)
+      if (!els.length) { e.preventDefault(); node.focus(); return }
+      const first = els[0]
+      const last = els[els.length - 1]
+      const idx = els.indexOf(document.activeElement)
+      // idx === -1 means focus is on the dialog container (or something outside
+      // the focusable list): Tab → first, Shift+Tab → last. Otherwise wrap the ends.
+      if (e.shiftKey && idx <= 0) { e.preventDefault(); last.focus() }
+      else if (!e.shiftKey && (idx === -1 || idx === els.length - 1)) { e.preventDefault(); first.focus() }
+    }
+    node?.addEventListener('keydown', onKey)
+    return () => {
+      node?.removeEventListener('keydown', onKey)
+      // Return focus to the trigger, if it's still in the document.
+      if (restore && restore.focus && document.contains(restore)) restore.focus()
+    }
+  }, [])
+  const props = { role: 'dialog', 'aria-modal': true, tabIndex: -1 }
+  if (label) props['aria-label'] = label
+  if (labelledBy) props['aria-labelledby'] = labelledBy
+  return { ref, props }
+}
+
+// Keyboard behavior for a toggle-button + popover panel (the filter / sort
+// dropdowns). Attach the returned ref to the PANEL. When it opens, focus moves
+// to the first option; Escape closes it and returns focus to the toggle; for
+// `menu` popovers Up/Down rove the options. Tab still works throughout.
+function usePopover(open, onClose, { menu = false } = {}) {
+  const ref = useRef(null)
+  const triggerRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+  useEffect(() => {
+    if (!open) return
+    triggerRef.current = document.activeElement
+    const node = ref.current
+    const raf = requestAnimationFrame(() => {
+      const first = node?.querySelector(menu ? '[role="menuitem"]' : FOCUSABLE_SEL)
+      first?.focus?.()
+    })
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.stopPropagation(); onCloseRef.current?.(); triggerRef.current?.focus?.(); return }
+      if (menu && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+        const els = [...(node?.querySelectorAll('[role="menuitem"]') || [])]
+        if (!els.length) return
+        e.preventDefault()
+        const i = els.indexOf(document.activeElement)
+        els[(i + (e.key === 'ArrowDown' ? 1 : -1) + els.length) % els.length]?.focus?.()
+      }
+    }
+    node?.addEventListener('keydown', onKey)
+    return () => { cancelAnimationFrame(raf); node?.removeEventListener('keydown', onKey) }
+  }, [open, menu])
+  return ref
+}
+
 // Pick a cover for a Mix — one of the thumbnail options, an uploaded image, or
 // the default collage. Whatever's chosen is saved to the shared Mix, so it
 // updates for every member.
 function CoverPickerModal({ blend, games, onClose, onSave }) {
-  useEscClose(onClose)
+  const dlg = useDialog(onClose, { label: 'Change cover image' })
   const fileRef = useRef(null)
   const onFile = (e) => {
     const file = e.target.files?.[0]
@@ -2425,7 +2606,7 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
   )
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-[460px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[460px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <h3 className="text-[20px] font-bold text-white">Change cover image</h3>
         <p className="mt-[4px] text-[14px] text-[#b5bac1]">Pick a cover for <span className="font-semibold text-white">{blend.name}</span>.</p>
         <div className="mt-[18px] grid grid-cols-3 gap-[12px]">
@@ -2460,15 +2641,16 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
 
 function RenameMixModal({ blend, onClose, onSave }) {
   const [name, setName] = useState(blend.name)
-  useEscClose(onClose)
+  const dlg = useDialog(onClose, { label: 'Rename Mix' })
   const save = () => { const n = name.trim(); if (n) onSave({ name: n }); onClose() }
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <h3 className="text-[20px] font-bold text-white">Rename Mix</h3>
         <input
           value={name}
           autoFocus
+          data-autofocus
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') save() }}
           className="mt-[16px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[10px] text-[15px] text-white focus:outline-none"
@@ -2484,14 +2666,14 @@ function RenameMixModal({ blend, onClose, onSave }) {
 
 function InviteMembersModal({ blend, onClose, onSave }) {
   const [sel, setSel] = useState(() => new Set(blend.members))
-  useEscClose(onClose)
+  const dlg = useDialog(onClose, { label: 'Manage members' })
   const toggle = (c) => setSel((s) => { const n = new Set(s); n.has(c) ? n.delete(c) : n.add(c); return n })
   // People who've been sent an invite but haven't accepted/declined yet.
   const invited = new Set(blend.invited || [])
   const isMember = (c) => (blend.members || []).includes(c)
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <h3 className="text-[20px] font-bold text-white">Manage members</h3>
         <p className="mt-[4px] text-[14px] text-[#b5bac1]">Choose who’s in <span className="font-semibold text-white">{blend.name}</span>.</p>
         <div className="mt-[16px] flex flex-col gap-[2px]">
@@ -2535,7 +2717,7 @@ const SHARE_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="
 // The full group PLAYlist (Figma 863:3952) — every game in the Mix's shared
 // list as a numbered, drag-to-rank grid, plus a search to add or remove games.
 function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
-  useEscClose(onClose)
+  const dlg = useDialog(onClose, { label: 'Your Mix PLAYlist' })
   const [q, setQ] = useState('')
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
@@ -2553,7 +2735,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
     .slice(0, 6)
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[600px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[600px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
             <h3 className="text-[20px] font-bold text-white">Your Mix PLAYlist</h3>
@@ -2611,7 +2793,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
                   <div className="relative aspect-video bg-[#1a1a1d]">
                     <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
                     <span className="absolute left-[6px] top-[6px] flex size-[22px] items-center justify-center rounded-[6px] bg-black text-[13px] font-bold text-white">{i + 1}</span>
-                    <button onClick={() => onToggle(g.key, false)} aria-label="Remove from PLAYlist" className="absolute right-[6px] top-[6px] flex size-[22px] items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition hover:bg-[#f0505b] group-hover:opacity-100">
+                    <button onClick={() => onToggle(g.key, false)} aria-label="Remove from PLAYlist" className="absolute right-[6px] top-[6px] flex size-[22px] items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition hover:bg-[#f0505b] group-hover:opacity-100 focus-visible:opacity-100">
                       <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                     </button>
                   </div>
@@ -2833,7 +3015,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                 onClick={(e) => { e.stopPropagation(); setCoverPicker(true) }}
                 title="Change cover art"
                 aria-label="Change cover art"
-                className="absolute bottom-[8px] right-[8px] flex size-[34px] items-center justify-center rounded-full bg-black/70 text-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.5)] backdrop-blur transition hover:bg-black/85 group-hover/cover:opacity-100"
+                className="absolute bottom-[8px] right-[8px] flex size-[34px] items-center justify-center rounded-full bg-black/70 text-white opacity-0 shadow-[0_2px_8px_rgba(0,0,0,0.5)] backdrop-blur transition hover:bg-black/85 group-hover/cover:opacity-100 focus-visible:opacity-100"
               >
                 <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" fill="currentColor" stroke="none" /><path d="M5 18l5-5 4 4 2-2 3 3" /></svg>
               </button>
@@ -2940,6 +3122,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                         onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
                         onClick={() => onOpen?.(g.title)}
                         onContextMenu={(e) => openMenu(e, g.title)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Open ${g.title}`}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
                         className={'cursor-pointer select-none rounded-[14px] p-[6px] ring-2 transition ' + (dragIdx === i ? 'opacity-0 ' : '') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')}
                       >
                         <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#1a1a1d]">
@@ -2963,6 +3149,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                         onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
                         onClick={() => onOpen?.(g.title)}
                         onContextMenu={(e) => openMenu(e, g.title)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Open ${g.title}`}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
                         className={'group flex cursor-pointer select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (dragIdx === i ? 'opacity-0 ' : '') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')}
                       >
                         <span className="flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">{i + 1}</span>
@@ -3066,7 +3256,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
 // opens a game's detail page on select (Enter picks the top result).
 function SearchModal({ onClose, onOpen }) {
   const [q, setQ] = useState('')
-  useEscClose(onClose)
+  const dlg = useDialog(onClose, { label: 'Search games' })
   const query = q.trim().toLowerCase()
   const results = Object.entries(CATALOG)
     .filter(([, v]) => !query || v.title.toLowerCase().includes(query) || (v.genre || '').toLowerCase().includes(query))
@@ -3074,11 +3264,12 @@ function SearchModal({ onClose, onOpen }) {
   const pick = (title) => { onOpen(title); onClose() }
   return (
     <div className="fixed inset-0 z-[95] flex items-start justify-center bg-black/60 p-4 pt-[12vh]" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-[560px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[560px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-center gap-[12px] border-b border-black/20 px-[18px] py-[14px]">
           <svg viewBox="0 0 24 24" className="size-[20px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
           <input
             autoFocus
+            data-autofocus
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter' && results[0]) pick(results[0][1].title) }}
@@ -3115,7 +3306,7 @@ function WhosOnModal({ onClose, onCreated }) {
   // friends aren't yet and get a Gift button.
   const sorted = friends.filter((d) => !query || capName(d.name).toLowerCase().includes(query))
   const offArcade = OFF_ARCADE_FRIENDS.filter((d) => !query || capName(d.name).toLowerCase().includes(query))
-  useEscClose(onClose)
+  const dlg = useDialog(onClose, { label: 'Who’s on ARCADE' })
   const [dupMix, setDupMix] = useState(null)
   const toggle = (n) => { setDupMix(null); setSel((s) => ({ ...s, [n]: !s[n] })) }
   // Both on-Arcade friends and not-yet-on-Arcade friends can be selected into a
@@ -3149,7 +3340,7 @@ function WhosOnModal({ onClose, onCreated }) {
   }
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
             <p className="text-[22px] font-bold text-white">Who’s on ARCADE</p>
@@ -3162,7 +3353,7 @@ function WhosOnModal({ onClose, onCreated }) {
         <div className="px-[24px] pt-[16px]">
           <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
             <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+            <input autoFocus data-autofocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
           </div>
         </div>
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[10px]">
@@ -3195,7 +3386,16 @@ function WhosOnModal({ onClose, onCreated }) {
           {offArcade.map((f) => {
             const on = !!sel[f.name]
             return (
-              <div key={f.name} onClick={() => toggle(f.name)} className="flex w-full cursor-pointer items-center gap-[12px] py-[8px]">
+              <div
+                key={f.name}
+                onClick={() => toggle(f.name)}
+                role="button"
+                tabIndex={0}
+                aria-pressed={on}
+                aria-label={`${capName(f.name)} — ${on ? 'selected' : 'not selected'}`}
+                onKeyDown={(e) => { if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); toggle(f.name) } }}
+                className="flex w-full cursor-pointer items-center gap-[12px] rounded-[8px] py-[8px]"
+              >
                 <span className="relative shrink-0">
                   <Avatar color={f.color} size={40} />
                   <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: '#80848e' }} />
@@ -3247,14 +3447,14 @@ function GiftArcadeModal({ onClose }) {
   const [sel, setSel] = useState({})
   const [q, setQ] = useState('')
   const [sent, setSent] = useState(false)
-  useEscClose(onClose)
+  const dlg = useDialog(onClose, { label: 'Gift Nitro' })
   const query = q.trim().toLowerCase()
   const list = OFF_ARCADE_FRIENDS.filter((f) => !query || capName(f.name).toLowerCase().includes(query))
   const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
   const chosen = OFF_ARCADE_FRIENDS.filter((f) => sel[f.name])
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
             <p className="text-[22px] font-bold text-white">Gift Nitro</p>
@@ -3267,7 +3467,7 @@ function GiftArcadeModal({ onClose }) {
         <div className="px-[24px] pt-[16px]">
           <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
             <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-            <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+            <input autoFocus data-autofocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
           </div>
         </div>
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] pb-[16px] pt-[10px]">
@@ -3312,11 +3512,7 @@ function CreateBlendModal({ onClose, onCreated }) {
   const hiddenP = useHidden()
   const friends = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const [sel, setSel] = useState({})
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dlg = useDialog(onClose, { label: 'Create a Mix' })
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
   const [nameOverride, setNameOverride] = useState(null)
   const [dupMix, setDupMix] = useState(null)
@@ -3354,6 +3550,8 @@ function CreateBlendModal({ onClose, onCreated }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
+        ref={dlg.ref}
+        {...dlg.props}
         onClick={(e) => e.stopPropagation()}
         className="w-[480px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
       >
@@ -3453,11 +3651,7 @@ function CreateBlendModal({ onClose, onCreated }) {
 function WishlistModal({ game, onClose }) {
   const { blends, setBlends } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dlg = useDialog(onClose, { label: 'Add to Mix' })
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
     const wishlist = has ? b.wishlist.filter((x) => x !== key) : [...(b.wishlist || []), key]
@@ -3465,7 +3659,7 @@ function WishlistModal({ game, onClose }) {
   }
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="p-[24px]">
           <div className="flex items-start justify-between gap-[12px]">
             <div>
@@ -3529,12 +3723,7 @@ function PreferenceModal({ blend, onClose, onContinue }) {
   const [input, setInput] = useState('')
   const MAX = 3
   const full = mine.length >= MAX
-
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dlg = useDialog(onClose, { label: 'Add Your Preferences' })
 
   // Flatten all members' prefs (only this blend's members), newest members last.
   const groupSoFar = blend.members
@@ -3558,6 +3747,8 @@ function PreferenceModal({ blend, onClose, onContinue }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div
+        ref={dlg.ref}
+        {...dlg.props}
         onClick={(e) => e.stopPropagation()}
         className="w-[520px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
       >
@@ -4498,11 +4689,9 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeSpin?.id])
 
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape' && phase !== 'spinning') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose, phase])
+  // Escape closes the wheel — but never mid-spin (the spin must resolve first),
+  // matching the disabled backdrop-click below. Focus trap + return come with it.
+  const dlg = useDialog(() => { if (phase !== 'spinning') onClose() }, { label: 'Spin the wheel' })
 
   function doSpin() {
     if (!canSpin) return
@@ -4526,7 +4715,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/70 p-4" onClick={phase === 'spinning' ? undefined : onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="relative flex max-h-[92vh] w-[980px] max-w-full flex-col overflow-hidden rounded-[20px] border border-[#1c1d21] bg-[#0c0c0e] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="relative flex max-h-[92vh] w-[980px] max-w-full flex-col overflow-hidden rounded-[20px] border border-[#1c1d21] bg-[#0c0c0e] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))', boxShadow: '0 0 18px rgba(61,191,30,0.8)' }} />
         <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(90% 60% at 28% 0%, rgba(45,160,0,0.18), transparent 60%)' }} />
         <button onClick={onClose} aria-label="Close" className="absolute right-[16px] top-[16px] z-10 text-[#9a9ba3] transition hover:text-white">
@@ -4906,11 +5095,7 @@ function WhosPlayingModal({ game, onClose, onStart }) {
   const elsewhere = others.filter((d) => !online.includes(d.name))
   const [sel, setSel] = useState(() => Object.fromEntries(inCall.map((d) => [d.name, true])))
   const [q, setQ] = useState('')
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dlg = useDialog(onClose, { label: 'Who’s playing?' })
   const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
   const selectAll = () => setSel((s) => ({ ...s, ...Object.fromEntries(inCall.map((d) => [d.name, true])) }))
   const chosen = Object.keys(sel).filter((n) => sel[n])
@@ -4931,7 +5116,7 @@ function WhosPlayingModal({ game, onClose, onStart }) {
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
             <p className="text-[22px] font-bold text-white">Who’s playing?</p>
@@ -5309,11 +5494,7 @@ function ShareModal({ game, initialFriend, onClose }) {
   const [selG, setSelG] = useState({})
   const [message, setMessage] = useState('')
   const [mode, setMode] = useState('individual') // when 2+ friends and no group
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dlg = useDialog(onClose, { label: 'Forward to' })
 
   const chosenFriends = friends.filter((f) => selF[f.name])
   const chosenGroups = myGroups.filter((g) => selG[g.id])
@@ -5352,7 +5533,7 @@ function ShareModal({ game, initialFriend, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="p-[24px] pb-[12px]">
           <div className="flex items-start justify-between gap-[12px]">
             <div>
@@ -5507,11 +5688,7 @@ function InviteMessage({ msg, mine, onRespond }) {
 function QuickShareModal({ game, to, hrs, onClose }) {
   const [message, setMessage] = useState('')
   const [sent, setSent] = useState(false)
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dlg = useDialog(onClose, { label: `Message ${capName(to)}` })
   const cover = CATALOG[KEY_OF_TITLE[game] || game]?.image
   const send = () => {
     putDM(to, { from: SELF_NAME, to, kind: 'game', game, text: message.trim(), ts: Date.now() })
@@ -5520,7 +5697,7 @@ function QuickShareModal({ game, to, hrs, onClose }) {
   }
   return (
     <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="w-[440px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[440px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px]">
           <div className="flex items-center gap-[12px]">
             <Avatar color={COLOR_OF[to] || D.raised} size={44} />
@@ -6204,6 +6381,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
   }, [filter, filterOpen, expanded, page, writing, added])
   const eFilter = IS_SPECTATE ? (rUI?.filter || 'All') : filter
   const eFilterOpen = IS_SPECTATE ? !!rUI?.filterOpen : filterOpen
+  const filterPop = usePopover(eFilterOpen, () => setFilterOpen(false), { menu: true })
   const eExpanded = IS_SPECTATE ? !!rUI?.expanded : expanded
   const ePage = IS_SPECTATE ? (rUI?.page || 1) : page
   const eWriting = IS_SPECTATE ? !!rUI?.writing : writing
@@ -6245,10 +6423,11 @@ function ReviewsSection({ reviews = REVIEWS }) {
           <button
             onClick={() => setFilterOpen((v) => !v)}
             aria-label="Filter reviews"
+            aria-haspopup="menu"
             aria-expanded={eFilterOpen}
             className="group relative flex items-center justify-center text-[#9a9ba3] transition hover:text-white"
           >
-            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/80 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100">
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/80 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover:opacity-100 group-focus-within:opacity-100">
               Filter
             </span>
             <svg viewBox="0 0 30 30" className="size-[24px]" fill="currentColor">
@@ -6259,10 +6438,11 @@ function ReviewsSection({ reviews = REVIEWS }) {
           {eFilterOpen && (
             <>
               <div className="fixed inset-0 z-[40]" onClick={() => setFilterOpen(false)} />
-              <div className="absolute right-0 top-[34px] z-[50] w-[184px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+              <div ref={filterPop} role="menu" aria-label="Filter reviews" aria-orientation="vertical" className="absolute right-0 top-[34px] z-[50] w-[184px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
                 {FILTERS.map((f) => (
                   <button
                     key={f}
+                    role="menuitem"
                     onClick={() => pickFilter(f)}
                     className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (eFilter === f ? 'text-[#7aff46]' : 'text-[#dbdee1]')}
                   >
@@ -6358,11 +6538,7 @@ function WriteReviewModal({ onClose, onSubmit }) {
   const tagMatches = REVIEW_TAG_OPTIONS.filter((t) => !tags.includes(t) && (!tq || t.toLowerCase().includes(tq)))
   // Let the reviewer coin a tag that isn't in the preset list.
   const canCoin = tq && !REVIEW_TAG_OPTIONS.some((t) => t.toLowerCase() === tq) && !tags.some((t) => t.toLowerCase() === tq)
-  useEffect(() => {
-    const onKey = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [onClose])
+  const dlg = useDialog(onClose, { label: 'Write a review' })
   const canPost = title.trim() && body.trim()
   const post = () => {
     if (!canPost) return
@@ -6381,7 +6557,7 @@ function WriteReviewModal({ onClose, onSubmit }) {
   )
   return (
     <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div onClick={(e) => e.stopPropagation()} className="flex w-[520px] max-w-full flex-col gap-[18px] rounded-[16px] border border-[#1c1d21] bg-[#1c1c1f] p-[24px] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex w-[520px] max-w-full flex-col gap-[18px] rounded-[16px] border border-[#1c1d21] bg-[#1c1c1f] p-[24px] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
         <div className="flex items-center justify-between">
           <h3 className="text-[22px] font-bold text-white">Write a review</h3>
           <button onClick={onClose} aria-label="Close" className="text-[#9a9ba3] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
@@ -6538,14 +6714,14 @@ function HeroCarousel({ slides, children }) {
             <button
               onClick={() => go(-1)}
               aria-label="Previous"
-              className="absolute left-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
+              className="absolute left-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100 focus-visible:opacity-100"
             >
               <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
             </button>
             <button
               onClick={() => go(1)}
               aria-label="Next"
-              className="absolute right-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100"
+              className="absolute right-[10px] top-1/2 flex size-[38px] -translate-y-1/2 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition hover:bg-black/70 group-hover:opacity-100 focus-visible:opacity-100"
             >
               <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
             </button>
@@ -6588,21 +6764,25 @@ function HeroCarousel({ slides, children }) {
 function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs, reviewed }) {
   const name = NAME[color]
   const spAv = useContext(SpectateAvCtx)
+  // Keyboard parity: focusing the avatar shows its name tooltip like hover does.
+  const [kbFocus, setKbFocus] = useState(false)
   // The user (green) and any unmapped color aren't share targets.
   if (color === SELF || !name) {
     return <Avatar color={color} size={size} style={{ marginRight, boxShadow: '0 0 0 2px #0c0c0e' }} />
   }
-  const reveal = !!spAv && spAv === avKey(gameTitle, capName(name))
+  const reveal = kbFocus || (!!spAv && spAv === avKey(gameTitle, capName(name)))
   return (
     <button
       type="button"
       data-av={avKey(gameTitle, capName(name))}
       onClick={(e) => { e.stopPropagation(); onShare?.({ title: gameTitle, to: name }) }}
+      onFocus={() => setKbFocus(true)}
+      onBlur={() => setKbFocus(false)}
       title={`Share ${gameTitle} with ${capName(name)}`}
       className="group/av relative shrink-0 rounded-full transition hover:z-10 hover:-translate-y-[2px]"
       style={{ marginRight, zIndex: reveal ? 10 : undefined }}
     >
-      <span className={'pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-20 inline-flex -translate-x-1/2 items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/85 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100' + (reveal ? ' !opacity-100' : '')}>
+      <span className={'pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-20 inline-flex -translate-x-1/2 items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/85 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100 group-focus-within/av:opacity-100' + (reveal ? ' !opacity-100' : '')}>
         <span>{capName(name)}{hrs != null ? ` · ${hrs} hrs` : ''}</span>
         {/* Green thumbs-up when this friend has left a review of the game —
             mirrors the recommends badge on the cinematic cards' ShareAvatars. */}
@@ -6613,7 +6793,7 @@ function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs, revie
           </>
         )}
       </span>
-      <Avatar color={color} size={size} className="rounded-full ring-0 transition group-hover/av:ring-2 group-hover/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
+      <Avatar color={color} size={size} className="rounded-full ring-0 transition group-hover/av:ring-2 group-hover/av:ring-[#5765f2] group-focus-within/av:ring-2 group-focus-within/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
     </button>
   )
 }
@@ -7117,6 +7297,27 @@ export default function Landing() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blendId, detailKey, dmName, decide, mixesTab, libraryTab])
+  // ── Per-screen landing focus ─────────────────────────────────────────────
+  // On every page switch move keyboard focus to the new page's main heading, so
+  // screen readers announce the screen and keyboard users start at the top and
+  // Tab down. We skip the initial mount (don't yank focus on first load) and any
+  // time a modal owns focus (dialogs manage their own).
+  const mainRef = useRef(null)
+  const navFirstRun = useRef(true)
+  useEffect(() => {
+    if (IS_SPECTATE) return
+    if (navFirstRun.current) { navFirstRun.current = false; return }
+    if (typeof document !== 'undefined' && document.querySelector('[role="dialog"]')) return
+    const el = mainRef.current
+    if (!el) return
+    // The page renders as the last child (after the Sidebar) — scope the heading
+    // search there so we don't land on a sidebar heading.
+    const pageEl = el.lastElementChild || el
+    const target = pageEl.querySelector('[data-page-heading], h1, h2') || pageEl
+    if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1')
+    target.focus()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [blendId, detailKey, dmName, decide, mixesTab, libraryTab])
   const applyView = (v) => {
     applying.current = true
     setBlendId(v.blendId ?? null)
@@ -7277,7 +7478,7 @@ export default function Landing() {
         {/* The menu (sidebar) + main content — flush to the window, with only the
             top-left corner rounded and a gray border on the top + left edges
             (against the server rail). */}
-        <div className="flex min-h-0 flex-1 overflow-hidden rounded-tl-[10px] border-l border-t border-white/10">
+        <div ref={mainRef} className="flex min-h-0 flex-1 overflow-hidden rounded-tl-[10px] border-l border-t border-white/10">
         <Sidebar online={room.online} onReset={room.resetRoom} activeDm={eDmName} onOpenDm={openDm} onOpenBlend={openBlend} onHome={goHome} reads={reads} />
         {dmFriend ? (
           <DMPage
