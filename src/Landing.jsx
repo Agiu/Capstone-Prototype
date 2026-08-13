@@ -3798,7 +3798,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
 
               {/* Recommended carousel — extra top gap separates it from the
                   PlayList grid above. */}
-              <section className="mt-[148px]">
+              <section className="mt-[200px]">
                 <ShelfRow title="Recommended for this PlayList" padTop={30}>
                   {blend.games.map((k) => (
                     <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={!!eHover && eHover === (CATALOG[k]?.title || STARTER_BY_KEY[k]?.title)} />
@@ -6151,47 +6151,46 @@ function WheelNotification({ spin, onOpenWheel, onStartParty, onRestart, onDismi
   const iSpun = by === SELF_NAME
   const cover = picked && (CATALOG[picked.key]?.image || STARTER_BY_KEY[picked.key]?.image)
   return (
-    <div className="pointer-events-auto fixed right-[24px] top-[24px] z-[190] w-[380px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, rgba(155,240,11,0), #9BF00B 15%, #9BF00B 85%, rgba(155,240,11,0))' }} />
-      <div className="p-[16px]">
-        <div className="flex items-start justify-between gap-[10px]">
-          <div className="flex items-center gap-[9px]">
-            <Avatar color={COLOR_OF[by] || '#4a4d55'} size={30} />
-            <p className="text-[14px] leading-snug text-white">
-              <span className="font-semibold">{iSpun ? 'You' : capName(by)}</span>{spinning ? (iSpun ? ' are spinning the wheel…' : ' is spinning the wheel…') : ' spun the wheel'}
-            </p>
+    <div className="pointer-events-auto fixed right-[24px] top-[24px] z-[190] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+      <div className="flex">
+        {!spinning && (cover ? <img alt="" src={cover} className="w-[116px] shrink-0 self-stretch object-cover" /> : <span className="w-[116px] shrink-0 self-stretch bg-[#2b2d31]" />)}
+        <div className="flex min-w-0 flex-1 flex-col gap-[12px] p-[16px]">
+          <div className="flex items-start justify-between gap-[10px]">
+            <div className="flex items-center gap-[9px]">
+              <Avatar color={COLOR_OF[by] || '#4a4d55'} size={30} />
+              <p className="text-[14px] leading-snug text-white">
+                <span className="font-semibold">{iSpun ? 'You' : capName(by)}</span>{spinning ? (iSpun ? ' are spinning the wheel…' : ' is spinning the wheel…') : ' spun the wheel'}
+              </p>
+            </div>
+            <button onClick={onDismiss} aria-label="Dismiss" className="mt-[1px] shrink-0 text-[#9a9ba3] transition hover:text-white">
+              <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
           </div>
-          <button onClick={onDismiss} aria-label="Dismiss" className="mt-[1px] shrink-0 text-[#9a9ba3] transition hover:text-white">
-            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          </button>
-        </div>
-        {spinning ? (
-          <div className="mt-[12px] flex items-center gap-[10px] text-[#9a9ba3]">
-            <svg viewBox="0 0 24 24" className="size-[18px] animate-spin text-[#9BF00B]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6" /></svg>
-            <span className="text-[14px]">Landing on a game…</span>
-          </div>
-        ) : picked ? (
-          <>
-            <div className="mt-[12px] flex items-center gap-[12px]">
-              {cover ? <img alt="" src={cover} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" /> : <span className="h-[46px] w-[82px] shrink-0 rounded-[6px] bg-[#2b2d31]" />}
-              <div className="min-w-0">
+          {spinning ? (
+            <div className="flex items-center gap-[10px] text-[#9a9ba3]">
+              <svg viewBox="0 0 24 24" className="size-[18px] animate-spin text-[#9BF00B]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6" /></svg>
+              <span className="text-[14px]">Landing on a game…</span>
+            </div>
+          ) : picked ? (
+            <>
+              <div className="flex flex-col gap-[2px]">
                 <p className="text-[12px] font-semibold text-[#9BF00B]">The wheel picked</p>
-                <p className="truncate text-[17px] font-bold leading-tight text-white">{picked.title}</p>
+                <p className="truncate text-[18px] font-bold leading-tight text-white">{picked.title}</p>
               </div>
-            </div>
-            <div className="mt-[12px] flex flex-wrap gap-[8px]">
-              <button onClick={() => onStartParty(picked)} className="flex items-center gap-[7px] rounded-[8px] bg-[#9BF00B] px-[14px] py-[8px] text-[13px] font-bold text-[#0c0c0e] transition hover:brightness-110">
-                <PartyGlyph size={15} />
-                Start a party
-              </button>
-              <button onClick={onOpenWheel} className="rounded-[8px] bg-[#2b2d31] px-[14px] py-[8px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#34363c]">Go to wheel</button>
-              <button onClick={onRestart} className="flex items-center gap-[6px] rounded-[8px] bg-[#2b2d31] px-[14px] py-[8px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#34363c]">
-                <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
-                Restart
-              </button>
-            </div>
-          </>
-        ) : null}
+              <div className="flex flex-wrap gap-[8px]">
+                <button onClick={() => onStartParty(picked)} className="flex items-center gap-[7px] rounded-[8px] bg-[#9BF00B] px-[14px] py-[8px] text-[13px] font-bold text-[#0c0c0e] transition hover:brightness-110">
+                  <PartyGlyph size={15} />
+                  Start a party
+                </button>
+                <button onClick={onOpenWheel} className="rounded-[8px] bg-[#3a3c42] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-[#44464d]">Go to wheel</button>
+                <button onClick={onRestart} className="flex items-center gap-[6px] rounded-[8px] bg-[#3a3c42] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-[#44464d]">
+                  <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
+                  Restart
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
       </div>
     </div>
   )
