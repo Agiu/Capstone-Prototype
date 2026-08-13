@@ -4284,20 +4284,13 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
   const { blends, setBlends } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
   const dlg = useDialog(onClose, { label: 'Add to PlayList' })
-  // Open centered on the clicked game card (falls back to the pointer, then the
-  // screen center). Frozen once on open so toggling playlists inside doesn't move
-  // it (each click updates LAST_POINTER, which must not re-anchor the modal).
-  const W = 380, H = 300
+  // A compact context-menu-style popover anchored at the click point (frozen on
+  // open so toggling a playlist inside never re-anchors it).
+  const W = 288, H = 340
   const [pos] = useState(() => {
-    if (typeof window === 'undefined') return null
+    if (typeof window === 'undefined' || LAST_POINTER.x == null) return null
     const vw = window.innerWidth, vh = window.innerHeight
-    if (LAST_POINTER.cardX != null) {
-      const left = Math.min(Math.max(LAST_POINTER.cardX - W / 2, 12), vw - W - 12)
-      const top = Math.min(Math.max(LAST_POINTER.cardY - H / 2, 12), vh - H - 12)
-      return { left, top }
-    }
-    if (LAST_POINTER.x == null) return null
-    return { left: Math.min(Math.max(LAST_POINTER.x - 40, 12), vw - W - 12), top: Math.min(Math.max(LAST_POINTER.y - 20, 12), vh - 360) }
+    return { left: Math.min(Math.max(LAST_POINTER.x, 12), vw - W - 12), top: Math.min(Math.max(LAST_POINTER.y, 12), vh - H - 12) }
   })
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
@@ -4306,62 +4299,40 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
     if (has) delete addedBy[key]; else if (!addedBy[key]) addedBy[key] = SELF_NAME
     setBlends(blends.map((x) => (x.id === b.id ? { ...x, wishlist, addedBy } : x)))
   }
+  const mineBlends = blends.filter((b) => (b.members || []).includes(SELF))
   return (
-    <div className="fixed inset-0 z-50 bg-black/50" onClick={onClose}>
+    <div className="fixed inset-0 z-[100]" onClick={onClose}>
       <div
         ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()}
-        className="absolute w-[380px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
+        className="absolute w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]"
         style={pos ? { left: pos.left, top: pos.top } : { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
       >
-        <div className="p-[20px]">
-          <div className="flex items-start justify-between gap-[12px]">
-            <div>
-              <h3 className="text-[19px] font-bold text-white">Add to PlayList</h3>
-              <p className="mt-[3px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a PlayList.</p>
-            </div>
-            <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
-              <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-            </button>
-          </div>
-          <div className="no-scrollbar mt-[14px] flex max-h-[300px] flex-col gap-[2px] overflow-y-auto">
-            {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => {
-              const on = (b.wishlist || []).includes(key)
-              const by = b.addedBy?.[key]
-              const byOther = on && by && by !== SELF_NAME
-              return (
-                <button
-                  key={b.id}
-                  onClick={() => toggle(b)}
-                  className="flex items-center gap-[12px] rounded-[8px] p-[8px] text-left transition hover:bg-white/5"
-                >
-                  <span className="size-[40px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]" style={b.color ? { backgroundColor: b.color } : undefined}>
-                    {b.cover ? (
-                      <img alt="" src={b.cover} className="size-full object-cover" />
-                    ) : (
-                      <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">
-                        {mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}
-                      </span>
-                    )}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-[15px] font-semibold text-white">{b.name}</p>
-                    {/* If someone else already added this game, credit them here. */}
-                    {byOther ? (
-                      <span className="mt-[2px] inline-flex items-center gap-[5px] text-[12px] text-[#9BF00B]">
-                        <Avatar color={COLOR_OF[by] || '#4a4d55'} size={14} />
-                        {capName(by)} already added
-                      </span>
-                    ) : (
-                      <p className="text-[12px] text-[#80848e]">{b.members.length} member{b.members.length === 1 ? '' : 's'}</p>
-                    )}
-                  </div>
-                  <span className={'flex shrink-0 items-center rounded-[6px] px-[14px] py-[7px] text-[13px] font-semibold text-white transition ' + (on ? 'bg-[#248046]' : 'bg-[#4e5058]')}>
-                    {on ? '✓ Added' : '+ Add'}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+        <p className="px-[14px] pb-[6px] pt-[6px] text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Add “{game}” to</p>
+        <div className="no-scrollbar flex max-h-[300px] flex-col overflow-y-auto">
+          {mineBlends.map((b) => {
+            const on = (b.wishlist || []).includes(key)
+            const by = b.addedBy?.[key]
+            const byOther = on && by && by !== SELF_NAME
+            return (
+              <button key={b.id} onClick={() => toggle(b)} className="flex w-full items-center gap-[10px] px-[12px] py-[7px] text-left transition hover:bg-white/[0.06]">
+                <span className="size-[30px] shrink-0 overflow-hidden rounded-[6px] bg-[#1a1a1d]" style={b.color ? { backgroundColor: b.color } : undefined}>
+                  {b.cover ? <img alt="" src={b.cover} className="size-full object-cover" /> : <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">{mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}</span>}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[14px] font-medium text-[#dbdee1]">{b.name}</span>
+                  {byOther
+                    ? <span className="mt-[1px] flex items-center gap-[4px] text-[11px] text-[#9BF00B]"><Avatar color={COLOR_OF[by] || '#4a4d55'} size={12} />{capName(by)} added</span>
+                    : <span className="block text-[11px] text-[#80848e]">{b.members.length} member{b.members.length === 1 ? '' : 's'}</span>}
+                </span>
+                {on ? (
+                  <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#9BF00B]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                )}
+              </button>
+            )
+          })}
+          {mineBlends.length === 0 && <p className="px-[14px] py-[10px] text-[13px] text-[#7e7f87]">You’re not in any PlayLists yet.</p>}
         </div>
       </div>
     </div>
