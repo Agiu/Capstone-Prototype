@@ -1,5 +1,5 @@
 import { createContext, Fragment, useContext, useEffect, useId, useRef, useState } from 'react'
-import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, TagCtx, SpectateHoverCtx, SpectateAvCtx, avKey } from './RecCard.jsx'
+import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import {
   discordLogo,
@@ -419,7 +419,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
         {pinnedMixes.length > 0 && (
           <>
             <div className="px-[8px] pb-[4px]">
-              <span className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>Mixes</span>
+              <span className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>PlayLists</span>
             </div>
             <div className="flex flex-col gap-[2px] pb-[6px]">
               {pinnedMixes.map((b) => {
@@ -497,29 +497,33 @@ const details = {
 const shelfToday = [
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, owners: [AVATAR.blue, AVATAR.green, AVATAR.yellow] },
   { featured: true, avatars: [AVATAR.yellow], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, owners: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red] },
-  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol, free: true, owners: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red] },
+  { avatars: [AVATAR.green], label: 'PlayListed this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol, free: true, owners: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red] },
   { avatars: [AVATAR.red, AVATAR.yellow], label: 'played this for 4 hours', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, owners: [AVATAR.green, AVATAR.blue, AVATAR.yellow, AVATAR.red], shared: true },
   { avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, owners: [AVATAR.green, AVATAR.yellow] },
 ]
 
 const shelfFriends = [
-  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, owners: [AVATAR.green, AVATAR.red] },
+  { avatars: [AVATAR.green], label: 'PlayListed this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, owners: [AVATAR.green, AVATAR.red] },
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, owners: [AVATAR.blue, AVATAR.red], shared: true },
-  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-8', image: heroGangBeasts, video: { youTubeId: 'Lm3HDdLufmA', poster: heroGangBeasts }, details: details.gangBeasts, owners: [AVATAR.yellow, AVATAR.red] },
-  { avatars: [AVATAR.yellow], label: 'PLAYlisted this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: details.wildHearts, owners: [AVATAR.blue] },
+  { avatars: [AVATAR.red], label: 'PlayListed this game', players: '1-8', image: heroGangBeasts, video: { youTubeId: 'Lm3HDdLufmA', poster: heroGangBeasts }, details: details.gangBeasts, owners: [AVATAR.yellow, AVATAR.red] },
+  { avatars: [AVATAR.yellow], label: 'PlayListed this game', players: '1-4', image: heroWildHearts, video: { youTubeId: '8vw9PlFrrOk', poster: heroWildHearts }, details: details.wildHearts, owners: [AVATAR.blue] },
   { avatars: [AVATAR.red], label: 'recommends this game', players: '1-4', image: heroMinecraftDungeons, video: { youTubeId: 'TxNH6bapa3A', poster: heroMinecraftDungeons }, details: details.minecraftDungeons, owners: [AVATAR.red, AVATAR.yellow] },
 ]
 
 const shelfMore = [
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves },
   { avatars: [AVATAR.yellow], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft },
-  { avatars: [AVATAR.green], label: 'PLAYlisted this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol },
-  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat },
+  { avatars: [AVATAR.green], label: 'PlayListed this game', players: '1-5', image: heroLol, video: { youTubeId: 'p4QG59y6FGE', poster: heroLol }, details: details.lol },
+  { avatars: [AVATAR.red], label: 'PlayListed this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat },
   { avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded },
 ]
 
 // Friend colors → display names (green is always the user).
 const NAME = { [AVATAR.green]: 'clarisse', [AVATAR.blue]: 'caleb', [AVATAR.yellow]: 'sauhee', [AVATAR.red]: 'meera', [AVATAR.pink]: 'yessenia' }
+// Color → name including not-yet-on-Arcade friends, so invited (pending) members
+// can still be named on hover.
+const OFF_NAME = Object.fromEntries(OFF_ARCADE_FRIENDS.map((f) => [f.color, f.name]))
+const nameForColor = (c) => NAME[c] || OFF_NAME[c] || null
 
 // Game catalog for the blend pages — cover art + a short caption. Reuses the
 // card `details` above for title/developer/genre/playtime.
@@ -611,7 +615,7 @@ function socialProof(i) {
   const variants = [
     { avatars: [who], label: `${name} recommends this` },
     { avatars: [who], label: `${name} played this for ${hours} hours` },
-    { avatars: [who], label: `${name} PLAYlisted this game` },
+    { avatars: [who], label: `${name} PlayListed this game` },
   ]
   return variants[i % variants.length]
 }
@@ -659,12 +663,12 @@ const RECS = {
 // Both reuse the game CATALOG for covers/metadata and VIDEOS for trailers, so
 // this stays a self-contained layout/animation mock.
 const CINEMATIC_ROW = [
-  { key: 'seaOfThieves', avatars: [AVATAR.blue, AVATAR.green], label: 'PLAYlisted this game' },
+  { key: 'seaOfThieves', avatars: [AVATAR.blue, AVATAR.green], label: 'PlayListed this game' },
   { key: 'monsterHunter', avatars: [AVATAR.blue], label: 'recommends this game' },
   { key: 'grounded', avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours' },
   { key: 'humanFallFlat', avatars: [AVATAR.red, AVATAR.yellow], label: 'played this for 4 hours' },
   { key: 'minecraft', avatars: [AVATAR.green], label: 'recommends this game' },
-  { key: 'gangBeasts', avatars: [AVATAR.red], label: 'PLAYlisted this game' },
+  { key: 'gangBeasts', avatars: [AVATAR.red], label: 'PlayListed this game' },
 ].map(({ key, avatars, label }) => {
   const g = CATALOG[key]
   return {
@@ -680,7 +684,7 @@ const PORTRAIT_ROW = [
   { key: 'minecraft', released: 'Released on Nov 18, 2011', recommend: 'Highly recommended game', multiplayer: 'Online multiplayer (1+)', tags: ['Sandbox', 'Survival', 'Everyone 10+'] },
   { key: 'seaOfThieves', released: 'Released on Jun 3, 2020', recommend: 'A hit with your crew', multiplayer: 'Online co-op (1-4)', tags: ['Adventure', 'Pirates', 'Teen 13+'] },
   { key: 'monsterHunter', released: 'Released on Jan 12, 2022', recommend: 'Highly recommended game', multiplayer: 'Online co-op (1-4)', tags: ['Action RPG', 'Hunting', 'Teen 13+'] },
-  { key: 'grounded', released: 'Released on Sep 27, 2022', recommend: 'Popular in your Mixes', multiplayer: 'Online co-op (1-4)', tags: ['Survival', 'Crafting', 'Everyone 10+'] },
+  { key: 'grounded', released: 'Released on Sep 27, 2022', recommend: 'Popular in your PlayLists', multiplayer: 'Online co-op (1-4)', tags: ['Survival', 'Crafting', 'Everyone 10+'] },
   { key: 'overcooked', released: 'Released on Aug 7, 2018', recommend: 'Great for a full lobby', multiplayer: 'Local + online (1-4)', tags: ['Co-op', 'Party', 'Everyone 7+'] },
   { key: 'forHonor', released: 'Released on Feb 14, 2017', recommend: 'Highly recommended game', multiplayer: 'Online multiplayer (1-4)', tags: ['Fighting', 'Melee', 'Mature 17+'] },
 ].map(({ key, released, recommend, multiplayer, tags }) => {
@@ -709,6 +713,31 @@ const BLENDS = [
 const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 // Start with no premade Mixes — everyone builds their own.
 const SEED_BLENDS = []
+
+// Playful default PlayList names — an "inside joke" about the group's collective
+// gaming personality instead of a boring list of usernames. Picked at random on
+// creation; the creator can always rename.
+const FUNNY_MIX_NAMES = [
+  'Cozy Chaos After Midnight',
+  'Three Sweats and a Casual',
+  'One More Game, Apparently',
+  'Loot Goblins With Commitment Issues',
+  'Side Quests Over Main Objectives',
+  'Competitive Until Someone Gets Hungry',
+  'We Definitely Have Time for This',
+  'Emotionally Invested in Fake Loot',
+  'Respawning on Pure Spite',
+  'Sweaty but Extremely Casual',
+  'Just Five More Minutes, Liars',
+  'Chronically Online, Occasionally Winning',
+  'Peer Pressure and Power-Ups',
+  'Aggressively Chill Grinders',
+  'The Ready-Up Never Comes',
+  'Snacks First, Strategy Later',
+  'Unranked and Unbothered',
+  'Certified Menu-Screen Enjoyers',
+]
+const funnyMixName = () => FUNNY_MIX_NAMES[Math.floor(Math.random() * FUNNY_MIX_NAMES.length)]
 
 // A Mix's "party" is its set of people (members + invited), order-independent.
 // Two Mixes with the same party are duplicates — we block creating those.
@@ -783,13 +812,80 @@ function mixCoverImages({ id, name, games = [] }) {
   return seededShuffle(own.length >= 4 ? own : COLLAGE_POOL, id || name).slice(0, 4).map((k) => CATALOG[k].image)
 }
 
-function BlendCard({ id, name, color, members, games = [], cover, onOpen, onContext, onMenu }) {
+// A member's avatar with a username tooltip on hover/keyboard-focus. Used on the
+// PlayList cards and inside the PlayList header.
+function MemberChip({ color, size = 28, marginRight = 0, pending = false }) {
+  const name = nameForColor(color)
+  const label = name ? capName(name) + (pending ? ' · pending' : '') : (pending ? 'Invited · pending' : null)
+  const [show, setShow] = useState(false)
+  return (
+    <span
+      className="relative inline-flex outline-none"
+      style={{ marginRight, zIndex: show ? 10 : undefined }}
+      tabIndex={label ? 0 : undefined}
+      aria-label={label || undefined}
+      onMouseEnter={() => setShow(true)}
+      onMouseLeave={() => setShow(false)}
+      onFocus={() => setShow(true)}
+      onBlur={() => setShow(false)}
+    >
+      <Avatar color={color} size={size} style={{ boxShadow: '0 0 0 2px #0c0c0e', opacity: pending ? 0.45 : 1, filter: pending ? 'grayscale(0.7)' : undefined }} />
+      {label && (
+        <span className={'pointer-events-none absolute bottom-[calc(100%+6px)] left-1/2 z-[70] -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-black/90 px-[8px] py-[3px] text-[12px] font-semibold text-white transition-opacity duration-150 ' + (show ? 'opacity-100' : 'opacity-0')}>
+          {label}
+        </span>
+      )}
+    </span>
+  )
+}
+
+function BlendCard({ id, name, color, members, games = [], cover, onOpen, onContext, onMenu, onOpenGame }) {
   // Cover art: a custom thumbnail if one's been set, otherwise a 2×2 collage.
   const covers = mixCoverImages({ id, name, games })
   // The hover ellipsis opens the same menu as right-click, anchored to itself.
   const openMenu = (e) => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); onMenu?.(r.left, r.bottom + 4) }
+  // Games inside this PlayList — shown in a popover on hover.
+  const [peek, setPeek] = useState(false)
+  const gameTitles = games.map((k) => CATALOG[k]?.title || STARTER_BY_KEY[k]?.title).filter(Boolean)
   return (
-    <div className="group flex w-[200px] shrink-0 flex-col text-left">
+    <div
+      className="group relative flex w-[200px] shrink-0 flex-col text-left"
+      onMouseEnter={() => setPeek(true)}
+      onMouseLeave={() => setPeek(false)}
+    >
+      {/* Peek popover: the games inside this PlayList — anchored to the right of
+          the cover so it never gets clipped by the page's top scroll edge. The
+          `pl-[10px]` bridges the gap to the cover so the pointer can travel onto
+          the list without the card's hover dropping. Always mounted so it can
+          fade in/out smoothly. */}
+      {gameTitles.length > 0 && (
+        <div
+          className={
+            'absolute left-[200px] top-0 z-[80] w-[246px] pl-[10px] transition-[opacity,transform] duration-200 ease-out ' +
+            (peek ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-[6px] opacity-0')
+          }
+        >
+          <div className="rounded-[12px] border border-[#2b2d31] bg-[#101012] p-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+            <p className="mb-[8px] text-[11px] font-bold uppercase tracking-wide text-[#87898c]">{gameTitles.length} game{gameTitles.length === 1 ? '' : 's'} in this PlayList</p>
+            <div className="no-scrollbar flex max-h-[248px] flex-col gap-[4px] overflow-y-auto">
+              {gameTitles.map((t, i) => {
+                const k = KEY_OF_TITLE[t]
+                const img = (CATALOG[k] || STARTER_BY_KEY[k])?.image
+                return (
+                  <button
+                    key={i}
+                    onClick={(e) => { e.stopPropagation(); onOpenGame?.(t) }}
+                    className="flex items-center gap-[9px] rounded-[7px] p-[3px] text-left transition hover:bg-white/[0.06]"
+                  >
+                    {img ? <img alt="" src={img} className="h-[28px] w-[50px] shrink-0 rounded-[5px] object-cover" /> : <span className="h-[28px] w-[50px] shrink-0 rounded-[5px] bg-white/10" />}
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-white">{t}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      )}
       <button onClick={onOpen} onContextMenu={onContext} className="block w-full text-left">
         <div
           className="size-[200px] overflow-hidden rounded-[20px] transition-[translate] duration-200 group-hover:-translate-y-[3px]"
@@ -816,10 +912,11 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
           </button>
         )}
       </div>
-      {/* Member profile images — spaced circles, up to 5 then a "+N" (Figma 1133:7885). */}
+      {/* Member profile images — spaced circles, up to 5 then a "+N" (Figma 1133:7885).
+          Each is hoverable/focusable and shows the member's name. */}
       <div className="mt-[10px] flex items-center gap-[4px]">
         {members.slice(0, 5).map((c, i) => (
-          <Avatar key={i} color={c} size={28} style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
+          <MemberChip key={i} color={c} size={28} />
         ))}
         {members.length > 5 && (
           <span
@@ -838,14 +935,14 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
 function CreateBlendCard({ onClick }) {
   return (
     <button onClick={onClick} className="group flex w-[200px] shrink-0 flex-col text-left">
-      {/* Dark tile with a green ring + the same plus glyph as the "Add to Mix"
+      {/* Dark tile with a green ring + the same plus glyph as the "Add to PlayList"
           button (Figma 1135:1711). */}
       <div className="flex size-[200px] items-center justify-center rounded-[20px] bg-[#0f0f12] ring-[1.5px] ring-[#9BF00B]/35 transition duration-200 group-hover:-translate-y-[3px] group-hover:ring-[#9BF00B]/70">
         <svg viewBox="0 0 17 18" className="size-[40px] transition group-hover:scale-110 group-hover:[filter:drop-shadow(0_0_10px_rgba(155,240,11,0.6))]" fill="none" style={{ color: '#9BF00B' }}>
           <path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
-      <p className="mt-[10px] text-[16px] font-semibold text-white">Create a new Mix</p>
+      <p className="mt-[10px] text-[16px] font-semibold text-white">Create a new PlayList</p>
     </button>
   )
 }
@@ -899,7 +996,7 @@ function DiscoveredBanner() {
 const STEAM_ROW = [
   { avatars: [AVATAR.green], label: 'recommends this game', players: '1+', image: heroMinecraft, video: { youTubeId: '-1Sy6iz43vg', poster: heroMinecraft }, details: details.minecraft, steam: { released: 'Nov 18, 2011', desc: 'Build, explore and survive in an infinite world of blocks — solo or with friends. Mine deep, craft anything, and make the world your own.', review: 'Overwhelmingly Positive', reviews: '2.4M', tags: ['Sandbox', 'Survival', 'Building', 'Multiplayer'] } },
   { avatars: [AVATAR.blue, AVATAR.green], label: 'played this for 2.5 hours', players: '1-4', image: heroSeaOfThieves, video: { youTubeId: 'QntMfX3FkZQ', poster: heroSeaOfThieves }, details: details.seaOfThieves, steam: { released: 'Jun 3, 2020', desc: 'A shared-world pirate adventure — sail, fight and hunt treasure with your crew across an open ocean full of other real players.', review: 'Very Positive', reviews: '312K', tags: ['Adventure', 'Open World', 'Pirates', 'Co-op'] } },
-  { avatars: [AVATAR.red], label: 'PLAYlisted this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, steam: { released: 'Aug 7, 2018', desc: 'Chaotic co-op cooking across wobbling, falling-apart kitchens. Chop, cook and serve before the timer runs out.', review: 'Very Positive', reviews: '58K', tags: ['Co-op', 'Party', 'Casual', 'Local Multiplayer'] } },
+  { avatars: [AVATAR.red], label: 'PlayListed this game', players: '1-4', image: heroOvercooked, video: { youTubeId: 'uKLb8D36YKk', poster: heroOvercooked }, details: details.overcooked, steam: { released: 'Aug 7, 2018', desc: 'Chaotic co-op cooking across wobbling, falling-apart kitchens. Chop, cook and serve before the timer runs out.', review: 'Very Positive', reviews: '58K', tags: ['Co-op', 'Party', 'Casual', 'Local Multiplayer'] } },
   { avatars: [AVATAR.yellow], label: 'recommends this game', players: '1-8', image: heroHumanFallFlat, video: { youTubeId: 'maiYKaZNG7Y', poster: heroHumanFallFlat }, details: details.humanFallFlat, steam: { released: 'Jul 22, 2016', desc: 'Floppy physics puzzles in surreal dreamscapes. No skill floor at all, endless slapstick, and better with friends.', review: 'Overwhelmingly Positive', reviews: '180K', tags: ['Puzzle', 'Physics', 'Co-op', 'Funny'] } },
   { avatars: [AVATAR.yellow, AVATAR.green], label: 'played this for 6 hours', players: '1-4', image: heroGrounded, video: { youTubeId: 'zBD-GS61Gto', poster: heroGrounded }, details: details.grounded, steam: { released: 'Sep 27, 2022', desc: 'Shrunk to the size of an ant, survive the backyard: build bases, brew gear and fight off giant bugs with friends.', review: 'Very Positive', reviews: '96K', tags: ['Survival', 'Co-op', 'Crafting', 'Adventure'] } },
   { avatars: [AVATAR.blue], label: 'recommends this game', players: '1-4', image: heroMonsterHunter, video: { youTubeId: 'O0tc1ODHma8', poster: heroMonsterHunter }, details: details.monsterHunter, steam: { released: 'Jan 12, 2022', desc: 'Hunt colossal monsters, craft mighty gear, and chain fluid aerial combat with the new Wirebug.', review: 'Very Positive', reviews: '110K', tags: ['Action RPG', 'Co-op', 'Hunting', 'Multiplayer'] } },
@@ -933,25 +1030,33 @@ function GiftArcadeButton() {
 // Sits just left of the Gift ARCADE button on every page's nav. A green dot
 // shows when a wheel jam is live on the call.
 function WheelNavButton() {
-  const { openWheel, wheelLive } = useContext(NavCtx)
+  const { openWheel, wheelLive, wheelCount = 0 } = useContext(NavCtx)
   return (
     <button
       onClick={openWheel}
-      title={wheelLive ? 'A wheel sync is live on the call' : 'Spin the wheel'}
-      className="relative flex items-center gap-[9px] rounded-[8px] bg-black/40 px-[14px] py-[8px] text-[14px] font-semibold text-white ring-1 ring-white/10 backdrop-blur-sm transition hover:bg-black/75"
+      title={wheelLive ? 'A wheel sync is live on the call — tap to watch it spin together' : wheelCount > 0 ? `${wheelCount} game${wheelCount === 1 ? '' : 's'} on your wheel` : 'Spin the wheel'}
+      className={'relative flex items-center gap-[9px] rounded-[8px] px-[14px] py-[8px] text-[14px] font-semibold ring-1 backdrop-blur-sm transition ' + (wheelLive ? 'bg-[#123a00] text-[#8dff5a] ring-[#3dbf1e] shadow-[0_0_14px_rgba(61,191,30,0.35)] hover:bg-[#164700]' : 'bg-black/40 text-white ring-white/10 hover:bg-black/75')}
     >
-      {wheelLive && (
-        <span className="absolute -right-[3px] -top-[3px] flex size-[10px]">
-          <span className="absolute inline-flex size-full animate-ping rounded-full bg-[#3dbf1e] opacity-75" />
-          <span className="relative inline-flex size-[10px] rounded-full bg-[#3dbf1e] ring-2 ring-[#0c0c0e]" />
+      {wheelCount > 0 && (
+        <span className={'absolute -right-[7px] -top-[7px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-[5px] text-[11px] font-bold leading-none ring-2 ring-[#0c0c0e] ' + (wheelLive ? 'bg-white text-[#0e3b00]' : 'bg-[#3dbf1e] text-black')}>
+          {wheelCount}
         </span>
       )}
-      <svg viewBox="0 0 24 24" className="size-[18px] shrink-0 text-[#3fbf3f]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
+      <svg viewBox="0 0 24 24" className="size-[18px] shrink-0" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" />
         <path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" />
         <path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" />
       </svg>
       <span className="leading-none">Wheel</span>
+      {wheelLive && (
+        <span className="ml-[1px] flex items-center gap-[5px] rounded-full bg-[#3dbf1e] px-[8px] py-[3px] text-[11px] font-bold uppercase leading-none tracking-wide text-black">
+          <span className="relative flex size-[7px]">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-black/70 opacity-75" />
+            <span className="relative inline-flex size-[7px] rounded-full bg-black" />
+          </span>
+          Live
+        </span>
+      )}
     </button>
   )
 }
@@ -995,7 +1100,7 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
         <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
         <Tab label="Recommended" isActive={active === 'recommended'} onClick={onHome} />
         <Tab label="Library" isActive={active === 'library'} onClick={onLibrary} />
-        <Tab label="Mixes" isActive={active === 'mixes'} onClick={onMixes} />
+        <Tab label="PlayLists" isActive={active === 'mixes'} onClick={onMixes} />
       </div>
       <div className="flex flex-1 items-center justify-end gap-[20px]">
         <WheelNavButton />
@@ -1005,7 +1110,57 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
   )
 }
 
-function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onHome, onMixes, onLibrary, menuGame }) {
+// Home hero card for a live party you're invited to — game art, the ready-up
+// roster, and a Join / Ready / Start action depending on your role + state.
+function HomePartyCard({ party, launch, onOpen }) {
+  const { readyUp, undoReady, launchNow } = party
+  const isHost = launch.host === SELF_NAME
+  const iAmReady = isHost || !!launch.ready?.[SELF_NAME]
+  const { readyInvitees, invitees } = launchTally(launch)
+  const game = launch.game || {}
+  const readyCount = 1 + readyInvitees.length // host is always ready
+  const total = 1 + invitees.length
+  return (
+    <div className="flex w-full max-w-[720px] items-center gap-[20px] rounded-[20px] border border-white/10 bg-[#121214] p-[16px]">
+      <button
+        onClick={() => onOpen?.(game.title)}
+        className="relative h-[132px] w-[234px] shrink-0 overflow-hidden rounded-[12px] bg-[#1a1a1d] focus-ring-strong"
+        aria-label={`Open ${game.title}`}
+      >
+        {game.image && <img alt="" src={game.image} className="size-full object-cover" />}
+        <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25">
+          <span className="flex size-[46px] items-center justify-center rounded-full bg-black/55 backdrop-blur">
+            <svg viewBox="0 0 24 24" className="size-[22px] text-white" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
+          </span>
+        </span>
+      </button>
+      <div className="min-w-0 flex-1">
+        <p className="flex items-center gap-[7px] text-[13px] font-semibold uppercase tracking-wide text-[#9BF00B]">
+          <span className="size-[8px] animate-pulse rounded-full bg-[#9BF00B]" /> Live party
+        </p>
+        <p className="mt-[4px] truncate text-[24px] font-bold text-white">{game.title}</p>
+        <div className="mt-[12px] flex items-center gap-[10px]">
+          <PartyAvatars launch={launch} />
+          <span className="text-[14px] text-[#9a9ba3]">{readyCount}/{total} ready</span>
+        </div>
+      </div>
+      <div className="shrink-0 pr-[6px]">
+        {isHost ? (
+          <button onClick={launchNow} className="rounded-[10px] bg-[#9BF00B] px-[22px] py-[12px] text-[15px] font-bold text-[#0c0c0e] transition hover:brightness-110">Start now</button>
+        ) : iAmReady ? (
+          <button onClick={undoReady} className="flex items-center gap-[7px] rounded-[10px] bg-[#248046] px-[20px] py-[12px] text-[15px] font-bold text-white transition hover:brightness-110">
+            <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
+            Ready
+          </button>
+        ) : (
+          <button onClick={readyUp} className="rounded-[10px] bg-[#9BF00B] px-[22px] py-[12px] text-[15px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">Join party</button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onHome, onMixes, onLibrary, menuGame, party, onStartParty, onAddToWheel }) {
   // Home has no back button, so re-arm the inner-page emerge animation for the
   // next time we drill into a page that does.
   useEffect(() => { navBackWasShown = false }, [])
@@ -1053,7 +1208,11 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
   const eRenameFor = IS_SPECTATE ? bybid(cUI?.renameForId) : renameFor
   const eInviteFor = IS_SPECTATE ? bybid(cUI?.inviteForId) : inviteFor
   const eSearchOpen = IS_SPECTATE ? !!cUI?.searchOpen : searchOpen
-  const eHover = IS_SPECTATE ? (cUI?.hover ?? null) : hover
+  // Live users reveal cards purely from native hover/focus on the specific card,
+  // so we never force-reveal by title here — otherwise a second card for the same
+  // game would light up too. `hover` is still tracked above and broadcast so the
+  // moderator's spectate mirror (which has no real pointer) can echo the reveal.
+  const eHover = IS_SPECTATE ? (cUI?.hover ?? null) : null
 
   // Hero background video: parallax (scrolls slower than the title/info that sit
   // on the page) + a 1.5s ease-in/out fade at each loop's start and end so the
@@ -1100,7 +1259,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
         <button data-tab aria-current="page" className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Recommended</button>
         <button onClick={onLibrary} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button onClick={onMixes} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Mixes</button>
+        <button onClick={onMixes} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">PlayLists</button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
           <WheelNavButton />
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
@@ -1133,39 +1292,59 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
             style={{ background: 'linear-gradient(to bottom, rgba(12,12,14,0.35) 0%, rgba(12,12,14,0.55) 55%, #0c0c0e 100%)' }}
           />
           <div className="relative mx-auto w-full max-w-[1400px] px-[40px] pb-[8px] pt-[24px]">
-            {/* Your Mixes — at the top, with "See who's on ARCADE" beside the heading.
-                mt gives a 56px gap below the nav bar. */}
-            <div className="relative mt-[88px] flex flex-col items-start">
-              <div className="relative flex w-full flex-wrap items-center gap-x-[24px] gap-y-[12px]">
-                <h2
-                  className="text-[clamp(40px,6vw,88px)] uppercase leading-[0.95] tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
-                  style={{ fontFamily: '"Base Neue Cond Bold"' }}
-                >
-                  Your Mixes
-                </h2>
-                {/* "See who's on ARCADE" — opens the friends popup (Figma 1148:1562):
-                    dark-green pill, 30px avatars, Xbox-green ARCADE. */}
-                <button
-                  onClick={onWhosOn}
-                  className="flex items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125"
-                >
-                  <div className="flex items-center">
-                    {[AVATAR.blue, AVATAR.pink, AVATAR.yellow].map((c, i) => (
-                      <Avatar key={i} color={c} size={30} style={{ marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #092000' }} />
-                    ))}
+            {/* Party — a live party you're invited to (Jump in), else a Start-a-party
+                CTA. The "See who's on ARCADE" button stays beside the heading. */}
+            {(() => {
+              const launch = party?.launch
+              const myParty = launch && !launch.launched && (launch.host === SELF_NAME || (launch.invitees || []).includes(SELF_NAME)) ? launch : null
+              return (
+                <div className="relative mt-[88px] flex flex-col items-start">
+                  <div className="relative flex w-full flex-wrap items-end gap-x-[24px] gap-y-[12px]">
+                    <h2
+                      className="mb-[0.11em] text-[clamp(40px,6vw,88px)] uppercase leading-[0.95] tracking-[0.02em] text-white [text-shadow:0_3px_10px_rgba(0,0,0,0.6)]"
+                      style={{ fontFamily: '"Base Neue Cond Bold"' }}
+                    >
+                      Jump in
+                    </h2>
+                    {/* "See who's on ARCADE" — opens the friends popup (Figma 1148:1562):
+                        dark-green pill, 30px avatars, Xbox-green ARCADE. */}
+                    <button
+                      onClick={onWhosOn}
+                      className="flex items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125"
+                    >
+                      <div className="flex items-center">
+                        {[AVATAR.blue, AVATAR.pink, AVATAR.yellow].map((c, i) => (
+                          <Avatar key={i} color={c} size={30} style={{ marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #092000' }} />
+                        ))}
+                      </div>
+                      <span className="text-[16px] text-white">See who’s on</span>
+                      <span className="flex items-center gap-[3px]">
+                        <XboxLogo size={16} />
+                        <span className="text-[12px] font-bold uppercase tracking-wide text-[#107c10]">Arcade</span>
+                      </span>
+                    </button>
                   </div>
-                  <span className="text-[16px] text-white">See who’s on</span>
-                  <span className="flex items-center gap-[3px]">
-                    <XboxLogo size={16} />
-                    <span className="text-[12px] font-bold uppercase tracking-wide text-[#107c10]">Arcade</span>
-                  </span>
-                </button>
-              </div>
-              <div className="relative mt-[24px] flex max-w-full flex-wrap justify-start gap-x-[24px] gap-y-[24px]">
-                <CreateBlendCard onClick={onCreateBlend} />
-                {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => <BlendCard key={b.id} {...b} onOpen={() => onOpenBlend(b)} onContext={(e) => openMixMenu(e, b)} onMenu={(x, y) => setMixMenu({ x, y, blend: b })} />)}
-              </div>
-            </div>
+                  <div className="relative mt-[24px] w-full">
+                    {myParty ? (
+                      <HomePartyCard party={party} launch={myParty} onOpen={onOpen} />
+                    ) : (
+                      <button
+                        onClick={onStartParty}
+                        className="group flex items-center gap-[18px] rounded-[20px] border-2 border-[#9BF00B]/55 bg-[#0d1a06] px-[28px] py-[22px] text-left transition hover:border-[#9BF00B] hover:bg-[#112407]"
+                      >
+                        <span className="flex size-[54px] shrink-0 items-center justify-center rounded-full bg-[#9BF00B] shadow-[0_2px_12px_rgba(45,160,0,0.45)] transition group-hover:scale-105">
+                          <PartyGlyph size={26} className="text-[#0c0c0e]" />
+                        </span>
+                        <span>
+                          <span className="block text-[24px] font-bold text-white">Start a party</span>
+                          <span className="block text-[15px] text-[#9db08f]">Pick a game and invite your friends to jump in.</span>
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
           </div>
         </section>
 
@@ -1229,7 +1408,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
   )
 }
 
-// ── Mixes tab (Figma 926:4875) — the "Your Mixes" grid on its own top-nav tab.
+// ── Mixes tab (Figma 926:4875) — the "Your PlayLists" grid on its own top-nav tab.
 function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
   const { blends, setBlends } = useRoomCtx()
   const [mixMenu, setMixMenu] = useState(null)
@@ -1268,7 +1447,7 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
       <PageNav active="mixes" onHome={onHome} onLibrary={onLibrary} onBack={onHome} />
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
         <div className="mx-auto w-full max-w-[1400px]">
-          <h1 className="text-[clamp(30px,3vw,44px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Your Mixes</h1>
+          <h1 className="text-[clamp(30px,3vw,44px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Your PlayLists</h1>
           <div className="mt-[28px] flex flex-wrap gap-x-[16px] gap-y-[28px]">
             <CreateBlendCard onClick={onCreate} />
             {mine.map((b) => (
@@ -1276,6 +1455,7 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
                 key={b.id}
                 {...b}
                 onOpen={() => onOpenBlend(b)}
+                onOpenGame={onOpen}
                 onContext={(e) => { e.preventDefault(); e.stopPropagation(); setMixMenu({ x: e.clientX, y: e.clientY, blend: b }) }}
                 onMenu={(x, y) => setMixMenu({ x, y, blend: b })}
               />
@@ -1466,8 +1646,8 @@ STARTER_LIBRARY.forEach((g) => {
       caption: `${g.genre} — playable free with Game Pass Starter.`,
     }
   }
-  // Title → key must include Starter games too, or "already in PLAYlist" checks
-  // (and right-click "Add to PLAYlist") silently miss them.
+  // Title → key must include Starter games too, or "already in PlayList" checks
+  // (and right-click "Add to PlayList") silently miss them.
   KEY_OF_TITLE[g.title] = k
   if (g.youTubeId && !VIDEOS[k]) VIDEOS[k] = g.youTubeId
   if (!details[k]) details[k] = {
@@ -1729,7 +1909,7 @@ function TrendingThumb({ gameKey }) {
 function TrendingRow({ items, onOpen, onShare }) {
   return (
     <section className="mt-[56px]">
-      <p className="text-[24px] font-semibold text-white">Trending in Your Communities</p>
+      <p className="text-[24px] font-semibold text-white">Trending amongst Your Friends</p>
       <div className="mt-[16px] flex flex-col gap-[4px]">
         {items.map((k) => {
           const g = STARTER_BY_KEY[k]
@@ -1915,8 +2095,10 @@ function WorthACloserLook({ gameKey, onOpen, onShare, revealTitle }) {
 
 // One Library game: cover art (local → Steam → gradient fallback) that swaps to
 // the trailer on hover.
-function LibraryTile({ g, onClick, metric, onWishlist }) {
+function LibraryTile({ g, onClick, metric, onWishlist, onShare }) {
   const [broken, setBroken] = useState(false)
+  const onParty = useContext(PartyCtx)
+  const onWheelAdd = useContext(WheelCtx)
   // On the moderator's mirror, force this tile's hover reveal when it's the card
   // the participant is hovering.
   const spHover = useContext(SpectateHoverCtx)
@@ -1946,6 +2128,7 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
       onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setKbFocus(false) }}
       className="group cursor-pointer text-left"
     >
+      <div className="relative">
       <div className={'relative aspect-[3/4] overflow-hidden rounded-[12px] bg-[#151518] ring-1 ring-white/5 transition group-hover:ring-white/25' + (fr ? ' !ring-white/25' : '')}>
         {cover ? (
           <img alt="" src={cover} onError={() => setBroken(true)} className={'size-full object-cover transition duration-300 group-hover:scale-[1.06]' + (fr ? ' scale-[1.06]' : '')} />
@@ -1957,17 +2140,37 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        {/* Add-to-Mix + More — bottom-right, revealed on hover. Bare green glyphs
-            with a hover glow + label, matching the horizontal cards. */}
+      </div>
+        {/* Add-to-PlayList + party — bottom-right, revealed on hover. Placed
+            OUTSIDE the image's overflow-hidden so the + hover-menu isn't clipped. */}
         <div className={'absolute bottom-[14px] right-[16px] flex items-center gap-[16px] opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100' + (fr ? ' !opacity-100' : '')}>
-          <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(g.title) }} aria-label="Add to Mix" className="group/add relative flex size-[28px] items-center justify-center">
-            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100 group-focus-within/add:opacity-100">Add to Mix</span>
-            <svg viewBox="0 0 17 18" fill="none" className="size-[24px] transition-[scale,filter] duration-200 group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" style={{ color: '#9BF00B' }}><path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
-          </button>
-          <button type="button" onClick={openMenu} aria-label="More" className="group/more relative flex size-[28px] items-center justify-center">
-            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/more:opacity-100 group-focus-within/more:opacity-100">More</span>
-            <svg viewBox="0 0 24 24" className="size-[24px] transition-[scale,filter] duration-200 group-hover/more:scale-110 group-hover/more:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" fill="currentColor" style={{ color: '#9BF00B' }}><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
-          </button>
+          {onParty && (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onParty(g.title) }} aria-label="Start a party" className="group/party relative flex size-[28px] items-center justify-center">
+              <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/party:opacity-100 group-focus-within/party:opacity-100">Start a party</span>
+              <PartyGlyph size={22} className="text-[#9BF00B] transition-[scale,filter] duration-200 group-hover/party:scale-110 group-hover/party:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" />
+            </button>
+          )}
+          <div className="group/add relative flex size-[28px] items-center justify-center">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(g.title) }} aria-label="Add this game" className="flex size-full items-center justify-center">
+              <svg viewBox="0 0 17 18" fill="none" className="size-[24px] transition-[scale,filter] duration-200 group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" style={{ color: '#9BF00B' }}><path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" /></svg>
+            </button>
+            {onWheelAdd ? (
+              <div className="pointer-events-none absolute bottom-full right-0 z-[20] pb-[8px] opacity-0 transition-opacity duration-150 group-hover/add:pointer-events-auto group-hover/add:opacity-100">
+                <div className="w-[172px] overflow-hidden rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[5px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+                  <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(g.title) }} className="flex w-full items-center gap-[9px] px-[12px] py-[8px] text-left text-[13px] font-medium text-[#dbdee1] transition hover:bg-white/5">
+                    <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-white" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+                    Add to PlayList
+                  </button>
+                  <button type="button" onClick={(e) => { e.stopPropagation(); onWheelAdd(g.title) }} className="flex w-full items-center gap-[9px] px-[12px] py-[8px] text-left text-[13px] font-medium text-[#dbdee1] transition hover:bg-white/5">
+                    <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-white" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
+                    Add to Wheel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100 group-focus-within/add:opacity-100">Add this game</span>
+            )}
+          </div>
         </div>
       </div>
       <p className="mt-[8px] truncate text-[15px] font-semibold text-white">{g.title}</p>
@@ -1980,6 +2183,22 @@ function LibraryTile({ g, onClick, metric, onWishlist }) {
 // ── Library filter facets ───────────────────────────────────────────────────
 // A game's max party size, derived from its `players` range ("1-4" → 4, "MMO" → 999).
 const maxPlayers = (p) => p === 'MMO' ? 999 : Math.max(1, ...String(p).split('-').map(Number).filter((n) => !isNaN(n)))
+// A game's supported player span as [min,max] ("1-4"→[1,4], "1+"→[1,999],
+// "MMO"→[1,999], "2"→[2,2]). Used by the min–max player-range filter.
+const playerRange = (p) => {
+  if (!p) return [1, 1]
+  if (/mmo/i.test(String(p))) return [1, 999]
+  const parts = String(p).replace(/\+/, '-999').split('-').map((n) => parseInt(n, 10)).filter((n) => !isNaN(n))
+  if (!parts.length) return [1, 1]
+  return [parts[0], parts[parts.length - 1]]
+}
+// Does a game's player span overlap a requested [min,max] range? (Either bound
+// may be null → open-ended.) A game "supports" the range if the spans intersect,
+// so a 2–2 filter surfaces every game playable with exactly two people.
+const playerRangeOverlaps = (p, fmin, fmax) => {
+  const [gmin, gmax] = playerRange(p)
+  return gmin <= (fmax ?? 999) && gmax >= (fmin ?? 1)
+}
 // Every distinct genre in the catalog, for the genre filter chips.
 const ALL_GENRES = [...new Set(STARTER_LIBRARY.map((g) => g.genre))].sort((a, b) => a.localeCompare(b))
 // Descriptive tags a game carries (from its Starter blurb) — used by the generic
@@ -1988,7 +2207,14 @@ const gameTags = (g) => STARTER_DESC[g.catKey]?.tags || []
 // Compare two {kind,value} filter facets.
 const sameFacet = (a, b) => a.kind === b.kind && a.value === b.value
 // Human label for a filter facet — the player-capacity facet is a number ("N").
-const facetLabel = (f) => f.kind === 'cap' ? (f.value >= 999 ? 'MMO' : `Up to ${f.value} player${f.value === 1 ? '' : 's'}`) : f.value
+const facetLabel = (f) =>
+  f.kind === 'cap' ? (f.value >= 999 ? 'MMO' : `Up to ${f.value} player${f.value === 1 ? '' : 's'}`)
+  : f.kind === 'range' ? (
+      f.min != null && f.max != null ? (f.min === f.max ? `${f.min} players` : `${f.min}–${f.max} players`)
+      : f.min != null ? `${f.min}+ players`
+      : `Up to ${f.max} players`)
+  : f.kind === 'session' ? `≤ ${f.value} hrs / session`
+  : f.value
 // Resolve a clicked card-tag string to a Library filter facet: a real genre, a
 // player-capacity number (the game's max), or otherwise a generic descriptive tag.
 const facetForTag = (text) => {
@@ -2007,6 +2233,13 @@ const ratingHash = (key, salt) => { let h = 0; const s = key + ':' + salt; for (
 const friendsRating = (key) => { const a = STARTER_DESC[key]?.rec; return typeof a === 'number' ? a : 78 + (ratingHash(key, 'fr') % 21) } // 78..98
 const overallRating = (key) => 70 + (ratingHash(key, 'ov') % 26) // 70..95
 const avgFriendHours = (key) => friendInfo(key).hours
+// Average group session length in whole hours. Parsed from a game's "~2hrs"
+// playtime string; falls back to a stable per-game value (1..4h) when unknown.
+const sessionHours = (key) => {
+  const src = CATALOG[key]?.playtime || STARTER_BY_KEY[key]?.playtime || details[key]?.playtime
+  const n = src && parseInt(String(src).replace(/[^0-9]/g, ''), 10)
+  return n || (1 + (ratingHash(key, 'sess') % 4))
+}
 // Per-friend playtime for a game — deterministic, spread around the game's avg
 // so each friend's avatar tooltip can read "Name · N hrs".
 const friendHours = (key, color) => {
@@ -2028,14 +2261,31 @@ const friendActivityLine = (key) => {
   return `${fi.count} friends played this`
 }
 const LIB_SORTS = [
-  { id: 'default', label: 'Recommended', metric: (k) => friendActivityLine(k) },
+  { id: 'default', label: 'A to Z', metric: (k) => friendActivityLine(k), cmp: (a, b) => (a.title || '').localeCompare(b.title || '') },
   { id: 'hours', label: 'Avg friend playtime', metric: (k) => `${avgFriendHours(k)} hrs avg`, cmp: (a, b) => avgFriendHours(b.catKey) - avgFriendHours(a.catKey) },
-  { id: 'friends', label: "Friends' rating", metric: (k) => `${friendsRating(k)}% of friends`, cmp: (a, b) => friendsRating(b.catKey) - friendsRating(a.catKey) },
+  { id: 'friends', label: "Friend's rating", metric: (k) => `${friendsRating(k)}% of friends`, cmp: (a, b) => friendsRating(b.catKey) - friendsRating(a.catKey) },
   { id: 'overall', label: 'Overall rating', metric: (k) => `${overallRating(k)}% overall`, cmp: (a, b) => overallRating(b.catKey) - overallRating(a.catKey) },
+  { id: 'session', label: 'Session length', metric: (k) => `~${sessionHours(k)} hrs / session`, cmp: (a, b) => sessionHours(a.catKey) - sessionHours(b.catKey) },
 ]
 
+// Min–max player-range inputs, shared by the Library and PlayList filters.
+// Either bound can be left blank (open-ended); "2 to 2" isolates 2-player games.
+function PlayerRangeInputs({ min, max, onChange }) {
+  const cls = 'h-[34px] w-[64px] rounded-[8px] bg-[#1f1f23] px-[10px] text-center text-[14px] font-semibold text-white outline-none ring-1 ring-white/10 placeholder:font-normal placeholder:text-[#87898c] focus:ring-[#9BF00B] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none'
+  const num = (v) => { const n = parseInt(v, 10); return (!v || isNaN(n) || n < 1) ? null : n }
+  return (
+    <div className="flex flex-wrap items-center gap-[8px]">
+      <input type="number" min="1" inputMode="numeric" value={min ?? ''} onChange={(e) => onChange(num(e.target.value), max)} placeholder="min" aria-label="Minimum players" className={cls} />
+      <span className="text-[14px] text-[#c7c9cb]">to</span>
+      <input type="number" min="1" inputMode="numeric" value={max ?? ''} onChange={(e) => onChange(min, num(e.target.value))} placeholder="max" aria-label="Maximum players" className={cls} />
+      <span className="text-[14px] text-[#c7c9cb]">players</span>
+      {(min != null || max != null) && <button onClick={() => onChange(null, null)} className="text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear</button>}
+    </div>
+  )
+}
+
 // ── Library tab — the full Game Pass Starter Edition catalog ────────────────
-function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
+function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onShare }) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(initialFilter || []) // [{kind:'cap'|'genre', value}]
@@ -2063,22 +2313,37 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
   const eSearchOpen = IS_SPECTATE ? !!lUI?.searchOpen : searchOpen
 
   const query = eQ.trim().toLowerCase()
-  const capFacet = eActive.find((a) => a.kind === 'cap') // player capacity is a single "up to N" number
-  const capMax = capFacet ? capFacet.value : null
+  // A clicked player pill still arrives as {kind:'cap', value:N} → treated as the
+  // range [1..N]. The manual filter sets a {kind:'range', min, max} facet.
+  const capFacet = eActive.find((a) => a.kind === 'cap')
+  const rangeFacet = eActive.find((a) => a.kind === 'range')
   const genres = eActive.filter((a) => a.kind === 'genre').map((a) => a.value)
   const tagFacets = eActive.filter((a) => a.kind === 'tag').map((a) => a.value)
+  const sessionFacet = eActive.find((a) => a.kind === 'session')
   // Faceted: OR within a group, AND across groups, AND with the text search.
   const filtered = STARTER_LIBRARY.filter((g) =>
     (!query || g.title.toLowerCase().includes(query) || g.genre.toLowerCase().includes(query)) &&
-    (capMax == null || maxPlayers(g.players) <= capMax) &&
+    (!capFacet || playerRangeOverlaps(g.players, 1, capFacet.value)) &&
+    (!rangeFacet || playerRangeOverlaps(g.players, rangeFacet.min, rangeFacet.max)) &&
     (genres.length === 0 || genres.includes(g.genre)) &&
+    (!sessionFacet || sessionHours(g.catKey) <= sessionFacet.value) &&
     (tagFacets.length === 0 || tagFacets.some((t) => gameTags(g).includes(t))))
   const activeSort = LIB_SORTS.find((s) => s.id === eSort) || LIB_SORTS[0]
   const shown = activeSort.cmp ? [...filtered].sort(activeSort.cmp) : filtered
   const isOn = (f) => eActive.some((a) => sameFacet(a, f))
   const toggle = (f) => setActive((cur) => cur.some((a) => sameFacet(a, f)) ? cur.filter((a) => !sameFacet(a, f)) : [...cur, f])
-  // Set (or clear) the single "up to N players" capacity facet.
-  const setCap = (n) => setActive((cur) => { const rest = cur.filter((a) => a.kind !== 'cap'); return n == null ? rest : [...rest, { kind: 'cap', value: n }] })
+  // Set (or clear) the player-range facet from the min/max inputs.
+  const rangeMin = rangeFacet?.min ?? null
+  const rangeMax = rangeFacet?.max ?? null
+  const setRange = (min, max) => setActive((cur) => {
+    const rest = cur.filter((a) => a.kind !== 'range' && a.kind !== 'cap')
+    return (min == null && max == null) ? rest : [...rest, { kind: 'range', min, max }]
+  })
+  // Filter to games whose average session fits within `n` hours.
+  const setSessionMax = (n) => setActive((cur) => {
+    const rest = cur.filter((a) => a.kind !== 'session')
+    return n == null ? rest : [...rest, { kind: 'session', value: n }]
+  })
   const open = (g) => onOpen(g.catKey)
 
   return (
@@ -2112,19 +2377,13 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
                     <div className="fixed inset-0 z-[40]" onClick={() => setFilterOpen(false)} />
                     <div ref={filterPop} role="dialog" aria-label="Filters" className="absolute right-0 top-[46px] z-[50] max-h-[62vh] w-[340px] overflow-y-auto rounded-[12px] border border-[#2b2d31] bg-[#161618] p-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
                       <p className="mb-[9px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Players</p>
-                      <div className="flex items-center gap-[8px]">
+                      <PlayerRangeInputs min={rangeMin} max={rangeMax} onChange={setRange} />
+                      <p className="mb-[9px] mt-[16px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Session length</p>
+                      <div className="flex flex-wrap items-center gap-[8px]">
                         <span className="text-[14px] text-[#c7c9cb]">Up to</span>
-                        <input
-                          type="number"
-                          min="1"
-                          inputMode="numeric"
-                          value={capFacet ? capFacet.value : ''}
-                          onChange={(e) => { const n = parseInt(e.target.value, 10); setCap(!e.target.value || isNaN(n) || n < 1 ? null : n) }}
-                          placeholder="any"
-                          className="h-[34px] w-[76px] rounded-[8px] bg-[#1f1f23] px-[10px] text-center text-[14px] font-semibold text-white outline-none ring-1 ring-white/10 placeholder:font-normal placeholder:text-[#87898c] focus:ring-[#7aff46] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                        />
-                        <span className="text-[14px] text-[#c7c9cb]">players</span>
-                        {capFacet && <button onClick={() => setCap(null)} className="text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear</button>}
+                        <input type="number" min="1" inputMode="numeric" value={sessionFacet?.value ?? ''} onChange={(e) => { const n = parseInt(e.target.value, 10); setSessionMax(!e.target.value || isNaN(n) || n < 1 ? null : n) }} placeholder="hrs" aria-label="Max hours per session" className="h-[34px] w-[64px] rounded-[8px] bg-[#1f1f23] px-[10px] text-center text-[14px] font-semibold text-white outline-none ring-1 ring-white/10 placeholder:font-normal placeholder:text-[#87898c] focus:ring-[#9BF00B] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                        <span className="text-[14px] text-[#c7c9cb]">hrs / session</span>
+                        {sessionFacet && <button onClick={() => setSessionMax(null)} className="text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear</button>}
                       </div>
                       <p className="mb-[9px] mt-[16px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Genre</p>
                       <div className="flex flex-wrap gap-[8px]">
@@ -2198,7 +2457,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist }) {
           )}
 
           <div className="mt-[24px] grid grid-cols-2 gap-x-[18px] gap-y-[24px] sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {shown.map((g) => <LibraryTile key={g.title} g={g} onClick={() => open(g)} metric={activeSort.metric ? activeSort.metric(g.catKey) : null} onWishlist={onWishlist} />)}
+            {shown.map((g) => <LibraryTile key={g.title} g={g} onClick={() => open(g)} metric={activeSort.metric ? activeSort.metric(g.catKey) : null} onWishlist={onWishlist} onShare={onShare} />)}
           </div>
           {shown.length === 0 && <p className="mt-[40px] text-center text-[15px] text-[#7e7f87]">No games match your filters.</p>}
         </div>
@@ -2227,7 +2486,7 @@ function FeedRow({ who, text, pre, game, post, when, onOpen }) {
           </>
         ) : text}
       </p>
-      <span className="shrink-0 text-[11px]" style={{ color: when === 'live' ? '#95ff00' : '#7e7f87' }}>{when}</span>
+      <span className="shrink-0 text-[11px]" style={{ color: when === 'live' ? '#9BF00B' : '#7e7f87' }}>{when}</span>
     </div>
   )
 }
@@ -2464,7 +2723,7 @@ function mixMenuItems(blend, h) {
   const pinned = !!blend.pinned
   const notif = blend.notif || 'Nothing'
   const items = []
-  if (h.onOpen) items.push({ label: 'Open Mix', icon: PLAY_GLYPH, primary: true, onClick: h.onOpen }, { divider: true })
+  if (h.onOpen) items.push({ label: 'Open PlayList', icon: PLAY_GLYPH, primary: true, onClick: h.onOpen }, { divider: true })
   items.push(
     { label: 'Rename', icon: EDIT_MENU_GLYPH, onClick: h.onRename },
     { label: 'Change cover art', icon: IMAGE_MENU_GLYPH, onClick: h.onCover },
@@ -2472,7 +2731,7 @@ function mixMenuItems(blend, h) {
     { label: 'Manage members', icon: PEOPLE_MENU_GLYPH, chevron: true, onClick: h.onManage },
     { label: 'Notification Settings', icon: BELL_MENU_GLYPH, sub: notif, submenu: MIX_NOTIF_LEVELS.map((lvl) => ({ label: lvl, active: notif === lvl, onClick: () => h.onSetNotif(lvl) })) },
     { divider: true },
-    { label: 'Leave Mix', icon: LEAVE_MENU_GLYPH, onClick: h.onLeave },
+    { label: 'Leave PlayList', icon: LEAVE_MENU_GLYPH, onClick: h.onLeave },
   )
   return items
 }
@@ -2547,6 +2806,26 @@ function useDialog(onClose, { label, labelledBy } = {}) {
   if (label) props['aria-label'] = label
   if (labelledBy) props['aria-labelledby'] = labelledBy
   return { ref, props }
+}
+
+// A small in-app confirmation dialog (replaces window.confirm so the styling
+// matches the rest of the app). `danger` tints the confirm button red.
+function ConfirmModal({ title, body, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger, onConfirm, onClose }) {
+  const dlg = useDialog(onClose, { label: title })
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[400px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="px-[24px] pb-[8px] pt-[22px]">
+          <p className="text-[20px] font-bold text-white">{title}</p>
+          {body && <p className="mt-[8px] text-[15px] leading-snug text-[#b5bac1]">{body}</p>}
+        </div>
+        <div className="flex items-center justify-end gap-[10px] px-[24px] py-[16px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">{cancelLabel}</button>
+          <button data-autofocus onClick={onConfirm} className={'rounded-[8px] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 ' + (danger ? 'bg-[#d83c3e]' : 'bg-[#5765f2]')}>{confirmLabel}</button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // Keyboard behavior for a toggle-button + popover panel (the filter / sort
@@ -2641,12 +2920,12 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
 
 function RenameMixModal({ blend, onClose, onSave }) {
   const [name, setName] = useState(blend.name)
-  const dlg = useDialog(onClose, { label: 'Rename Mix' })
+  const dlg = useDialog(onClose, { label: 'Rename PlayList' })
   const save = () => { const n = name.trim(); if (n) onSave({ name: n }); onClose() }
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
-        <h3 className="text-[20px] font-bold text-white">Rename Mix</h3>
+        <h3 className="text-[20px] font-bold text-white">Rename PlayList</h3>
         <input
           value={name}
           autoFocus
@@ -2714,10 +2993,10 @@ const LINK_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" 
 const WHEEL_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
 const SHARE_MENU_GLYPH = <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7" /><path d="M16 6l-4-4-4 4M12 2v13" /></svg>
 
-// The full group PLAYlist (Figma 863:3952) — every game in the Mix's shared
+// The full group PlayList (Figma 863:3952) — every game in the Mix's shared
 // list as a numbered, drag-to-rank grid, plus a search to add or remove games.
 function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
-  const dlg = useDialog(onClose, { label: 'Your Mix PLAYlist' })
+  const dlg = useDialog(onClose, { label: 'Your PlayList' })
   const [q, setQ] = useState('')
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
@@ -2738,7 +3017,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[600px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
-            <h3 className="text-[20px] font-bold text-white">Your Mix PLAYlist</h3>
+            <h3 className="text-[20px] font-bold text-white">Your PlayList</h3>
             <p className="mt-[2px] text-[13px] text-[#9a9ba3]">Drag to rank</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
@@ -2748,7 +3027,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
 
         {/* Search — above the ranking grid */}
         <div className="border-b border-black/30 px-[24px] py-[16px]">
-          <p className="text-[12px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Search your PLAYlist</p>
+          <p className="text-[12px] font-semibold tracking-wide text-[#9a9ba3]">Search your PlayList</p>
           <div className="mt-[8px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
             <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
             <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
@@ -2793,7 +3072,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
                   <div className="relative aspect-video bg-[#1a1a1d]">
                     <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
                     <span className="absolute left-[6px] top-[6px] flex size-[22px] items-center justify-center rounded-[6px] bg-black text-[13px] font-bold text-white">{i + 1}</span>
-                    <button onClick={() => onToggle(g.key, false)} aria-label="Remove from PLAYlist" className="absolute right-[6px] top-[6px] flex size-[22px] items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition hover:bg-[#f0505b] group-hover:opacity-100 focus-visible:opacity-100">
+                    <button onClick={() => onToggle(g.key, false)} aria-label="Remove from PlayList" className="absolute right-[6px] top-[6px] flex size-[22px] items-center justify-center rounded-full bg-black/60 text-white opacity-0 transition hover:bg-[#f0505b] group-hover:opacity-100 focus-visible:opacity-100">
                       <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                     </button>
                   </div>
@@ -2802,7 +3081,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
               ))}
             </div>
           ) : (
-            <p className="py-[28px] text-center text-[14px] text-[#7e7f87]">No games in this PLAYlist yet — search above to add some.</p>
+            <p className="py-[28px] text-center text-[14px] text-[#7e7f87]">No games in this PlayList yet — search above to add some.</p>
           )}
         </div>
       </div>
@@ -2810,7 +3089,24 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
   )
 }
 
-function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, onLibrary, onMixes }) {
+// Up/down vote control for a PlayList game — taps adjust the net score, which
+// re-ranks the list. `mine` is this member's current vote (1/-1/0).
+function VoteControl({ score, mine, onUp, onDown }) {
+  const btn = (active, activeCls) => 'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] transition ' + (active ? activeCls : 'text-[#9a9ba3] hover:bg-white/10 hover:text-white')
+  return (
+    <div className="flex items-center gap-[3px]" onClick={(e) => e.stopPropagation()}>
+      <button onClick={(e) => { e.stopPropagation(); onUp() }} aria-label="Upvote" aria-pressed={mine === 1} className={btn(mine === 1, 'bg-[#9BF00B]/25 text-[#9BF00B]')}>
+        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M6 11l6-6 6 6" /></svg>
+      </button>
+      <span className={'min-w-[20px] text-center text-[14px] font-bold tabular-nums ' + (score > 0 ? 'text-[#9BF00B]' : score < 0 ? 'text-[#f0505b]' : 'text-white')}>{score}</span>
+      <button onClick={(e) => { e.stopPropagation(); onDown() }} aria-label="Downvote" aria-pressed={mine === -1} className={btn(mine === -1, 'bg-[#f0505b]/20 text-[#f0505b]')}>
+        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 13l6 6 6-6" /></svg>
+      </button>
+    </div>
+  )
+}
+
+function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlist, onHome, onLibrary, onMixes }) {
   const { addToWheel } = useContext(NavCtx)
   const [menu, setMenu] = useState(null) // { x, y, title }
   const [launching, setLaunching] = useState(null)
@@ -2830,7 +3126,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   }
   function openMenu(e, title) {
     e.preventDefault()
-    e.stopPropagation() // this page has its own PLAYlist-aware menu; don't also fire the global one
+    e.stopPropagation() // this page has its own PlayList-aware menu; don't also fire the global one
     setMenu({ x: e.clientX, y: e.clientY, title })
   }
   function launch(title) {
@@ -2841,7 +3137,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
     else setLaunching(title)
   }
   const { blends, setBlends } = useRoomCtx()
-  // Add/remove a game from this Mix's shared PLAYlist (the right-click menu).
+  // Add/remove a game from this Mix's shared PlayList (the right-click menu).
   function setPlaylistMembership(title, add) {
     const key = KEY_OF_TITLE[title] || title
     const cur = blend.wishlist || []
@@ -2855,10 +3151,12 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   const [renameOpen, setRenameOpen] = useState(false)
   const [inviteOpen, setInviteOpen] = useState(false)
   const [playlistOpen, setPlaylistOpen] = useState(false)
+  const [confirmLeave, setConfirmLeave] = useState(false)
   const patchBlend = (patch) => setBlends(blends.map((b) => (b.id === blend.id ? { ...b, ...patch } : b)))
-  function leaveMix() {
-    if (!window.confirm(`Leave ${blend.name}?`)) return
+  function leaveMix() { setConfirmLeave(true) }
+  function doLeaveMix() {
     patchBlend({ members: blend.members.filter((c) => c !== SELF) })
+    setConfirmLeave(false)
     onBack()
   }
   function deleteBlend() {
@@ -2900,7 +3198,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   const g = (i) => (games.length ? games[i % games.length] : { title: 'a game' })
   // Activity feed — includes you (green/sauhee) alongside the other members.
   const feed = [
-    { who: SELF, pre: 'PLAYlisted', game: g(2).title, when: '1h' },
+    { who: SELF, pre: 'PlayListed', game: g(2).title, when: '1h' },
     { who: m[1] || SELF, pre: 'finished', game: g(0).title, post: ' and left it five stars', when: '2h' },
     { who: m[2] || m[1] || SELF, pre: 'is in a', game: g(1).title, post: ' lobby — one seat open', when: 'live' },
     { who: SELF, pre: 'added', game: g(3).title, post: ' to the group list', when: 'yest' },
@@ -2909,11 +3207,44 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
 
   // Rankable group wishlist — shared. Dragging reorders blend.wishlist for
   // everyone in the room (writes the new order to the realtime DB).
-  // The PLAYlist is exactly what the group curates — empty until they add games.
+  // The PlayList is exactly what the group curates — empty until they add games.
   const wishKeys = blend.wishlist || []
-  const wish = wishKeys.map((k) => CATALOG[k]).filter(Boolean)
+  const wish = wishKeys.map((k) => (CATALOG[k] ? { key: k, ...CATALOG[k] } : null)).filter(Boolean)
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
+  // ── Group voting + sort/filter (replaces drag-to-rank) ───────────────────
+  // Each game carries a deterministic base score; up/down taps add a delta and
+  // the list auto-ranks by the net score. `myVote` tracks this member's tap so
+  // it can be toggled off.
+  const [votes, setVotes] = useState({})
+  const [myVote, setMyVote] = useState({})
+  const [plSort, setPlSort] = useState('votes')
+  const [plSortOpen, setPlSortOpen] = useState(false)
+  const [plGenres, setPlGenres] = useState([])    // genre filter facets
+  const [plRange, setPlRange] = useState(null)     // { min, max } player range
+  const [plSession, setPlSession] = useState(null) // max hours / session
+  const [plFilterOpen, setPlFilterOpen] = useState(false)
+  const plSortPop = usePopover(plSortOpen, () => setPlSortOpen(false), { menu: true })
+  const plFilterPop = usePopover(plFilterOpen, () => setPlFilterOpen(false))
+  const setPlPlayerRange = (min, max) => setPlRange(min == null && max == null ? null : { min, max })
+  const plFilterCount = plGenres.length + (plRange ? 1 : 0) + (plSession ? 1 : 0)
+  // A game starts with no votes; its score is purely the group's up/down votes.
+  const scoreOf = (key) => votes[key] || 0
+  const applyVote = (key, dir) => {
+    const cur = myVote[key] || 0
+    const next = cur === dir ? 0 : dir
+    setVotes((v) => ({ ...v, [key]: (v[key] || 0) + (next - cur) }))
+    setMyVote((mv) => ({ ...mv, [key]: next }))
+  }
+  // Same sort menu the Library offers, plus the group's own vote ranking.
+  const PL_SORTS = [
+    { id: 'votes', label: 'Top voted' },
+    { id: 'az', label: 'A to Z' },
+    { id: 'hours', label: 'Avg friend playtime' },
+    { id: 'session', label: 'Session length' },
+    { id: 'friends', label: "Friend's rating" },
+    { id: 'overall', label: 'Overall rating' },
+  ]
   // Playlist display — grid (4 per row) or list, with an expand/collapse after
   // four rows.
   const [playlistView, setPlaylistView] = useState('grid')
@@ -2924,7 +3255,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   // The card under the pointer, so the moderator's mirror can force-reveal it.
   const [hover, setHover] = useState(null)
 
-  // Extend the spectate mirror with this page's PLAYlist view state + hovered
+  // Extend the spectate mirror with this page's PlayList view state + hovered
   // card (published alongside the menus above via a second effect so both stay
   // in sync). Read back below and used throughout the render in spectate.
   useEffect(() => {
@@ -2937,11 +3268,32 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
   const ePlaylistView = IS_SPECTATE ? (bui2?.playlistView || 'grid') : playlistView
   const ePlaylistExpanded = IS_SPECTATE ? !!bui2?.playlistExpanded : playlistExpanded
   const ePlaylistSearch = IS_SPECTATE ? (bui2?.playlistSearch || '') : playlistSearch
-  const eHover = IS_SPECTATE ? (bui2?.hover ?? null) : hover
+  // See the note in Content: live view never force-reveals by title (that would
+  // light up a second card for the same game). Only the spectate mirror echoes.
+  const eHover = IS_SPECTATE ? (bui2?.hover ?? null) : null
   const eLaunching = IS_SPECTATE ? (bui2?.launching ?? null) : launching
 
   const PLAYLIST_LIMIT = ePlaylistView === 'grid' ? 16 : 4 // four rows either way
-  const wishShown = ePlaylistExpanded ? wish : wish.slice(0, PLAYLIST_LIMIT)
+  const plAllGenres = [...new Set(wish.map((g) => g.genre).filter(Boolean))].sort((a, b) => a.localeCompare(b))
+  const plFiltered = wish.filter((g) =>
+    (plGenres.length === 0 || plGenres.includes(g.genre)) &&
+    (!plRange || playerRangeOverlaps(g.players, plRange.min, plRange.max)) &&
+    (!plSession || sessionHours(g.key) <= plSession))
+  const plList = [...plFiltered].sort((a, b) =>
+    plSort === 'az' ? (a.title || '').localeCompare(b.title || '')
+    : plSort === 'hours' ? (avgFriendHours(b.key) - avgFriendHours(a.key))
+    : plSort === 'session' ? (sessionHours(a.key) - sessionHours(b.key))
+    : plSort === 'friends' ? (friendsRating(b.key) - friendsRating(a.key))
+    : plSort === 'overall' ? (overallRating(b.key) - overallRating(a.key))
+    : (scoreOf(b.key) - scoreOf(a.key)))
+  const wishShown = ePlaylistExpanded ? plList : plList.slice(0, PLAYLIST_LIMIT)
+  // Who added each game — deterministic per (blend, game) so it's stable across
+  // renders. Drawn from the group's members (always includes you).
+  const adderColor = (key) => { const pool = m.length ? m : [SELF]; return pool[ratingHash(blend.id + key, 'addedby') % pool.length] }
+  const adderName = (key) => capName(NAME[adderColor(key)] || 'a member')
+  // When the list is ranked by a play-stat, surface that stat on each card.
+  const showSortMeta = plSort === 'hours' || plSort === 'session' || plSort === 'friends' || plSort === 'overall'
+  const sortRating = (key) => plSort === 'overall' ? `${overallRating(key)}% overall` : `${friendsRating(key)}% friends`
   const q = ePlaylistSearch.trim().toLowerCase()
   const isHit = (title) => !!q && title.toLowerCase().includes(q)
   const searchAddable = q
@@ -2990,11 +3342,14 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
             style={{ background: 'linear-gradient(to bottom, rgba(12,12,14,0.5) 0%, rgba(12,12,14,0.62) 60%, #0c0c0e 100%)' }}
           />
           {/* Top gap matches the breathing room between this banner and the
-              PLAYlist below it, so the header isn't crowded against the frame. */}
-          <div className="relative mx-auto w-full max-w-[1280px] px-[40px] pb-[30px] pt-[74px]">
+              PlayList below it, so the header isn't crowded against the frame. */}
+          <div className="relative mx-auto w-full max-w-[1280px] px-[40px] pb-[40px] pt-[74px]">
 
-          {/* Header — cover quad + name + members + refresh note */}
-          <div className="flex items-center gap-[28px]">
+          {/* Header — cover quad + name + members on the left, group-activity
+              panel on the right. Both live inside the heading so the activity
+              box no longer overlaps the divider below. */}
+          <div className="flex items-start gap-[32px]">
+            <div className="flex min-w-0 flex-1 items-center gap-[28px]">
             <div
               onClick={() => setCoverPicker(true)}
               onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setCoverMenu({ x: e.clientX, y: e.clientY }) }}
@@ -3021,27 +3376,57 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
               </button>
             </div>
             <div>
-              <div className="flex items-center gap-[14px]">
-                <h1 className="text-[52px] font-semibold leading-none tracking-tight text-white">{blend.name}</h1>
-                {/* Clear edit affordance right next to the title */}
+              {/* The edit affordance flows inline after the title text, so it sits
+                  wherever the (possibly wrapping) title ends. */}
+              <h1 className="text-[52px] font-semibold leading-[1.05] tracking-tight text-white">
+                {blend.name}
                 <button
                   onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setCoverMenu({ x: r.left, y: r.bottom + 6 }) }}
-                  title="Edit this Mix"
-                  aria-label="Edit this Mix"
-                  className="flex size-[36px] shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20"
+                  title="Edit this PlayList"
+                  aria-label="Edit this PlayList"
+                  className="ml-[14px] inline-flex size-[36px] translate-y-[3px] items-center justify-center rounded-full bg-white/10 align-middle text-white transition hover:bg-white/20"
                 >
                   <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
                 </button>
-              </div>
-              <div className="mt-[16px] flex items-center gap-[10px] text-[18px] text-[#e7e7e7]">
-                A Mix of games for
+              </h1>
+              <div className="mt-[16px] flex flex-wrap items-center gap-[10px] text-[18px] text-[#e7e7e7]">
+                A PlayList of games for
                 <span className="flex items-center">
                   {blend.members.map((c, i) => (
-                    <Avatar key={i} color={c} size={30} style={{ marginRight: i < blend.members.length - 1 ? -10 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                    <MemberChip key={i} color={c} size={30} marginRight={i < blend.members.length - 1 ? -10 : 0} />
                   ))}
                 </span>
+                {/* Pending invites — people invited who haven't accepted yet.
+                    Grayed out, hoverable for their name + pending status. */}
+                {(() => {
+                  const pend = (blend.invited || []).filter((c) => !(blend.members || []).includes(c))
+                  if (!pend.length) return null
+                  return (
+                    <span className="flex items-center gap-[8px] text-[13px] text-[#7e7f87]">
+                      <span className="flex items-center">
+                        {pend.map((c, i) => (
+                          <MemberChip key={i} color={c} size={30} marginRight={i < pend.length - 1 ? -10 : 0} pending />
+                        ))}
+                      </span>
+                      <span>pending</span>
+                    </span>
+                  )
+                })()}
               </div>
             </div>
+            </div>
+
+            {/* Group activity — now lives in the header, to the right of the
+                title, so it clears the divider below. Shows three rows. */}
+            <aside className="hidden w-[340px] shrink-0 self-stretch lg:block">
+              <div className="h-full rounded-[16px] border border-white/10 bg-[#121214]/95 p-[18px] backdrop-blur">
+                <p className="text-[16px] font-semibold text-white">What the group members are doing</p>
+                <p className="mt-[2px] text-[12px] text-[#7e7f87]">Activity only shows this group.</p>
+                <div className="mt-[18px] flex flex-col gap-[16px]">
+                  {feed.slice(0, 3).map((f, i) => <FeedRow key={i} {...f} onOpen={onOpen} />)}
+                </div>
+              </div>
+            </aside>
           </div>
 
           </div>
@@ -3052,44 +3437,97 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
           <div className="my-[28px] h-px" style={{ backgroundColor: '#1c1d21' }} />
 
           <div className="flex gap-[32px]">
-            {/* Main column — the group's Mix (playlist) + daily recommended */}
+            {/* Main column — the group's Mix (playlist) + daily recommended.
+                Spans the full width now that group activity moved to the header. */}
             <div className="min-w-0 flex-1">
               {/* The Mix (this group's playlist) — grid (4/row) or list, expandable */}
               <section>
-                {/* Search — highlights matching games in the Mix, offers to add ones
-                    that aren't in it yet. */}
-                <div className="relative mb-[16px]">
-                  <div className="flex items-center gap-[10px] rounded-[10px] bg-[#151517] px-[14px] py-[10px] ring-1 ring-white/5 focus-within:ring-[#5765f2]">
-                    <svg viewBox="0 0 24 24" className="size-[18px] shrink-0 text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-                    <input value={ePlaylistSearch} onChange={(e) => setPlaylistSearch(e.target.value)} placeholder="Search games to find or add to this Mix" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
-                    {ePlaylistSearch && (
-                      <button onClick={() => setPlaylistSearch('')} aria-label="Clear search" className="shrink-0 text-[#87898c] transition hover:text-white">
-                        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-                      </button>
+                {/* Search + Filters + Sort in one row, like the Library page. The
+                    search finds/adds games; Filters (genre + player range) and Sort
+                    narrow and rank the list. */}
+                <div className="relative z-[30] mb-[18px] flex flex-wrap items-center gap-[10px]">
+                  <div className="relative min-w-[240px] flex-1">
+                    <div className="kbd-ring flex items-center gap-[10px] rounded-[10px] bg-[#151517] px-[14px] py-[10px] ring-1 ring-white/5">
+                      <svg viewBox="0 0 24 24" className="size-[18px] shrink-0 text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                      <input value={ePlaylistSearch} onChange={(e) => setPlaylistSearch(e.target.value)} placeholder="Search games to find or add to this PlayList" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+                      {ePlaylistSearch && (
+                        <button onClick={() => setPlaylistSearch('')} aria-label="Clear search" className="shrink-0 text-[#87898c] transition hover:text-white">
+                          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                        </button>
+                      )}
+                    </div>
+                    {/* Add-a-game results for games not already in the PlayList */}
+                    {q && searchAddable.length > 0 && (
+                      <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#1a1a1d] shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
+                        <p className="px-[14px] pb-[6px] pt-[10px] text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Not in this PlayList — add one</p>
+                        {searchAddable.map((g) => (
+                          <button key={g.key} onClick={() => { setPlaylistMembership(g.title, true); setPlaylistSearch('') }} className="flex w-full items-center gap-[12px] px-[14px] py-[9px] text-left transition hover:bg-white/[0.05]">
+                            <img alt="" src={g.image} className="h-[36px] w-[64px] shrink-0 rounded-[6px] object-cover" />
+                            <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">{g.title}</span>
+                            <span className="flex items-center gap-[5px] text-[13px] font-semibold text-[#9BF00B]">
+                              <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+                              Add
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     )}
                   </div>
-                  {/* Add-a-game results for games not already in the Mix */}
-                  {q && searchAddable.length > 0 && (
-                    <div className="absolute left-0 right-0 top-[calc(100%+6px)] z-20 overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#1a1a1d] shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
-                      <p className="px-[14px] pb-[6px] pt-[10px] text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Not in this Mix — add one</p>
-                      {searchAddable.map((g) => (
-                        <button key={g.key} onClick={() => { setPlaylistMembership(g.title, true); setPlaylistSearch('') }} className="flex w-full items-center gap-[12px] px-[14px] py-[9px] text-left transition hover:bg-white/[0.05]">
-                          <img alt="" src={g.image} className="h-[36px] w-[64px] shrink-0 rounded-[6px] object-cover" />
-                          <span className="min-w-0 flex-1 truncate text-[14px] font-semibold text-white">{g.title}</span>
-                          <span className="flex items-center gap-[5px] text-[13px] font-semibold text-[#9BF00B]">
-                            <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                            Add
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                <div className="mb-[18px] flex items-center gap-[14px]">
-                  <span className="text-[12px] font-medium text-[#7e7f87]">drag to rank</span>
+                  {/* Filters — genre chips + player range (same as the Library) */}
+                  <div className="relative">
+                    <button onClick={() => setPlFilterOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={plFilterOpen} className="flex h-[42px] items-center gap-[8px] rounded-[10px] bg-[#151517] px-[14px] text-[14px] font-semibold text-white ring-1 ring-white/5 transition hover:bg-[#1d1d20]">
+                      <svg viewBox="0 0 24 24" className="size-[15px]" fill="currentColor"><path d="M3 5.5h18a1 1 0 0 1 .8 1.6l-6.3 8.2V20a1 1 0 0 1-1.45.9l-3-1.5A1 1 0 0 1 10.5 18.5v-3.2L2.2 7.1A1 1 0 0 1 3 5.5z" /></svg>
+                      Filters
+                      {plFilterCount > 0 && <span className="rounded-full bg-white/15 px-[7px] py-[1px] text-[12px] font-bold">{plFilterCount}</span>}
+                    </button>
+                    {plFilterOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[40]" onClick={() => setPlFilterOpen(false)} />
+                        <div ref={plFilterPop} role="dialog" aria-label="Filter PlayList" className="absolute right-0 top-[48px] z-[50] max-h-[62vh] w-[320px] overflow-y-auto rounded-[12px] border border-[#2b2d31] bg-[#161618] p-[16px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                          <p className="mb-[9px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Players</p>
+                          <PlayerRangeInputs min={plRange?.min ?? null} max={plRange?.max ?? null} onChange={setPlPlayerRange} />
+                          <p className="mb-[9px] mt-[16px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Session length</p>
+                          <div className="flex flex-wrap items-center gap-[8px]">
+                            <span className="text-[14px] text-[#c7c9cb]">Up to</span>
+                            <input type="number" min="1" inputMode="numeric" value={plSession ?? ''} onChange={(e) => { const n = parseInt(e.target.value, 10); setPlSession(!e.target.value || isNaN(n) || n < 1 ? null : n) }} placeholder="hrs" aria-label="Max hours per session" className="h-[34px] w-[64px] rounded-[8px] bg-[#1f1f23] px-[10px] text-center text-[14px] font-semibold text-white outline-none ring-1 ring-white/10 placeholder:font-normal placeholder:text-[#87898c] focus:ring-[#9BF00B] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" />
+                            <span className="text-[14px] text-[#c7c9cb]">hrs / session</span>
+                          </div>
+                          <p className="mb-[9px] mt-[16px] text-[12px] font-bold uppercase tracking-wide text-[#87898c]">Genre</p>
+                          {plAllGenres.length ? (
+                            <div className="flex flex-wrap gap-[8px]">
+                              {plAllGenres.map((gn) => {
+                                const on = plGenres.includes(gn)
+                                return <button key={gn} onClick={() => setPlGenres((cur) => on ? cur.filter((x) => x !== gn) : [...cur, gn])} className={'rounded-full px-[12px] py-[6px] text-[13px] font-semibold transition ' + (on ? 'bg-white text-black' : 'bg-[#1f1f23] text-[#c7c9cb] hover:bg-[#2a2a2f] hover:text-white')}>{gn}</button>
+                              })}
+                            </div>
+                          ) : <p className="text-[13px] text-[#7e7f87]">No games to filter yet.</p>}
+                          {plFilterCount > 0 && <button onClick={() => { setPlGenres([]); setPlRange(null); setPlSession(null) }} className="mt-[16px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear filters</button>}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  {/* Sort */}
+                  <div className="relative">
+                    <button onClick={() => setPlSortOpen((v) => !v)} aria-haspopup="menu" aria-expanded={plSortOpen} className="flex h-[42px] items-center gap-[8px] rounded-[10px] bg-[#151517] px-[14px] text-[14px] font-semibold text-white ring-1 ring-white/5 transition hover:bg-[#1d1d20]">
+                      <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h10M4 18h6" /></svg>
+                      {PL_SORTS.find((s) => s.id === plSort)?.label}
+                    </button>
+                    {plSortOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[40]" onClick={() => setPlSortOpen(false)} />
+                        <div ref={plSortPop} role="menu" aria-label="Sort PlayList" aria-orientation="vertical" className="absolute right-0 top-[48px] z-[50] w-[220px] overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                          {PL_SORTS.map((s) => (
+                            <button key={s.id} role="menuitem" onClick={() => { setPlSort(s.id); setPlSortOpen(false) }} className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (plSort === s.id ? 'font-semibold text-white' : 'text-[#c7c9cb]')}>
+                              {s.label}
+                              {plSort === s.id && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                   {/* List / grid view toggle */}
-                  <div className="ml-auto flex items-center gap-[2px] rounded-[9px] bg-[#151517] p-[3px]">
+                  <div className="flex items-center gap-[2px] rounded-[9px] bg-[#151517] p-[3px]">
                     <button onClick={() => setPlaylistView('list')} aria-label="List view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (ePlaylistView === 'list' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
                       <svg viewBox="0 0 24 24" className="size-[17px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" /></svg>
                     </button>
@@ -3105,34 +3543,52 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                       <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
                     </span>
                     <span>
-                      <span className="block text-[16px] font-semibold text-white">This Mix is empty</span>
+                      <span className="block text-[16px] font-semibold text-white">This PlayList is empty</span>
                       <span className="block text-[13px] text-[#9a9ba3]">Right-click a game below to add the ones your group wants to play.</span>
                     </span>
                   </button>
+                ) : plList.length === 0 ? (
+                  <p className="rounded-[12px] bg-[#151517] py-[28px] text-center text-[14px] text-[#9a9ba3]">No games match the filter.</p>
                 ) : ePlaylistView === 'grid' ? (
-                  <div className="grid grid-cols-4 gap-[16px]">
+                  <div className="grid grid-cols-4 gap-[20px]">
                     {wishShown.map((g, i) => (
                       <div
-                        key={g.title}
-                        draggable
-                        onDragStart={() => setDragIdx(i)}
-                        onDragOver={(e) => { e.preventDefault(); setOverIdx(i) }}
-                        onDragLeave={() => setOverIdx((v) => (v === i ? null : v))}
-                        onDrop={() => dropAt(i)}
-                        onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                        key={g.key}
                         onClick={() => onOpen?.(g.title)}
                         onContextMenu={(e) => openMenu(e, g.title)}
                         role="button"
                         tabIndex={0}
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
-                        className={'cursor-pointer select-none rounded-[14px] p-[6px] ring-2 transition ' + (dragIdx === i ? 'opacity-0 ' : '') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')}
+                        className={'cursor-pointer select-none rounded-[14px] p-[6px] ring-2 transition ' + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent')}
                       >
                         <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#1a1a1d]">
-                          <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
-                          <span className="absolute left-[8px] top-[8px] flex size-[26px] items-center justify-center rounded-[8px] bg-black/70 text-[14px] font-bold text-white backdrop-blur">{i + 1}</span>
+                          <img alt="" src={g.image} className="size-full object-cover" />
+                          <span className="absolute left-[10px] top-[10px] flex size-[30px] items-center justify-center rounded-[9px] bg-black/70 text-[15px] font-bold text-white backdrop-blur">{i + 1}</span>
+                          {/* Who added this game — profile + name, bottom-left. */}
+                          <span title={`Added by ${adderName(g.key)}`} className="absolute bottom-[8px] left-[8px] flex max-w-[calc(100%-16px)] items-center gap-[6px] rounded-full bg-black/65 py-[3px] pl-[3px] pr-[10px] backdrop-blur">
+                            <Avatar color={adderColor(g.key)} size={18} />
+                            <span className="truncate text-[11px] font-semibold text-white">{adderName(g.key)}</span>
+                          </span>
                         </div>
-                        <p className="mt-[8px] truncate text-[15px] font-semibold text-white">{g.title}</p>
+                        <div className="mt-[10px] flex items-center gap-[8px]">
+                          <p className="min-w-0 flex-1 truncate text-[17px] font-semibold text-white">{g.title}</p>
+                          <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} />
+                        </div>
+                        {/* Ranked-by stat: session length, or avg friend playtime + rating. */}
+                        {showSortMeta && (
+                          <div className="mt-[3px] flex items-center gap-[7px] text-[12px] text-[#9a9ba3]">
+                            {plSort === 'session' ? (
+                              <span className="inline-flex items-center gap-[3px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" /></svg>~{sessionHours(g.key)} hrs / session</span>
+                            ) : (
+                              <>
+                                <span className="inline-flex items-center gap-[3px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" /></svg>~{avgFriendHours(g.key)}h avg</span>
+                                <span className="text-[#4a4d55]">·</span>
+                                <span>{sortRating(g.key)}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -3140,61 +3596,63 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
                   <div className="flex flex-col gap-[10px]">
                     {wishShown.map((g, i) => (
                       <div
-                        key={g.title}
-                        draggable
-                        onDragStart={() => setDragIdx(i)}
-                        onDragOver={(e) => { e.preventDefault(); setOverIdx(i) }}
-                        onDragLeave={() => setOverIdx((v) => (v === i ? null : v))}
-                        onDrop={() => dropAt(i)}
-                        onDragEnd={() => { setDragIdx(null); setOverIdx(null) }}
+                        key={g.key}
                         onClick={() => onOpen?.(g.title)}
                         onContextMenu={(e) => openMenu(e, g.title)}
                         role="button"
                         tabIndex={0}
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
-                        className={'group flex cursor-pointer select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (dragIdx === i ? 'opacity-0 ' : '') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : overIdx === i && dragIdx !== i ? 'ring-[#5765f2]' : 'ring-transparent')}
+                        className={'group flex cursor-pointer select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent')}
                       >
                         <span className="flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">{i + 1}</span>
                         <div className="h-[68px] w-[121px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]">
-                          <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
+                          <img alt="" src={g.image} className="size-full object-cover" />
                         </div>
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="truncate text-[16px] font-semibold text-white">{g.title}</p>
+                          <p className="truncate text-[13px] text-[#7e7f87]">{capName(g.genre || 'game')} · {g.players} players</p>
+                          <span title={`Added by ${adderName(g.key)}`} className="mt-[4px] inline-flex items-center gap-[5px] text-[12px] text-[#9a9ba3]">
+                            <Avatar color={adderColor(g.key)} size={16} />
+                            <span className="truncate">Added by {adderName(g.key)}</span>
+                          </span>
                         </div>
+                        {showSortMeta && (
+                          <div className="hidden shrink-0 flex-col items-end text-[12px] text-[#9a9ba3] sm:flex">
+                            {plSort === 'session' ? (
+                              <span>~{sessionHours(g.key)} hrs / session</span>
+                            ) : (
+                              <>
+                                <span>~{avgFriendHours(g.key)}h avg</span>
+                                <span>{sortRating(g.key)}</span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                        <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} />
                       </div>
                     ))}
                   </div>
                 )}
 
-                {wish.length > PLAYLIST_LIMIT && (
+                {plList.length > PLAYLIST_LIMIT && (
                   <button onClick={() => setPlaylistExpanded((v) => !v)} className="mt-[16px] flex items-center gap-[6px] rounded-[8px] border border-[#2b2d31] px-[16px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-white/[0.04]">
-                    {ePlaylistExpanded ? 'Collapse' : `Expand (${wish.length - PLAYLIST_LIMIT} more)`}
+                    {ePlaylistExpanded ? 'Collapse' : `Expand (${plList.length - PLAYLIST_LIMIT} more)`}
                     <svg viewBox="0 0 24 24" className={'size-[15px] transition ' + (ePlaylistExpanded ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
                   </button>
                 )}
               </section>
 
-              {/* Daily Recommended — a carousel like the game detail page */}
-              <section className="mt-[44px]">
-                <ShelfRow title="Daily Recommended Games" padTop={30}>
+              {/* Recommended carousel — extra top gap separates it from the
+                  PlayList grid above. */}
+              <section className="mt-[112px]">
+                <ShelfRow title="Recommended for the group" padTop={30}>
                   {blend.games.map((k) => (
-                    <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={(t) => setPlaylistMembership(t, true)} onShare={onShare} forceReveal={!!eHover && eHover === (CATALOG[k]?.title || STARTER_BY_KEY[k]?.title)} />
+                    <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={!!eHover && eHover === (CATALOG[k]?.title || STARTER_BY_KEY[k]?.title)} />
                   ))}
                 </ShelfRow>
               </section>
             </div>
-
-            {/* Group activity — sticky on the right */}
-            <aside className="hidden w-[320px] shrink-0 lg:block">
-              <div className="sticky top-[20px] rounded-[16px] bg-[#121214] p-[18px]">
-                <p className="text-[16px] font-semibold text-white">What the group members are doing</p>
-                <p className="mt-[2px] text-[12px] text-[#7e7f87]">Activity only shows this group.</p>
-                <div className="mt-[18px] flex flex-col gap-[16px]">
-                  {feed.map((f, i) => <FeedRow key={i} {...f} onOpen={onOpen} />)}
-                </div>
-              </div>
-            </aside>
           </div>
         </div>
       </div>
@@ -3209,8 +3667,8 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
             { label: 'Start a party', icon: PLAY_GLYPH, primary: true, onClick: () => launch(eMenu.title) },
             { divider: true },
             (blend.wishlist || []).includes(KEY_OF_TITLE[eMenu.title] || eMenu.title)
-              ? { label: 'Remove from PLAYlist', icon: REMOVE_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, false) }
-              : { label: 'Add to PLAYlist', icon: BOOKMARK_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, true) },
+              ? { label: 'Remove from PlayList', icon: REMOVE_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, false) }
+              : { label: 'Add to PlayList', icon: BOOKMARK_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, true) },
             { label: 'Add to Wheel', icon: WHEEL_MENU_GLYPH, onClick: () => { addToWheel(eMenu.title); setMenu(null) } },
             { label: 'Share', icon: SHARE_MENU_GLYPH, onClick: () => { onShare?.(eMenu.title); setMenu(null) } },
           ]}
@@ -3247,6 +3705,16 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onHome, o
         />
       )}
       {eLaunching && <LaunchToast title={eLaunching} onDone={() => setLaunching(null)} />}
+      {confirmLeave && (
+        <ConfirmModal
+          title="Leave this PlayList?"
+          body={`Are you sure you want to leave ${blend.name}? You can be re-invited later.`}
+          confirmLabel="Leave PlayList"
+          danger
+          onConfirm={doLeaveMix}
+          onClose={() => setConfirmLeave(false)}
+        />
+      )}
     </main>
   )
 }
@@ -3317,7 +3785,8 @@ function WhosOnModal({ onClose, onCreated }) {
     if (!chosen.length) return
     // A group can have multiple Mixes (each is a separate playlist), so no
     // duplicate-group check here.
-    const name = [capName(SELF_NAME), ...chosen.map((f) => capName(f.name))].join(', ')
+    // Default to a playful, personality-based name instead of listing usernames.
+    const name = funnyMixName()
     const games = STARTER_MIX_GAMES
     const newBlend = {
       id: slug(name) + '-' + Date.now().toString(36).slice(-4),
@@ -3344,7 +3813,7 @@ function WhosOnModal({ onClose, onCreated }) {
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
             <p className="text-[22px] font-bold text-white">Who’s on ARCADE</p>
-            <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick who to start a Mix with.</p>
+            <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick who to start a PlayList with.</p>
           </div>
           <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
             <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -3367,11 +3836,11 @@ function WhosOnModal({ onClose, onCreated }) {
               <button key={f.name} onClick={() => toggle(f.name)} className="flex w-full items-center gap-[12px] py-[8px] text-left">
                 <span className="relative shrink-0">
                   <Avatar color={f.color} size={40} />
-                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: isOnline ? '#23a55a' : '#80848e' }} />
+                  <span className="absolute -bottom-[1px] -right-[1px] size-[13px] rounded-full ring-[3px] ring-[#2b2d31]" style={{ backgroundColor: isOnline ? '#9BF00B' : '#80848e' }} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
-                  <p className="text-[13px]" style={{ color: isOnline ? '#23a55a' : '#80848e' }}>{isOnline ? 'On Arcade' : 'Offline'}</p>
+                  <p className="text-[13px]" style={{ color: isOnline ? '#9BF00B' : '#80848e' }}>{isOnline ? 'On Arcade' : 'Offline'}</p>
                 </div>
                 <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (on ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
                   {on && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
@@ -3402,7 +3871,7 @@ function WhosOnModal({ onClose, onCreated }) {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="text-[15px] font-semibold text-white">{capName(f.name)}</p>
-                  <p className="text-[13px]" style={{ color: gifted[f.name] ? '#23a55a' : '#80848e' }}>
+                  <p className="text-[13px]" style={{ color: gifted[f.name] ? '#9BF00B' : '#80848e' }}>
                     {gifted[f.name] ? 'Nitro gift sent' : on ? 'Will be asked to subscribe' : 'Not on Arcade'}
                   </p>
                 </div>
@@ -3422,7 +3891,7 @@ function WhosOnModal({ onClose, onCreated }) {
         </div>
         {dupMix && (
           <div className="mx-[24px] mb-[2px] mt-[4px] flex items-center justify-between gap-[10px] rounded-[8px] bg-[#f0505b]/12 px-[12px] py-[10px]">
-            <p className="text-[13px] text-[#f0a0a6]">You already have a Mix with these people — <span className="font-semibold text-white">{dupMix.name}</span>.</p>
+            <p className="text-[13px] text-[#f0a0a6]">You already have a PlayList with these people — <span className="font-semibold text-white">{dupMix.name}</span>.</p>
             <button onClick={() => onCreated?.(dupMix.id)} className="shrink-0 text-[13px] font-semibold text-[#5765f2] transition hover:underline">Open it</button>
           </div>
         )}
@@ -3433,7 +3902,7 @@ function WhosOnModal({ onClose, onCreated }) {
             onClick={createMix}
             className="rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Create a Mix{chosen.length ? ` with ${chosen.length}` : ''}
+            Create a PlayList{chosen.length ? ` with ${chosen.length}` : ''}
           </button>
         </div>
       </div>
@@ -3512,19 +3981,22 @@ function CreateBlendModal({ onClose, onCreated }) {
   const hiddenP = useHidden()
   const friends = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
   const [sel, setSel] = useState({})
-  const dlg = useDialog(onClose, { label: 'Create a Mix' })
+  const dlg = useDialog(onClose, { label: 'Create a PlayList' })
   const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1)
   const [nameOverride, setNameOverride] = useState(null)
   const [dupMix, setDupMix] = useState(null)
+  // A playful default name, generated once, so it's stable while the modal is open.
+  const [funnyDefault] = useState(funnyMixName)
   const toggleSel = (name) => { setDupMix(null); setSel((s) => ({ ...s, [name]: !s[name] })) }
   const selectedFriends = friends.filter((f) => sel[f.name])
   const selectedNames = selectedFriends.map((f) => cap(f.name))
   const anySelected = selectedNames.length > 0
-  // The generated name includes you (the creator), not just the people invited.
-  const blendName = nameOverride !== null ? nameOverride : [cap(SELF_NAME), ...selectedNames].join(', ')
+  // Default to a playful, personality-based name instead of listing usernames;
+  // the creator can still type their own (nameOverride).
+  const blendName = nameOverride !== null ? nameOverride : funnyDefault
   function createBlend() {
     // A group can have multiple Mixes (each is a separate playlist).
-    const name = (blendName || 'New Mix').trim()
+    const name = (blendName || 'New PlayList').trim()
     const games = STARTER_MIX_GAMES
     const newBlend = {
       id: slug(name) + '-' + Date.now().toString(36).slice(-4),
@@ -3558,8 +4030,8 @@ function CreateBlendModal({ onClose, onCreated }) {
         <div className="p-[24px]">
           <div className="flex items-start justify-between gap-[12px]">
             <div>
-              <h3 className="text-[22px] font-bold text-white">Create a Mix</h3>
-              <p className="mt-[4px] text-[15px] text-[#b5bac1]">Select who you want to create a Mix with.</p>
+              <h3 className="text-[22px] font-bold text-white">Create a PlayList</h3>
+              <p className="mt-[4px] text-[15px] text-[#b5bac1]">Select who you want to create a PlayList with.</p>
             </div>
             <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
               <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -3571,8 +4043,8 @@ function CreateBlendModal({ onClose, onCreated }) {
             <input placeholder="Search" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
           </div>
 
-          <p className="mt-[16px] text-[12px] font-semibold uppercase tracking-wide text-[#b5bac1]">
-            Add friends or server members to Mixes
+          <p className="mt-[16px] text-[12px] font-semibold tracking-wide text-[#b5bac1]">
+            Add friends or server members to mixes
           </p>
           <div className="no-scrollbar mt-[8px] flex max-h-[280px] flex-col overflow-y-auto">
             {friends.map((f) => {
@@ -3612,24 +4084,24 @@ function CreateBlendModal({ onClose, onCreated }) {
                 </span>
               </div>
               <div className="min-w-0 flex-1">
-                <label className="text-[13px] text-[#b5bac1]">Mix Name (optional)</label>
+                <label className="text-[13px] text-[#b5bac1]">PlayList Name (optional)</label>
                 <input
                   value={blendName}
                   onChange={(e) => setNameOverride(e.target.value)}
-                  placeholder="Mix name"
+                  placeholder="PlayList name"
                   className="mt-[4px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px] text-[14px] text-white outline-none placeholder:text-[#87898c]"
                 />
               </div>
             </div>
             {dupMix && (
               <div className="mt-[14px] flex items-center justify-between gap-[10px] rounded-[8px] bg-[#f0505b]/12 px-[12px] py-[10px]">
-                <p className="text-[13px] text-[#f0a0a6]">You already have a Mix with these people — <span className="font-semibold text-white">{dupMix.name}</span>.</p>
+                <p className="text-[13px] text-[#f0a0a6]">You already have a PlayList with these people — <span className="font-semibold text-white">{dupMix.name}</span>.</p>
                 <button onClick={() => onCreated?.(dupMix.id)} className="shrink-0 text-[13px] font-semibold text-[#5765f2] transition hover:underline">Open it</button>
               </div>
             )}
             <div className="mt-[18px] flex justify-end gap-[10px]">
               <button onClick={onClose} className="rounded-[8px] bg-[#2b2d31] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]">Cancel</button>
-              <button onClick={createBlend} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Create a new Mix</button>
+              <button onClick={createBlend} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Create a new PlayList</button>
             </div>
           </div>
         ) : (
@@ -3648,10 +4120,10 @@ function CreateBlendModal({ onClose, onCreated }) {
 }
 
 // ── Add a game to a Blend's wishlist (opened from a card's bookmark) ────────
-function WishlistModal({ game, onClose }) {
+function WishlistModal({ game, onClose, onAddToWheel }) {
   const { blends, setBlends } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
-  const dlg = useDialog(onClose, { label: 'Add to Mix' })
+  const dlg = useDialog(onClose, { label: 'Add to PlayList' })
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
     const wishlist = has ? b.wishlist.filter((x) => x !== key) : [...(b.wishlist || []), key]
@@ -3663,8 +4135,8 @@ function WishlistModal({ game, onClose }) {
         <div className="p-[24px]">
           <div className="flex items-start justify-between gap-[12px]">
             <div>
-              <h3 className="text-[20px] font-bold text-white">Add to Mix</h3>
-              <p className="mt-[4px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a Mix&rsquo;s XBOX PLAYlist.</p>
+              <h3 className="text-[20px] font-bold text-white">Add to PlayList</h3>
+              <p className="mt-[4px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a PlayList.</p>
             </div>
             <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
               <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -3679,7 +4151,15 @@ function WishlistModal({ game, onClose }) {
                   onClick={() => toggle(b)}
                   className="flex items-center gap-[12px] rounded-[8px] p-[8px] text-left transition hover:bg-white/5"
                 >
-                  <span className="size-[40px] shrink-0 rounded-[10px]" style={{ backgroundColor: b.color }} />
+                  <span className="size-[40px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]" style={b.color ? { backgroundColor: b.color } : undefined}>
+                    {b.cover ? (
+                      <img alt="" src={b.cover} className="size-full object-cover" />
+                    ) : (
+                      <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">
+                        {mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}
+                      </span>
+                    )}
+                  </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-semibold text-white">{b.name}</p>
                     <p className="text-[12px] text-[#80848e]">{b.members.length} members</p>
@@ -4161,7 +4641,7 @@ function WheelGameEditor({ keys, onChange, locked, isDefault, onReset }) {
       <p className="mt-[2px] text-[12px] leading-snug" style={{ color: D.mute }}>
         {keys.length > ART_FULL
           ? `Past ${ART_FULL} the slices get too thin for cover art.`
-          : 'Only changes the wheel — nothing leaves the Mix.'}
+          : 'Only changes the wheel — nothing leaves the PlayList.'}
       </p>
 
       <div className="thin-scrollbar mt-[8px] max-h-[190px] min-h-[86px] overflow-y-auto pr-[2px]">
@@ -4214,7 +4694,7 @@ function WheelGameEditor({ keys, onChange, locked, isDefault, onReset }) {
           onClick={onReset}
           className="mt-[10px] text-left text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white"
         >
-          Reset to the Mix&rsquo;s games
+          Reset to the PlayList&rsquo;s games
         </button>
       ) : null}
     </div>
@@ -4249,7 +4729,7 @@ function StatusRow({ name, vote }) {
         {(yes || no) && (
           <span
             className="absolute -bottom-[2px] -right-[2px] flex size-[16px] items-center justify-center rounded-full"
-            style={{ backgroundColor: yes ? '#7aff46' : '#ff5a5a', boxShadow: '0 0 0 2px #272727' }}
+            style={{ backgroundColor: yes ? '#9BF00B' : '#ff5a5a', boxShadow: '0 0 0 2px #272727' }}
           >
             {yes ? (
               <svg viewBox="0 0 24 24" className="size-[11px]" fill="none" stroke="#0c0c0e" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 6" /></svg>
@@ -4271,14 +4751,14 @@ function SpinPanel({ blend, state, onLaunch }) {
   const elsewhere = spin && spin.blendId !== blend.id ? spin : null
 
   // What's on the wheel is the wheel's business: a separate shared list that
-  // starts as the blend's games PLUS the group's XBOX PLAYlist, so trimming it
+  // starts as the blend's games PLUS the group's XBOX PlayList, so trimming it
   // is purely a "don't spin for that tonight" call and never touches the blend
   // or the catalog.
   const [savedKeys, setWheelKeys] = useRoomNode('wheel/' + blend.id, null)
   const saved = Array.isArray(savedKeys) ? savedKeys.filter((k) => CATALOG[k]) : null
   const custom = saved && saved.length >= 2 ? saved : null
   // Never trust a key straight from the room — a game that's left the catalog
-  // would take the whole page down with it. PLAYlist picks lead, then the rest
+  // would take the whole page down with it. PlayList picks lead, then the rest
   // of the Mix's games, deduped.
   const wheelKeys = custom || [...new Set([...(blend.wishlist || []), ...(blend.games || [])])].filter((k) => CATALOG[k])
 
@@ -4388,7 +4868,7 @@ function SpinPanel({ blend, state, onLaunch }) {
             <button
               onClick={() => setEditOpen((v) => !v)}
               aria-expanded={editOpen}
-              className="flex items-center gap-[8px] text-[13px] font-semibold text-[#3fbf3f] transition hover:text-[#7aff46]"
+              className="flex items-center gap-[8px] text-[13px] font-semibold text-[#3fbf3f] transition hover:text-[#9BF00B]"
             >
               <svg viewBox="0 0 24 24" className="size-[17px]" fill="currentColor">
                 <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12 3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5 3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97s-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1s.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z" />
@@ -4445,7 +4925,7 @@ function SpinPanel({ blend, state, onLaunch }) {
                     <span className="text-[13px]" style={{ color: D.mute }}>Online right now</span>
                     <span className="flex items-center">
                       {[...new Set([SELF_NAME, ...online])].map((n, i) => (
-                        <Avatar key={n} color={COLOR_OF[n] || D.raised} size={26} style={{ marginRight: -8, boxShadow: '0 0 0 2px #0a0c08', zIndex: 10 - i }} />
+                        <MemberChip key={n} color={COLOR_OF[n] || D.raised} size={26} marginRight={-8} />
                       ))}
                     </span>
                   </div>
@@ -4462,14 +4942,14 @@ function SpinPanel({ blend, state, onLaunch }) {
                 <div className="flex h-full flex-col justify-center">
                   {/* The wheel landed — go straight to a party for the picked
                       game (the spinner hosts, the call gets invited). No vote. */}
-                  <div className="relative overflow-hidden rounded-[10px] border border-[#7aff46]/40">
+                  <div className="relative overflow-hidden rounded-[10px] border border-[#9BF00B]/40">
                     {cover && <img alt="" src={cover} className="absolute inset-0 size-full object-cover" />}
                     <div
                       className="absolute inset-0"
                       style={{ background: 'linear-gradient(180deg, rgba(21,43,13,0.55), rgba(12,12,14,0.92))' }}
                     />
                     <div className="relative z-10 flex min-h-[238px] flex-col p-[24px]">
-                      <p className="text-[16px] font-semibold text-[#7aff46]">The wheel picked</p>
+                      <p className="text-[16px] font-semibold text-[#9BF00B]">The wheel picked</p>
                       <p
                         className="mt-[2px] uppercase leading-[0.95] text-white"
                         style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)' }}
@@ -4541,7 +5021,7 @@ function SpinNotification({ state }) {
 
 // ── The spin wheel, as a standalone module (opened from the top bar) ─────────
 // It's personal: you build it up with "Add to Wheel" or by loading a Mix's
-// PLAYlist, and the spin runs locally on your screen. The only synced moment is
+// PlayList, and the spin runs locally on your screen. The only synced moment is
 // the party it starts when it lands — that snapshots whoever's on the call right
 // then, which is exactly why membership can keep changing without breaking it.
 const CALL_WHEEL_EXPIRY = 20 * 60 * 1000
@@ -4661,7 +5141,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const canSpin = boardGames.length >= 2 && phase !== 'spinning'
 
   const myMixes = (blends || []).filter((b) => (b.members || []).includes(SELF))
-  // Only the Mix's curated PLAYlist (wishlist) — not its daily recommended games.
+  // Only the Mix's curated PlayList (wishlist) — not its daily recommended games.
   const mixGames = (b) => (b.wishlist || []).filter((k) => CATALOG[k] || STARTER_BY_KEY[k])
 
   const query = eQ.trim().toLowerCase()
@@ -4729,7 +5209,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
               <DecisionWheel games={games} spin={activeSpin} remaining={Math.max(0, spinRemaining || SPIN_MS)} onSpin={doSpin} spinning={phase === 'spinning'} disabled={!canSpin} />
             ) : (
               <div className="flex size-[420px] items-center justify-center rounded-full border-2 border-dashed border-[#2b2d31] p-[40px] text-center">
-                <p className="max-w-[220px] text-[15px] text-[#7e7f87]">{synced ? 'The call wheel is empty. Anyone can add games or load a PLAYlist.' : 'Your wheel is empty. Add games or load a Mix’s PLAYlist.'}</p>
+                <p className="max-w-[220px] text-[15px] text-[#7e7f87]">{synced ? 'The call wheel is empty. Anyone can add games or load a PlayList.' : 'Your wheel is empty. Add games or load a Mix’s PlayList.'}</p>
               </div>
             )}
           </div>
@@ -4738,14 +5218,14 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
           <div className="min-w-0 flex-1 lg:pr-[24px]">
             {phase === 'result' && picked ? (
               <div>
-                <p className="text-[16px] font-semibold text-[#7aff46]">The wheel picked</p>
+                <p className="text-[16px] font-semibold text-[#9BF00B]">The wheel picked</p>
                 <p className="mt-[2px] uppercase leading-[0.95] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)' }}>{picked.title}</p>
                 <p className="mt-[14px] text-[15px] text-[#9a9ba3]">
                   {synced && !iSpun ? `${capName(activeSpin.by)} spun it — anyone can start the party for ${picked.title}, or restart.` : `Ready when you are — start a party for ${picked.title}, or restart.`}
                 </p>
                 <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
-                  <button onClick={startPartyNow} className="flex items-center gap-[9px] rounded-[10px] bg-[#2da000] px-[20px] py-[11px] text-[15px] font-bold text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">
-                    <svg viewBox="0 0 24 24" className="size-[18px]" fill="currentColor"><path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2 19c0-2.7 2.9-4.3 6.5-4.3s6.5 1.6 6.5 4.3v.5H2zm14.4-4.2c.3-.04.6-.05 1-.02 2.2.16 3.6 1.4 3.6 3.2V19h-3.9v-.5c0-1.6-.55-2.9-1.5-4z" /></svg>
+                  <button onClick={startPartyNow} className="flex items-center gap-[9px] rounded-[10px] bg-[#9BF00B] px-[20px] py-[11px] text-[15px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">
+                    <PartyGlyph size={18} />
                     Start a party
                   </button>
                   <button onClick={backToWheel} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[18px] py-[11px] text-[15px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
@@ -4767,32 +5247,36 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   <button onClick={() => setInviting(true)} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Invite</button>
                 </div>
 
-                {/* Load games from your Mix — a Select-Mix dropdown */}
-                <p className="mt-[22px] text-[16px] font-medium text-white">Load games from your Mix</p>
+                {/* Load games from your PlayList — a Select-Mix dropdown */}
+                <p className="mt-[22px] text-[16px] font-medium text-white">Load games from your PlayList</p>
                 <div className="relative z-40 mt-[10px]">
                   <button onClick={() => setMixMenu((v) => !v)} aria-expanded={eMixMenu} className="flex w-full items-center justify-between gap-[8px] rounded-[10px] bg-[#141416] px-[16px] py-[12px] text-[14px] text-[#9a9ba3] ring-1 ring-white/10 transition hover:ring-white/20">
-                    <span>Select Mix</span>
+                    <span>Select PlayList</span>
                     <svg viewBox="0 0 24 24" className={'size-[16px] transition-transform ' + (eMixMenu ? 'rotate-180' : '')} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
                   </button>
                   {eMixMenu && (
                     <>
                       <div className="fixed inset-0 z-[-1]" onClick={() => setMixMenu(false)} />
                       <div className="absolute left-0 right-0 top-[52px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
-                        {myMixes.length ? myMixes.map((b) => (
-                          <button key={b.id} onClick={() => loadMix(b)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] text-[#dbdee1] transition hover:bg-white/5">
+                        {myMixes.length ? myMixes.map((b) => {
+                          const count = mixGames(b).length
+                          const empty = count === 0
+                          return (
+                          <button key={b.id} onClick={() => !empty && loadMix(b)} disabled={empty} aria-disabled={empty} title={empty ? 'No games in this PlayList yet' : undefined} className={'flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] transition ' + (empty ? 'cursor-not-allowed text-[#6f7276] opacity-50' : 'text-[#dbdee1] hover:bg-white/5')}>
                             <span className="size-[36px] shrink-0 overflow-hidden rounded-[6px] bg-[#2b2d31]" style={b.color ? { backgroundColor: b.color } : undefined}>
                               {b.cover ? (
-                                <img alt="" src={b.cover} className="size-full object-cover" />
+                                <img alt="" src={b.cover} className={'size-full object-cover' + (empty ? ' grayscale' : '')} />
                               ) : (
-                                <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">
+                                <span className={'grid size-full grid-cols-2 grid-rows-2 gap-[1px]' + (empty ? ' grayscale' : '')}>
                                   {mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}
                                 </span>
                               )}
                             </span>
                             <span className="min-w-0 flex-1 truncate">{b.name}</span>
-                            <span className="shrink-0 text-[12px] text-[#7e7f87]">{mixGames(b).length} games</span>
+                            <span className="shrink-0 text-[12px] text-[#7e7f87]">{empty ? 'No games' : `${count} games`}</span>
                           </button>
-                        )) : <p className="px-[14px] py-[8px] text-[13px] text-[#7e7f87]">You&rsquo;re not in any Mixes yet.</p>}
+                          )
+                        }) : <p className="px-[14px] py-[8px] text-[13px] text-[#7e7f87]">You&rsquo;re not in any PlayLists yet.</p>}
                       </div>
                     </>
                   )}
@@ -4824,11 +5308,11 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 {/* On the wheel — an outlined (border-only) results box */}
                 <div className="mt-[12px] rounded-[12px] border border-white/12 p-[14px]">
                   <div className="mb-[10px] flex items-center justify-between">
-                    <p className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">{synced ? 'Call wheel' : 'On the wheel'} · {boardGames.length}</p>
+                    <p className="text-[13px] font-semibold tracking-wide text-[#9a9ba3]">{synced ? 'Call wheel' : 'On the wheel'} · {boardGames.length}</p>
                     {boardGames.length > 0 && <button onClick={clearAll} className="text-[12px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>}
                   </div>
                   <div className="no-scrollbar flex max-h-[168px] min-h-[64px] flex-wrap content-start gap-[8px] overflow-y-auto">
-                    {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Nothing yet — pick a Mix above, search a game, or right-click any game &rarr; &ldquo;Add to Wheel&rdquo;.</p>}
+                    {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Nothing yet — pick a PlayList above, search a game, or right-click any game &rarr; &ldquo;Add to Wheel&rdquo;.</p>}
                     {boardGames.map((g) => (
                       <span key={g.key} className="flex h-fit items-center gap-[8px] rounded-[8px] bg-[#1c1c1f] py-[6px] pl-[8px] pr-[6px] text-[13px] text-white ring-1 ring-white/5">
                         {wheelThumb(g.key) ? <img alt="" src={wheelThumb(g.key)} className="h-[22px] w-[38px] rounded-[4px] object-cover" /> : <span className="h-[22px] w-[38px] rounded-[4px] bg-[#2b2d31]" />}
@@ -4843,7 +5327,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 </div>
 
                 {/* Spin the wheel — the primary action */}
-                <button onClick={doSpin} disabled={!canSpin} className={'mt-[16px] w-full rounded-[10px] py-[13px] text-[15px] font-bold transition ' + (canSpin ? 'bg-[#2da000] text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] hover:brightness-110' : 'cursor-not-allowed bg-[#1c1c1f] text-[#7e7f87] ring-1 ring-white/5')}>
+                <button onClick={doSpin} disabled={!canSpin} className={'mt-[16px] w-full rounded-[10px] py-[13px] text-[15px] font-bold transition ' + (canSpin ? 'bg-[#9BF00B] text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] hover:brightness-110' : 'cursor-not-allowed bg-[#1c1c1f] text-[#7e7f87] ring-1 ring-white/5')}>
                   Spin the wheel
                 </button>
 
@@ -4869,7 +5353,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   ) : eSynced ? (
                     <button
                       onClick={leaveOrEnd}
-                      className="flex items-center gap-[9px] rounded-[10px] bg-[#2da000] px-[16px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110"
+                      className="flex items-center gap-[9px] rounded-[10px] bg-[#9BF00B] px-[16px] py-[10px] text-[14px] font-semibold text-[#0c0c0e] transition hover:brightness-110"
                     >
                       <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
                       {isHost ? 'End wheel sync' : 'Leave wheel sync'}
@@ -4935,7 +5419,7 @@ function WheelInviteStep({ online, onCancel, onStart, popover }) {
     <button onClick={() => toggle(d.name)} className="flex w-full items-center gap-[12px] py-[8px]">
       <Avatar color={d.color} size={38} />
       <span className="min-w-0 flex-1 truncate text-left text-[15px] font-semibold text-white">{capName(d.name)}</span>
-      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#2da000] bg-[#2da000]' : 'border-[#4a4d55]')}>
+      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#9BF00B] bg-[#9BF00B]' : 'border-[#4a4d55]')}>
         {sel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
       </span>
     </button>
@@ -4953,7 +5437,7 @@ function WheelInviteStep({ online, onCancel, onStart, popover }) {
       </button>
 
       <div className="mt-[22px] flex items-center gap-[10px]">
-        <span className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">In your call</span>
+        <span className="text-[13px] font-semibold tracking-wide text-[#9a9ba3]">In your call</span>
       </div>
       <div className="mt-[2px]">
         {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on the call right now — invite someone below or share the link.</p>}
@@ -4972,7 +5456,7 @@ function WheelInviteStep({ online, onCancel, onStart, popover }) {
 
       <div className="mt-[24px] flex justify-end gap-[10px]">
         <button onClick={onCancel} className="rounded-[8px] bg-[#3a3c42] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
-        <button onClick={() => onStart(chosen)} className="rounded-[8px] bg-[#2da000] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110">
+        <button onClick={() => onStart(chosen)} className="rounded-[8px] bg-[#9BF00B] px-[18px] py-[10px] text-[14px] font-semibold text-[#0c0c0e] transition hover:brightness-110">
           {chosen.length ? `Start sync · invite ${chosen.length}` : 'Start sync'}
         </button>
       </div>
@@ -4995,7 +5479,7 @@ function WheelJamToast({ host, count, onJoin, onDismiss }) {
         </p>
         <button
           onClick={onJoin}
-          className="ml-[6px] flex shrink-0 items-center gap-[7px] rounded-[10px] bg-[#2da000] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110"
+          className="ml-[6px] flex shrink-0 items-center gap-[7px] rounded-[10px] bg-[#9BF00B] px-[16px] py-[9px] text-[14px] font-semibold text-[#0c0c0e] transition hover:brightness-110"
         >
           <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
           Join
@@ -5128,7 +5612,7 @@ function WhosPlayingModal({ game, onClose, onStart }) {
         </div>
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] py-[16px]">
           <div className="flex items-center gap-[12px]">
-            <span className="text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">In your call</span>
+            <span className="text-[13px] font-semibold tracking-wide text-[#9a9ba3]">In your call</span>
             {inCall.length > 0 && <button onClick={selectAll} className="text-[13px] font-semibold text-[#8aa0ff] transition hover:underline">Select all</button>}
           </div>
           {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is in the room right now — invite someone below.</p>}
@@ -5144,9 +5628,126 @@ function WhosPlayingModal({ game, onClose, onStart }) {
           <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
           <button
             onClick={() => onStart(chosen)}
-            className={'rounded-[8px] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 ' + (chosen.length ? 'bg-[#5765f2]' : 'bg-[#2da000]')}
+            className={'rounded-[8px] px-[18px] py-[10px] text-[14px] font-semibold text-[#0c0c0e] transition hover:brightness-110 ' + (chosen.length ? 'bg-[#5765f2]' : 'bg-[#9BF00B]')}
           >
             {chosen.length ? `Send Ready Up [${chosen.length} selected]` : 'Launch Solo'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Start a party from the home page: pick a game (search/select), invite friends,
+// then launch a ready-up party. One modal for the whole flow.
+function StartPartyModal({ onClose, onStart, initialGame }) {
+  const { online } = useRoomCtx()
+  const hiddenP = useHidden()
+  const others = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
+  const inCall = others.filter((d) => online.includes(d.name))
+  const elsewhere = others.filter((d) => !online.includes(d.name))
+  const [sel, setSel] = useState(() => Object.fromEntries(inCall.map((d) => [d.name, true])))
+  const [q, setQ] = useState('')        // friend search
+  const [gameQ, setGameQ] = useState('') // game search
+  const [gameKey, setGameKey] = useState(initialGame?.key || null)
+  const dlg = useDialog(onClose, { label: 'Start a party' })
+  const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
+  const chosen = Object.keys(sel).filter((n) => sel[n])
+  const gameQuery = gameQ.trim().toLowerCase()
+  const gameResults = Object.entries(CATALOG)
+    .filter(([, v]) => !gameQuery || v.title.toLowerCase().includes(gameQuery) || (v.genre || '').toLowerCase().includes(gameQuery))
+    .slice(0, 6)
+  // Resolve the picked game from the local-art catalog OR the Starter catalog so
+  // cards from any shelf can start a party.
+  const selected = gameKey ? (CATALOG[gameKey] || STARTER_BY_KEY[gameKey] || (initialGame?.key === gameKey ? initialGame : null)) : null
+  const gameImg = (k) => CATALOG[k]?.image || (initialGame?.key === k ? initialGame?.image : null) || null
+  const friendFiltered = elsewhere.filter((d) => capName(d.name).toLowerCase().includes(q.toLowerCase()))
+
+  const Row = ({ d }) => (
+    <button onClick={() => toggle(d.name)} className="flex w-full items-center gap-[12px] py-[8px]">
+      <Avatar color={d.color} size={40} />
+      <div className="min-w-0 flex-1 text-left">
+        <p className="text-[15px] font-semibold text-white">{capName(d.name)}</p>
+        <p className="truncate text-[13px] text-[#9a9ba3]">{online.includes(d.name) ? 'On Arcade' : 'Offline'}</p>
+      </div>
+      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+        {sel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+      </span>
+    </button>
+  )
+
+  const start = () => {
+    if (!selected) return
+    onStart({ key: gameKey, title: selected.title, image: gameImg(gameKey) }, chosen)
+  }
+
+  return (
+    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+        <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
+          <div>
+            <p className="text-[22px] font-bold text-white">Start a party</p>
+            <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick a game and invite friends to jump in.</p>
+          </div>
+          <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
+
+        <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] py-[16px]">
+          {/* Game selection */}
+          <p className="mb-[6px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Game</p>
+          {selected ? (
+            <div className="flex items-center gap-[12px] rounded-[10px] bg-[#1e1f22] p-[10px]">
+              {gameImg(gameKey) && <img alt="" src={gameImg(gameKey)} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" />}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[15px] font-semibold text-white">{selected.title}</p>
+                <p className="truncate text-[13px] text-[#9a9ba3]">{capName(selected.genre || 'game')} · {selected.players} players</p>
+              </div>
+              <button onClick={() => { setGameKey(null); setGameQ('') }} className="shrink-0 text-[13px] font-semibold text-[#8aa0ff] transition hover:underline">Change</button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+                <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                <input data-autofocus value={gameQ} onChange={(e) => setGameQ(e.target.value)} placeholder="Search games" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+              </div>
+              <div className="mt-[8px] flex flex-col gap-[2px]">
+                {gameResults.map(([k, v]) => (
+                  <button key={k} onClick={() => setGameKey(k)} className="flex w-full items-center gap-[12px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
+                    <img alt="" src={v.image} className="h-[40px] w-[71px] shrink-0 rounded-[6px] object-cover" />
+                    <div className="min-w-0">
+                      <p className="truncate text-[14px] font-semibold text-white">{v.title}</p>
+                      <p className="truncate text-[12px] text-[#9a9ba3]">{capName(v.genre || 'game')} · {v.players} players</p>
+                    </div>
+                  </button>
+                ))}
+                {gameResults.length === 0 && <p className="px-[6px] py-[10px] text-[13px] text-[#6f7276]">No games match “{gameQ}”.</p>}
+              </div>
+            </>
+          )}
+
+          {/* Invitees */}
+          <div className="mt-[18px] flex items-center gap-[12px]">
+            <span className="text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Invite</span>
+          </div>
+          {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on right now — search below.</p>}
+          <div className="mt-[10px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+          </div>
+          {friendFiltered.map((d) => <Row key={d.name} d={d} />)}
+        </div>
+
+        <div className="flex items-center justify-end gap-[10px] border-t border-black/20 px-[24px] py-[16px]">
+          <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
+          <button
+            onClick={start}
+            disabled={!selected}
+            className="flex items-center gap-[7px] rounded-[8px] bg-[#9BF00B] px-[20px] py-[10px] text-[14px] font-semibold text-[#0c0c0e] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <PartyGlyph size={18} />
+            {chosen.length ? 'Launch' : 'Launch Solo'}
           </button>
         </div>
       </div>
@@ -5352,7 +5953,7 @@ function DecidePage({ blend, prefs, onBack }) {
               Matched to
               <span className="flex items-center">
                 {blend.members.map((c, i) => (
-                  <Avatar key={i} color={c} size={24} style={{ marginRight: i < blend.members.length - 1 ? -8 : 0, boxShadow: '0 0 0 2px #0c0c0e' }} />
+                  <MemberChip key={i} color={c} size={24} marginRight={i < blend.members.length - 1 ? -8 : 0} />
                 ))}
               </span>
               in {blend.name}
@@ -5645,15 +6246,15 @@ function InviteMessage({ msg, mine, onRespond }) {
       <div className="flex items-center gap-[10px] border-b border-[#2f3136] bg-[#1e1f22] px-[14px] py-[10px]">
         <span className="flex size-[34px] items-center justify-center rounded-[8px] bg-[#5765f2] text-[16px]">🎮</span>
         <div className="min-w-0">
-          <p className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>Mix invitation</p>
+          <p className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>PlayList invitation</p>
           <p className="truncate text-[15px] font-semibold text-white">{msg.blendName}</p>
         </div>
       </div>
       <div className="px-[14px] py-[12px]">
         <p className="text-[14px] text-[#dbdee1]">
           {mine
-            ? <>You invited <span className="font-semibold text-white">{capName(msg.to)}</span> to this Mix{needsNitro ? <> — they need to <span className="font-semibold text-white">get Nitro to join first</span>.</> : <> to join.</>}</>
-            : <><span className="font-semibold text-white">{capName(msg.from)}</span> invited you to this Mix.{needsNitro ? <> <span className="text-[#c7c9cb]">Subscribe to Arcade to join.</span></> : null}</>}
+            ? <>You invited <span className="font-semibold text-white">{capName(msg.to)}</span> to this PlayList{needsNitro ? <> — they need to <span className="font-semibold text-white">get Nitro to join first</span>.</> : <> to join.</>}</>
+            : <><span className="font-semibold text-white">{capName(msg.from)}</span> invited you to this PlayList.{needsNitro ? <> <span className="text-[#c7c9cb]">Subscribe to Arcade to join.</span></> : null}</>}
         </p>
         {msg.text ? <p className="mt-[6px] text-[13px] text-[#b5bac1]">“{msg.text}”</p> : null}
 
@@ -5675,7 +6276,7 @@ function InviteMessage({ msg, mine, onRespond }) {
           </div>
         ) : (
           <p className="mt-[10px] text-[13px] font-semibold" style={{ color: accepted ? D.green : '#f0787a' }}>
-            {accepted ? '✓ You joined this Mix' : '✕ You declined'}
+            {accepted ? '✓ You joined this PlayList' : '✕ You declined'}
           </p>
         )}
       </div>
@@ -5967,12 +6568,12 @@ function SpectatorCursor({ pointer, click }) {
 function describeView(v) {
   if (!v) return 'Idle'
   if (v.shareGame) return `Sharing “${v.shareGame}”`
-  if (v.wishlistGame) return `Add to Mix: ${v.wishlistGame}`
-  if (v.createOpen) return 'Creating a Mix'
+  if (v.wishlistGame) return `Add to PlayList: ${v.wishlistGame}`
+  if (v.createOpen) return 'Creating a PlayList'
   if (v.prefsForId) return 'Setting preferences'
   if (v.decide) return 'The Jumble (deciding)'
   if (v.dmName) return `DM with ${v.dmName}`
-  if (v.blendId) return 'Viewing a Mix'
+  if (v.blendId) return 'Viewing a PlayList'
   return 'Home / For you'
 }
 
@@ -6014,7 +6615,7 @@ function ModeratorTile({ name, displayName, onRename, color, vp, online, view, s
       <div className="flex items-center gap-[10px] px-[12px] py-[8px]">
         <span className="relative shrink-0">
           <Avatar color={color} size={24} />
-          <span className="absolute -bottom-[1px] -right-[1px] size-[9px] rounded-full" style={{ backgroundColor: online ? '#23a55a' : '#5c5e66', border: '2px solid #111114' }} />
+          <span className="absolute -bottom-[1px] -right-[1px] size-[9px] rounded-full" style={{ backgroundColor: online ? '#9BF00B' : '#5c5e66', border: '2px solid #111114' }} />
         </span>
         <div className="min-w-0 flex-1">
           {/* Editable display name — the moderator can rename each participant;
@@ -6313,7 +6914,7 @@ function InfoLine({ label, children }) {
 function PrivacyBadge({ kind }) {
   const friends = kind === 'Friends Only'
   return (
-    <span className={'flex w-fit items-center gap-[7px] whitespace-nowrap rounded-[6px] border px-[11px] py-[5px] text-[13px] font-semibold ' + (friends ? 'border-[#7aff46]/55 text-[#7aff46]' : 'border-white/40 text-[#c7c9cb]')}>
+    <span className={'flex w-fit items-center gap-[7px] whitespace-nowrap rounded-[6px] border px-[11px] py-[5px] text-[13px] font-semibold ' + (friends ? 'border-[#9BF00B]/55 text-[#9BF00B]' : 'border-white/40 text-[#c7c9cb]')}>
       {friends ? <StarGlyph size={14} /> : <PersonGlyph size={14} />}
       {kind}
     </span>
@@ -6444,7 +7045,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
                     key={f}
                     role="menuitem"
                     onClick={() => pickFilter(f)}
-                    className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (eFilter === f ? 'text-[#7aff46]' : 'text-[#dbdee1]')}
+                    className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (eFilter === f ? 'text-[#9BF00B]' : 'text-[#dbdee1]')}
                   >
                     {f === 'All' ? 'All reviews' : f === 'Friends Only' ? 'Friends only' : 'Public'}
                     {eFilter === f && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
@@ -6469,7 +7070,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
         <div className="mt-[20px] flex justify-center">
           <button
             onClick={() => { setExpanded(true); setPage(1) }}
-            className="flex items-center gap-[8px] rounded-[10px] border border-[#3a3d41] px-[24px] py-[11px] text-[15px] font-semibold text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46]"
+            className="flex items-center gap-[8px] rounded-[10px] border border-[#3a3d41] px-[24px] py-[11px] text-[15px] font-semibold text-white transition hover:border-[#9BF00B]/60 hover:text-[#9BF00B]"
           >
             Show more reviews
             <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg>
@@ -6483,7 +7084,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={safePage === 1}
             aria-label="Previous page"
-            className="flex size-[36px] items-center justify-center rounded-[8px] border border-[#3a3d41] text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#3a3d41] disabled:hover:text-white"
+            className="flex size-[36px] items-center justify-center rounded-[8px] border border-[#3a3d41] text-white transition hover:border-[#9BF00B]/60 hover:text-[#9BF00B] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#3a3d41] disabled:hover:text-white"
           >
             <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
           </button>
@@ -6492,7 +7093,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
               key={p}
               onClick={() => setPage(p)}
               aria-current={p === safePage}
-              className={'flex size-[36px] items-center justify-center rounded-[8px] text-[15px] font-semibold transition ' + (p === safePage ? 'bg-[#7aff46] text-black' : 'border border-[#3a3d41] text-white hover:border-[#7aff46]/60 hover:text-[#7aff46]')}
+              className={'flex size-[36px] items-center justify-center rounded-[8px] text-[15px] font-semibold transition ' + (p === safePage ? 'bg-[#9BF00B] text-black' : 'border border-[#3a3d41] text-white hover:border-[#9BF00B]/60 hover:text-[#9BF00B]')}
             >
               {p}
             </button>
@@ -6501,7 +7102,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
             onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
             disabled={safePage === pageCount}
             aria-label="Next page"
-            className="flex size-[36px] items-center justify-center rounded-[8px] border border-[#3a3d41] text-white transition hover:border-[#7aff46]/60 hover:text-[#7aff46] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#3a3d41] disabled:hover:text-white"
+            className="flex size-[36px] items-center justify-center rounded-[8px] border border-[#3a3d41] text-white transition hover:border-[#9BF00B]/60 hover:text-[#9BF00B] disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-[#3a3d41] disabled:hover:text-white"
           >
             <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
           </button>
@@ -6550,7 +7151,7 @@ function WriteReviewModal({ onClose, onSubmit }) {
   const Vis = ({ value, glyph, label }) => (
     <button
       onClick={() => setPrivacy(value)}
-      className={'flex flex-1 items-center justify-center gap-[7px] rounded-[8px] border px-[12px] py-[9px] text-[13px] font-semibold transition ' + (privacy === value ? (value === 'Friends Only' ? 'border-[#7aff46] text-[#7aff46]' : 'border-white text-white') : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}
+      className={'flex flex-1 items-center justify-center gap-[7px] rounded-[8px] border px-[12px] py-[9px] text-[13px] font-semibold transition ' + (privacy === value ? (value === 'Friends Only' ? 'border-[#9BF00B] text-[#9BF00B]' : 'border-white text-white') : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}
     >
       {glyph}{label}
     </button>
@@ -6565,9 +7166,9 @@ function WriteReviewModal({ onClose, onSubmit }) {
 
         {/* Recommend? — thumb up / down */}
         <div>
-          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Do you recommend it?</p>
+          <p className="mb-[8px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Do you recommend it?</p>
           <div className="flex gap-[10px]">
-            <button onClick={() => setThumb('up')} className={'flex flex-1 items-center justify-center gap-[8px] rounded-[8px] border px-[12px] py-[10px] text-[14px] font-semibold transition ' + (thumb === 'up' ? 'border-[#7aff46] bg-[#107C10]/15 text-[#7aff46]' : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}>
+            <button onClick={() => setThumb('up')} className={'flex flex-1 items-center justify-center gap-[8px] rounded-[8px] border px-[12px] py-[10px] text-[14px] font-semibold transition ' + (thumb === 'up' ? 'border-[#9BF00B] bg-[#107C10]/15 text-[#9BF00B]' : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}>
               <ThumbsUpGlyph size={18} /> Yes
             </button>
             <button onClick={() => setThumb('down')} className={'flex flex-1 items-center justify-center gap-[8px] rounded-[8px] border px-[12px] py-[10px] text-[14px] font-semibold transition ' + (thumb === 'down' ? 'border-[#f04747] bg-[#f04747]/15 text-[#ff8a8a]' : 'border-[#3a3d41] text-[#9a9ba3] hover:border-white/40')}>
@@ -6577,17 +7178,17 @@ function WriteReviewModal({ onClose, onSubmit }) {
         </div>
 
         <div>
-          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Title</p>
+          <p className="mb-[8px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Title</p>
           <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Sum it up" maxLength={80} className="w-full rounded-[8px] bg-[#111214] px-[12px] py-[10px] text-[14px] text-white outline-none ring-1 ring-white/10 placeholder:text-[#6f7276] focus:ring-[#5765f2]" />
         </div>
         <div>
-          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Your review</p>
+          <p className="mb-[8px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Your review</p>
           <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What did you think?" rows={4} className="w-full resize-none rounded-[8px] bg-[#111214] px-[12px] py-[10px] text-[14px] leading-[1.5] text-white outline-none ring-1 ring-white/10 placeholder:text-[#6f7276] focus:ring-[#5765f2]" />
         </div>
 
         {/* Tags — searchable, multi-select, with the option to coin your own */}
         <div>
-          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Add tags <span className="font-normal normal-case text-[#6f7276]">(optional)</span></p>
+          <p className="mb-[8px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Add tags <span className="font-normal normal-case text-[#6f7276]">(optional)</span></p>
           {/* Selected tags — click to remove */}
           {tags.length > 0 && (
             <div className="mb-[10px] flex flex-wrap gap-[8px]">
@@ -6600,7 +7201,7 @@ function WriteReviewModal({ onClose, onSubmit }) {
             </div>
           )}
           {/* Search box */}
-          <div className="flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] ring-1 ring-white/10 focus-within:ring-[#5765f2]">
+          <div className="kbd-ring flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] ring-1 ring-white/10">
             <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
             <input
               value={tagQuery}
@@ -6631,7 +7232,7 @@ function WriteReviewModal({ onClose, onSubmit }) {
 
         {/* Visibility — Public / Friends Only */}
         <div>
-          <p className="mb-[8px] text-[13px] font-semibold uppercase tracking-wide text-[#9a9ba3]">Who can see this?</p>
+          <p className="mb-[8px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Who can see this?</p>
           <div className="flex gap-[10px]">
             <Vis value="Public" glyph={<PersonGlyph size={14} />} label="Public" />
             <Vis value="Friends Only" glyph={<StarGlyph size={14} />} label="Friends only" />
@@ -6737,7 +7338,7 @@ function HeroCarousel({ slides, children }) {
               key={idx}
               onClick={() => setI(idx)}
               aria-label={`${s.type === 'video' ? (s.badge || 'Trailer') : 'Screenshot'} ${idx + 1}`}
-              className={'group/th relative aspect-video min-w-0 flex-1 overflow-hidden rounded-[6px] transition ' + (idx === i ? 'ring-2 ring-[#7aff46]' : 'ring-1 ring-white/10 hover:ring-white/40')}
+              className={'group/th relative aspect-video min-w-0 flex-1 overflow-hidden rounded-[6px] transition ' + (idx === i ? 'ring-2 ring-[#9BF00B]' : 'ring-1 ring-white/10 hover:ring-white/40')}
             >
               <img alt="" src={s.type === 'video' ? ytThumb(s.youTubeId) : s.src} className="absolute inset-0 size-full object-cover" />
               <div className={'absolute inset-0 transition ' + (idx === i ? 'bg-transparent' : 'bg-black/45 group-hover/th:bg-black/15')} />
@@ -6789,7 +7390,7 @@ function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs, revie
         {reviewed && (
           <>
             <span aria-hidden className="text-white/60">·</span>
-            <svg viewBox="0 0 24 24" className="size-[13px]" fill="#7aff46" aria-label="Reviewed"><path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" /></svg>
+            <svg viewBox="0 0 24 24" className="size-[13px]" fill="#9BF00B" aria-label="Reviewed"><path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" /></svg>
           </>
         )}
       </span>
@@ -6850,7 +7451,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               <div className="mt-[14px] flex items-end gap-[10px] text-[16px] text-[#a2a4ae]">
                 Also Played By:
                 {unplayed ? (
-                  <span className="text-[15px] text-[#7e7f87]">No one in your Mix yet</span>
+                  <span className="text-[15px] text-[#7e7f87]">No one in your PlayList yet</span>
                 ) : (
                   <span className="flex items-center">
                     {playedBy.map((c, i) => (
@@ -6861,19 +7462,41 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               </div>
               <p className="mt-[16px] max-w-[560px] text-[16px] leading-[1.5] text-[#a2a4ae]">{d.description}</p>
               <div className="mt-[20px] flex flex-wrap items-center gap-[8px]">
-                <DetailPill
-                  onClick={libGame && onLibraryTag ? () => onLibraryTag({ kind: 'cap', value: maxPlayers(libGame.players) }) : undefined}
-                  title={libGame ? `See games for up to ${maxPlayers(libGame.players)} players` : undefined}
-                >
-                  <img alt="" src={userGroup} className="size-[15px] -scale-x-100" />
-                  {d.players}
-                </DetailPill>
-                <DetailPill>{d.playtime}</DetailPill>
-                <DetailPill
-                  onClick={libGame && onLibraryTag ? () => onLibraryTag({ kind: 'genre', value: libGame.genre }) : undefined}
-                  title={libGame ? `See ${libGame.genre} games` : undefined}
-                >{d.genre}</DetailPill>
-                <DetailPill>{d.difficulty}</DetailPill>
+                {(() => {
+                  // Player capacity + genre jump to a filtered Library. Prefer the
+                  // Library entry's raw facets; fall back to the detail data so the
+                  // pills are clickable for local-art (non-Starter) games too.
+                  const capVal = maxPlayers(libGame?.players || d.players)
+                  const genreVal = libGame ? libGame.genre : d.genre
+                  return (
+                    <>
+                      <DetailPill
+                        onClick={onLibraryTag ? () => onLibraryTag({ kind: 'cap', value: capVal }) : undefined}
+                        title={onLibraryTag ? `See games for up to ${capVal} players` : undefined}
+                      >
+                        <img alt="" src={userGroup} className="size-[15px] -scale-x-100" />
+                        {d.players}
+                      </DetailPill>
+                      {(() => {
+                        const sh = sessionHours(gameKey)
+                        return (
+                          <DetailPill
+                            onClick={onLibraryTag ? () => onLibraryTag({ kind: 'session', value: sh }) : undefined}
+                            title={onLibraryTag ? `See games around ${sh} hrs / session` : undefined}
+                          >
+                            <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                            ~{sh} hrs / session
+                          </DetailPill>
+                        )
+                      })()}
+                      <DetailPill
+                        onClick={onLibraryTag ? () => onLibraryTag(facetForTag(genreVal) || { kind: 'genre', value: genreVal }) : undefined}
+                        title={onLibraryTag ? `See ${genreVal} games` : undefined}
+                      >{d.genre}</DetailPill>
+                      <DetailPill>{d.difficulty}</DetailPill>
+                    </>
+                  )
+                })()}
               </div>
             </div>
           </section>
@@ -6887,18 +7510,18 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
                 {/* Start a Party — green primary action */}
                 <button
                   onClick={() => onPlay?.(gameKey)}
-                  className="flex items-center gap-[9px] rounded-[8px] bg-[#2da000] px-[22px] py-[14px] text-[16px] font-bold text-white shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110"
+                  className="flex items-center gap-[9px] rounded-[8px] bg-[#9BF00B] px-[22px] py-[14px] text-[16px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110"
                 >
-                  <svg viewBox="0 0 24 24" className="size-[20px]" fill="currentColor"><path d="M8.5 11a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm7 0a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM2 19c0-2.7 2.9-4.3 6.5-4.3s6.5 1.6 6.5 4.3v.5H2zm14.4-4.2c.3-.04.6-.05 1-.02 2.2.16 3.6 1.4 3.6 3.2V19h-3.9v-.5c0-1.6-.55-2.9-1.5-4z" /></svg>
+                  <PartyGlyph size={20} />
                   Start a Party
                 </button>
-                {/* Add to Mix — outlined */}
+                {/* Add to PlayList — outlined */}
                 <button
                   onClick={() => onWishlist?.(d.title)}
                   className="flex items-center gap-[9px] rounded-[8px] border-2 border-white/85 px-[20px] py-[12px] text-[16px] font-bold text-white transition hover:bg-white/10"
                 >
                   <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
-                  Add to Mix
+                  Add to PlayList
                 </button>
                 <button
                   onClick={() => onShare?.(d.title)}
@@ -6920,8 +7543,8 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               <div className="flex flex-1 flex-col items-start gap-[18px]">
                 <div className="flex flex-col gap-[10px]">
                   <div className="flex items-center gap-[12px]">
-                    <span className="text-[34px] font-semibold leading-none text-[#7aff46]">{d.recPct}</span>
-                    <ThumbsUpGlyph size={24} className="text-[#7aff46]" />
+                    <span className="text-[34px] font-semibold leading-none text-[#9BF00B]">{d.recPct}</span>
+                    <ThumbsUpGlyph size={24} className="text-[#9BF00B]" />
                     <div className="flex items-center">
                       {reviewers.map((c, i) => (
                         <PlayerAvatar key={i} color={c} size={30} marginRight={i < reviewers.length - 1 ? -9 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} reviewed />
@@ -6948,7 +7571,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
             <section className="mt-[36px] flex flex-col items-center gap-[8px] rounded-[16px] border border-dashed border-[#2b2d31] py-[36px] text-center">
               <svg viewBox="0 0 24 24" className="size-[26px] text-[#9BF00B]" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4 3.9.9 5.6L12 15l-4.9 2.5L8 11.9 4 8l5.6-.6L12 2z" /></svg>
               <p className="text-[16px] font-semibold text-white">No friend reviews yet</p>
-              <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your Mix and share what you think.</p>
+              <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your PlayList and share what you think.</p>
             </section>
           ) : (
             <ReviewsSection reviews={[...friendReviews, ...REVIEWS]} />
@@ -6993,7 +7616,7 @@ const OV_LINK = (q) => `${OV_BASE}?${q}`
 const OVERVIEW_FEATURES = [
   {
     title: 'Social-proof home', tag: 'Rebuilt',
-    blurb: 'The home screen leads with what your friends are playing — “Recommended by Your Friends” and “Trending in Your Communities”, with per-game friend counts and hours.',
+    blurb: 'The home screen leads with what your friends are playing — “Recommended by Your Friends” and “Trending amongst Your Friends”, with per-game friend counts and hours.',
     steps: ['Open Home', 'See friends’ recommendations first', 'Trending list shows “N friends played this for avg. X hrs”'],
     link: { href: OV_LINK('u=1'), label: 'Open home' },
   },
@@ -7022,9 +7645,9 @@ const OVERVIEW_FEATURES = [
     link: { href: OV_LINK('u=1'), label: 'Open the prototype' },
   },
   {
-    title: 'Mixes (was “Blend”)', tag: 'Renamed',
-    blurb: 'Group game lists renamed to “Mix”, with collage thumbnails, inline title editing, cover-art changing and a leave-only membership model.',
-    steps: ['Open a Mix', 'Rename / change cover', 'Manage members'],
+    title: 'PlayLists (was “Mix”)', tag: 'Renamed',
+    blurb: 'Group game lists renamed to “PlayList”, with collage thumbnails, inline title editing, cover-art changing and a leave-only membership model.',
+    steps: ['Open a PlayList', 'Rename / change cover', 'Manage members'],
   },
   {
     title: 'Moderator wall', tag: 'Updated',
@@ -7046,7 +7669,7 @@ const OVERVIEW_FEATURES = [
 
 // The notification scenarios the simulator can run. Order = suggested demo path.
 const OVERVIEW_SIMS = [
-  { id: 'spin', label: 'Someone spun the wheel', desc: 'Ambient heads-up that a friend is spinning in a Mix.' },
+  { id: 'spin', label: 'Someone spun the wheel', desc: 'Ambient heads-up that a friend is spinning in a PlayList.' },
   { id: 'jam', label: 'Wheel jam invite', desc: '“Caleb started a wheel — Join.” Click Join to hop in.' },
   { id: 'invite', label: 'Party invite (you’re invited)', desc: 'Ready Up or Not Now, then the host launches.' },
   { id: 'host', label: 'You host a party', desc: 'Invite the call, watch them ready up, then Launch.' },
@@ -7231,6 +7854,8 @@ export default function Landing() {
   const [launching, setLaunching] = useState(null)
   const [playKey, setPlayKey] = useState(null) // game key whose "Who's playing?" modal is open
   const [whoOpen, setWhoOpen] = useState(false) // "See who's on PARTY" friends popup
+  const [startPartyOpen, setStartPartyOpen] = useState(false) // home "Start a party" modal
+  const [partyGameInit, setPartyGameInit] = useState(null) // game pre-selected when a card starts a party
   const [gameMenu, setGameMenu] = useState(null) // { x, y, title } — global right-click game menu
   const [wheelOpen, setWheelOpen] = useState(false) // the top-bar spin-wheel module
   const [wheelAutoJoin, setWheelAutoJoin] = useState(false) // opened via the jam "Join" toast
@@ -7297,6 +7922,19 @@ export default function Landing() {
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blendId, detailKey, dmName, decide, mixesTab, libraryTab])
+  // ── Input modality flag ──────────────────────────────────────────────────
+  // Text inputs match :focus-visible even on a mouse click, so that pseudo alone
+  // can't tell keyboard focus from a click. Track the last interaction and stamp
+  // <html data-kbd> only while navigating by keyboard; search fields key their
+  // blue focus ring off this so a click never paints one.
+  useEffect(() => {
+    const root = document.documentElement
+    const onKey = (e) => { if (e.key === 'Tab' || e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') root.setAttribute('data-kbd', '') }
+    const onPointer = () => root.removeAttribute('data-kbd')
+    window.addEventListener('keydown', onKey, true)
+    window.addEventListener('pointerdown', onPointer, true)
+    return () => { window.removeEventListener('keydown', onKey, true); window.removeEventListener('pointerdown', onPointer, true) }
+  }, [])
   // ── Per-screen landing focus ─────────────────────────────────────────────
   // On every page switch move keyboard focus to the new page's main heading, so
   // screen readers announce the screen and keyboard users start at the top and
@@ -7329,6 +7967,17 @@ export default function Landing() {
   }
   const goBack = () => { if (hist.idx <= 0) return; const idx = hist.idx - 1; applyView(hist.stack[idx]); setHist((h) => ({ ...h, idx })) }
   const goForward = () => { if (hist.idx >= hist.stack.length - 1) return; const idx = hist.idx + 1; applyView(hist.stack[idx]); setHist((h) => ({ ...h, idx })) }
+  // Start a party for a game (by title or key) from any card's hover action —
+  // resolves the game across both catalogs and opens the Start-a-party modal
+  // pre-filled with it.
+  const startPartyForTitle = (titleOrKey) => {
+    const key = (CATALOG[titleOrKey] || STARTER_BY_KEY[titleOrKey]) ? titleOrKey
+      : (KEY_OF_TITLE[titleOrKey] || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey))
+    const g = key ? (CATALOG[key] || STARTER_BY_KEY[key]) : null
+    if (!key || !g) return
+    setPartyGameInit({ key, title: g.title, image: CATALOG[key]?.image || null })
+    setStartPartyOpen(true)
+  }
   // Add a game (by title or key) to the personal wheel, then flash the wheel
   // open so it's clear where it went. Deduped, and only real catalog games.
   const addToWheel = (titleOrKey) => {
@@ -7342,7 +7991,7 @@ export default function Landing() {
   const jamLive = !!callWheelRoot && Object.keys(jamParticipants).length > 0 && Date.now() - (callWheelRoot.lastActive || callWheelRoot.startedAt || 0) < CALL_WHEEL_EXPIRY
   const inJam = !!jamParticipants[SELF_NAME]
   const [jamDismissed, setJamDismissed] = useState(null) // startedAt of a dismissed jam invite
-  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward, openWheel: () => setWheelOpen(true), addToWheel, wheelLive: jamLive }
+  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward, openWheel: () => setWheelOpen(true), addToWheel, wheelLive: jamLive, wheelCount: (IS_SPECTATE ? eWheelKeys : wheelKeys).length }
 
   // Observation plumbing. A live tester publishes their nav + pointer/scroll;
   // a spectator instance reads it back and drives the view read-only.
@@ -7471,6 +8120,8 @@ export default function Landing() {
         <SpectateHoverCtx.Provider value={eHoverGame}>
         <SpectateAvCtx.Provider value={eHoverAv}>
         <TagCtx.Provider value={handleCardTag}>
+        <PartyCtx.Provider value={IS_SPECTATE ? null : startPartyForTitle}>
+        <WheelCtx.Provider value={IS_SPECTATE ? null : addToWheel}>
         <NavCtx.Provider value={navCtx}>
         <TopBar />
         <div className="group/rail relative flex min-h-0 flex-1 overflow-hidden" style={{ backgroundColor: D.rail }}>
@@ -7491,7 +8142,7 @@ export default function Landing() {
         ) : decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={eDecide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
-          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} onShare={setShareGame} onHome={goHome} onLibrary={openLibrary} onMixes={openMixes} />
+          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} onShare={setShareGame} onWishlist={setWishlistGame} onHome={goHome} onLibrary={openLibrary} onMixes={openMixes} />
         ) : eDetailKey ? (
           <GameDetailPage
             key={eDetailKey}
@@ -7507,11 +8158,11 @@ export default function Landing() {
             onLibraryTag={openLibraryFiltered}
           />
         ) : eLibraryTab ? (
-          <LibraryPage onHome={goHome} onMixes={openMixes} onOpen={openGame} initialFilter={libraryFilter} onWishlist={setWishlistGame} />
+          <LibraryPage onHome={goHome} onMixes={openMixes} onOpen={openGame} initialFilter={libraryFilter} onWishlist={setWishlistGame} onShare={setShareGame} />
         ) : eMixesTab ? (
           <MixesPage onHome={goHome} onLibrary={openLibrary} onOpenBlend={(b) => openBlend(b.id)} onCreate={() => setCreateOpen(true)} onOpen={openGame} />
         ) : (
-          <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onHome={goHome} onMixes={openMixes} onLibrary={openLibrary} menuGame={eGameMenu?.title || null} />
+          <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onHome={goHome} onMixes={openMixes} onLibrary={openLibrary} menuGame={eGameMenu?.title || null} party={party} onStartParty={() => setStartPartyOpen(true)} onAddToWheel={addToWheel} />
         )}
         </div>
         {/* Voice + user panel — a rounded card floating at the bottom-left,
@@ -7519,8 +8170,19 @@ export default function Landing() {
         <div className="absolute bottom-[8px] left-[8px] z-[40] w-[298px]"><VoiceUserPanel /></div>
         </div>
         {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
+        {startPartyOpen && !IS_SPECTATE && (
+          <StartPartyModal
+            initialGame={partyGameInit}
+            onClose={() => { setStartPartyOpen(false); setPartyGameInit(null) }}
+            onStart={(game, invitees) => {
+              if (!invitees.length) setLaunching(game.title)
+              else party.start(game, invitees)
+              setStartPartyOpen(false); setPartyGameInit(null)
+            }}
+          />
+        )}
         {eWhoOpen && <WhosOnModal onClose={() => setWhoOpen(false)} onCreated={(id) => { setWhoOpen(false); setBlendId(id) }} />}
-        {eWishlistGame && <WishlistModal game={eWishlistGame} onClose={() => setWishlistGame(null)} />}
+        {eWishlistGame && <WishlistModal game={eWishlistGame} onClose={() => setWishlistGame(null)} onAddToWheel={addToWheel} />}
         {eShareGame && (typeof eShareGame === 'object' && eShareGame.to
           ? <QuickShareModal game={eShareGame.title} to={eShareGame.to} hrs={eShareGame.hrs} onClose={() => setShareGame(null)} />
           : <ShareModal game={typeof eShareGame === 'string' ? eShareGame : eShareGame.title} onClose={() => setShareGame(null)} />)}
@@ -7534,13 +8196,15 @@ export default function Landing() {
 
         {/* "Who's playing?" invite picker (host only), opened from a game's Play button */}
         {ePlayKey && CATALOG[ePlayKey] && (
-          <WhosPlayingModal
-            game={{ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }}
+          // The game-detail / blend "Start a party" flow uses the same modal as the
+          // recommended cards, with the game pre-selected.
+          <StartPartyModal
+            initialGame={{ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }}
             onClose={() => setPlayKey(null)}
-            onStart={(invitees) => {
+            onStart={(game, invitees) => {
               // Solo (no one invited) launches straight away — no ready-up party.
-              if (!invitees.length) setLaunching(CATALOG[ePlayKey].title)
-              else party.start({ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }, invitees)
+              if (!invitees.length) setLaunching(game.title)
+              else party.start(game, invitees)
               setPlayKey(null)
             }}
           />
@@ -7555,7 +8219,7 @@ export default function Landing() {
             items={[
               { label: 'Start a party', icon: PLAY_GLYPH, primary: true, onClick: () => { const k = KEY_OF_TITLE[eGameMenu.title]; setGameMenu(null); if (k) setPlayKey(k) } },
               { divider: true },
-              { label: 'Add to Mix', icon: BOOKMARK_MENU_GLYPH, onClick: () => { setWishlistGame(eGameMenu.title); setGameMenu(null) } },
+              { label: 'Add to PlayList', icon: BOOKMARK_MENU_GLYPH, onClick: () => { setWishlistGame(eGameMenu.title); setGameMenu(null) } },
               { label: 'Add to Wheel', icon: WHEEL_MENU_GLYPH, onClick: () => { addToWheel(eGameMenu.title); setGameMenu(null) } },
               { label: 'Share', icon: SHARE_MENU_GLYPH, onClick: () => { setShareGame(eGameMenu.title); setGameMenu(null) } },
             ]}
@@ -7600,6 +8264,8 @@ export default function Landing() {
         {/* Read-only mirror overlay: the participant's live cursor + click ripples */}
         {IS_SPECTATE && <SpectatorCursor pointer={mirror?.pointer} click={mirror?.click} />}
         </NavCtx.Provider>
+        </WheelCtx.Provider>
+        </PartyCtx.Provider>
         </TagCtx.Provider>
         </SpectateAvCtx.Provider>
         </SpectateHoverCtx.Provider>

@@ -4,6 +4,10 @@ import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/inde
 // Set by Landing to a handler(tagText) that opens the Library filtered by a
 // clicked card tag. null when no handler is provided (tags stay non-clickable).
 export const TagCtx = createContext(null)
+// Provides startParty(title) so any game card can offer a "start a party" action.
+export const PartyCtx = createContext(null)
+// Provides addToWheel(title) so any game card's + hover-menu can offer it.
+export const WheelCtx = createContext(null)
 
 // On a moderator's mirror, set to the game TITLE the participant is hovering, so
 // any game card can force its hover reveal on even though the moderator can't
@@ -44,6 +48,16 @@ function smoothScrollLeft(el, to, duration = 600) {
 
 // Friend avatar colors (solid Discord-style circles). Green is the user (sauhee).
 export const AVATAR = { blue: '#5165F6', yellow: '#F5C518', red: '#FF3737', green: '#00A853', pink: '#EB459E' }
+
+// The "Start a party" group glyph (three party-goers). fill=currentColor so each
+// button keeps its own color + hover treatment.
+const PARTY_GLYPH_D = "M18.3005 15.6953C18.3005 14.5563 19.5274 13.8242 20.5271 14.3965C22.3196 15.4229 23.7271 16.3104 25.4978 17.5049C26.5085 18.1866 26.3149 19.7159 25.1824 20.1406L20.3269 21.9619C19.3464 22.3293 18.3005 21.6038 18.3005 20.5566V15.6953ZM8.32593 12.7578C11.2114 10.8478 15.844 10.807 18.7869 12.6328C17.5942 12.8269 16.7997 13.9122 16.7996 15.6631V20.0732C16.7996 20.232 16.8063 20.3855 16.8191 20.5332C15.8172 20.8436 14.7336 21 13.6501 21C11.7185 20.9999 9.786 20.5063 8.31616 19.5195C6.99351 18.6376 6.25773 17.4406 6.25757 16.1494C6.25757 14.8581 6.99283 13.6503 8.32593 12.7578ZM1.37573 12.501C3.17106 11.0521 6.09049 10.6007 8.41089 11.2725C7.51863 11.5979 6.69919 12.0393 5.99585 12.5957C4.75723 13.5931 4.13795 14.8427 4.24292 16.1445C4.32691 17.0472 4.76764 17.8977 5.52319 18.5801C4.21098 18.6114 2.88741 18.3391 1.83765 17.7617C0.74611 17.1633 0.0955371 16.2809 0.0114746 15.2627C-0.0829901 14.2549 0.410085 13.2779 1.37573 12.501ZM18.8894 11.3291C21.2097 10.6573 24.1291 11.1089 25.9246 12.5576C26.8905 13.3346 27.3833 14.3114 27.2888 15.3193C27.2363 15.9561 26.9618 16.5391 26.4968 17.0332C26.2432 16.4294 25.7105 15.8571 24.8982 15.3877L22.9949 14.2852L22.5154 14.0068C22.2223 13.522 21.817 13.065 21.3044 12.6523C20.601 12.096 19.7818 11.6546 18.8894 11.3291ZM13.6501 0C16.4009 0.000255925 18.6373 2.23655 18.6375 4.9873C18.627 7.6858 16.5159 9.87034 13.8279 9.96484H13.7546C13.6917 9.95442 13.607 9.95437 13.5232 9.96484C10.7727 9.86988 8.66187 7.6855 8.66187 4.9873C8.66197 2.23655 10.8994 0.000257191 13.6501 0ZM21.115 2.17383C23.173 1.99533 25.0107 3.52844 25.1892 5.60742C25.357 7.64413 23.9083 9.42925 21.9031 9.6709H21.8503C21.7875 9.6709 21.724 9.67046 21.6716 9.69141C20.6535 9.74376 19.7187 9.41856 19.0154 8.82031C20.0969 7.85433 20.7165 6.40504 20.5906 4.83008C20.5171 3.97966 20.2229 3.20247 19.782 2.54102C20.1807 2.34168 20.6428 2.21588 21.115 2.17383ZM2.11108 5.54785C2.28957 3.46901 4.12749 1.93603 6.1853 2.11426C6.65745 2.15626 7.11954 2.28216 7.51831 2.48145C7.07741 3.14287 6.78322 3.92014 6.70972 4.77051C6.58374 6.34537 7.20358 7.79475 8.28491 8.76074C7.58149 9.35901 6.64692 9.68429 5.62866 9.63184C5.57624 9.611 5.51279 9.61133 5.44995 9.61133H5.39722C3.39217 9.3695 1.94324 7.5845 2.11108 5.54785Z"
+// `size` is the rendered HEIGHT in px; width is derived from the native 28:23
+// viewBox so the icon's proportions (and the gaps between the three figures) are
+// preserved exactly at any scale. Pass color/transform/filter via className.
+export function PartyGlyph({ size = 24, className, style }) {
+  return <svg viewBox="0 0 28 23" width={(size * 28) / 23} height={size} className={className} style={style} fill="currentColor"><path d={PARTY_GLYPH_D} /></svg>
+}
 
 /** A Discord-style avatar: colored circle with the white Discord logo. */
 function ProfileIcon({ color, className, style }) {
@@ -126,7 +140,7 @@ function ShareAvatars({ colors, targets, title, onShare }) {
               {t.rec && (
                 <>
                   <span aria-hidden className="text-white/60">·</span>
-                  <svg viewBox="0 0 24 24" className="size-[13px]" fill="#7aff46" aria-label="Recommends"><path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" /></svg>
+                  <svg viewBox="0 0 24 24" className="size-[13px]" fill="#9BF00B" aria-label="Recommends"><path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" /></svg>
                 </>
               )}
             </span>
@@ -354,7 +368,7 @@ function CardIconButton({ glyph: Glyph, initialMine = false, othersActive = fals
  * hover_content fades in.
  */
 export function RecCard({ avatars, label, image, players, details, video, shared, overlay, steam, expanded, onWishlist, onShare, onOpen, reveal }) {
-  const wishlistedByMe = label === 'PLAYlisted this game' && (avatars || []).includes(AVATAR.green)
+  const wishlistedByMe = label === 'PlayListed this game' && (avatars || []).includes(AVATAR.green)
   const cardRef = useRef(null)
   const [fly, setFly] = useState(null)
   // Clicking anywhere on the card (except the wishlist/share buttons, which
@@ -417,7 +431,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
           <div className="h-[380px] rounded-[16px] bg-[#121214] p-[16px] shadow-[0_12px_40px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
             <div className="flex h-full flex-col gap-[16px]">
               <div className="flex items-center justify-end gap-[8px]">
-                <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
                 <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
               </div>
               <div className="flex flex-1 flex-col justify-between pb-[5px]">
@@ -483,7 +497,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
         </div>
         <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px]">
           <div className="flex items-center justify-end gap-[8px]">
-            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
             <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
           </div>
           <div className="flex flex-1 flex-col justify-between pb-[5px]">
@@ -560,7 +574,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
             over the bottom of the 16:9 cover. Fades in on hover. */}
         <div className={'pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100' + (reveal ? ' !opacity-100' : '')}>
           <div className="absolute right-[16px] top-[16px] flex gap-[8px]">
-            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
             <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
           </div>
           <div className="absolute inset-x-[16px] bottom-[16px] flex flex-col gap-[8px] rounded-b-[16px] bg-gradient-to-t from-black via-black/80 to-transparent px-[16px] pb-[14px] pt-[52px]">
@@ -672,7 +686,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
       {/* Right column — hover_content; fades in as the card expands */}
       <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px] opacity-0 transition-opacity delay-[0ms] duration-[400ms] ease-out group-hover:opacity-100 group-hover:delay-[550ms]">
         <div className="flex items-center justify-end gap-[8px]">
-          <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to Mix" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
           <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
         </div>
 
@@ -736,7 +750,7 @@ export function RecCard({ avatars, label, image, players, details, video, shared
  *  · the trailer is revealed by an inset clip wiping leftward from the card's
  *    right edge — it never translates — and cross-fades up out of Xbox green
  */
-export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, mini, onWishlist, onShare, onViewDetails, onOpen, forceReveal }) {
+export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, mini, onWishlist, onShare, onViewDetails, onOpen, forceReveal, onAddToWheel }) {
   const open = () => (onViewDetails || onOpen)?.(title)
   // On the moderator's mirror, force the reveal when this card is the one the
   // participant is hovering (there's no real :hover on the mirror).
@@ -750,6 +764,11 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
   const IMG_H = mini ? 'h-[169px]' : compact ? 'h-[234px]' : 'h-[292px]'
   const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
   const onTag = useContext(TagCtx)
+  const onParty = useContext(PartyCtx)
+  // The + opens a hover mini-menu (Add to PlayList / Add to Wheel) whenever a
+  // wheel handler is available — provided app-wide via WheelCtx.
+  const ctxWheel = useContext(WheelCtx)
+  const wheelAdd = onAddToWheel || ctxWheel
   // Spectate mirroring: force the hover reveal on (a moderator can't hover).
   const F = forceReveal ? ' !opacity-100 !translate-x-0 !translate-y-0' : ''
   const LightPill = ({ children, tagValue }) => {
@@ -871,35 +890,50 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
           label, so `group/add` and `group/view` are scoped to the button and
           don't disturb the card-level `group` the rest of the reveal hangs off. */}
       <div className="absolute bottom-[14px] right-[18px] z-[2] flex items-center gap-[16px]">
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
-          aria-label="Add to Mix"
-          className={`${reveal} group/add relative flex size-[28px] items-center justify-center`}
-        >
-          <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">
-            Add to Mix
-          </span>
-          <PlusGlyph className={`size-[24px] transition-[scale,filter] duration-200 ${EASE} group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} style={{ color: ACCENT }} />
-        </button>
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            // Open the same menu as a right-click: dispatch a bubbling contextmenu
-            // event so the global game-card menu handler catches it (the card is
-            // tagged data-game), anchored to this button.
-            const r = e.currentTarget.getBoundingClientRect()
-            e.currentTarget.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, clientX: r.left, clientY: r.top }))
-          }}
-          aria-label="More"
-          className={`${reveal} group/share relative flex size-[28px] items-center justify-center`}
-        >
-          <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/share:opacity-100">
-            More
-          </span>
-          <svg viewBox="0 0 24 24" className={`size-[24px] transition-[scale,filter] duration-200 ${EASE} group-hover/share:scale-110 group-hover/share:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} fill="currentColor" style={{ color: ACCENT }}><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
-        </button>
+        {onParty && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onParty(title) }}
+            aria-label="Start a party"
+            className={`${reveal} group/party relative flex size-[28px] items-center justify-center`}
+          >
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/party:opacity-100">
+              Start a party
+            </span>
+            <PartyGlyph size={22} className={`transition-[scale,filter] duration-200 ${EASE} group-hover/party:scale-110 group-hover/party:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} style={{ color: ACCENT }} />
+          </button>
+        )}
+        <div className={`${reveal} group/add relative flex size-[28px] items-center justify-center`}>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
+            aria-label="Add this game"
+            className="flex size-full items-center justify-center"
+          >
+            <PlusGlyph className={`size-[24px] transition-[scale,filter] duration-200 ${EASE} group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} style={{ color: ACCENT }} />
+          </button>
+          {wheelAdd ? (
+            /* Hover mini-menu: Add to PlayList / Add to Wheel. `bottom-full` + a
+               transparent `pb` keep the hover area continuous with the + so the
+               menu stays open while you move onto it. */
+            <div className="pointer-events-none absolute bottom-full right-0 z-[10] pb-[8px] opacity-0 transition-opacity duration-150 group-hover/add:pointer-events-auto group-hover/add:opacity-100">
+              <div className="w-[172px] overflow-hidden rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[5px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+                <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }} className="flex w-full items-center gap-[9px] px-[12px] py-[8px] text-left text-[13px] font-medium text-[#dbdee1] transition hover:bg-white/5">
+                  <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-white" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+                  Add to PlayList
+                </button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); wheelAdd(title) }} className="flex w-full items-center gap-[9px] px-[12px] py-[8px] text-left text-[13px] font-medium text-[#dbdee1] transition hover:bg-white/5">
+                  <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-white" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
+                  Add to Wheel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">
+              Add this game
+            </span>
+          )}
+        </div>
       </div>
     </div>
     </div>
@@ -1020,11 +1054,11 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
-            aria-label="Add to Mix"
+            aria-label="Add to PlayList"
             className="group/add relative flex size-[26px] items-center justify-center"
           >
             <span className="pointer-events-none absolute bottom-[34px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">
-              Add to Mix
+              Add to PlayList
             </span>
             <PlusGlyph className="size-[22px] transition-[scale,filter] duration-200 ease-out group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" />
           </button>

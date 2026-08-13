@@ -24,6 +24,12 @@ button:not(:disabled),
 .focus-ring-none:focus-visible {
   outline: none;
 }
+/* Search fields recolour their ring blue only while the user is navigating by
+   keyboard (see the data-kbd flag in Landing). A plain mouse click focuses the
+   field but leaves the resting ring, so no blue border appears. */
+html[data-kbd] .kbd-ring:focus-within {
+  --tw-ring-color: #5765f2;
+}
 /* A stronger, inset-safe ring for controls sitting on artwork/photos where a
    thin blue line would wash out. */
 .focus-ring-strong:focus-visible {
