@@ -525,10 +525,15 @@ const NAME = { [AVATAR.green]: 'clarisse', [AVATAR.blue]: 'caleb', [AVATAR.yello
 const OFF_NAME = Object.fromEntries(OFF_ARCADE_FRIENDS.map((f) => [f.color, f.name]))
 const nameForColor = (c) => NAME[c] || OFF_NAME[c] || null
 
-// Last pointer-down position, so popover-style modals (Add to PlayList) can open
-// next to the card the user clicked instead of dead-center.
-const LAST_POINTER = { x: null, y: null }
-if (typeof window !== 'undefined') window.addEventListener('pointerdown', (e) => { LAST_POINTER.x = e.clientX; LAST_POINTER.y = e.clientY }, true)
+// Last pointer-down position + the clicked game card's center, so popover-style
+// modals (Add to PlayList) can open centered on the card the user clicked.
+const LAST_POINTER = { x: null, y: null, cardX: null, cardY: null }
+if (typeof window !== 'undefined') window.addEventListener('pointerdown', (e) => {
+  LAST_POINTER.x = e.clientX; LAST_POINTER.y = e.clientY
+  const card = e.target.closest?.('[data-game], [data-game-card]')
+  if (card) { const r = card.getBoundingClientRect(); LAST_POINTER.cardX = r.left + r.width / 2; LAST_POINTER.cardY = r.top + r.height / 2 }
+  else { LAST_POINTER.cardX = null; LAST_POINTER.cardY = null }
+}, true)
 
 // Game catalog for the blend pages — cover art + a short caption. Reuses the
 // card `details` above for title/developer/genre/playtime.
@@ -3329,8 +3334,11 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   // Each game carries a deterministic base score; up/down taps add a delta and
   // the list auto-ranks by the net score. `myVote` tracks this member's tap so
   // it can be toggled off.
-  const [votes, setVotes] = useState({})
-  const [myVote, setMyVote] = useState({})
+  // Votes are shared: votes/{blendId} = { [gameKey]: { [member]: 1 | -1 } }, so
+  // every member sees the live tally and who cast each vote.
+  const [voteData, setVoteData] = useRoomNode('votes/' + blend.id, {})
+  const votesFor = (key) => voteData[key] || {}
+  const myVoteFor = (key) => votesFor(key)[SELF_NAME] || 0
   const [plSort, setPlSort] = useState('votes')
   const [plSortOpen, setPlSortOpen] = useState(false)
   const [plGenres, setPlGenres] = useState([])    // genre filter facets
@@ -3341,13 +3349,15 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const plFilterPop = usePopover(plFilterOpen, () => setPlFilterOpen(false))
   const setPlPlayerRange = (min, max) => setPlRange(min == null && max == null ? null : { min, max })
   const plFilterCount = plGenres.length + (plRange ? 1 : 0) + (plSession ? 1 : 0)
-  // A game starts with no votes; its score is purely the group's up/down votes.
-  const scoreOf = (key) => votes[key] || 0
+  // A game starts with no votes; its score is the sum of every member's vote.
+  const scoreOf = (key) => Object.values(votesFor(key)).reduce((s, v) => s + (v || 0), 0)
   const applyVote = (key, dir) => {
-    const cur = myVote[key] || 0
+    if (IS_SPECTATE) return
+    const cur = myVoteFor(key)
     const next = cur === dir ? 0 : dir
-    setVotes((v) => ({ ...v, [key]: (v[key] || 0) + (next - cur) }))
-    setMyVote((mv) => ({ ...mv, [key]: next }))
+    const forKey = { ...votesFor(key) }
+    if (next === 0) delete forKey[SELF_NAME]; else forKey[SELF_NAME] = next
+    setVoteData({ ...voteData, [key]: forKey })
   }
   // Same sort menu the Library offers, plus the group's own vote ranking.
   const PL_SORTS = [
@@ -3405,13 +3415,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const guessColor = (key) => { const pool = m.length ? m : [SELF]; return pool[ratingHash(blend.id + key, 'addedby') % pool.length] }
   const adderColor = (key) => { const rec = blend.addedBy?.[key]; return rec ? (COLOR_OF[rec] || guessColor(key)) : guessColor(key) }
   const adderName = (key) => { const rec = blend.addedBy?.[key]; return capName((rec || NAME[guessColor(key)]) || 'a member') }
-  // Who voted which way — deterministic pseudo-voters from the group (other than
-  // you), plus you based on your live vote. Powers the vote hover tooltips.
-  const votePeople = [...new Set((m || []).map((c) => NAME[c]).filter(Boolean).filter((n) => n !== SELF_NAME))]
+  // Who voted which way — read live from the shared vote data. Powers the tooltips.
   const voterNames = (key, dir) => {
-    const base = votePeople.filter((n) => { const h = ratingHash(key + ':' + n, 'voter') % 3; return (h === 0 ? 1 : h === 1 ? -1 : 0) === dir })
-    const withSelf = (myVote[key] || 0) === dir ? ['you', ...base] : base
-    return withSelf.map((n) => (n === 'you' ? 'You' : capName(n)))
+    const forKey = votesFor(key)
+    return Object.keys(forKey).filter((n) => forKey[n] === dir).map((n) => (n === SELF_NAME ? 'You' : capName(n)))
   }
   // When the list is ranked by a play-stat, surface that stat on each card.
   const showSortMeta = plSort === 'hours' || plSort === 'session' || plSort === 'friends' || plSort === 'overall'
@@ -3726,7 +3733,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         </div>
                         <div className="mt-[10px] flex items-center gap-[8px]">
                           <p className="min-w-0 flex-1 truncate text-[17px] font-semibold text-white">{g.title}</p>
-                          <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
+                          <VoteControl score={scoreOf(g.key)} mine={myVoteFor(g.key)} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
                         </div>
                         {/* Ranked-by stat: session length, or avg friend playtime + rating. */}
                         {showSortMeta && (
@@ -3782,7 +3789,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                             )}
                           </div>
                         )}
-                        <VoteControl score={scoreOf(g.key)} mine={myVote[g.key] || 0} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
+                        <VoteControl score={scoreOf(g.key)} mine={myVoteFor(g.key)} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
                       </div>
                     ))}
                   </div>
@@ -4277,14 +4284,19 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
   const { blends, setBlends } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
   const dlg = useDialog(onClose, { label: 'Add to PlayList' })
-  // Open next to the clicked card (falls back to center) so the cursor barely moves.
-  const W = 380
+  // Open centered on the clicked game card (falls back to the pointer, then the
+  // screen center) so it lands right where the user is looking.
+  const W = 380, H = 300
   const pos = (() => {
-    if (typeof window === 'undefined' || LAST_POINTER.x == null) return null
+    if (typeof window === 'undefined') return null
     const vw = window.innerWidth, vh = window.innerHeight
-    const left = Math.min(Math.max(LAST_POINTER.x - 40, 12), vw - W - 12)
-    const top = Math.min(Math.max(LAST_POINTER.y - 20, 12), vh - 360)
-    return { left, top }
+    if (LAST_POINTER.cardX != null) {
+      const left = Math.min(Math.max(LAST_POINTER.cardX - W / 2, 12), vw - W - 12)
+      const top = Math.min(Math.max(LAST_POINTER.cardY - H / 2, 12), vh - H - 12)
+      return { left, top }
+    }
+    if (LAST_POINTER.x == null) return null
+    return { left: Math.min(Math.max(LAST_POINTER.x - 40, 12), vw - W - 12), top: Math.min(Math.max(LAST_POINTER.y - 20, 12), vh - 360) }
   })()
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
@@ -4339,7 +4351,7 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
                         {capName(by)} already added
                       </span>
                     ) : (
-                      <p className="text-[12px] text-[#80848e]">{b.members.length} members</p>
+                      <p className="text-[12px] text-[#80848e]">{b.members.length} member{b.members.length === 1 ? '' : 's'}</p>
                     )}
                   </div>
                   <span className={'flex shrink-0 items-center rounded-[6px] px-[14px] py-[7px] text-[13px] font-semibold text-white transition ' + (on ? 'bg-[#248046]' : 'bg-[#4e5058]')}>
@@ -5618,39 +5630,37 @@ function WheelInviteStep({ online, onCancel, onStart, popover }) {
   )
 
   return (
-    <div className={'no-scrollbar relative flex w-full flex-col overflow-y-auto ' + (popover ? 'p-[20px]' : 'max-h-[92vh] p-[32px]')}>
-      <h2 className={'font-bold text-white ' + (popover ? 'text-[20px]' : 'text-[28px]')}>Start a wheel sync</h2>
-      <p className={'mt-[6px] leading-snug text-[#9a9ba3] ' + (popover ? 'text-[13px]' : 'text-[15px]')}>Invite people to build the wheel and watch it spin with you — or copy a link to share.</p>
-
-      {/* Copy link */}
-      <button onClick={copyLink} className="mt-[18px] flex w-fit items-center gap-[9px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
-        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
-        {copied ? 'Link copied!' : 'Copy invite link'}
-      </button>
-
-      <div className="mt-[22px] flex items-center gap-[10px]">
-        <span className="text-[13px] font-semibold tracking-wide text-[#9a9ba3]">In your call</span>
-      </div>
-      <div className="mt-[2px]">
-        {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on the call right now — invite someone below or share the link.</p>}
-      </div>
-
-      <p className="mb-[6px] mt-[18px] text-[15px] text-white">Invite someone else</p>
-      <div className="flex items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] py-[9px] ring-1 ring-white/10">
-        <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
-      </div>
-      {q && (
-        <div className="mt-[4px] max-h-[160px] overflow-y-auto">
-          {filtered.length ? filtered.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one matches “{q}”.</p>}
-        </div>
-      )}
-
-      <div className="mt-[24px] flex justify-end gap-[10px]">
-        <button onClick={onCancel} className="rounded-[8px] bg-[#3a3c42] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
-        <button onClick={() => onStart(chosen)} className="rounded-[8px] bg-[#9BF00B] px-[18px] py-[10px] text-[14px] font-semibold text-[#0c0c0e] transition hover:brightness-110">
-          {chosen.length ? `Start sync · invite ${chosen.length}` : 'Start sync'}
+    <div className={'relative flex w-full flex-col ' + (popover ? 'max-h-[calc(92vh-84px)] p-[20px]' : 'max-h-[92vh] p-[32px]')}>
+      {/* Fixed header */}
+      <div className="shrink-0">
+        <h2 className={'font-bold text-white ' + (popover ? 'text-[20px]' : 'text-[28px]')}>Start a wheel sync</h2>
+        <p className={'mt-[6px] leading-snug text-[#9a9ba3] ' + (popover ? 'text-[13px]' : 'text-[15px]')}>Invite people to build the wheel and watch it spin with you — or copy a link to share.</p>
+        <button onClick={copyLink} className="mt-[18px] flex w-fit items-center gap-[9px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M9 15l6-6M8 7h2m4 0h2a3 3 0 0 1 0 6h-1M10 17H8a3 3 0 0 1 0-6h1" /></svg>
+          {copied ? 'Link copied!' : 'Copy invite link'}
         </button>
+        <p className="mt-[22px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">In your call</p>
+      </div>
+
+      {/* Scrollable people list — keeps the footer below it pinned in place */}
+      <div className="no-scrollbar mt-[2px] min-h-0 flex-1 overflow-y-auto">
+        {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on the call right now — invite someone below or share the link.</p>}
+        {q && (filtered.length ? filtered.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one matches “{q}”.</p>)}
+      </div>
+
+      {/* Fixed footer — search + actions stay put while the list scrolls */}
+      <div className="shrink-0 pt-[14px]">
+        <p className="mb-[6px] text-[15px] text-white">Invite someone else</p>
+        <div className="flex items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] py-[9px] ring-1 ring-white/10">
+          <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#87898c]" />
+        </div>
+        <div className="mt-[16px] flex justify-end gap-[10px]">
+          <button onClick={onCancel} className="rounded-[8px] bg-[#3a3c42] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
+          <button onClick={() => onStart(chosen)} className="rounded-[8px] bg-[#9BF00B] px-[18px] py-[10px] text-[14px] font-semibold text-[#0c0c0e] transition hover:brightness-110">
+            {chosen.length ? `Start sync · invite ${chosen.length}` : 'Start sync'}
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -7842,16 +7852,16 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
             )}
           </section>
 
-          {/* Reviews — hidden until a friend has actually played it */}
-          {unplayed ? (
-            <section className="mt-[36px] flex flex-col items-center gap-[8px] rounded-[16px] border border-dashed border-[#2b2d31] py-[36px] text-center">
+          {/* Reviews — always available so every game has Write-a-review + Filter.
+              When no friend has played it yet, a note leads the section. */}
+          {unplayed && (
+            <section className="mt-[36px] flex flex-col items-center gap-[8px] rounded-[16px] border border-dashed border-[#2b2d31] py-[28px] text-center">
               <svg viewBox="0 0 24 24" className="size-[26px] text-[#9BF00B]" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4 3.9.9 5.6L12 15l-4.9 2.5L8 11.9 4 8l5.6-.6L12 2z" /></svg>
               <p className="text-[16px] font-semibold text-white">No friend reviews yet</p>
               <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your PlayList and share what you think.</p>
             </section>
-          ) : (
-            <ReviewsSection reviews={[...friendReviews, ...REVIEWS]} />
           )}
+          <ReviewsSection reviews={unplayed ? REVIEWS : [...friendReviews, ...REVIEWS]} />
 
           {/* Friends Also Liked — compact cinematic cards, consistent with the
               Recommended page. */}
