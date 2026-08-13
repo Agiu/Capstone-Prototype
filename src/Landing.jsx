@@ -525,6 +525,11 @@ const NAME = { [AVATAR.green]: 'clarisse', [AVATAR.blue]: 'caleb', [AVATAR.yello
 const OFF_NAME = Object.fromEntries(OFF_ARCADE_FRIENDS.map((f) => [f.color, f.name]))
 const nameForColor = (c) => NAME[c] || OFF_NAME[c] || null
 
+// Last pointer-down position, so popover-style modals (Add to PlayList) can open
+// next to the card the user clicked instead of dead-center.
+const LAST_POINTER = { x: null, y: null }
+if (typeof window !== 'undefined') window.addEventListener('pointerdown', (e) => { LAST_POINTER.x = e.clientX; LAST_POINTER.y = e.clientY }, true)
+
 // Game catalog for the blend pages — cover art + a short caption. Reuses the
 // card `details` above for title/developer/genre/playtime.
 const CATALOG = {
@@ -605,6 +610,19 @@ function useInbox() {
     const unread = list.filter((m) => m.from !== SELF_NAME && (m.ts || 0) > (lastReadTs || 0)).length
     return { last: list[list.length - 1], unread }
   }
+}
+// Pending PlayList invites addressed to me — powers the on-page invite cards and
+// the nav badge. Reads every DM thread and keeps invites still awaiting a reply.
+function usePendingInvites() {
+  const [all] = useRoomNode('dms', {})
+  const convs = all && typeof all === 'object' ? all : {}
+  const out = []
+  Object.values(convs).forEach((conv) => {
+    if (conv && typeof conv === 'object') Object.values(conv).forEach((m) => {
+      if (m && m.kind === 'invite' && m.to === SELF_NAME && m.status === 'pending') out.push(m)
+    })
+  })
+  return out.sort((a, b) => (b.ts || 0) - (a.ts || 0))
 }
 // Social proof from the OTHER testers (never the viewer), varied per card.
 function socialProof(i) {
@@ -1077,8 +1095,12 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
   useEffect(() => { navBackWasShown = showBack }, [showBack])
   const anim = animate ? ' [animation:navBackIn_.4s_.06s_cubic-bezier(0.16,1,0.3,1)_both]' : ''
   const groupAnim = animate ? ' [animation:navGroupSlide_.4s_cubic-bezier(0.16,1,0.3,1)_both]' : ''
-  const Tab = ({ label, isActive, onClick }) => (
-    <button onClick={onClick} data-tab aria-current={isActive ? 'page' : undefined} className={'flex h-[56px] items-center border-b-2 text-[16px] font-medium transition ' + (isActive ? 'border-white text-white' : 'border-transparent text-[#c7c9cb] hover:text-white')}>{label}</button>
+  const inviteCount = IS_SPECTATE ? 0 : usePendingInvites().length
+  const Tab = ({ label, isActive, onClick, badge }) => (
+    <button onClick={onClick} data-tab aria-current={isActive ? 'page' : undefined} className={'relative flex h-[56px] items-center gap-[7px] border-b-2 text-[16px] font-medium transition ' + (isActive ? 'border-white text-white' : 'border-transparent text-[#c7c9cb] hover:text-white')}>
+      {label}
+      {badge > 0 && <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#9BF00B] px-[5px] text-[11px] font-bold text-[#0c0c0e]">{badge}</span>}
+    </button>
   )
   // Left/Right arrow moves between the nav tabs (horizontal layout → ←/→).
   const onTabsKeyDown = (e) => {
@@ -1100,7 +1122,7 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
         <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
         <Tab label="Recommended" isActive={active === 'recommended'} onClick={onHome} />
         <Tab label="Library" isActive={active === 'library'} onClick={onLibrary} />
-        <Tab label="PlayLists" isActive={active === 'mixes'} onClick={onMixes} />
+        <Tab label="PlayLists" isActive={active === 'mixes'} onClick={onMixes} badge={inviteCount} />
       </div>
       <div className="flex flex-1 items-center justify-end gap-[20px]">
         <WheelNavButton />
@@ -1164,6 +1186,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
   // Home has no back button, so re-arm the inner-page emerge animation for the
   // next time we drill into a page that does.
   useEffect(() => { navBackWasShown = false }, [])
+  const inviteCount = IS_SPECTATE ? 0 : usePendingInvites().length
   // A card keeps its hover reveal while its right-click/More menu is open, so
   // moving the cursor onto the menu doesn't collapse the card.
   const titleOf = (k) => STARTER_BY_KEY[k]?.title || CATALOG[k]?.title
@@ -1259,7 +1282,10 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
         <button data-tab aria-current="page" className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Recommended</button>
         <button onClick={onLibrary} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button onClick={onMixes} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">PlayLists</button>
+        <button onClick={onMixes} data-tab className="relative flex h-[56px] items-center gap-[7px] border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">
+          PlayLists
+          {inviteCount > 0 && <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#9BF00B] px-[5px] text-[11px] font-bold text-[#0c0c0e]">{inviteCount}</span>}
+        </button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
           <WheelNavButton />
           <GiftArcadeButton onClick={() => setSearchOpen(true)} />
@@ -1425,6 +1451,15 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
   const deleteMix = (b) => { if (window.confirm(`Delete ${b.name}? This removes it for everyone.`)) setBlends(blends.filter((x) => x.id !== b.id)) }
   const togglePin = (b) => patchMix(b, { pinned: !b.pinned })
   const mine = blends.filter((b) => (b.members || []).includes(SELF))
+  // Pending PlayList invites for me — shown as cards with Accept / Decline.
+  const pendingInvites = usePendingInvites()
+  const acceptInvite = (m) => {
+    setBlends(blends.map((b) => b.id === m.blendId
+      ? { ...b, members: [...new Set([...(b.members || []), SELF])], invited: (b.invited || []).filter((c) => c !== SELF) }
+      : b))
+    putDM(m.from, { ...m, status: 'accepted' })
+  }
+  const declineInvite = (m) => putDM(m.from, { ...m, status: 'declined' })
 
   // ── Spectate/moderator fidelity ──────────────────────────────────────────
   // Publish this page's right-click menu + modals so the moderator's mirror
@@ -1452,6 +1487,25 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
         <div className="mx-auto w-full max-w-[1400px]">
           <h1 className="text-[clamp(30px,3vw,44px)] uppercase tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond Bold"' }}>Your PlayLists</h1>
+          {/* Pending invites — Accept / Decline right here on the page. */}
+          {!IS_SPECTATE && pendingInvites.length > 0 && (
+            <div className="mt-[24px] rounded-[16px] border border-[#9BF00B]/25 bg-[#9BF00B]/[0.06] p-[16px]">
+              <p className="mb-[12px] text-[13px] font-bold uppercase tracking-wide text-[#9BF00B]">{pendingInvites.length} PlayList invite{pendingInvites.length === 1 ? '' : 's'}</p>
+              <div className="flex flex-col gap-[10px]">
+                {pendingInvites.map((m) => (
+                  <div key={m.blendId + m.from} className="flex items-center gap-[12px] rounded-[12px] bg-[#161618] p-[10px] ring-1 ring-white/5">
+                    <Avatar color={COLOR_OF[m.from] || '#4a4d55'} size={40} />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-semibold text-white">{m.blendName || 'a PlayList'}</p>
+                      <p className="truncate text-[13px] text-[#9a9ba3]">{capName(m.from)} invited you</p>
+                    </div>
+                    <button onClick={() => acceptInvite(m)} className="shrink-0 rounded-[8px] bg-[#9BF00B] px-[16px] py-[8px] text-[13px] font-bold text-[#0c0c0e] transition hover:brightness-110">Accept</button>
+                    <button onClick={() => declineInvite(m)} className="shrink-0 rounded-[8px] bg-[#3a3c42] px-[16px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-[#45474e]">Decline</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mt-[28px] flex flex-wrap gap-x-[16px] gap-y-[28px]">
             <CreateBlendCard onClick={onCreate} />
             {mine.map((b) => (
@@ -4226,27 +4280,44 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
   const { blends, setBlends } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
   const dlg = useDialog(onClose, { label: 'Add to PlayList' })
+  // Open next to the clicked card (falls back to center) so the cursor barely moves.
+  const W = 380
+  const pos = (() => {
+    if (typeof window === 'undefined' || LAST_POINTER.x == null) return null
+    const vw = window.innerWidth, vh = window.innerHeight
+    const left = Math.min(Math.max(LAST_POINTER.x - 40, 12), vw - W - 12)
+    const top = Math.min(Math.max(LAST_POINTER.y - 20, 12), vh - 360)
+    return { left, top }
+  })()
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
     const wishlist = has ? b.wishlist.filter((x) => x !== key) : [...(b.wishlist || []), key]
-    setBlends(blends.map((x) => (x.id === b.id ? { ...x, wishlist } : x)))
+    const addedBy = { ...(b.addedBy || {}) }
+    if (has) delete addedBy[key]; else if (!addedBy[key]) addedBy[key] = SELF_NAME
+    setBlends(blends.map((x) => (x.id === b.id ? { ...x, wishlist, addedBy } : x)))
   }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
-        <div className="p-[24px]">
+    <div className="fixed inset-0 z-50 bg-black/50" onClick={onClose}>
+      <div
+        ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()}
+        className="absolute w-[380px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
+        style={pos ? { left: pos.left, top: pos.top } : { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
+      >
+        <div className="p-[20px]">
           <div className="flex items-start justify-between gap-[12px]">
             <div>
-              <h3 className="text-[20px] font-bold text-white">Add to PlayList</h3>
-              <p className="mt-[4px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a PlayList.</p>
+              <h3 className="text-[19px] font-bold text-white">Add to PlayList</h3>
+              <p className="mt-[3px] text-[14px] text-[#b5bac1]">Add <span className="font-semibold text-white">{game}</span> to a PlayList.</p>
             </div>
             <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
-              <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
           </div>
-          <div className="no-scrollbar mt-[16px] flex max-h-[320px] flex-col gap-[2px] overflow-y-auto">
+          <div className="no-scrollbar mt-[14px] flex max-h-[300px] flex-col gap-[2px] overflow-y-auto">
             {blends.filter((b) => (b.members || []).includes(SELF)).map((b) => {
               const on = (b.wishlist || []).includes(key)
+              const by = b.addedBy?.[key]
+              const byOther = on && by && by !== SELF_NAME
               return (
                 <button
                   key={b.id}
@@ -4264,7 +4335,15 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-semibold text-white">{b.name}</p>
-                    <p className="text-[12px] text-[#80848e]">{b.members.length} members</p>
+                    {/* If someone else already added this game, credit them here. */}
+                    {byOther ? (
+                      <span className="mt-[2px] inline-flex items-center gap-[5px] text-[12px] text-[#9BF00B]">
+                        <Avatar color={COLOR_OF[by] || '#4a4d55'} size={14} />
+                        {capName(by)} already added
+                      </span>
+                    ) : (
+                      <p className="text-[12px] text-[#80848e]">{b.members.length} members</p>
+                    )}
                   </div>
                   <span className={'flex shrink-0 items-center rounded-[6px] px-[14px] py-[7px] text-[13px] font-semibold text-white transition ' + (on ? 'bg-[#248046]' : 'bg-[#4e5058]')}>
                     {on ? '✓ Added' : '+ Add'}
