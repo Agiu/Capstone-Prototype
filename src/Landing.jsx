@@ -525,14 +525,18 @@ const NAME = { [AVATAR.green]: 'clarisse', [AVATAR.blue]: 'caleb', [AVATAR.yello
 const OFF_NAME = Object.fromEntries(OFF_ARCADE_FRIENDS.map((f) => [f.color, f.name]))
 const nameForColor = (c) => NAME[c] || OFF_NAME[c] || null
 
-// Last pointer-down position + the clicked game card's center, so popover-style
-// modals (Add to PlayList) can open centered on the card the user clicked.
-const LAST_POINTER = { x: null, y: null, cardX: null, cardY: null }
+// Last pointer-down position + the "+" add-button's top-right, so the Add-to-
+// PlayList popover can open in exactly the same spot as that button's hover menu.
+const LAST_POINTER = { x: null, y: null, plusRight: null, plusTop: null }
 if (typeof window !== 'undefined') window.addEventListener('pointerdown', (e) => {
   LAST_POINTER.x = e.clientX; LAST_POINTER.y = e.clientY
-  const card = e.target.closest?.('[data-game], [data-game-card]')
-  if (card) { const r = card.getBoundingClientRect(); LAST_POINTER.cardX = r.left + r.width / 2; LAST_POINTER.cardY = r.top + r.height / 2 }
-  else { LAST_POINTER.cardX = null; LAST_POINTER.cardY = null }
+  // When the click comes from the "+" hover menu, grab the "+" button's rect so
+  // the popover anchors its bottom-right to the button's top-right (== the menu).
+  const wrap = e.target.closest?.('.group\\/add')
+  const plus = wrap && wrap.querySelector('[aria-label="Add this game"]')
+  LAST_POINTER.plusEl = plus || null // kept so the popover can follow it on scroll
+  if (plus) { const r = plus.getBoundingClientRect(); LAST_POINTER.plusRight = r.right; LAST_POINTER.plusTop = r.top }
+  else { LAST_POINTER.plusRight = null; LAST_POINTER.plusTop = null }
 }, true)
 
 // Game catalog for the blend pages — cover art + a short caption. Reuses the
@@ -3194,8 +3198,8 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
 
 // Up/down vote control for a PlayList game — taps adjust the net score, which
 // re-ranks the list. `mine` is this member's current vote (1/-1/0).
-function VoteControl({ score, mine, onUp, onDown, upVoters = [], downVoters = [] }) {
-  const btn = (active, activeCls) => 'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] transition ' + (active ? activeCls : 'text-[#9a9ba3] hover:bg-white/10 hover:text-white')
+function VoteControl({ mine, onUp, onDown, upVoters = [], downVoters = [] }) {
+  const pill = (active, activeCls) => 'flex shrink-0 items-center gap-[5px] rounded-[8px] px-[8px] py-[5px] text-[13px] font-semibold tabular-nums transition ' + (active ? activeCls : 'text-[#9a9ba3] hover:bg-white/10 hover:text-white')
   // Hover tooltip listing who voted this way.
   const tip = (voters, label) => (
     <span className="pointer-events-none absolute bottom-[calc(100%+7px)] left-1/2 z-[80] w-max max-w-[180px] -translate-x-1/2 rounded-[7px] bg-black/90 px-[9px] py-[6px] text-left text-[12px] leading-snug text-white opacity-0 shadow-[0_8px_24px_rgba(0,0,0,0.6)] transition-opacity duration-150 group-hover/v:opacity-100">
@@ -3203,17 +3207,18 @@ function VoteControl({ score, mine, onUp, onDown, upVoters = [], downVoters = []
     </span>
   )
   return (
-    <div className="flex items-center gap-[3px]" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center gap-[4px]" onClick={(e) => e.stopPropagation()}>
       <span className="group/v relative">
-        <button onClick={(e) => { e.stopPropagation(); onUp() }} aria-label="Upvote" aria-pressed={mine === 1} className={btn(mine === 1, 'bg-[#9BF00B]/25 text-[#9BF00B]')}>
-          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M6 11l6-6 6 6" /></svg>
+        <button onClick={(e) => { e.stopPropagation(); onUp() }} aria-label="Thumbs up" aria-pressed={mine === 1} className={pill(mine === 1, 'bg-[#9BF00B]/20 text-[#9BF00B]')}>
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill={mine === 1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4.5-7a2 2 0 0 1 3.5 1.3V9h4.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 20.2 20H7" /></svg>
+          {upVoters.length}
         </button>
         {tip(upVoters, upVoters.length === 1 ? 'upvote' : 'upvotes')}
       </span>
-      <span className={'min-w-[20px] text-center text-[14px] font-bold tabular-nums ' + (score > 0 ? 'text-[#9BF00B]' : score < 0 ? 'text-[#f0505b]' : 'text-white')}>{score}</span>
       <span className="group/v relative">
-        <button onClick={(e) => { e.stopPropagation(); onDown() }} aria-label="Downvote" aria-pressed={mine === -1} className={btn(mine === -1, 'bg-[#f0505b]/20 text-[#f0505b]')}>
-          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M6 13l6 6 6-6" /></svg>
+        <button onClick={(e) => { e.stopPropagation(); onDown() }} aria-label="Thumbs down" aria-pressed={mine === -1} className={pill(mine === -1, 'bg-[#f0505b]/20 text-[#f0505b]')}>
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill={mine === -1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 14V3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zm0 0-4.5 7a2 2 0 0 1-3.5-1.3V15H4.4a2 2 0 0 1-2-2.4l1.4-7A2 2 0 0 1 5.8 4H17" /></svg>
+          {downVoters.length}
         </button>
         {tip(downVoters, downVoters.length === 1 ? 'downvote' : 'downvotes')}
       </span>
@@ -3339,8 +3344,21 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const [voteData, setVoteData] = useRoomNode('votes/' + blend.id, {})
   const votesFor = (key) => voteData[key] || {}
   const myVoteFor = (key) => votesFor(key)[SELF_NAME] || 0
-  const [plSort, setPlSort] = useState('votes')
+  const [plSort, setPlSort] = useState('manual') // default: custom order (votes don't reorder)
   const [plSortOpen, setPlSortOpen] = useState(false)
+  // Drag-to-reorder — moving a game switches the list to the manual "Custom order"
+  // and writes the new order to the shared wishlist.
+  const [dragKey, setDragKey] = useState(null)
+  const [overKey, setOverKey] = useState(null)
+  const reorderWishlist = (fromKey, toKey) => {
+    if (!fromKey || fromKey === toKey) return
+    const cur = [...(blend.wishlist || [])]
+    const fi = cur.indexOf(fromKey), ti = cur.indexOf(toKey)
+    if (fi < 0 || ti < 0) return
+    cur.splice(fi, 1); cur.splice(ti, 0, fromKey)
+    patchBlend({ wishlist: cur })
+    setPlSort('manual')
+  }
   const [plGenres, setPlGenres] = useState([])    // genre filter facets
   const [plRange, setPlRange] = useState(null)     // { min, max } player range
   const [plSession, setPlSession] = useState(null) // max hours / session
@@ -3361,6 +3379,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   }
   // Same sort menu the Library offers, plus the group's own vote ranking.
   const PL_SORTS = [
+    { id: 'manual', label: 'Custom order' },
     { id: 'votes', label: 'Top voted' },
     { id: 'az', label: 'A to Z' },
     { id: 'hours', label: 'Avg friend playtime' },
@@ -3402,7 +3421,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
     (plGenres.length === 0 || plGenres.includes(g.genre)) &&
     (!plRange || playerRangeOverlaps(g.players, plRange.min, plRange.max)) &&
     (!plSession || sessionHours(g.key) <= plSession))
-  const plList = [...plFiltered].sort((a, b) =>
+  // 'manual' (Custom order) keeps the wishlist order untouched — votes never
+  // reorder it; the group arranges it by dragging.
+  const plList = plSort === 'manual' ? plFiltered : [...plFiltered].sort((a, b) =>
     plSort === 'az' ? (a.title || '').localeCompare(b.title || '')
     : plSort === 'hours' ? (avgFriendHours(b.key) - avgFriendHours(a.key))
     : plSort === 'session' ? (sessionHours(a.key) - sessionHours(b.key))
@@ -3720,7 +3741,12 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         tabIndex={0}
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
-                        className={'cursor-pointer select-none rounded-[14px] p-[6px] ring-2 transition ' + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent')}
+                        draggable={plSort === 'manual'}
+                        onDragStart={plSort === 'manual' ? (e) => { setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
+                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); setOverKey(g.key) } : undefined}
+                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault(); reorderWishlist(dragKey, g.key); setDragKey(null); setOverKey(null) } : undefined}
+                        onDragEnd={() => { setDragKey(null); setOverKey(null) }}
+                        className={'select-none rounded-[14px] p-[6px] ring-2 transition ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : (overKey === g.key && dragKey && dragKey !== g.key) ? 'ring-[#9BF00B]/60' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
                       >
                         <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#1a1a1d]">
                           <img alt="" src={g.image} className="size-full object-cover" />
@@ -3763,7 +3789,12 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         tabIndex={0}
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
-                        className={'group flex cursor-pointer select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent')}
+                        draggable={plSort === 'manual'}
+                        onDragStart={plSort === 'manual' ? (e) => { setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
+                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); setOverKey(g.key) } : undefined}
+                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault(); reorderWishlist(dragKey, g.key); setDragKey(null); setOverKey(null) } : undefined}
+                        onDragEnd={() => { setDragKey(null); setOverKey(null) }}
+                        className={'group flex select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : (overKey === g.key && dragKey && dragKey !== g.key) ? 'ring-[#9BF00B]/60' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
                       >
                         <span className="flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">{i + 1}</span>
                         <div className="h-[68px] w-[121px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]">
@@ -4283,15 +4314,43 @@ function CreateBlendModal({ onClose, onCreated }) {
 function WishlistModal({ game, onClose, onAddToWheel }) {
   const { blends, setBlends } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
-  const dlg = useDialog(onClose, { label: 'Add to PlayList' })
-  // A compact context-menu-style popover whose BOTTOM-RIGHT is anchored at the
-  // click point, so it opens upward and right-aligned exactly like the "+"
-  // button's hover menu. Frozen on open so toggling inside never re-anchors it.
-  const [pos] = useState(() => {
-    if (typeof window === 'undefined' || LAST_POINTER.x == null) return null
+  // A non-modal popover (no blocking backdrop) so the page behind stays
+  // scrollable/clickable; closes on outside click or Escape.
+  const ref = useRef(null)
+  useEffect(() => {
+    const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose() }
+    const onKey = (e) => { if (e.key === 'Escape') onClose() }
+    const id = setTimeout(() => { document.addEventListener('mousedown', onDown, true); document.addEventListener('keydown', onKey) }, 0)
+    return () => { clearTimeout(id); document.removeEventListener('mousedown', onDown, true); document.removeEventListener('keydown', onKey) }
+  }, [onClose])
+  // Anchor the popover's bottom-right to the "+" button's top-right so it opens in
+  // exactly the same spot as that button's hover menu (falls back to the click).
+  const plusEl = useRef(LAST_POINTER.plusEl)
+  const GAP = 8 // same breathing room the "+" hover menu leaves above the button
+  const fromEl = () => {
+    const el = plusEl.current
+    if (!el) return null
     const vw = window.innerWidth, vh = window.innerHeight
-    return { right: Math.min(Math.max(vw - LAST_POINTER.x, 12), vw - 300), bottom: Math.min(Math.max(vh - LAST_POINTER.y, 12), vh - 60) }
+    const r = el.getBoundingClientRect()
+    return { right: Math.min(Math.max(vw - r.right, 12), vw - 300), bottom: Math.min(Math.max(vh - r.top + GAP, 12), vh - 60) }
+  }
+  const [pos, setPos] = useState(() => {
+    if (typeof window === 'undefined') return null
+    const vw = window.innerWidth, vh = window.innerHeight
+    return fromEl() || (LAST_POINTER.x == null ? null : { right: Math.min(Math.max(vw - LAST_POINTER.x, 12), vw - 300), bottom: Math.min(Math.max(vh - LAST_POINTER.y + GAP, 12), vh - 60) })
   })
+  // Follow the "+" button as the page scrolls so the popover stays pinned to the
+  // card, not the viewport. rAF-throttled so it tracks smoothly. (The app content
+  // scrolls in an inner container, hence the capture-phase scroll listener.)
+  useEffect(() => {
+    if (!plusEl.current) return
+    let raf = 0
+    const update = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const p = fromEl(); if (p) setPos(p) }) }
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => { if (raf) cancelAnimationFrame(raf); window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
     const wishlist = has ? b.wishlist.filter((x) => x !== key) : [...(b.wishlist || []), key]
@@ -4300,14 +4359,19 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
     setBlends(blends.map((x) => (x.id === b.id ? { ...x, wishlist, addedBy } : x)))
   }
   const mineBlends = blends.filter((b) => (b.members || []).includes(SELF))
+  // Non-modal popover: page behind stays scrollable; follows the "+" on scroll.
   return (
-    <div className="fixed inset-0 z-[100]" onClick={onClose}>
       <div
-        ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()}
-        className="absolute w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]"
+        ref={ref} role="menu" aria-label="Add to PlayList"
+        className="fixed z-[210] w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]"
         style={pos ? { right: pos.right, bottom: pos.bottom } : { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
       >
-        <p className="px-[14px] pb-[6px] pt-[6px] text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Add “{game}” to</p>
+        <div className="flex items-center justify-between gap-[8px] px-[14px] pb-[6px] pt-[6px]">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Add “{game}” to</p>
+          <button onClick={onClose} aria-label="Close" className="-mr-[4px] shrink-0 text-[#7e7f87] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </div>
         <div className="no-scrollbar flex max-h-[300px] flex-col overflow-y-auto">
           {mineBlends.map((b) => {
             const on = (b.wishlist || []).includes(key)
@@ -4335,7 +4399,6 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
           {mineBlends.length === 0 && <p className="px-[14px] py-[10px] text-[13px] text-[#7e7f87]">You’re not in any PlayLists yet.</p>}
         </div>
       </div>
-    </div>
   )
 }
 
@@ -8435,7 +8498,7 @@ export default function Landing() {
         ) : eMixesTab ? (
           <MixesPage onHome={goHome} onLibrary={openLibrary} onOpenBlend={(b) => openBlend(b.id)} onCreate={() => setCreateOpen(true)} onOpen={openGame} />
         ) : (
-          <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onHome={goHome} onMixes={openMixes} onLibrary={openLibrary} menuGame={eGameMenu?.title || null} party={party} onStartParty={() => setStartPartyOpen(true)} onAddToWheel={addToWheel} />
+          <Content onOpenBlend={(b) => openBlend(b.id)} onCreateBlend={() => setCreateOpen(true)} onWishlist={setWishlistGame} onShare={setShareGame} onOpen={openGame} onWhosOn={() => setWhoOpen(true)} onHome={goHome} onMixes={openMixes} onLibrary={openLibrary} menuGame={eGameMenu?.title || (typeof eWishlistGame === 'string' ? eWishlistGame : eWishlistGame?.title) || null} party={party} onStartParty={() => setStartPartyOpen(true)} onAddToWheel={addToWheel} />
         )}
         </div>
         {/* Voice + user panel — a rounded card floating at the bottom-left,
