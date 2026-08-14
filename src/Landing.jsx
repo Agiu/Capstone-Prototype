@@ -1,4 +1,4 @@
-import { createContext, Fragment, useContext, useEffect, useId, useRef, useState } from 'react'
+import { createContext, Fragment, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
@@ -923,51 +923,50 @@ function MemberChip({ color, size = 28, marginRight = 0, pending = false }) {
   )
 }
 
-function BlendCard({ id, name, color, members, games = [], cover, onOpen, onContext, onMenu, onOpenGame }) {
+function BlendCard({ id, name, color, members, games = [], wishlist = [], cover, onOpen, onContext, onMenu, onOpenGame }) {
   // Cover art: a custom thumbnail if one's been set, otherwise a seeded color pattern.
   // The hover ellipsis opens the same menu as right-click, anchored to itself.
   const openMenu = (e) => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); onMenu?.(r.left, r.bottom + 4) }
-  // Games inside this PlayList — shown in a popover on hover.
+  // Games inside this PlayList — shown in a popover on hover. Mirror the actual
+  // shared PlayList (`wishlist`), which is what the detail page's grid renders,
+  // so the peek always matches the real list (not the recommended `games` set).
   const [peek, setPeek] = useState(false)
-  const gameTitles = games.map((k) => CATALOG[k]?.title || STARTER_BY_KEY[k]?.title).filter(Boolean)
+  const gameTitles = wishlist.map((k) => CATALOG[k]?.title || STARTER_BY_KEY[k]?.title).filter(Boolean)
   return (
     <div className="group relative flex w-[200px] shrink-0 flex-col text-left">
       {/* The game-list popover only opens while hovering the thumbnail or title —
           not the member avatars below. */}
       <div className="relative" onMouseEnter={() => setPeek(true)} onMouseLeave={() => setPeek(false)}>
-      {/* Peek popover: the games inside this PlayList — anchored to the right of
-          the cover so it never gets clipped by the page's top scroll edge. The
-          `pl-[10px]` bridges the gap to the cover so the pointer can travel onto
-          the list without the card's hover dropping. Always mounted so it can
-          fade in/out smoothly. */}
-      {gameTitles.length > 0 && (
-        <div
-          className={
-            'absolute left-[200px] top-0 z-[80] w-[246px] pl-[10px] transition-[opacity,transform] duration-200 ease-out ' +
-            (peek ? 'translate-x-0 opacity-100' : 'pointer-events-none -translate-x-[6px] opacity-0')
-          }
-        >
-          <div className="rounded-[12px] border border-[#2b2d31] bg-[#101012] p-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
-            <p className="mb-[8px] text-[11px] font-bold uppercase tracking-wide text-[#87898c]">{gameTitles.length} game{gameTitles.length === 1 ? '' : 's'} in this PlayList</p>
+      {/* Peek popover: a passive preview of the games inside this PlayList,
+          anchored to the right of the cover. Fully non-interactive — it's just a
+          glance, and it closes the instant the pointer leaves the cover/title
+          hover zone (no bridge, nothing clickable). */}
+      <div
+        className={
+          'pointer-events-none absolute left-[200px] top-0 z-[80] w-[246px] pl-[10px] transition-[opacity,transform] duration-200 ease-out ' +
+          (peek ? 'translate-x-0 opacity-100' : '-translate-x-[6px] opacity-0')
+        }
+      >
+        <div className="rounded-[12px] border border-[#2b2d31] bg-[#101012] p-[12px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+          <p className="mb-[8px] text-[11px] font-bold uppercase tracking-wide text-[#87898c]">{gameTitles.length} game{gameTitles.length === 1 ? '' : 's'} in this PlayList</p>
+          {gameTitles.length === 0 ? (
+            <p className="py-[14px] text-center text-[13px] text-[#7e7f87]">No games yet — open it to add some.</p>
+          ) : (
             <div className="no-scrollbar flex max-h-[248px] flex-col gap-[4px] overflow-y-auto">
               {gameTitles.map((t, i) => {
                 const k = KEY_OF_TITLE[t]
                 const img = (CATALOG[k] || STARTER_BY_KEY[k])?.image
                 return (
-                  <button
-                    key={i}
-                    onClick={(e) => { e.stopPropagation(); onOpenGame?.(t) }}
-                    className="flex items-center gap-[9px] rounded-[7px] p-[3px] text-left transition hover:bg-white/[0.06]"
-                  >
+                  <div key={i} className="flex items-center gap-[9px] rounded-[7px] p-[3px] text-left">
                     {img ? <img alt="" src={img} className="h-[28px] w-[50px] shrink-0 rounded-[5px] object-cover" /> : <span className="h-[28px] w-[50px] shrink-0 rounded-[5px] bg-white/10" />}
                     <span className="min-w-0 flex-1 truncate text-[13px] font-medium text-white">{t}</span>
-                  </button>
+                  </div>
                 )
               })}
             </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
       <button onClick={onOpen} onContextMenu={onContext} className="block w-full text-left">
         <div
           className="size-[200px] overflow-hidden rounded-[20px] transition-[translate] duration-200 group-hover:-translate-y-[3px]"
@@ -3287,6 +3286,105 @@ function VoteControl({ mine, onUp, onDown, upVoters = [], downVoters = [] }) {
   )
 }
 
+const sameOrder = (a, b) => a.length === b.length && a.every((x, i) => x === b[i]) // pointer-drag order compare
+
+// Pointer-based reorder for the ranked PlayList tiles. Unlike native HTML5 drag
+// (which drags a translucent ghost), this moves the real tile: it stays fully
+// opaque, follows the cursor, rides above its siblings, and the others slide out
+// of the way via CSS transforms. On drop the tile settles into its new slot and
+// the order is committed. All motion is driven directly on the DOM nodes, so a
+// drag causes zero React re-renders until the single commit at the end.
+function usePlaylistDrag(displayKeys, onCommit) {
+  const els = useRef(new Map())            // key -> tile element
+  const drag = useRef(null)                // active drag session
+  const moved = useRef(false)              // did the pointer travel (drag vs click)
+  const pendingClear = useRef(false)       // strip inline transforms after the commit render
+  const EASE = 'transform 200ms cubic-bezier(0.2,0,0,1)'
+
+  const setEl = (k) => (node) => { if (node) els.current.set(k, node); else els.current.delete(k) }
+  const clearStyles = () => els.current.forEach((el) => { el.style.transform = ''; el.style.transition = ''; el.style.zIndex = ''; el.style.willChange = '' })
+
+  // Slide every non-dragged tile to the slot it holds in `visual` (row-major).
+  const applyVisual = (d, visual) => {
+    if (sameOrder(visual, d.visual)) return
+    d.visual = visual
+    d.keys.forEach((k, from) => {
+      if (k === d.key) return
+      const el = els.current.get(k); if (!el) return
+      const to = visual.indexOf(k)
+      const a = d.cellRects[from], b = d.cellRects[to]
+      const tx = b.left - a.left, ty = b.top - a.top
+      el.style.transform = tx || ty ? `translate(${tx}px, ${ty}px)` : ''
+    })
+  }
+
+  const onPointerDown = (k) => (e) => {
+    if (e.button !== 0) return
+    const keys = displayKeys.slice()
+    const from = keys.indexOf(k); if (from < 0) return
+    const cellRects = keys.map((kk) => els.current.get(kk)?.getBoundingClientRect())
+    if (cellRects.some((r) => !r)) return
+    // Grid rows share a top edge; a list stacks vertically — pick the drop axis.
+    const axis = cellRects.length > 1 && Math.abs(cellRects[1].top - cellRects[0].top) < 4 ? 'x' : 'y'
+    moved.current = false
+    drag.current = { key: k, startX: e.clientX, startY: e.clientY, keys, cellRects, from, axis, visual: keys.slice() }
+    try { e.currentTarget.setPointerCapture(e.pointerId) } catch { /* older browsers */ }
+    // Prime transitions so every later transform change eases; lift the dragged tile.
+    keys.forEach((kk) => {
+      const el = els.current.get(kk); if (!el) return
+      el.style.willChange = 'transform'
+      if (kk === k) { el.style.zIndex = '50'; el.style.transition = 'none' }
+      else el.style.transition = EASE
+    })
+  }
+
+  const onPointerMove = (e) => {
+    const d = drag.current; if (!d) return
+    const dx = e.clientX - d.startX, dy = e.clientY - d.startY
+    if (!moved.current && Math.abs(dx) + Math.abs(dy) > 4) moved.current = true
+    const el = els.current.get(d.key); if (el) el.style.transform = `translate(${dx}px, ${dy}px)`
+    // Which original cell is the pointer over?
+    let cell = -1
+    for (let i = 0; i < d.cellRects.length; i++) {
+      const r = d.cellRects[i]
+      if (e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom) { cell = i; break }
+    }
+    if (cell < 0) return
+    const target = d.keys[cell]
+    if (target === d.key) { applyVisual(d, d.keys.slice()); return }
+    const r = d.cellRects[cell]
+    const after = d.axis === 'x' ? e.clientX > r.left + r.width / 2 : e.clientY > r.top + r.height / 2
+    const base = d.keys.filter((kk) => kk !== d.key)
+    let ti = base.indexOf(target); if (after) ti += 1
+    applyVisual(d, [...base.slice(0, ti), d.key, ...base.slice(ti)])
+  }
+
+  const finish = (e) => {
+    const d = drag.current; if (!d) return
+    drag.current = null
+    try { e.currentTarget.releasePointerCapture?.(e.pointerId) } catch { /* noop */ }
+    const el = els.current.get(d.key)
+    // A tap that never moved: just drop the lift, no reorder.
+    if (!moved.current) { if (el) { el.style.transform = ''; el.style.transition = ''; el.style.zIndex = ''; el.style.willChange = '' } return }
+    // Settle the dragged tile from where the cursor left it into its new slot.
+    const p = d.visual.indexOf(d.key)
+    const to = d.cellRects[p], home = d.cellRects[d.from]
+    if (el) {
+      el.style.transition = EASE
+      requestAnimationFrame(() => { el.style.transform = `translate(${to.left - home.left}px, ${to.top - home.top}px)` })
+    }
+    const visual = d.visual.slice(), key = d.key
+    // After the settle animation, commit the order; the layout effect then strips
+    // the inline transforms in the same frame the reordered list paints — no jump.
+    setTimeout(() => { pendingClear.current = true; onCommit(visual, key) }, 230)
+  }
+
+  useLayoutEffect(() => { if (pendingClear.current) { pendingClear.current = false; clearStyles() } })
+
+  const tileProps = (k) => ({ ref: setEl(k), onPointerDown: onPointerDown(k), onPointerMove, onPointerUp: finish, onPointerCancel: finish })
+  return { tileProps, wasDragged: () => moved.current }
+}
+
 function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlist, onHome, onLibrary, onMixes }) {
   const { addToWheel } = useContext(NavCtx)
   const [menu, setMenu] = useState(null) // { x, y, title }
@@ -3392,7 +3490,12 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   // Rankable group wishlist — shared. Dragging reorders blend.wishlist for
   // everyone in the room (writes the new order to the realtime DB).
   // The PlayList is exactly what the group curates — empty until they add games.
-  const wishKeys = blend.wishlist || []
+  // Optimistic reorder: `patchBlend` round-trips through Firebase, so the local
+  // list wouldn't reflect a drop until the echo returns — the dragged tile would
+  // flash back at its old spot, then jump. Hold the new order locally so the drop
+  // lands instantly; clear it once the server order catches up (see effect below).
+  const [optWish, setOptWish] = useState(null)
+  const wishKeys = optWish || blend.wishlist || []
   const wish = wishKeys.map((k) => (CATALOG[k] ? { key: k, ...CATALOG[k] } : null)).filter(Boolean)
   const [dragIdx, setDragIdx] = useState(null)
   const [overIdx, setOverIdx] = useState(null)
@@ -3407,37 +3510,26 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const myVoteFor = (key) => votesFor(key)[SELF_NAME] || 0
   const [plSort, setPlSort] = useState('manual') // default: custom order (votes don't reorder)
   const [plSortOpen, setPlSortOpen] = useState(false)
-  // Drag-to-reorder — moving a game switches the list to the manual "Custom order"
-  // and writes the new order to the shared wishlist.
-  const [dragKey, setDragKey] = useState(null)
-  const [overKey, setOverKey] = useState(null)
-  const [overBefore, setOverBefore] = useState(true) // which side of overKey the drop bar shows
-  // Latest drag target, mirrored into refs so the commit (which fires on drag-end,
-  // not on a pixel-precise drop) always sees the last hovered insertion point.
-  const dragKeyRef = useRef(null)
-  const overKeyRef = useRef(null)
-  const overBeforeRef = useRef(true)
-  const reorderWishlist = (fromKey, toKey, before) => {
-    if (!fromKey || !toKey || fromKey === toKey) return
+  // Drag-to-reorder — moving a game switches the list to the manual "Custom order".
+  // Move the dragged game to sit right after its new predecessor in the shared
+  // wishlist (predecessor-based, so it's correct even when the list is filtered or
+  // truncated). Optimistic locally, then written through to everyone.
+  const commitOrder = (visualKeys, draggedKey) => {
     const cur = [...(blend.wishlist || [])]
-    const fi = cur.indexOf(fromKey)
-    if (fi < 0) return
+    const fi = cur.indexOf(draggedKey); if (fi < 0) return
+    const di = visualKeys.indexOf(draggedKey)
+    const pred = di > 0 ? visualKeys[di - 1] : null
     cur.splice(fi, 1)
-    let ti = cur.indexOf(toKey)
-    if (ti < 0) return
-    if (!before) ti += 1
-    cur.splice(ti, 0, fromKey)
+    const pi = pred == null ? -1 : cur.indexOf(pred)
+    cur.splice(pred == null ? 0 : pi < 0 ? cur.length : pi + 1, 0, draggedKey)
+    if (sameOrder(cur, blend.wishlist || [])) return
+    setOptWish(cur) // show the new order this frame; server echo confirms it
     patchBlend({ wishlist: cur })
     setPlSort('manual')
   }
-  // Track the hovered card + side (drives the drop bar and the refs).
-  const onCardDragOver = (key, before) => { overKeyRef.current = key; overBeforeRef.current = before; setOverKey(key); setOverBefore(before) }
-  // Commit on drag-end so releasing anywhere near the target still lands the drop.
-  const commitReorder = () => {
-    reorderWishlist(dragKeyRef.current, overKeyRef.current, overBeforeRef.current)
-    dragKeyRef.current = null; overKeyRef.current = null
-    setDragKey(null); setOverKey(null)
-  }
+  // Drop the optimistic order once the shared wishlist reflects it (or a remote
+  // edit lands) — from then on the real list is the source of truth again.
+  useEffect(() => { setOptWish(null) }, [(blend.wishlist || []).join(',')])
   const [plGenres, setPlGenres] = useState([])    // genre filter facets
   const [plRange, setPlRange] = useState(null)     // { min, max } player range
   const [plSession, setPlSession] = useState(null) // max hours / session
@@ -3514,6 +3606,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
     : plSort === 'overall' ? (overallRating(b.key) - overallRating(a.key))
     : (scoreOf(b.key) - scoreOf(a.key)))
   const wishShown = ePlaylistExpanded ? plList : plList.slice(0, PLAYLIST_LIMIT)
+  // Pointer-drag reorder (manual sort only) — moves the real tile, not a ghost.
+  const plDrag = usePlaylistDrag(wishShown.map((g) => g.key), commitOrder)
+  const canDrag = plSort === 'manual' && !IS_SPECTATE
   // Who added each game. Prefer the recorded adder (blend.addedBy, written on add);
   // fall back to a stable per-(blend,game) guess from the members for legacy games.
   const guessColor = (key) => { const pool = m.length ? m : [SELF]; return pool[ratingHash(blend.id + key, 'addedby') % pool.length] }
@@ -3835,28 +3930,23 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                     {wishShown.map((g, i) => (
                       <div
                         key={g.key}
-                        onClick={() => onOpen?.(g.title)}
+                        onClick={() => { if (plDrag.wasDragged()) return; onOpen?.(g.title) }}
                         onContextMenu={(e) => openMenu(e, g.title)}
                         role="button"
                         tabIndex={0}
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
-                        draggable={plSort === 'manual'}
-                        onDragStart={plSort === 'manual' ? (e) => { dragKeyRef.current = g.key; setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
                         data-game={g.title}
-                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const r = e.currentTarget.getBoundingClientRect(); onCardDragOver(g.key, e.clientX < r.left + r.width / 2) } : undefined}
-                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault() } : undefined}
-                        onDragEnd={plSort === 'manual' ? commitReorder : undefined}
-                        className={'group/card relative select-none rounded-[14px] p-[6px] ring-2 transition ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
+                        {...(canDrag ? plDrag.tileProps(g.key) : {})}
+                        className={'group/card relative select-none rounded-[14px] p-[6px] ring-2 transition-[box-shadow] ' + (canDrag ? 'cursor-grab touch-none active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent')}
                       >
-                        {dragKey && dragKey !== g.key && overKey === g.key && (
-                          <span className={'pointer-events-none absolute top-[6px] bottom-[6px] z-[2] w-[3px] rounded-full bg-[#9BF00B] shadow-[0_0_10px_2px_rgba(155,240,11,0.7)] ' + (overBefore ? '-left-[11px]' : '-right-[11px]')} />
-                        )}
                         <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#1a1a1d]">
-                          <img alt="" src={g.image} className="size-full object-cover" />
-                          <span className="absolute left-[10px] top-[10px] flex size-[30px] items-center justify-center rounded-[9px] bg-black/70 text-[15px] font-bold text-white backdrop-blur">{i + 1}</span>
+                          {/* draggable=false so grabbing the cover drags the whole
+                              card (native img drag would otherwise ghost just the image). */}
+                          <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
+                          <span className="absolute left-[10px] top-[10px] flex size-[30px] items-center justify-center rounded-[9px] bg-black/75 text-[15px] font-bold text-white">{i + 1}</span>
                           {/* Who added this game — profile + name, bottom-left. */}
-                          <span title={`Added by ${adderName(g.key)}`} className="absolute bottom-[8px] left-[8px] flex max-w-[calc(100%-16px)] items-center gap-[6px] rounded-full bg-black/65 py-[3px] pl-[3px] pr-[10px] backdrop-blur">
+                          <span title={`Added by ${adderName(g.key)}`} className="absolute bottom-[8px] left-[8px] flex max-w-[calc(100%-16px)] items-center gap-[6px] rounded-full bg-black/70 py-[3px] pl-[3px] pr-[10px]">
                             <Avatar color={adderColor(g.key)} size={18} />
                             <span className="truncate text-[11px] font-semibold text-white">{adderName(g.key)}</span>
                           </span>
@@ -3887,26 +3977,19 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                     {wishShown.map((g, i) => (
                       <div
                         key={g.key}
-                        onClick={() => onOpen?.(g.title)}
+                        onClick={() => { if (plDrag.wasDragged()) return; onOpen?.(g.title) }}
                         onContextMenu={(e) => openMenu(e, g.title)}
                         role="button"
                         tabIndex={0}
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
-                        draggable={plSort === 'manual'}
-                        onDragStart={plSort === 'manual' ? (e) => { dragKeyRef.current = g.key; setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
                         data-game={g.title}
-                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const r = e.currentTarget.getBoundingClientRect(); onCardDragOver(g.key, e.clientY < r.top + r.height / 2) } : undefined}
-                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault() } : undefined}
-                        onDragEnd={plSort === 'manual' ? commitReorder : undefined}
-                        className={'group/card group relative flex select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
+                        {...(canDrag ? plDrag.tileProps(g.key) : {})}
+                        className={'group/card group relative flex select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition-[box-shadow] hover:bg-[#151517] ' + (canDrag ? 'cursor-grab touch-none active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent')}
                       >
-                        {dragKey && dragKey !== g.key && overKey === g.key && (
-                          <span className={'pointer-events-none absolute left-[8px] right-[8px] z-[2] h-[3px] rounded-full bg-[#9BF00B] shadow-[0_0_10px_2px_rgba(155,240,11,0.7)] ' + (overBefore ? '-top-[6px]' : '-bottom-[6px]')} />
-                        )}
                         <span className="flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">{i + 1}</span>
                         <div className="h-[68px] w-[121px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]">
-                          <img alt="" src={g.image} className="size-full object-cover" />
+                          <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate text-[16px] font-semibold text-white">{g.title}</p>
@@ -5517,6 +5600,15 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   // matching the disabled backdrop-click below. Focus trap + return come with it.
   const dlg = useDialog(() => { if (phase !== 'spinning') onClose() }, { label: 'Spin the wheel' })
 
+  // Preserve the modal's height across phases: the setup view is tall (list +
+  // controls), while spinning/result are short. Record the setup height and hold
+  // it as a min-height once we leave setup, so the panel doesn't shrink mid-spin.
+  const rightRef = useRef(null)
+  const [lockH, setLockH] = useState(null)
+  useLayoutEffect(() => {
+    if (phase === 'idle' && rightRef.current) setLockH(rightRef.current.offsetHeight)
+  })
+
   function doSpin() {
     if (!canSpin) return
     const roll = rollSpin(boardGames.length, activeSpin?.target)
@@ -5558,49 +5650,52 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
             )}
           </div>
 
-          {/* Right column: title / result, sync toggle, load-a-mix, search, list */}
-          <div className="min-w-0 flex-1 lg:pr-[24px]">
+          {/* Right column: setup shows the title + Invite; spinning/result drop
+              them and center their (larger) content in the space the setup view
+              held, so the panel keeps its height instead of shrinking. */}
+          <div ref={rightRef} className="flex min-w-0 flex-1 flex-col lg:pr-[24px]" style={{ minHeight: phase !== 'idle' && lockH ? lockH : undefined }}>
+            {phase === 'idle' && (
+              <div className="flex items-center justify-between gap-[12px]">
+                <h2 className="uppercase leading-[0.92] tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(28px,3vw,44px)' }}>Spin the Wheel</h2>
+                <button onClick={() => setInviting(true)} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Invite</button>
+              </div>
+            )}
+            <div className={'flex min-h-0 flex-1 flex-col' + (phase !== 'idle' ? ' justify-center' : ' mt-[22px]')}>
             {phase === 'result' && picked ? (
               <div>
-                <p className="text-[16px] font-semibold text-[#9BF00B]">The wheel picked</p>
-                <p className="mt-[2px] uppercase leading-[0.95] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(30px,3.4vw,46px)' }}>{picked.title}</p>
-                <p className="mt-[14px] text-[15px] text-[#9a9ba3]">
+                <p className="text-[18px] font-semibold text-[#9BF00B]">The wheel picked</p>
+                <p className="mt-[6px] uppercase leading-[0.95] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(40px,5vw,68px)' }}>{picked.title}</p>
+                <p className="mt-[18px] text-[17px] leading-[1.5] text-[#9a9ba3]">
                   {synced && !iSpun ? `${capName(activeSpin.by)} spun it — anyone can start the party for ${picked.title}, or restart.` : `Ready when you are — start a party for ${picked.title}, or restart.`}
                 </p>
-                <div className="mt-[16px] flex flex-wrap items-center gap-[10px]">
-                  <button onClick={startPartyNow} className="flex items-center gap-[9px] rounded-[10px] bg-[#9BF00B] px-[20px] py-[11px] text-[15px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">
-                    <PartyGlyph size={18} />
+                <div className="mt-[24px] flex flex-wrap items-center gap-[12px]">
+                  <button onClick={startPartyNow} className="flex items-center gap-[10px] rounded-[12px] bg-[#9BF00B] px-[24px] py-[14px] text-[16px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">
+                    <PartyGlyph size={20} />
                     Start a party
                   </button>
-                  <button onClick={backToWheel} className="flex items-center gap-[8px] rounded-[10px] bg-[#1c1c1f] px-[18px] py-[11px] text-[15px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
-                    <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
+                  <button onClick={backToWheel} className="flex items-center gap-[9px] rounded-[12px] bg-[#1c1c1f] px-[22px] py-[14px] text-[16px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
+                    <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
                     Restart
                   </button>
                 </div>
               </div>
             ) : phase === 'spinning' ? (
               <div>
-                <h2 className="text-[28px] font-bold text-white">{synced ? 'The call is spinning…' : 'Spinning…'}</h2>
+                <h2 className="uppercase leading-[0.95] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(34px,4.4vw,58px)' }}>{synced ? 'The call is spinning…' : 'Spinning…'}</h2>
                 {/* Who's spinning — shown live during the spin, with their avatar. */}
                 {synced && activeSpin?.by ? (
-                  <div className="mt-[10px] flex items-center gap-[9px]">
-                    <Avatar color={COLOR_OF[activeSpin.by] || D.raised} size={26} />
-                    <p className="text-[15px] text-white"><span className="font-semibold">{iSpun ? 'You are' : `${capName(activeSpin.by)} is`}</span> spinning the wheel…</p>
+                  <div className="mt-[16px] flex items-center gap-[11px]">
+                    <Avatar color={COLOR_OF[activeSpin.by] || D.raised} size={30} />
+                    <p className="text-[17px] text-white"><span className="font-semibold">{iSpun ? 'You are' : `${capName(activeSpin.by)} is`}</span> spinning the wheel…</p>
                   </div>
                 ) : (
-                  <p className="mt-[6px] text-[15px] text-[#9a9ba3]">Landing on a game…</p>
+                  <p className="mt-[12px] text-[17px] text-[#9a9ba3]">Landing on a game…</p>
                 )}
               </div>
             ) : (
               <>
-                {/* Header — styled title + Invite (opens the wheel-sync invite) */}
-                <div className="flex items-center justify-between gap-[12px]">
-                  <h2 className="uppercase leading-[0.92] tracking-[0.02em] text-white" style={{ fontFamily: '"Base Neue Cond ExtBd"', fontSize: 'clamp(28px,3vw,44px)' }}>Spin the Wheel</h2>
-                  <button onClick={() => setInviting(true)} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Invite</button>
-                </div>
-
                 {/* Load games from your PlayList — a Select-Mix dropdown */}
-                <p className="mt-[22px] text-[16px] font-medium text-white">Load games from your PlayList</p>
+                <p className="text-[16px] font-medium text-white">Load games from your PlayList</p>
                 <div className="relative z-40 mt-[10px]">
                   <button onClick={() => setMixMenu((v) => !v)} aria-expanded={eMixMenu} className="flex w-full items-center justify-between gap-[8px] rounded-[10px] bg-[#141416] px-[16px] py-[12px] text-[14px] text-[#9a9ba3] ring-1 ring-white/10 transition hover:ring-white/20">
                     <span>Select PlayList</span>
@@ -5739,6 +5834,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 </>)}
               </>
             )}
+            </div>
           </div>
         </div>
 
@@ -6967,6 +7063,15 @@ function useMirrorPublish(nav) {
     const ok = () => window.innerWidth > 200 && window.innerHeight > 200
     const setVp = () => { if (ok()) writeRoomPath(`${SPECTATE_PATH}/vp`, { w: window.innerWidth, h: window.innerHeight }) }
     setVp()
+    // Throttle the resize→publish so a continuous drag-resize doesn't fire a
+    // Firebase write every frame; a trailing call captures the final size.
+    let vpThrottle = 0, vpTrail = null
+    const onResize = () => {
+      const t = Date.now()
+      clearTimeout(vpTrail); vpTrail = setTimeout(setVp, 160)
+      if (t - vpThrottle < 120) return
+      vpThrottle = t; setVp()
+    }
     let lastMove = 0
     const onMove = (e) => {
       const t = Date.now()
@@ -6988,14 +7093,15 @@ function useMirrorPublish(nav) {
     }
     writeRoomPath(`${SPECTATE_PATH}/ts`, Date.now())
     const beat = setInterval(() => writeRoomPath(`${SPECTATE_PATH}/ts`, Date.now()), 4000)
-    window.addEventListener('resize', setVp)
+    window.addEventListener('resize', onResize)
     document.addEventListener('visibilitychange', setVp)
     window.addEventListener('pointermove', onMove, true)
     window.addEventListener('pointerdown', onDown, true)
     window.addEventListener('scroll', onScroll, true)
     return () => {
-      window.removeEventListener('resize', setVp)
+      window.removeEventListener('resize', onResize)
       document.removeEventListener('visibilitychange', setVp)
+      clearTimeout(vpTrail)
       window.removeEventListener('pointermove', onMove, true)
       window.removeEventListener('pointerdown', onDown, true)
       window.removeEventListener('scroll', onScroll, true)
@@ -7392,6 +7498,8 @@ function ReviewCard({ r, shots = [] }) {
   const hash = [...(r.name || '')].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7)
   const pool = r.images && r.images.length ? r.images : shots
   const pics = r.images && r.images.length ? r.images.slice(0, 5) : pool.slice(0, Math.min(pool.length, 2 + (hash % 4)))
+  // Total play time shown in place of skill level — a stable per-reviewer value.
+  const totalHours = r.hours ?? 8 + (hash % 320)
   return (
     <div
       className="flex flex-col rounded-[8px] bg-[#1c1c1c] p-[16px] transition-colors hover:bg-[#202024]"
@@ -7400,11 +7508,11 @@ function ReviewCard({ r, shots = [] }) {
     >
       <div className="flex gap-[18px]">
         <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
-        {/* Reviewer meta — name, joined, skill, privacy badge */}
+        {/* Reviewer meta — name, joined, total play time, privacy badge */}
         <div className="flex w-[200px] shrink-0 flex-col justify-start pt-[2px]">
           <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
           <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
-          <p className="text-[13px] text-[#6f7276]">Skill Level: <span className="text-[#9a9ba3]">{r.skill}</span></p>
+          <p className="text-[13px] text-[#6f7276]">Total Play Time: <span className="text-[#9a9ba3]">{totalHours} hrs</span></p>
           <div className="mt-[12px]"><PrivacyBadge kind={r.privacy} /></div>
         </div>
         {/* Review panel — title + body on the left, big thumb on the right */}
