@@ -212,3 +212,23 @@ body,
   animation: spin-scrim 420ms ease;
   transition: opacity 420ms ease;
 }
+
+/* A hovered review "unfolds" open in a rolling motion: it unrolls top-to-bottom
+   (clip-path reveal) while easing down into place — the layout is unchanged, the
+   animation only covers the reveal on mount. */
+@keyframes review-unfold {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translateY(-6px) scaleY(0.96);
+    opacity: 0.5;
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+    transform: translateY(0) scaleY(1);
+    opacity: 1;
+  }
+}
+.review-unfold {
+  transform-origin: top center;
+  animation: review-unfold 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}

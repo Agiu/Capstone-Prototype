@@ -7377,41 +7377,244 @@ function PrivacyBadge({ kind }) {
   )
 }
 
-function ReviewCard({ r }) {
-  const down = r.thumb === 'down'
+// Gameplay screenshots for a game's expanded-review carousel. Beyond the cover
+// and any bespoke gallery art, we pull real gameplay frames from the title's own
+// trailer / gameplay clips: YouTube exposes the cover-quality still (mqdefault)
+// plus three auto-captured frames (1/2/3.jpg) per video — distinct in-game
+// moments — so the strip has enough shots to scroll through horizontally.
+function reviewShots(gameKey) {
+  if (!gameKey) return []
+  const out = []
+  const cover = detailFor(gameKey).image
+  if (cover) out.push(cover)
+  for (const src of GALLERY[gameKey] || []) out.push(src)
+  const seen = new Set()
+  for (const id of [VIDEOS[gameKey], GAMEPLAY_LANDSCAPE[gameKey]]) {
+    if (!id || seen.has(id)) continue
+    seen.add(id)
+    out.push(ytThumb(id)) // clean 16:9 still
+    out.push(`https://i.ytimg.com/vi/${id}/1.jpg`)
+    out.push(`https://i.ytimg.com/vi/${id}/2.jpg`)
+    out.push(`https://i.ytimg.com/vi/${id}/3.jpg`)
+  }
+  return out
+}
+
+// "Total Play Time" for a review — a friend's hours on this game, or a stable
+// value derived from the reviewer's name for the generic public reviews.
+function reviewPlaytime(r, gameKey) {
+  if (r.playtime) return r.playtime
+  if (r.color && gameKey) return `${friendHours(gameKey, r.color)} Hours`
+  let h = 0
+  const s = (r.name || '') + ':' + (gameKey || '')
+  for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+  return `${2 + (h % 40)} Hours`
+}
+
+// Horizontally scrollable carousel of gameplay snapshots below a review body.
+// Native trackpad/drag scroll plus prev/next arrows that hide at the ends.
+function ShotCarousel({ shots, height }) {
+  const scroller = useRef(null)
+  const [atStart, setAtStart] = useState(true)
+  const [atEnd, setAtEnd] = useState(false)
+  const update = () => {
+    const el = scroller.current
+    if (!el) return
+    setAtStart(el.scrollLeft <= 2)
+    setAtEnd(el.scrollLeft + el.clientWidth >= el.scrollWidth - 2)
+  }
+  useEffect(() => { update() }, [shots])
+  const page = (dir, e) => {
+    e && e.stopPropagation()
+    const el = scroller.current
+    if (!el) return
+    el.scrollBy({ left: dir * el.clientWidth * 0.85, behavior: 'smooth' })
+  }
+  const Arrow = ({ dir }) => (
+    <button
+      type="button"
+      aria-label={dir < 0 ? 'Previous screenshots' : 'More screenshots'}
+      onClick={(e) => page(dir, e)}
+      className={'absolute top-1/2 z-[2] flex size-[36px] -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/70 text-white backdrop-blur transition hover:bg-black/90 ' + (dir < 0 ? 'left-[10px]' : 'right-[10px]')}
+    >
+      <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d={dir < 0 ? 'M15 18l-6-6 6-6' : 'M9 6l6 6-6 6'} strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    </button>
+  )
+  // Fill the available row width; as many images as fit show, the rest scroll.
   return (
-    <div className="flex gap-[18px] rounded-[8px] bg-[#1c1c1c] p-[16px]">
-      <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
-      {/* Reviewer meta — name, joined, skill, privacy badge */}
-      <div className="flex w-[200px] shrink-0 flex-col justify-start pt-[2px]">
-        <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
-        <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
-        <p className="text-[13px] text-[#6f7276]">Skill Level: <span className="text-[#9a9ba3]">{r.skill}</span></p>
-        <div className="mt-[12px]"><PrivacyBadge kind={r.privacy} /></div>
+    <div className="relative w-full min-w-0">
+      <div ref={scroller} onScroll={update} className="no-scrollbar flex snap-x snap-mandatory gap-[14px] overflow-x-auto scroll-smooth">
+        {shots.map((src, i) => (
+          <img key={i} src={src} alt="" loading="lazy" className="shrink-0 snap-start rounded-[10px] object-cover" style={{ height, aspectRatio: '16 / 9' }} />
+        ))}
       </div>
-      {/* Review panel — title + body on the left, big thumb on the right */}
-      <div className="flex flex-1 items-center gap-[16px] rounded-[8px] bg-[#121214] p-[18px]">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <p className="text-[24px] font-semibold leading-tight text-white">{r.title}</p>
+      {!atStart && <Arrow dir={-1} />}
+      {!atEnd && <Arrow dir={1} />}
+    </div>
+  )
+}
+
+// The full "expanded review" design (Figma Frame 352): an enlarged reviewer
+// header (avatar + name + joined / skill / total play time) above a panel with
+// the title, privacy mark, full body, a big thumb and a screenshot strip.
+// Rendered both as the hover pop-up (compact) and as the separate page (full).
+function ReviewExpanded({ r, gameKey, compact = false, onOpen }) {
+  const down = r.thumb === 'down'
+  const friends = r.privacy === 'Friends Only'
+  const shots = reviewShots(gameKey)
+  const playtime = reviewPlaytime(r, gameKey)
+  const clickable = !!onOpen
+  const s = compact
+    ? { pad: 'p-[16px]', gap: 'gap-[20px]', colGap: 'gap-[14px]', metaW: 'w-[168px]', av: 96, avR: 8, name: 'text-[22px]', meta: 'text-[12px]', panelPad: 'p-[18px]', title: 'text-[26px]', body: 'text-[13px] max-h-[150px]', thumb: 54, shotH: 92, badge: 'text-[13px]', star: 15 }
+    : { pad: 'p-[28px]', gap: 'gap-[32px]', colGap: 'gap-[18px]', metaW: 'w-[210px]', av: 132, avR: 10, name: 'text-[30px]', meta: 'text-[15px]', panelPad: 'p-[28px]', title: 'text-[44px]', body: 'text-[17px] max-h-[260px]', thumb: 84, shotH: 150, badge: 'text-[16px]', star: 20 }
+  const bodyFade = compact ? 'rgba(35,35,39,0)' : 'rgba(35,35,39,0)'
+  return (
+    <div
+      className={'rounded-[16px] bg-[#141416] ' + s.pad + (clickable ? ' cursor-pointer ring-1 ring-transparent transition hover:ring-white/10' : '')}
+      onClick={clickable ? onOpen : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      aria-label={clickable ? `Open full review: ${r.title}` : undefined}
+      onKeyDown={clickable ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen() } } : undefined}
+    >
+      {/* Two columns: reviewer meta on the left (outside the panel), the review
+          panel on the right. */}
+      <div className={'flex items-start ' + s.gap}>
+        {/* Left — avatar + name / joined / skill / privacy badge */}
+        <div className={'flex shrink-0 ' + s.colGap}>
+          <Avatar color={r.color} size={s.av} className="shrink-0" style={{ borderRadius: s.avR }} />
+          <div className={'flex flex-col ' + s.metaW}>
+            <p className={'font-bold leading-tight text-white ' + s.name}>{r.name}</p>
+            <p className={'mt-[10px] text-[#6f7276] ' + s.meta}>Joined: <span className="font-semibold text-[#c7c9cb]">{r.joined}</span></p>
+            <p className={'text-[#6f7276] ' + s.meta}>Skill Level: <span className="font-semibold text-[#c7c9cb]">{r.skill}</span></p>
+            <p className={'text-[#6f7276] ' + s.meta}>Total Play Time: <span className="font-semibold text-[#c7c9cb]">{playtime}</span></p>
+            <span className={'mt-[16px] flex w-fit items-center gap-[8px] font-semibold ' + s.badge + (friends ? ' text-[#9BF00B]' : ' text-[#c7c9cb]')}>
+              {friends ? <StarGlyph size={s.star} /> : <PersonGlyph size={s.star} />}
+              {r.privacy}
+            </span>
+          </div>
+        </div>
+        {/* Right — panel: title, body, then the carousel aligned in a row with
+            the thumb up/down on the far right. */}
+        <div className={'min-w-0 flex-1 rounded-[16px] bg-[#232327] ' + s.panelPad}>
+          <p className={'font-bold leading-tight text-white ' + s.title}>{r.title}</p>
           <p
-            className="mt-[8px] max-h-[96px] overflow-hidden text-[15px] leading-[1.5] text-transparent"
-            style={{ backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
+            className={'mt-[16px] overflow-hidden leading-[1.5] text-transparent ' + s.body}
+            style={{ backgroundImage: `linear-gradient(to bottom, #b9bbc0 60%, ${bodyFade} 100%)`, WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
           >
             {r.body}
           </p>
+          <div className="mt-[18px] flex items-center gap-[24px]">
+            {shots.length > 0 && <div className="min-w-0 flex-1"><ShotCarousel shots={shots} height={s.shotH} /></div>}
+            <div className="shrink-0 self-center pr-[6px] text-white"><ThumbsUpGlyph size={s.thumb} className={down ? 'rotate-180' : undefined} /></div>
+          </div>
           {r.tags && r.tags.length > 0 && (
-            <div className="mt-[12px] flex flex-wrap gap-[6px]">
+            <div className="mt-[16px] flex flex-wrap gap-[6px]">
               {r.tags.map((t, i) => (
                 <span key={i} className="rounded-full bg-[#26262a] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb]">{t}</span>
               ))}
             </div>
           )}
         </div>
-        <div className="flex shrink-0 items-center pr-[10px] text-white">
-          <ThumbsUpGlyph size={46} className={down ? 'rotate-180' : undefined} />
-        </div>
       </div>
     </div>
+  )
+}
+
+function ReviewCard({ r, gameKey, onOpen }) {
+  const down = r.thumb === 'down'
+  const [hover, setHover] = useState(false)
+  const canOpen = !!onOpen
+  const open = () => onOpen && onOpen(r)
+  // Hovering a review expands it in place. The expanded card renders in normal
+  // flow (not an overlay), so the reviews below are pushed down rather than
+  // covered. Clicking either state opens the full expanded page.
+  return (
+    <div
+      onMouseEnter={() => canOpen && setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {canOpen && hover ? (
+        <div className="review-unfold rounded-[16px] shadow-[0_24px_70px_rgba(0,0,0,0.75)]">
+          <ReviewExpanded r={r} gameKey={gameKey} compact onOpen={open} />
+        </div>
+      ) : (
+        <div
+          className={'flex gap-[18px] rounded-[8px] bg-[#1c1c1c] p-[16px]' + (canOpen ? ' cursor-pointer' : '')}
+          role={canOpen ? 'button' : undefined}
+          tabIndex={canOpen ? 0 : undefined}
+          aria-label={canOpen ? `Open full review: ${r.title}` : undefined}
+          onClick={canOpen ? open : undefined}
+          onKeyDown={canOpen ? (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open() } } : undefined}
+        >
+          <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
+          {/* Reviewer meta — name, joined, skill, privacy badge */}
+          <div className="flex w-[200px] shrink-0 flex-col justify-start pt-[2px]">
+            <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
+            <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
+            <p className="text-[13px] text-[#6f7276]">Skill Level: <span className="text-[#9a9ba3]">{r.skill}</span></p>
+            <div className="mt-[12px]"><PrivacyBadge kind={r.privacy} /></div>
+          </div>
+          {/* Review panel — title + body on the left, big thumb on the right */}
+          <div className="flex flex-1 items-center gap-[16px] rounded-[8px] bg-[#121214] p-[18px]">
+            <div className="flex min-w-0 flex-1 flex-col">
+              <p className="text-[24px] font-semibold leading-tight text-white">{r.title}</p>
+              <p
+                className="mt-[8px] max-h-[96px] overflow-hidden text-[15px] leading-[1.5] text-transparent"
+                style={{ backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
+              >
+                {r.body}
+              </p>
+              {r.tags && r.tags.length > 0 && (
+                <div className="mt-[12px] flex flex-wrap gap-[6px]">
+                  {r.tags.map((t, i) => (
+                    <span key={i} className="rounded-full bg-[#26262a] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb]">{t}</span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="flex shrink-0 items-center pr-[10px] text-white">
+              <ThumbsUpGlyph size={46} className={down ? 'rotate-180' : undefined} />
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// The separate expanded-review page — the game's top nav, a back link, then the
+// reviews stacked in the full Figma Frame 352 design (each with a scrollable
+// gameplay carousel). Opens scrolled to the review that was clicked.
+function ReviewDetailPage({ reviews, initial, gameKey, game, onBack, onHome, onLibrary, onMixes }) {
+  const list = reviews && reviews.length ? reviews : (initial ? [initial] : [])
+  const initialIdx = Math.max(0, list.indexOf(initial))
+  const cardRefs = useRef([])
+  useEffect(() => {
+    const el = cardRefs.current[initialIdx]
+    if (el && initialIdx > 0) el.scrollIntoView({ block: 'start' })
+  }, [initialIdx])
+  return (
+    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+      <PageNav onHome={onHome || onBack} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
+      <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[24px]">
+        <div className="mx-auto w-full max-w-[1080px]">
+          <button onClick={onBack} className="mb-[20px] flex items-center gap-[8px] text-[14px] font-semibold text-[#9a9ba3] transition hover:text-white">
+            <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+            Back to {game?.title || 'reviews'}
+          </button>
+          <div className="flex flex-col gap-[24px]">
+            {list.map((rv, i) => (
+              <div key={`${rv.name}-${i}`} ref={(el) => (cardRefs.current[i] = el)} className="scroll-mt-[24px]">
+                <ReviewExpanded r={rv} gameKey={gameKey} />
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </main>
   )
 }
 
@@ -7420,7 +7623,7 @@ function ReviewCard({ r }) {
 // paginate the rest six at a time.
 const REVIEWS_PER_PAGE = 6
 const REVIEWS_PREVIEW = 3
-function ReviewsSection({ reviews = REVIEWS }) {
+function ReviewsSection({ reviews = REVIEWS, gameKey, onOpenReview }) {
   const [filter, setFilter] = useState('All') // 'All' | 'Friends Only' | 'Public'
   const [filterOpen, setFilterOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -7515,7 +7718,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
       </div>
 
       <div className="mt-[16px] flex flex-col gap-[16px]">
-        {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} />)}
+        {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} gameKey={gameKey} onOpen={onOpenReview} />)}
         {visible.length === 0 && (
           <p className="rounded-[8px] bg-[#1c1c1c] py-[28px] text-center text-[14px] text-[#9a9ba3]">No {eFilter === 'All' ? '' : eFilter.toLowerCase() + ' '}reviews yet.</p>
         )}
@@ -7874,6 +8077,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
   const recCinematic = CINEMATIC_ROW.filter((c) => c.id !== gameKey)
   const recPortrait = PORTRAIT_ROW.filter((c) => c.id !== gameKey)
   const [searchOpen, setSearchOpen] = useState(false)
+  const [openReview, setOpenReview] = useState(null) // a review expanded onto its own page
   // Mirror the search palette to the moderator's spectate view.
   const [dUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/detailUI` : 'spectate/__nodui', {})
   useEffect(() => {
@@ -7881,6 +8085,24 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
     writeRoomPath(`${SPECTATE_PATH}/detailUI`, { searchOpen: !!searchOpen })
   }, [searchOpen])
   const eSearchOpen = IS_SPECTATE ? !!dUI?.searchOpen : searchOpen
+
+  // Clicking (or keyboard-activating) a review swaps this whole view for the
+  // expanded review page; Back returns to the game's reviews.
+  const reviewsList = unplayed ? REVIEWS : [...friendReviews, ...REVIEWS]
+  if (openReview) {
+    return (
+      <ReviewDetailPage
+        reviews={reviewsList}
+        initial={openReview}
+        gameKey={gameKey}
+        game={d}
+        onBack={() => setOpenReview(null)}
+        onHome={onHome}
+        onLibrary={onLibrary}
+        onMixes={onMixes}
+      />
+    )
+  }
 
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
@@ -8031,7 +8253,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your PlayList and share what you think.</p>
             </section>
           )}
-          <ReviewsSection reviews={unplayed ? REVIEWS : [...friendReviews, ...REVIEWS]} />
+          <ReviewsSection reviews={reviewsList} gameKey={gameKey} onOpenReview={setOpenReview} />
 
           {/* Friends Also Liked — compact cinematic cards, consistent with the
               Recommended page. */}
