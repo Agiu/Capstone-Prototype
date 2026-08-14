@@ -80,6 +80,16 @@ export function useRoom({ self, seedBlends }) {
   }, [self])
 
   const setBlends = (next) => set(ref(db, `rooms/${ROOM_ID}/blends`), next)
+  // Patch one blend's fields via LEAF writes (blends/<idx>/<field>) instead of a
+  // whole-array set. Whole-array last-write-wins clobbers concurrent edits — e.g.
+  // one person accepting an invite (adding themselves to `members`) while another
+  // edits a different blend would lose the membership. Per-field leaf writes let
+  // those land independently. Structural add/remove still go through setBlends.
+  const patchBlendById = (id, patch) => {
+    const idx = blends.findIndex((b) => b && b.id === id)
+    if (idx < 0) return
+    Object.entries(patch).forEach(([k, v]) => set(ref(db, `rooms/${ROOM_ID}/blends/${idx}/${k}`), v))
+  }
   // Reset wipes the Mixes AND the ephemeral room state: DM history, any live
   // spin/launch party, group preferences/wheels, and the spectate mirrors.
   const resetRoom = () => {
@@ -95,7 +105,7 @@ export function useRoom({ self, seedBlends }) {
 
   const setName = (key, name) => set(ref(db, `rooms/${ROOM_ID}/names/${key}`), name || null)
   const setHiddenProfile = (key, hidden) => set(ref(db, `rooms/${ROOM_ID}/hidden/${key}`), hidden ? true : null)
-  return { blends, ready, online, names, hiddenProfiles, setBlends, resetRoom, setName, setHiddenProfile }
+  return { blends, ready, online, names, hiddenProfiles, setBlends, patchBlendById, resetRoom, setName, setHiddenProfile }
 }
 
 // Sync an arbitrary sub-tree of the room (e.g. decide-a-game preferences).

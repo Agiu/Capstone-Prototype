@@ -1,4 +1,5 @@
 import { createContext, Fragment, useContext, useEffect, useId, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import {
@@ -423,7 +424,6 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
             </div>
             <div className="flex flex-col gap-[2px] pb-[6px]">
               {pinnedMixes.map((b) => {
-                const thumb = b.cover || mixCoverImages(b)[0]
                 return (
                   <button
                     key={b.id}
@@ -431,7 +431,7 @@ function Sidebar({ online = [], onReset, activeDm, onOpenDm, onOpenBlend, onHome
                     className="group flex items-center gap-[10px] rounded-[6px] px-[8px] py-[6px] text-left transition hover:bg-white/5"
                   >
                     <span className="size-[32px] shrink-0 overflow-hidden rounded-[8px]" style={{ backgroundColor: b.color || '#5765f2' }}>
-                      {thumb && <img alt="" src={thumb} className="size-full object-cover" />}
+                      {b.cover ? <img alt="" src={b.cover} className="size-full object-cover" /> : <DefaultCover seed={b.id || b.name} />}
                     </span>
                     <span className="min-w-0 flex-1 truncate text-[15px] font-medium" style={{ color: D.dim }}>{b.name}</span>
                   </button>
@@ -741,6 +741,8 @@ const slug = (s) => s.toLowerCase().replace(/[^a-z0-9]+/g, '-')
 // Start with no premade Mixes — everyone builds their own.
 const SEED_BLENDS = []
 
+// Max length for a PlayList name — keeps titles from overflowing card/header layout.
+const PLAYLIST_NAME_MAX = 40
 // Playful default PlayList names — an "inside joke" about the group's collective
 // gaming personality instead of a boring list of usernames. Picked at random on
 // creation; the creator can always rename.
@@ -839,6 +841,61 @@ function mixCoverImages({ id, name, games = [] }) {
   return seededShuffle(own.length >= 4 ? own : COLLAGE_POOL, id || name).slice(0, 4).map((k) => CATALOG[k].image)
 }
 
+// Default PlayList cover — a deterministic patchwork seeded by the PlayList id, so
+// it's stable per PlayList but distinct between them. Shown whenever no custom cover
+// image has been chosen (replaces the old game-image collage). Every cell stays
+// within ±30° of one seeded base hue, so each cover reads as a single cohesive color
+// scheme rather than a random rainbow.
+function coverHash(s) {
+  let h = 2166136261
+  const str = String(s || '')
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) }
+  // Avalanche so near-identical ids still land on well-separated hues (otherwise a
+  // handful of similar PlayList ids all cluster in the same color range).
+  h ^= h >>> 15; h = Math.imul(h, 2246822507); h ^= h >>> 13; h = Math.imul(h, 3266489909); h ^= h >>> 16
+  return h >>> 0
+}
+// A set of simple solid game/leisure glyphs (24×24) tiled across the cover. Which
+// glyph appears — and the base hue — is seeded, so covers differ in both icon and
+// color, matching the tiled-icon Figma design.
+const COVER_ICONS = [
+  'M13 2 4 14h6l-1 8 9-12h-6z',                                                              // bolt
+  'M12 21S3 14.5 3 8.8C3 5.6 5.4 3.5 8.2 3.5c1.7 0 3.1.8 3.8 2 .7-1.2 2.1-2 3.8-2C18.6 3.5 21 5.6 21 8.8 21 14.5 12 21 12 21z', // heart
+  'M12 2l2.7 6.6 7.1.5-5.4 4.6 1.7 6.9L12 17.6 5.9 21.2l1.7-6.9L2.2 9.7l7.1-.5z',            // star
+  'M12 2c1.5 3.5 5 4.5 5 8.5a5 5 0 0 1-10 0c0-1.2.4-2.2.4-2.2S6 9.5 6 12a6 6 0 1 0 12 0c0-5-4-7-6-10z', // flame
+  'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 1 0 9.8 9.8z',                                             // moon
+  'M12 2l1.9 6.6L20.5 10l-6.6 1.4L12 18l-1.9-6.6L3.5 10l6.6-1.4z',                            // sparkle
+  'M12 2l6.5 7L12 22 5.5 9z',                                                                 // diamond
+  'M17 4a3 3 0 0 1 3 3c0 1.5-1 3.2-2.4 4.7 1 .8 1.4 2 1.4 3.3a4 4 0 0 1-7.5 2 4 4 0 0 1-7.5-2c0-1.3.4-2.5 1.4-3.3C3 10.2 2 8.5 2 7a3 3 0 0 1 5.5-1.7C8.3 6.5 10 8 12 8s3.7-1.5 4.5-2.7A3 3 0 0 1 17 4z', // clover-ish blob
+  'M12 2l8.5 5v10L12 22 3.5 17V7z',                                                           // hexagon
+  'M12 2l9 6.5-3.4 10.5H6.4L3 8.5z',                                                          // pentagon
+  'M12 2s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z',                                         // teardrop
+  'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',                                                         // plus
+  'M3 7l4 4 5-7 5 7 4-4v11H3z',                                                               // crown
+]
+function DefaultCover({ seed = '' }) {
+  const h = coverHash(seed)
+  const baseHue = h % 360
+  const bg = `hsl(${baseHue} 46% 39%)`
+  const icon = `hsl(${baseHue} 52% 53%)`   // the glyph, a lighter shade of the same hue
+  // Pick the glyph from an independently-mixed hash so it varies freely from the
+  // hue — consecutive generations rarely repeat the same icon.
+  const glyph = COVER_ICONS[(Math.imul(h ^ 0x9e3779b9, 2654435761) >>> 0) % COVER_ICONS.length]
+  const pid = 'cov-' + h.toString(36)      // stable per seed, unique across seeds
+  const tile = 20                          // glyph kept inside the tile so rotated
+  return (                                 // neighbours never touch
+    <svg className="size-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+      <defs>
+        <pattern id={pid} width={tile} height={tile} patternUnits="userSpaceOnUse" patternTransform="rotate(-18)">
+          <path d={glyph} fill={icon} transform="translate(2 2.5) scale(0.66)" />
+        </pattern>
+      </defs>
+      <rect width="100" height="100" fill={bg} />
+      <rect width="100" height="100" fill={`url(#${pid})`} />
+    </svg>
+  )
+}
+
 // A member's avatar with a username tooltip on hover/keyboard-focus. Used on the
 // PlayList cards and inside the PlayList header.
 function MemberChip({ color, size = 28, marginRight = 0, pending = false }) {
@@ -867,8 +924,7 @@ function MemberChip({ color, size = 28, marginRight = 0, pending = false }) {
 }
 
 function BlendCard({ id, name, color, members, games = [], cover, onOpen, onContext, onMenu, onOpenGame }) {
-  // Cover art: a custom thumbnail if one's been set, otherwise a 2×2 collage.
-  const covers = mixCoverImages({ id, name, games })
+  // Cover art: a custom thumbnail if one's been set, otherwise a seeded color pattern.
   // The hover ellipsis opens the same menu as right-click, anchored to itself.
   const openMenu = (e) => { e.preventDefault(); e.stopPropagation(); const r = e.currentTarget.getBoundingClientRect(); onMenu?.(r.left, r.bottom + 4) }
   // Games inside this PlayList — shown in a popover on hover.
@@ -919,11 +975,9 @@ function BlendCard({ id, name, color, members, games = [], cover, onOpen, onCont
         >
           {cover ? (
             <img alt="" src={cover} className="size-full object-cover" />
-          ) : covers.length ? (
-            <div className="grid size-full grid-cols-2 grid-rows-2 gap-[2px]">
-              {covers.map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}
-            </div>
-          ) : null}
+          ) : (
+            <DefaultCover seed={id || name} />
+          )}
         </div>
       </button>
       <div className="mt-[10px] flex items-center gap-[6px]">
@@ -1065,7 +1119,7 @@ function WheelNavButton() {
       className={'relative flex items-center gap-[9px] rounded-[8px] px-[14px] py-[8px] text-[14px] font-semibold ring-1 backdrop-blur-sm transition ' + (wheelLive ? 'bg-[#123a00] text-[#8dff5a] ring-[#3dbf1e] shadow-[0_0_14px_rgba(61,191,30,0.35)] hover:bg-[#164700]' : 'bg-black/40 text-white ring-white/10 hover:bg-black/75')}
     >
       {wheelCount > 0 && (
-        <span className={'absolute -right-[7px] -top-[7px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-[5px] text-[11px] font-bold leading-none ring-2 ring-[#0c0c0e] ' + (wheelLive ? 'bg-white text-[#0e3b00]' : 'bg-[#3dbf1e] text-black')}>
+        <span className="absolute -right-[7px] -top-[7px] flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-white px-[5px] text-[11px] font-bold leading-none text-black ring-2 ring-[#0c0c0e]">
           {wheelCount}
         </span>
       )}
@@ -1108,7 +1162,12 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
   const Tab = ({ label, isActive, onClick, badge }) => (
     <button onClick={onClick} data-tab aria-current={isActive ? 'page' : undefined} className={'relative flex h-[56px] items-center gap-[7px] border-b-2 text-[16px] font-medium transition ' + (isActive ? 'border-white text-white' : 'border-transparent text-[#c7c9cb] hover:text-white')}>
       {label}
-      {badge > 0 && <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#9BF00B] px-[5px] text-[11px] font-bold text-[#0c0c0e]">{badge}</span>}
+      {badge > 0 && (
+        <span className="relative inline-flex shrink-0" title={`${badge} PlayList invite${badge === 1 ? '' : 's'}`}>
+          <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-11.7 7.9L4 21l1.6-5.3A8.5 8.5 0 1 1 21 11.5Z" /></svg>
+          <span className="absolute -right-[6px] -top-[6px] flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[#f23f42] px-[4px] text-[10px] font-bold leading-none text-white ring-2 ring-[#0c0c0e]">{badge}</span>
+        </span>
+      )}
     </button>
   )
   // Left/Right arrow moves between the nav tabs (horizontal layout → ←/→).
@@ -1200,7 +1259,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
   // moving the cursor onto the menu doesn't collapse the card.
   const titleOf = (k) => STARTER_BY_KEY[k]?.title || CATALOG[k]?.title
   const revealed = (k) => (IS_SPECTATE && eHover === titleOf(k)) || (!!menuGame && menuGame === titleOf(k))
-  const { blends, setBlends } = useRoomCtx()
+  const { blends, setBlends, patchBlendById } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.clarisse
 
   // Right-click menu for the Mix cards (same editor as the Mix page).
@@ -1208,7 +1267,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
   const [coverFor, setCoverFor] = useState(null)
   const [renameFor, setRenameFor] = useState(null)
   const [inviteFor, setInviteFor] = useState(null)
-  const patchMix = (b, patch) => setBlends(blends.map((x) => (x.id === b.id ? { ...x, ...patch } : x)))
+  const patchMix = (b, patch) => patchBlendById(b.id, patch)
   const openMixMenu = (e, b) => { e.preventDefault(); e.stopPropagation(); setMixMenu({ x: e.clientX, y: e.clientY, blend: b }) }
   const leaveMixCard = (b) => { if (window.confirm(`Leave ${b.name}?`)) patchMix(b, { members: b.members.filter((c) => c !== SELF) }) }
   const deleteMix = (b) => { if (window.confirm(`Delete ${b.name}? This removes it for everyone.`)) setBlends(blends.filter((x) => x.id !== b.id)) }
@@ -1293,7 +1352,12 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         <button onClick={onLibrary} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
         <button onClick={onMixes} data-tab className="relative flex h-[56px] items-center gap-[7px] border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">
           PlayLists
-          {inviteCount > 0 && <span className="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#9BF00B] px-[5px] text-[11px] font-bold text-[#0c0c0e]">{inviteCount}</span>}
+          {inviteCount > 0 && (
+            <span className="relative inline-flex shrink-0" title={`${inviteCount} PlayList invite${inviteCount === 1 ? '' : 's'}`}>
+              <svg viewBox="0 0 24 24" className="size-[20px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.5 8.5 0 0 1-11.7 7.9L4 21l1.6-5.3A8.5 8.5 0 1 1 21 11.5Z" /></svg>
+              <span className="absolute -right-[6px] -top-[6px] flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-[#f23f42] px-[4px] text-[10px] font-bold leading-none text-white ring-2 ring-[#0c0c0e]">{inviteCount}</span>
+            </span>
+          )}
         </button>
         <div className="flex flex-1 items-center justify-end gap-[20px]">
           <WheelNavButton />
@@ -1363,7 +1427,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                       </span>
                     </button>
                   </div>
-                  <div className="relative mt-[24px] w-full">
+                  <div className="relative mt-[48px] w-full">
                     {myParty ? (
                       <HomePartyCard party={party} launch={myParty} onOpen={onOpen} />
                     ) : (
@@ -1449,13 +1513,13 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
 
 // ── Mixes tab (Figma 926:4875) — the "Your PlayLists" grid on its own top-nav tab.
 function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
-  const { blends, setBlends } = useRoomCtx()
+  const { blends, setBlends, patchBlendById } = useRoomCtx()
   const [mixMenu, setMixMenu] = useState(null)
   const [coverFor, setCoverFor] = useState(null)
   const [renameFor, setRenameFor] = useState(null)
   const [inviteFor, setInviteFor] = useState(null)
   const [searchOpen, setSearchOpen] = useState(false)
-  const patchMix = (b, patch) => setBlends(blends.map((x) => (x.id === b.id ? { ...x, ...patch } : x)))
+  const patchMix = (b, patch) => patchBlendById(b.id, patch)
   const leaveMixCard = (b) => { if (window.confirm(`Leave ${b.name}?`)) patchMix(b, { members: b.members.filter((c) => c !== SELF) }) }
   const deleteMix = (b) => { if (window.confirm(`Delete ${b.name}? This removes it for everyone.`)) setBlends(blends.filter((x) => x.id !== b.id)) }
   const togglePin = (b) => patchMix(b, { pinned: !b.pinned })
@@ -1463,9 +1527,8 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
   // Pending PlayList invites for me — shown as cards with Accept / Decline.
   const pendingInvites = usePendingInvites()
   const acceptInvite = (m) => {
-    setBlends(blends.map((b) => b.id === m.blendId
-      ? { ...b, members: [...new Set([...(b.members || []), SELF])], invited: (b.invited || []).filter((c) => c !== SELF) }
-      : b))
+    const b = blends.find((x) => x.id === m.blendId)
+    if (b) patchBlendById(m.blendId, { members: [...new Set([...(b.members || []), SELF])], invited: (b.invited || []).filter((c) => c !== SELF) })
     putDM(m.from, { ...m, status: 'accepted' })
   }
   const declineInvite = (m) => putDM(m.from, { ...m, status: 'declined' })
@@ -2162,7 +2225,7 @@ function WorthACloserLook({ gameKey, onOpen, onShare, revealTitle }) {
 
 // One Library game: cover art (local → Steam → gradient fallback) that swaps to
 // the trailer on hover.
-function LibraryTile({ g, onClick, metric, onWishlist, onShare }) {
+function LibraryTile({ g, onClick, metric, showThumb, onWishlist, onShare }) {
   const [broken, setBroken] = useState(false)
   const onParty = useContext(PartyCtx)
   const onWheelAdd = useContext(WheelCtx)
@@ -2242,7 +2305,7 @@ function LibraryTile({ g, onClick, metric, onWishlist, onShare }) {
       </div>
       <p className="mt-[8px] truncate text-[15px] font-semibold text-white">{g.title}</p>
       <p className="truncate text-[13px] text-[#7e7f87]">{g.players === 'MMO' ? 'MMO' : g.players === '1' ? '1 player' : `${g.players} players`} · {g.genre}</p>
-      {metric && <p className="truncate text-[13px] font-semibold text-[#c7c9cb]">{metric}</p>}
+      {metric && <p className="flex items-center gap-[4px] text-[13px] font-semibold text-[#c7c9cb]">{showThumb && <svg viewBox="0 0 24 24" className="size-[13px] shrink-0" fill="currentColor"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4.5-7a2 2 0 0 1 3.5 1.3V9h4.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 20.2 20H7" /></svg>}<span className="truncate">{metric}</span></p>}
     </div>
   )
 }
@@ -2354,7 +2417,7 @@ function PlayerRangeInputs({ min, max, onChange }) {
 // ── Library tab — the full Game Pass Starter Edition catalog ────────────────
 function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onShare }) {
   const { addToWheel } = useContext(NavCtx)
-  const { blends, setBlends } = useRoomCtx()
+  const { blends, setBlends, patchBlendById } = useRoomCtx()
   const [addPlOpen, setAddPlOpen] = useState(false)
   const myLibBlends = (blends || []).filter((b) => (b.members || []).includes(SELF))
   const [searchOpen, setSearchOpen] = useState(false)
@@ -2422,7 +2485,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
     const wl = [...new Set([...(b.wishlist || []), ...keys])]
     const addedBy = { ...(b.addedBy || {}) }
     keys.forEach((k) => { if (!addedBy[k]) addedBy[k] = SELF_NAME })
-    setBlends((blends || []).map((x) => (x.id === b.id ? { ...x, wishlist: wl, addedBy } : x)))
+    patchBlendById(b.id, { wishlist: wl, addedBy })
     setAddPlOpen(false)
   }
 
@@ -2547,7 +2610,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
                       {myLibBlends.length ? myLibBlends.map((b) => (
                         <button key={b.id} role="menuitem" onClick={() => addAllToBlend(b)} className="flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] text-[#dbdee1] transition hover:bg-white/5">
                           <span className="size-[28px] shrink-0 overflow-hidden rounded-[6px] bg-[#2b2d31]" style={b.color ? { backgroundColor: b.color } : undefined}>
-                            {b.cover ? <img alt="" src={b.cover} className="size-full object-cover" /> : <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">{mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}</span>}
+                            {b.cover ? <img alt="" src={b.cover} className="size-full object-cover" /> : <DefaultCover seed={b.id || b.name} />}
                           </span>
                           <span className="min-w-0 flex-1 truncate">{b.name}</span>
                         </button>
@@ -2556,7 +2619,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
                   </>
                 )}
               </div>
-              <button onClick={() => shown.forEach((g) => addToWheel(g.title))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
+              <button onClick={() => shown.forEach((g) => addToWheel(g.catKey || g.key || g.title))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
                 <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
                 Add {shown.length} to Wheel
               </button>
@@ -2564,7 +2627,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
           )}
 
           <div className="mt-[24px] grid grid-cols-2 gap-x-[18px] gap-y-[24px] sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {shown.map((g) => <LibraryTile key={g.title} g={g} onClick={() => open(g)} metric={activeSort.metric ? activeSort.metric(g.catKey) : null} onWishlist={onWishlist} onShare={onShare} />)}
+            {shown.map((g) => <LibraryTile key={g.title} g={g} onClick={() => open(g)} metric={activeSort.metric ? activeSort.metric(g.catKey) : null} showThumb={activeSort.id === 'friends' || activeSort.id === 'overall'} onWishlist={onWishlist} onShare={onShare} />)}
           </div>
           {shown.length === 0 && <p className="mt-[40px] text-center text-[15px] text-[#7e7f87]">No games match your filters.</p>}
         </div>
@@ -2996,11 +3059,9 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
         <h3 className="text-[20px] font-bold text-white">Change cover image</h3>
         <p className="mt-[4px] text-[14px] text-[#b5bac1]">Pick a cover for <span className="font-semibold text-white">{blend.name}</span>.</p>
         <div className="mt-[18px] grid grid-cols-3 gap-[12px]">
-          {/* Default = the auto game collage */}
+          {/* Default = the seeded color pattern */}
           <Tile src={undefined} label="Default" active={!blend.cover}>
-            <div className="grid size-full grid-cols-2 grid-rows-2 gap-[1px] bg-black">
-              {games.slice(0, 4).map((g, i) => <img key={i} alt="" src={g.image} className="size-full object-cover" />)}
-            </div>
+            <DefaultCover seed={blend.id || blend.name} />
           </Tile>
           {MIX_COVERS.map((c) => (
             <Tile key={c.label} src={c.src} label={c.label} active={blend.cover === c.src}>
@@ -3028,7 +3089,7 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
 function RenameMixModal({ blend, onClose, onSave }) {
   const [name, setName] = useState(blend.name)
   const dlg = useDialog(onClose, { label: 'Rename PlayList' })
-  const save = () => { const n = name.trim(); if (n) onSave({ name: n }); onClose() }
+  const save = () => { const n = name.trim().slice(0, PLAYLIST_NAME_MAX); if (n) onSave({ name: n }); onClose() }
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
@@ -3037,10 +3098,12 @@ function RenameMixModal({ blend, onClose, onSave }) {
           value={name}
           autoFocus
           data-autofocus
+          maxLength={PLAYLIST_NAME_MAX}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') save() }}
           className="mt-[16px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[10px] text-[15px] text-white focus:outline-none"
         />
+        <p className="mt-[6px] text-right text-[12px] text-[#7e7f87]">{name.length}/{PLAYLIST_NAME_MAX}</p>
         <div className="mt-[18px] flex justify-end gap-[10px]">
           <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
           <button onClick={save} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Save</button>
@@ -3209,15 +3272,15 @@ function VoteControl({ mine, onUp, onDown, upVoters = [], downVoters = [] }) {
   return (
     <div className="flex items-center gap-[4px]" onClick={(e) => e.stopPropagation()}>
       <span className="group/v relative">
-        <button onClick={(e) => { e.stopPropagation(); onUp() }} aria-label="Thumbs up" aria-pressed={mine === 1} className={pill(mine === 1, 'bg-[#9BF00B]/20 text-[#9BF00B]')}>
-          <svg viewBox="0 0 24 24" className="size-[16px]" fill={mine === 1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4.5-7a2 2 0 0 1 3.5 1.3V9h4.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 20.2 20H7" /></svg>
+        <button onClick={(e) => { e.stopPropagation(); onUp() }} aria-label="Upvote" aria-pressed={mine === 1} className={pill(mine === 1, 'bg-[#9BF00B]/20 text-[#9BF00B]')}>
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth={mine === 1 ? 3 : 2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 19V5M5 12l7-7 7 7" /></svg>
           {upVoters.length}
         </button>
         {tip(upVoters, upVoters.length === 1 ? 'upvote' : 'upvotes')}
       </span>
       <span className="group/v relative">
-        <button onClick={(e) => { e.stopPropagation(); onDown() }} aria-label="Thumbs down" aria-pressed={mine === -1} className={pill(mine === -1, 'bg-[#f0505b]/20 text-[#f0505b]')}>
-          <svg viewBox="0 0 24 24" className="size-[16px]" fill={mine === -1 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 14V3h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-3zm0 0-4.5 7a2 2 0 0 1-3.5-1.3V15H4.4a2 2 0 0 1-2-2.4l1.4-7A2 2 0 0 1 5.8 4H17" /></svg>
+        <button onClick={(e) => { e.stopPropagation(); onDown() }} aria-label="Downvote" aria-pressed={mine === -1} className={pill(mine === -1, 'bg-[#f0505b]/20 text-[#f0505b]')}>
+          <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth={mine === -1 ? 3 : 2} strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14M5 12l7 7 7-7" /></svg>
           {downVoters.length}
         </button>
         {tip(downVoters, downVoters.length === 1 ? 'downvote' : 'downvotes')}
@@ -3256,7 +3319,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
     if (onPlay && CATALOG[key]) onPlay(key)
     else setLaunching(title)
   }
-  const { blends, setBlends } = useRoomCtx()
+  const { blends, setBlends, patchBlendById } = useRoomCtx()
   // Add/remove a game from this Mix's shared PlayList (the right-click menu).
   function setPlaylistMembership(title, add) {
     const key = KEY_OF_TITLE[title] || title
@@ -3265,7 +3328,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
     // Record who added each game so the card can credit the real adder.
     const addedBy = { ...(blend.addedBy || {}) }
     if (add) { if (!addedBy[key]) addedBy[key] = SELF_NAME } else { delete addedBy[key] }
-    setBlends(blends.map((b) => (b.id === blend.id ? { ...b, wishlist: next, addedBy } : b)))
+    patchBlendById(blend.id, { wishlist: next, addedBy })
     setMenu(null)
   }
   // Mix cover right-click menu + its editor modals.
@@ -3275,7 +3338,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const [inviteOpen, setInviteOpen] = useState(false)
   const [playlistOpen, setPlaylistOpen] = useState(false)
   const [confirmLeave, setConfirmLeave] = useState(false)
-  const patchBlend = (patch) => setBlends(blends.map((b) => (b.id === blend.id ? { ...b, ...patch } : b)))
+  const patchBlend = (patch) => patchBlendById(blend.id, patch)
   function leaveMix() { setConfirmLeave(true) }
   function doLeaveMix() {
     patchBlend({ members: blend.members.filter((c) => c !== SELF) })
@@ -3350,14 +3413,32 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   // and writes the new order to the shared wishlist.
   const [dragKey, setDragKey] = useState(null)
   const [overKey, setOverKey] = useState(null)
-  const reorderWishlist = (fromKey, toKey) => {
-    if (!fromKey || fromKey === toKey) return
+  const [overBefore, setOverBefore] = useState(true) // which side of overKey the drop bar shows
+  // Latest drag target, mirrored into refs so the commit (which fires on drag-end,
+  // not on a pixel-precise drop) always sees the last hovered insertion point.
+  const dragKeyRef = useRef(null)
+  const overKeyRef = useRef(null)
+  const overBeforeRef = useRef(true)
+  const reorderWishlist = (fromKey, toKey, before) => {
+    if (!fromKey || !toKey || fromKey === toKey) return
     const cur = [...(blend.wishlist || [])]
-    const fi = cur.indexOf(fromKey), ti = cur.indexOf(toKey)
-    if (fi < 0 || ti < 0) return
-    cur.splice(fi, 1); cur.splice(ti, 0, fromKey)
+    const fi = cur.indexOf(fromKey)
+    if (fi < 0) return
+    cur.splice(fi, 1)
+    let ti = cur.indexOf(toKey)
+    if (ti < 0) return
+    if (!before) ti += 1
+    cur.splice(ti, 0, fromKey)
     patchBlend({ wishlist: cur })
     setPlSort('manual')
+  }
+  // Track the hovered card + side (drives the drop bar and the refs).
+  const onCardDragOver = (key, before) => { overKeyRef.current = key; overBeforeRef.current = before; setOverKey(key); setOverBefore(before) }
+  // Commit on drag-end so releasing anywhere near the target still lands the drop.
+  const commitReorder = () => {
+    reorderWishlist(dragKeyRef.current, overKeyRef.current, overBeforeRef.current)
+    dragKeyRef.current = null; overKeyRef.current = null
+    setDragKey(null); setOverKey(null)
   }
   const [plGenres, setPlGenres] = useState([])    // genre filter facets
   const [plRange, setPlRange] = useState(null)     // { min, max } player range
@@ -3391,6 +3472,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   // four rows.
   const [playlistView, setPlaylistView] = useState('grid')
   const [playlistExpanded, setPlaylistExpanded] = useState(false)
+  // Whether vote tallies are always visible. Off by default → votes only appear on
+  // a card's hover (except the "Top voted" sort, where they're the ranking).
+  const [showVotes, setShowVotes] = useState(false)
   // Search across all games: matching games already in the Mix get highlighted,
   // matching games that aren't get an "Add" option.
   const [playlistSearch, setPlaylistSearch] = useState('')
@@ -3402,12 +3486,13 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   // in sync). Read back below and used throughout the render in spectate.
   useEffect(() => {
     if (!IS_LIVE) return
-    writeRoomPath(`${SPECTATE_PATH}/blendUI2`, { blendId: blend.id, playlistView, playlistExpanded, playlistSearch: playlistSearch || '', hover: hover || null, launching: launching || null })
+    writeRoomPath(`${SPECTATE_PATH}/blendUI2`, { blendId: blend.id, playlistView, playlistExpanded, showVotes, playlistSearch: playlistSearch || '', hover: hover || null, launching: launching || null })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [blend.id, playlistView, playlistExpanded, playlistSearch, hover, launching])
+  }, [blend.id, playlistView, playlistExpanded, showVotes, playlistSearch, hover, launching])
   const [bUI2] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/blendUI2` : 'spectate/__nobui2', {})
   const bui2 = IS_SPECTATE && bUI2?.blendId === blend.id ? bUI2 : null
   const ePlaylistView = IS_SPECTATE ? (bui2?.playlistView || 'grid') : playlistView
+  const eShowVotes = IS_SPECTATE ? !!bui2?.showVotes : showVotes
   const ePlaylistExpanded = IS_SPECTATE ? !!bui2?.playlistExpanded : playlistExpanded
   const ePlaylistSearch = IS_SPECTATE ? (bui2?.playlistSearch || '') : playlistSearch
   // See the note in Content: live view never force-reveals by title (that would
@@ -3457,7 +3542,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
       const next = wishKeys.slice()
       const [moved] = next.splice(dragIdx, 1)
       next.splice(i, 0, moved)
-      setBlends(blends.map((b) => (b.id === blend.id ? { ...b, wishlist: next } : b)))
+      patchBlendById(blend.id, { wishlist: next })
     }
     setDragIdx(null)
     setOverIdx(null)
@@ -3509,11 +3594,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
               {blend.cover ? (
                 <img alt="" src={blend.cover} className="size-full object-cover" />
               ) : (
-                <div className="grid size-full grid-cols-2 grid-rows-2 gap-[2px]">
-                  {mixCoverImages(blend).map((src, i) => (
-                    <img key={i} alt="" src={src} className="size-full object-cover" />
-                  ))}
-                </div>
+                <DefaultCover seed={blend.id || blend.name} />
               )}
               {/* Clicking the cover goes straight to Change cover art. */}
               <button
@@ -3525,10 +3606,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                 <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="8.5" cy="9.5" r="1.5" fill="currentColor" stroke="none" /><path d="M5 18l5-5 4 4 2-2 3 3" /></svg>
               </button>
             </div>
-            <div>
+            <div className="min-w-0">
               {/* The edit affordance flows inline after the title text, so it sits
                   wherever the (possibly wrapping) title ends. */}
-              <h1 className="text-[52px] font-semibold leading-[1.05] tracking-tight text-white">
+              <h1 className="break-words text-[52px] font-semibold leading-[1.05] tracking-tight text-white">
                 {blend.name}
                 <button
                   onClick={(e) => { const r = e.currentTarget.getBoundingClientRect(); setCoverMenu({ x: r.left, y: r.bottom + 6 }) }}
@@ -3620,6 +3701,26 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                       </div>
                     )}
                   </div>
+                  {/* Sort — shown before Filters */}
+                  <div className="relative">
+                    <button onClick={() => setPlSortOpen((v) => !v)} aria-haspopup="menu" aria-expanded={plSortOpen} className="flex h-[42px] items-center gap-[8px] rounded-[10px] bg-[#151517] px-[14px] text-[14px] font-semibold text-white ring-1 ring-white/5 transition hover:bg-[#1d1d20]">
+                      <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h10M4 18h6" /></svg>
+                      {PL_SORTS.find((s) => s.id === plSort)?.label}
+                    </button>
+                    {plSortOpen && (
+                      <>
+                        <div className="fixed inset-0 z-[40]" onClick={() => setPlSortOpen(false)} />
+                        <div ref={plSortPop} role="menu" aria-label="Sort PlayList" aria-orientation="vertical" className="absolute right-0 top-[48px] z-[50] w-[220px] overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
+                          {PL_SORTS.map((s) => (
+                            <button key={s.id} role="menuitem" onClick={() => { setPlSort(s.id); setPlSortOpen(false) }} className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (plSort === s.id ? 'font-semibold text-white' : 'text-[#c7c9cb]')}>
+                              {s.label}
+                              {plSort === s.id && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
                   {/* Filters — genre chips + player range (same as the Library) */}
                   <div className="relative">
                     <button onClick={() => setPlFilterOpen((v) => !v)} aria-haspopup="dialog" aria-expanded={plFilterOpen} className="flex h-[42px] items-center gap-[8px] rounded-[10px] bg-[#151517] px-[14px] text-[14px] font-semibold text-white ring-1 ring-white/5 transition hover:bg-[#1d1d20]">
@@ -3653,26 +3754,15 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                       </>
                     )}
                   </div>
-                  {/* Sort */}
-                  <div className="relative">
-                    <button onClick={() => setPlSortOpen((v) => !v)} aria-haspopup="menu" aria-expanded={plSortOpen} className="flex h-[42px] items-center gap-[8px] rounded-[10px] bg-[#151517] px-[14px] text-[14px] font-semibold text-white ring-1 ring-white/5 transition hover:bg-[#1d1d20]">
-                      <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6h16M4 12h10M4 18h6" /></svg>
-                      {PL_SORTS.find((s) => s.id === plSort)?.label}
-                    </button>
-                    {plSortOpen && (
-                      <>
-                        <div className="fixed inset-0 z-[40]" onClick={() => setPlSortOpen(false)} />
-                        <div ref={plSortPop} role="menu" aria-label="Sort PlayList" aria-orientation="vertical" className="absolute right-0 top-[48px] z-[50] w-[220px] overflow-hidden rounded-[12px] border border-[#2b2d31] bg-[#161618] py-[6px] shadow-[0_20px_60px_rgba(0,0,0,0.7)]">
-                          {PL_SORTS.map((s) => (
-                            <button key={s.id} role="menuitem" onClick={() => { setPlSort(s.id); setPlSortOpen(false) }} className={'flex w-full items-center justify-between px-[14px] py-[9px] text-left text-[14px] transition hover:bg-white/5 ' + (plSort === s.id ? 'font-semibold text-white' : 'text-[#c7c9cb]')}>
-                              {s.label}
-                              {plSort === s.id && <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  {/* Show-votes toggle — when off, votes only reveal on hover. */}
+                  <button
+                    onClick={() => setShowVotes((v) => !v)}
+                    aria-pressed={eShowVotes}
+                    title={eShowVotes ? 'Votes shown — click to reveal only on hover' : 'Votes hidden — click to always show'}
+                    className={'flex h-[42px] items-center rounded-[10px] px-[14px] text-[14px] font-semibold ring-1 transition ' + (eShowVotes ? 'bg-[#2b2d31] text-white ring-white/10' : 'bg-[#151517] text-[#c7c9cb] ring-white/5 hover:bg-[#1d1d20]')}
+                  >
+                    Show votes
+                  </button>
                   {/* List / grid view toggle */}
                   <div className="flex items-center gap-[2px] rounded-[9px] bg-[#151517] p-[3px]">
                     <button onClick={() => setPlaylistView('list')} aria-label="List view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (ePlaylistView === 'list' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
@@ -3706,17 +3796,26 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                       </button>
                     )}
                     <button onClick={() => { setPlGenres([]); setPlRange(null); setPlSession(null) }} className="ml-[2px] text-[13px] font-semibold text-[#9a9ba3] transition hover:text-white">Clear all</button>
-                    <span className="mx-[2px] h-[18px] w-px bg-white/10" />
-                    <button onClick={() => plList.forEach((g) => addToWheel(g.title))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
-                      <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
-                      Add {plList.length} to Wheel
-                    </button>
                   </div>
                 )}
                 {wish.length > 0 && (
-                  <p className="mb-[14px] text-[13px] text-[#7e7f87]">
-                    {plList.length === wish.length ? `${wish.length} games` : `${plList.length} / ${wish.length} games`}
-                  </p>
+                  <div className="mb-[14px] flex items-center gap-[10px]">
+                    <p className="text-[13px] text-[#7e7f87]">
+                      {plList.length === wish.length ? `${wish.length} games` : `${plList.length} / ${wish.length} games`}
+                    </p>
+                    {!IS_SPECTATE && plList.length > 0 && (
+                      <button onClick={() => plList.forEach((g) => addToWheel(g.key))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
+                        <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
+                        Add {plList.length} to Wheel
+                      </button>
+                    )}
+                    {plSort === 'manual' && !IS_SPECTATE && plList.length > 1 && (
+                      <span className="inline-flex items-center gap-[5px] text-[12px] text-[#7e7f87]">
+                        <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5h.01M15 5h.01M9 12h.01M15 12h.01M9 19h.01M15 19h.01" /></svg>
+                        Drag game tiles to reorder
+                      </span>
+                    )}
+                  </div>
                 )}
                 {wish.length === 0 ? (
                   <button onClick={() => setPlaylistOpen(true)} className="flex w-full items-center gap-[14px] rounded-[14px] border border-dashed border-[#2b2d31] px-[20px] py-[22px] text-left transition hover:border-[#5765f2] hover:bg-white/[0.02]">
@@ -3742,12 +3841,16 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
                         draggable={plSort === 'manual'}
-                        onDragStart={plSort === 'manual' ? (e) => { setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
-                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); setOverKey(g.key) } : undefined}
-                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault(); reorderWishlist(dragKey, g.key); setDragKey(null); setOverKey(null) } : undefined}
-                        onDragEnd={() => { setDragKey(null); setOverKey(null) }}
-                        className={'select-none rounded-[14px] p-[6px] ring-2 transition ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : (overKey === g.key && dragKey && dragKey !== g.key) ? 'ring-[#9BF00B]/60' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
+                        onDragStart={plSort === 'manual' ? (e) => { dragKeyRef.current = g.key; setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
+                        data-game={g.title}
+                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const r = e.currentTarget.getBoundingClientRect(); onCardDragOver(g.key, e.clientX < r.left + r.width / 2) } : undefined}
+                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault() } : undefined}
+                        onDragEnd={plSort === 'manual' ? commitReorder : undefined}
+                        className={'group/card relative select-none rounded-[14px] p-[6px] ring-2 transition ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
                       >
+                        {dragKey && dragKey !== g.key && overKey === g.key && (
+                          <span className={'pointer-events-none absolute top-[6px] bottom-[6px] z-[2] w-[3px] rounded-full bg-[#9BF00B] shadow-[0_0_10px_2px_rgba(155,240,11,0.7)] ' + (overBefore ? '-left-[11px]' : '-right-[11px]')} />
+                        )}
                         <div className="relative aspect-video overflow-hidden rounded-[12px] bg-[#1a1a1d]">
                           <img alt="" src={g.image} className="size-full object-cover" />
                           <span className="absolute left-[10px] top-[10px] flex size-[30px] items-center justify-center rounded-[9px] bg-black/70 text-[15px] font-bold text-white backdrop-blur">{i + 1}</span>
@@ -3759,19 +3862,19 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         </div>
                         <div className="mt-[10px] flex items-center gap-[8px]">
                           <p className="min-w-0 flex-1 truncate text-[17px] font-semibold text-white">{g.title}</p>
-                          <VoteControl score={scoreOf(g.key)} mine={myVoteFor(g.key)} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
+                          <span className={'shrink-0 transition-opacity ' + (plSort === 'votes' || eShowVotes || eHover === g.title ? 'opacity-100' : 'opacity-0 focus-within:opacity-100 group-hover/card:opacity-100')}>
+                            <VoteControl score={scoreOf(g.key)} mine={myVoteFor(g.key)} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
+                          </span>
                         </div>
                         {/* Ranked-by stat: session length, or avg friend playtime + rating. */}
                         {showSortMeta && (
                           <div className="mt-[3px] flex items-center gap-[7px] text-[12px] text-[#9a9ba3]">
                             {plSort === 'session' ? (
                               <span className="inline-flex items-center gap-[3px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" /></svg>~{sessionHours(g.key)} hrs / session</span>
+                            ) : plSort === 'hours' ? (
+                              <span className="inline-flex items-center gap-[3px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" /></svg>~{avgFriendHours(g.key)}h avg</span>
                             ) : (
-                              <>
-                                <span className="inline-flex items-center gap-[3px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" /></svg>~{avgFriendHours(g.key)}h avg</span>
-                                <span className="text-[#4a4d55]">·</span>
-                                <span>{sortRating(g.key)}</span>
-                              </>
+                              <span className="inline-flex items-center gap-[4px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="currentColor"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4.5-7a2 2 0 0 1 3.5 1.3V9h4.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 20.2 20H7" /></svg>{sortRating(g.key)}</span>
                             )}
                           </div>
                         )}
@@ -3790,12 +3893,16 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         aria-label={`Open ${g.title}`}
                         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpen?.(g.title) } }}
                         draggable={plSort === 'manual'}
-                        onDragStart={plSort === 'manual' ? (e) => { setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
-                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); setOverKey(g.key) } : undefined}
-                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault(); reorderWishlist(dragKey, g.key); setDragKey(null); setOverKey(null) } : undefined}
-                        onDragEnd={() => { setDragKey(null); setOverKey(null) }}
-                        className={'group flex select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : (overKey === g.key && dragKey && dragKey !== g.key) ? 'ring-[#9BF00B]/60' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
+                        onDragStart={plSort === 'manual' ? (e) => { dragKeyRef.current = g.key; setDragKey(g.key); e.dataTransfer.effectAllowed = 'move' } : undefined}
+                        data-game={g.title}
+                        onDragOver={plSort === 'manual' ? (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; const r = e.currentTarget.getBoundingClientRect(); onCardDragOver(g.key, e.clientY < r.top + r.height / 2) } : undefined}
+                        onDrop={plSort === 'manual' ? (e) => { e.preventDefault() } : undefined}
+                        onDragEnd={plSort === 'manual' ? commitReorder : undefined}
+                        className={'group/card group relative flex select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition hover:bg-[#151517] ' + (plSort === 'manual' ? 'cursor-grab active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent') + (dragKey === g.key ? ' opacity-0' : '')}
                       >
+                        {dragKey && dragKey !== g.key && overKey === g.key && (
+                          <span className={'pointer-events-none absolute left-[8px] right-[8px] z-[2] h-[3px] rounded-full bg-[#9BF00B] shadow-[0_0_10px_2px_rgba(155,240,11,0.7)] ' + (overBefore ? '-top-[6px]' : '-bottom-[6px]')} />
+                        )}
                         <span className="flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">{i + 1}</span>
                         <div className="h-[68px] w-[121px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]">
                           <img alt="" src={g.image} className="size-full object-cover" />
@@ -3812,15 +3919,16 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                           <div className="hidden shrink-0 flex-col items-end text-[12px] text-[#9a9ba3] sm:flex">
                             {plSort === 'session' ? (
                               <span>~{sessionHours(g.key)} hrs / session</span>
+                            ) : plSort === 'hours' ? (
+                              <span>~{avgFriendHours(g.key)}h avg</span>
                             ) : (
-                              <>
-                                <span>~{avgFriendHours(g.key)}h avg</span>
-                                <span>{sortRating(g.key)}</span>
-                              </>
+                              <span className="inline-flex items-center gap-[4px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="currentColor"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4.5-7a2 2 0 0 1 3.5 1.3V9h4.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 20.2 20H7" /></svg>{sortRating(g.key)}</span>
                             )}
                           </div>
                         )}
-                        <VoteControl score={scoreOf(g.key)} mine={myVoteFor(g.key)} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
+                        <span className={'shrink-0 transition-opacity ' + (plSort === 'votes' || eShowVotes || eHover === g.title ? 'opacity-100' : 'opacity-0 focus-within:opacity-100 group-hover/card:opacity-100')}>
+                          <VoteControl score={scoreOf(g.key)} mine={myVoteFor(g.key)} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -4235,7 +4343,7 @@ function CreateBlendModal({ onClose, onCreated }) {
           </div>
 
           <p className="mt-[16px] text-[12px] font-semibold tracking-wide text-[#b5bac1]">
-            Add friends or server members to mixes
+            Add friends or server members to your PlayList
           </p>
           <div className="no-scrollbar mt-[8px] flex max-h-[280px] flex-col overflow-y-auto">
             {friends.map((f) => {
@@ -4278,6 +4386,7 @@ function CreateBlendModal({ onClose, onCreated }) {
                 <label className="text-[13px] text-[#b5bac1]">PlayList Name (optional)</label>
                 <input
                   value={blendName}
+                  maxLength={PLAYLIST_NAME_MAX}
                   onChange={(e) => setNameOverride(e.target.value)}
                   placeholder="PlayList name"
                   className="mt-[4px] w-full rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px] text-[14px] text-white outline-none placeholder:text-[#87898c]"
@@ -4312,12 +4421,13 @@ function CreateBlendModal({ onClose, onCreated }) {
 
 // ── Add a game to a Blend's wishlist (opened from a card's bookmark) ────────
 function WishlistModal({ game, onClose, onAddToWheel }) {
-  const { blends, setBlends } = useRoomCtx()
+  const { blends, patchBlendById } = useRoomCtx()
   const key = KEY_OF_TITLE[game] || game // wishlist stores catalog keys
   // A non-modal popover (no blocking backdrop) so the page behind stays
   // scrollable/clickable; closes on outside click or Escape.
   const ref = useRef(null)
   useEffect(() => {
+    if (IS_SPECTATE) return // moderator mirror is read-only: don't let it dismiss the popover
     const onDown = (e) => { if (ref.current && !ref.current.contains(e.target)) onClose() }
     const onKey = (e) => { if (e.key === 'Escape') onClose() }
     const id = setTimeout(() => { document.addEventListener('mousedown', onDown, true); document.addEventListener('keydown', onKey) }, 0)
@@ -4334,37 +4444,44 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
     const r = el.getBoundingClientRect()
     return { right: Math.min(Math.max(vw - r.right, 12), vw - 300), bottom: Math.min(Math.max(vh - r.top + GAP, 12), vh - 60) }
   }
-  const [pos, setPos] = useState(() => {
-    if (typeof window === 'undefined') return null
+  // Position, recomputed fresh on every render (so it stays correct after any
+  // re-render, e.g. toggling a PlayList). Anchors to the "+" button when we have
+  // one, else to the click point, else centered.
+  const styleFor = () => {
     const vw = window.innerWidth, vh = window.innerHeight
-    return fromEl() || (LAST_POINTER.x == null ? null : { right: Math.min(Math.max(vw - LAST_POINTER.x, 12), vw - 300), bottom: Math.min(Math.max(vh - LAST_POINTER.y + GAP, 12), vh - 60) })
-  })
-  // Follow the "+" button as the page scrolls so the popover stays pinned to the
-  // card, not the viewport. rAF-throttled so it tracks smoothly. (The app content
-  // scrolls in an inner container, hence the capture-phase scroll listener.)
+    const p = fromEl()
+    if (p) return { right: p.right, bottom: p.bottom }
+    if (LAST_POINTER.x == null) return { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }
+    return { right: Math.min(Math.max(vw - LAST_POINTER.x, 12), vw - 300), bottom: Math.min(Math.max(vh - LAST_POINTER.y + GAP, 12), vh - 60) }
+  }
+  // The popover is anchored to the card, so following it during scroll would
+  // always risk lag. Instead we just close it the moment the page scrolls —
+  // rock-solid, nothing to track. (App content scrolls in an inner container,
+  // hence the capture-phase listener. Scrolls inside the popover's own list are
+  // ignored so the member list can still scroll.)
   useEffect(() => {
-    if (!plusEl.current) return
-    let raf = 0
-    const update = () => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; const p = fromEl(); if (p) setPos(p) }) }
-    window.addEventListener('scroll', update, true)
-    window.addEventListener('resize', update)
-    return () => { if (raf) cancelAnimationFrame(raf); window.removeEventListener('scroll', update, true); window.removeEventListener('resize', update) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    if (IS_SPECTATE) return // the mirror replays scroll; don't let it dismiss the popover
+    const onScroll = (e) => { if (ref.current && ref.current.contains(e.target)) return; onClose() }
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onClose)
+    return () => { window.removeEventListener('scroll', onScroll, true); window.removeEventListener('resize', onClose) }
+  }, [onClose])
   function toggle(b) {
     const has = (b.wishlist || []).includes(key)
     const wishlist = has ? b.wishlist.filter((x) => x !== key) : [...(b.wishlist || []), key]
     const addedBy = { ...(b.addedBy || {}) }
     if (has) delete addedBy[key]; else if (!addedBy[key]) addedBy[key] = SELF_NAME
-    setBlends(blends.map((x) => (x.id === b.id ? { ...x, wishlist, addedBy } : x)))
+    patchBlendById(b.id, { wishlist, addedBy })
   }
   const mineBlends = blends.filter((b) => (b.members || []).includes(SELF))
   // Non-modal popover: page behind stays scrollable; follows the "+" on scroll.
-  return (
+  // Portaled to <body> so it escapes any transformed/clipped ancestor and always
+  // stacks above the nav and toasts.
+  return createPortal(
       <div
         ref={ref} role="menu" aria-label="Add to PlayList"
-        className="fixed z-[210] w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]"
-        style={pos ? { right: pos.right, bottom: pos.bottom } : { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }}
+        className={'fixed z-[300] w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]' + (IS_SPECTATE ? ' pointer-events-none select-none' : '')}
+        style={styleFor()}
       >
         <div className="flex items-center justify-between gap-[8px] px-[14px] pb-[6px] pt-[6px]">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Add “{game}” to</p>
@@ -4380,7 +4497,7 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
             return (
               <button key={b.id} onClick={() => toggle(b)} className="flex w-full items-center gap-[10px] px-[12px] py-[7px] text-left transition hover:bg-white/[0.06]">
                 <span className="size-[30px] shrink-0 overflow-hidden rounded-[6px] bg-[#1a1a1d]" style={b.color ? { backgroundColor: b.color } : undefined}>
-                  {b.cover ? <img alt="" src={b.cover} className="size-full object-cover" /> : <span className="grid size-full grid-cols-2 grid-rows-2 gap-[1px]">{mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}</span>}
+                  {b.cover ? <img alt="" src={b.cover} className="size-full object-cover" /> : <DefaultCover seed={b.id || b.name} />}
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[14px] font-medium text-[#dbdee1]">{b.name}</span>
@@ -4398,7 +4515,8 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
           })}
           {mineBlends.length === 0 && <p className="px-[14px] py-[10px] text-[13px] text-[#7e7f87]">You’re not in any PlayLists yet.</p>}
         </div>
-      </div>
+      </div>,
+    document.body,
   )
 }
 
@@ -5434,7 +5552,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
               <DecisionWheel games={games} spin={activeSpin} remaining={Math.max(0, spinRemaining || SPIN_MS)} onSpin={doSpin} spinning={phase === 'spinning'} disabled={!canSpin} />
             ) : (
               <div className="flex size-[420px] items-center justify-center rounded-full border-2 border-dashed border-[#2b2d31] p-[40px] text-center">
-                <p className="max-w-[220px] text-[15px] text-[#7e7f87]">{synced ? 'The call wheel is empty. Anyone can add games or load a PlayList.' : 'Your wheel is empty. Add games or load a Mix’s PlayList.'}</p>
+                <p className="max-w-[220px] text-[15px] text-[#7e7f87]">{synced ? 'The call wheel is empty. Anyone can add games or load a PlayList.' : 'Your wheel is empty. Add games or load a PlayList.'}</p>
               </div>
             )}
           </div>
@@ -5500,9 +5618,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                               {b.cover ? (
                                 <img alt="" src={b.cover} className={'size-full object-cover' + (empty ? ' grayscale' : '')} />
                               ) : (
-                                <span className={'grid size-full grid-cols-2 grid-rows-2 gap-[1px]' + (empty ? ' grayscale' : '')}>
-                                  {mixCoverImages(b).map((src, i) => <img key={i} alt="" src={src} className="size-full object-cover" />)}
-                                </span>
+                                <span className={'block size-full' + (empty ? ' grayscale' : '')}><DefaultCover seed={b.id || b.name} /></span>
                               )}
                             </span>
                             <span className="min-w-0 flex-1 truncate">{b.name}</span>
@@ -5587,7 +5703,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   ) : eSynced ? (
                     <button
                       onClick={leaveOrEnd}
-                      className="flex items-center gap-[9px] rounded-[10px] bg-[#9BF00B] px-[16px] py-[10px] text-[14px] font-semibold text-[#0c0c0e] transition hover:brightness-110"
+                      className="flex items-center gap-[9px] rounded-[10px] bg-[#1c1c1f] px-[16px] py-[10px] text-[14px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]"
                     >
                       <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 11a8 8 0 0 0-14.3-4.9M4 5v4h4M4 13a8 8 0 0 0 14.3 4.9M20 19v-4h-4" /></svg>
                       {isHost ? 'End wheel sync' : 'Leave wheel sync'}
@@ -5599,16 +5715,6 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                       {copied ? 'Link copied!' : 'Copy invite link'}
                     </button>
                   )}
-                  {eSynced && (
-                    /* `isolate` confines the avatars' overlap z-index to this row so
-                       it can never rise above the Select-Mix dropdown above. Each
-                       avatar is hoverable for the member's name. */
-                    <span className="isolate flex items-center">
-                      {Object.keys(participants).map((n, i) => (
-                        <MemberChip key={n} color={COLOR_OF[n] || D.raised} size={26} marginRight={-8} />
-                      ))}
-                    </span>
-                  )}
                 </div>
                 {/* Total members, clearly stated below the avatars. */}
                 {eSynced && (
@@ -5619,6 +5725,16 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                     ? (isHost ? 'You started this sync — everyone on the call can join, edit and watch it spin.' : `Synced by ${dispName(callWheel?.host, jamNames)} — edits and spins are live for the whole call.`)
                     : 'Join to build and spin the wheel together.'}
                 </p>
+                {eSynced && (
+                  /* Member avatars, moved below the sync caption. `isolate` confines
+                     the overlap z-index so it can't rise above the dropdown above.
+                     Each avatar is hoverable for the member's name. */
+                  <span className="isolate mt-[10px] flex items-center">
+                    {Object.keys(participants).map((n) => (
+                      <MemberChip key={n} color={COLOR_OF[n] || D.raised} size={26} marginRight={-8} />
+                    ))}
+                  </span>
+                )}
                 </>)}
               </>
             )}
@@ -5659,7 +5775,7 @@ function WheelInviteStep({ online, onCancel, onStart, popover }) {
     <button onClick={() => toggle(d.name)} className="flex w-full items-center gap-[12px] py-[8px]">
       <Avatar color={d.color} size={38} />
       <span className="min-w-0 flex-1 truncate text-left text-[15px] font-semibold text-white">{capName(d.name)}</span>
-      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#9BF00B] bg-[#9BF00B]' : 'border-[#4a4d55]')}>
+      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
         {sel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
       </span>
     </button>
@@ -5967,8 +6083,9 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
                   {gameResults.length === 0 && <p className="px-[6px] py-[10px] text-[13px] text-[#6f7276]">No games match “{gameQ}”.</p>}
                 </div>
               ) : (
-                /* No query — show recent searches (up to 3 visible, scrollable). Each
-                   opens that game's detail page; the modal reopens on Back. */
+                /* No query — show recent searches (up to 3 visible, scrollable).
+                   Clicking one picks it as the party's game (like the search
+                   results), rather than navigating away to its detail page. */
                 <>
                   <p className="mb-[6px] mt-[12px] text-[12px] font-semibold tracking-wide text-[#87898c]">Recent searches</p>
                   {recentEntries.length === 0 ? (
@@ -5976,7 +6093,7 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
                   ) : (
                     <div className="no-scrollbar flex max-h-[168px] flex-col gap-[2px] overflow-y-auto">
                       {recentEntries.map(([k, v]) => (
-                        <button key={k} onClick={() => onOpenGame?.(k)} className="flex w-full items-center gap-[12px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
+                        <button key={k} onClick={() => setGameKey(k)} className="flex w-full items-center gap-[12px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
                           {v.image ? <img alt="" src={v.image} className="h-[40px] w-[71px] shrink-0 rounded-[6px] object-cover" /> : <span className="h-[40px] w-[71px] shrink-0 rounded-[6px] bg-white/10" />}
                           <div className="min-w-0">
                             <p className="truncate text-[14px] font-semibold text-white">{v.title}</p>
@@ -6229,10 +6346,6 @@ function WheelNotification({ spin, onOpenWheel, onStartParty, onRestart, onDismi
                   Start a party
                 </button>
                 <button onClick={onOpenWheel} className="rounded-[8px] bg-[#3a3c42] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-[#44464d]">Go to wheel</button>
-                <button onClick={onRestart} className="flex items-center gap-[6px] rounded-[8px] bg-[#3a3c42] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-[#44464d]">
-                  <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
-                  Restart
-                </button>
               </div>
             </>
           ) : null}
@@ -6566,7 +6679,7 @@ function InviteMessage({ msg, mine, onRespond }) {
   return (
     <div className="mt-[6px] w-full max-w-[440px] overflow-hidden rounded-[10px] border border-[#3a3c42] bg-[#232428]">
       <div className="flex items-center gap-[10px] border-b border-[#2f3136] bg-[#1e1f22] px-[14px] py-[10px]">
-        <span className="flex size-[34px] items-center justify-center rounded-[8px] bg-[#5765f2] text-[16px]">🎮</span>
+        <span className="size-[34px] shrink-0 overflow-hidden rounded-[8px]"><DefaultCover seed={msg.blendId || msg.blendName} /></span>
         <div className="min-w-0">
           <p className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: D.mute }}>PlayList invitation</p>
           <p className="truncate text-[15px] font-semibold text-white">{msg.blendName}</p>
@@ -6686,12 +6799,19 @@ function GameMessage({ msg, onOpen }) {
 }
 
 function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
-  const { blends, setBlends } = useRoomCtx()
+  const { blends, setBlends, patchBlendById } = useRoomCtx()
   const names = useNames()
   const fname = dispName(friend.name, names)
   const msgs = useDM(friend.name)
   const [draft, setDraft] = useState('')
   const scrollRef = useRef(null)
+  // Opening a PlayList from an invite: if it's since been deleted, surface a popup
+  // instead of navigating to a blank page.
+  const [gonePlaylist, setGonePlaylist] = useState(null)
+  const openPlaylist = (m) => {
+    if (blends.some((b) => b.id === m.blendId)) onOpenBlend(m.blendId)
+    else setGonePlaylist(m.blendName || 'This PlayList')
+  }
 
   useEffect(() => {
     const el = scrollRef.current
@@ -6718,14 +6838,14 @@ function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
   function respondInvite(msg, accept) {
     // Rewrite the same invite leaf so the inviter sees the result live…
     putDM(friend.name, { ...msg, status: accept ? 'accepted' : 'declined' })
-    // …and update the shared blend: joining adds me to members, either way I
-    // drop off the pending "invited" list.
-    setBlends(blends.map((b) => {
-      if (b.id !== msg.blendId) return b
-      const invited = (b.invited || []).filter((c) => c !== SELF)
-      const members = accept ? [...new Set([...(b.members || []), SELF])] : (b.members || [])
-      return { ...b, invited, members }
-    }))
+    // …and update the shared blend via leaf writes (avoids the whole-array
+    // last-write-wins race that could drop the membership): joining adds me to
+    // members, either way I drop off the pending "invited" list.
+    const b = blends.find((x) => x.id === msg.blendId)
+    if (b) patchBlendById(msg.blendId, {
+      invited: (b.invited || []).filter((c) => c !== SELF),
+      members: accept ? [...new Set([...(b.members || []), SELF])] : (b.members || []),
+    })
   }
 
   // Group consecutive messages by calendar day for the divider labels.
@@ -6753,7 +6873,7 @@ function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
           </div>
 
           {msgs.length === 0 && (
-            <p className="mt-[16px] text-[14px]" style={{ color: D.mute }}>No messages yet. Say hi, share a game, or invite {fname} to a Mix.</p>
+            <p className="mt-[16px] text-[14px]" style={{ color: D.mute }}>No messages yet. Say hi, share a game, or invite {fname} to a PlayList.</p>
           )}
 
           {msgs.map((m) => {
@@ -6781,7 +6901,7 @@ function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
                       <p className="mt-[2px] whitespace-pre-wrap break-words text-[15px] leading-snug text-[#dbdee1]">{m.text}</p>
                     )}
                     {m.kind === 'invite' && m.status === 'accepted' && (
-                      <button onClick={() => onOpenBlend(m.blendId)} className="mt-[8px] text-[13px] font-semibold text-[#5765f2] transition hover:underline">Open the Mix →</button>
+                      <button onClick={() => openPlaylist(m)} className="mt-[8px] text-[13px] font-semibold text-[#5765f2] transition hover:underline">Open the PlayList →</button>
                     )}
                   </div>
                 </div>
@@ -6804,6 +6924,20 @@ function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
           <button onClick={sendText} disabled={!eDraft.trim()} className="shrink-0 rounded-[8px] bg-[#5765f2] px-[16px] py-[8px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Send</button>
         </div>
       </div>
+
+      {/* Deleted-PlayList popup — the invited PlayList no longer exists. */}
+      {gonePlaylist && !IS_SPECTATE && (
+        <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={() => setGonePlaylist(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-[400px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] text-center shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+            <div className="mx-auto flex size-[48px] items-center justify-center rounded-full bg-[#f23f42]/15 text-[#f23f42]">
+              <svg viewBox="0 0 24 24" className="size-[26px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" /></svg>
+            </div>
+            <h3 className="mt-[14px] text-[18px] font-bold text-white">PlayList no longer exists</h3>
+            <p className="mt-[6px] text-[14px] text-[#b5bac1]"><span className="font-semibold text-white">{gonePlaylist}</span> has been deleted, so it can’t be opened anymore.</p>
+            <button onClick={() => setGonePlaylist(null)} className="mt-[18px] w-full rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Close</button>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
@@ -8320,9 +8454,23 @@ export default function Landing() {
   // Add a game (by title or key) to the personal wheel, then flash the wheel
   // open so it's clear where it went. Deduped, and only real catalog games.
   const addToWheel = (titleOrKey) => {
-    const key = CATALOG[titleOrKey] ? titleOrKey : (KEY_OF_TITLE[titleOrKey] || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey))
+    // Resolve to a wheel key. Accept an already-valid key (catalog OR starter), else
+    // map a title. Starter games live in STARTER_BY_KEY, not CATALOG — the old lookup
+    // ignored them, so bulk "Add to Wheel" silently dropped every starter game.
+    const key = (CATALOG[titleOrKey] || STARTER_BY_KEY[titleOrKey]) ? titleOrKey
+      : (KEY_OF_TITLE[titleOrKey]
+        || Object.keys(CATALOG).find((k) => CATALOG[k].title === titleOrKey)
+        || Object.keys(STARTER_BY_KEY).find((k) => STARTER_BY_KEY[k].title === titleOrKey))
     if (!key) return
-    setWheelKeys((ks) => (ks.includes(key) ? ks : [...ks, key]))
+    // If I'm in a live synced call wheel, add to the shared wheel so it actually
+    // shows up (the visible wheel reads callWheel.keys, not my personal wheelKeys).
+    if (callWheelRoot && callWheelRoot.participants?.[SELF_NAME]) {
+      const cur = callWheelRoot.keys || []
+      if (!cur.includes(key)) writeRoomPath('wheelCall/keys', [...cur, key])
+      writeRoomPath('wheelCall/lastActive', Date.now())
+    } else {
+      setWheelKeys((ks) => (ks.includes(key) ? ks : [...ks, key]))
+    }
   }
   // Live "wheel jam" on the call — drives the top-bar dot + the Join toast.
   const [callWheelRoot] = useRoomNode('wheelCall', null)
@@ -8330,11 +8478,9 @@ export default function Landing() {
   const jamLive = !!callWheelRoot && Object.keys(jamParticipants).length > 0 && Date.now() - (callWheelRoot.lastActive || callWheelRoot.startedAt || 0) < CALL_WHEEL_EXPIRY
   const inJam = !!jamParticipants[SELF_NAME]
   const [jamDismissed, setJamDismissed] = useState(null) // startedAt of a dismissed jam invite
-  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward, openWheel: () => setWheelOpen(true), addToWheel, wheelLive: jamLive, wheelCount: (IS_SPECTATE ? eWheelKeys : wheelKeys).length }
-
   // Observation plumbing. A live tester publishes their nav + pointer/scroll;
   // a spectator instance reads it back and drives the view read-only.
-  const nav = { blendId, detailKey, dmName, decide, mixesTab, libraryTab, createOpen, wishlistGame, shareGame, prefsForId, playKey, whoOpen, gameMenu, wheelOpen, wheelKeys }
+  const nav = { blendId, detailKey, dmName, decide, mixesTab, libraryTab, createOpen, wishlistGame, shareGame, prefsForId, playKey, whoOpen, gameMenu, wheelOpen, wheelKeys, wheelLive: jamLive && inJam }
   useMirrorPublish(nav)
   const [mirror] = useRoomNode(IS_SPECTATE ? SPECTATE_PATH : 'spectate/__none', null)
   const [cmd] = useRoomNode(IS_LIVE ? `${SPECTATE_PATH}/cmd` : 'spectate/__nocmd', null)
@@ -8414,6 +8560,13 @@ export default function Landing() {
   const eLibraryTab = IS_SPECTATE ? !!mv.libraryTab : libraryTab
   const eWheelOpen = IS_SPECTATE ? !!mv.wheelOpen : wheelOpen
   const eWheelKeys = IS_SPECTATE ? (mv.wheelKeys || []) : wheelKeys
+  // Nav context — defined here (after the mirror `mv`/`eWheelKeys` it reads) so the
+  // spectate branch doesn't hit those consts in their temporal dead zone, which
+  // was crashing the entire moderator view. The button shows "live" only when I've
+  // joined the sync (so an unaccepted invite doesn't light it up); in spectate it
+  // mirrors the observed tester's published wheelLive since the moderator isn't a
+  // jam participant.
+  const navCtx = { canBack: hist.idx > 0, canForward: hist.idx < hist.stack.length - 1, back: goBack, forward: goForward, openWheel: () => setWheelOpen(true), addToWheel, wheelLive: IS_SPECTATE ? !!mv.wheelLive : (jamLive && inJam), wheelCount: (IS_SPECTATE ? eWheelKeys : wheelKeys).length }
 
   // The live launch party — shared, so its ready-up toast reaches every page.
   const party = useLaunch()
@@ -8431,6 +8584,12 @@ export default function Landing() {
   // A SYNCED wheel spin surfaces as a cross-page notification (below) rather than
   // yanking everyone into the full modal. Track which spin's toast was dismissed.
   const [wheelNotifDismissed, setWheelNotifDismissed] = useState(null)
+  // If the wheel modal is open while a spin is live, the person is already seeing
+  // the result there — mark that spin seen so the notification never pops for it,
+  // even after they close the modal.
+  useEffect(() => {
+    if (wheelOpen && callWheelRoot?.spin) setWheelNotifDismissed(callWheelRoot.spin.id)
+  }, [wheelOpen, callWheelRoot?.spin?.id])
 
   const blend = byId(eBlendId)
   const prefsFor = byId(ePrefsForId)
@@ -8478,12 +8637,12 @@ export default function Landing() {
         ) : decideBlend ? (
           <DecidePage key={decideBlend.id} blend={decideBlend} prefs={eDecide.prefs} onBack={() => setDecide(null)} />
         ) : blend ? (
-          <BlendPage key={blend.id} blend={blend} onBack={() => setBlendId(null)} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} onShare={setShareGame} onWishlist={setWishlistGame} onHome={goHome} onLibrary={openLibrary} onMixes={openMixes} />
+          <BlendPage key={blend.id} blend={blend} onBack={goBack} onDecide={() => setPrefsForId(blend.id)} onOpen={openGame} onPlay={setPlayKey} onShare={setShareGame} onWishlist={setWishlistGame} onHome={goHome} onLibrary={openLibrary} onMixes={openMixes} />
         ) : eDetailKey ? (
           <GameDetailPage
             key={eDetailKey}
             gameKey={eDetailKey}
-            onBack={closeDetail}
+            onBack={goBack}
             onHome={goHome}
             onLibrary={openLibrary}
             onMixes={openMixes}
