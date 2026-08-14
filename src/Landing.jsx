@@ -1203,7 +1203,7 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
 // Home hero card for a live party you're invited to — game art, the ready-up
 // roster, and a Join / Ready / Start action depending on your role + state.
 function HomePartyCard({ party, launch, onOpen }) {
-  const { readyUp, undoReady, launchNow } = party
+  const { readyUp, undoReady, launchNow, decline, clear } = party
   const isHost = launch.host === SELF_NAME
   const iAmReady = isHost || !!launch.ready?.[SELF_NAME]
   const { readyInvitees, invitees } = launchTally(launch)
@@ -1234,16 +1234,25 @@ function HomePartyCard({ party, launch, onOpen }) {
           <span className="text-[14px] text-[#9a9ba3]">{readyCount}/{total} ready</span>
         </div>
       </div>
-      <div className="shrink-0 pr-[6px]">
+      <div className="flex shrink-0 items-center gap-[10px] pr-[6px]">
         {isHost ? (
-          <button onClick={launchNow} className="rounded-[10px] bg-[#9BF00B] px-[22px] py-[12px] text-[15px] font-bold text-[#0c0c0e] transition hover:brightness-110">Start now</button>
-        ) : iAmReady ? (
-          <button onClick={undoReady} className="flex items-center gap-[7px] rounded-[10px] bg-[#248046] px-[20px] py-[12px] text-[15px] font-bold text-white transition hover:brightness-110">
-            <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
-            Ready
-          </button>
+          <>
+            {/* Host: cancel the whole party, then launch — "Launch Anyways" until
+                everyone has readied up, "Launch" once the party is fully ready. */}
+            <button onClick={clear} className="rounded-[10px] bg-[#3a3c42] px-[18px] py-[12px] text-[15px] font-bold text-white transition hover:bg-[#44464d]">Cancel</button>
+            <button onClick={launchNow} className="rounded-[10px] bg-[#9BF00B] px-[22px] py-[12px] text-[15px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">{readyCount === total ? 'Launch Game' : 'Launch Anyways'}</button>
+          </>
         ) : (
-          <button onClick={readyUp} className="rounded-[10px] bg-[#9BF00B] px-[22px] py-[12px] text-[15px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">Join party</button>
+          iAmReady ? (
+            /* Invitee, readied up: a single gray Undo Ready Up. */
+            <button onClick={undoReady} className="rounded-[10px] bg-[#3a3c42] px-[20px] py-[12px] text-[15px] font-bold text-white transition hover:bg-[#44464d]">Undo Ready Up</button>
+          ) : (
+            <>
+              {/* Invitee: decline ("Not Now") or ready up. */}
+              <button onClick={decline} className="rounded-[10px] bg-[#3a3c42] px-[18px] py-[12px] text-[15px] font-bold text-white transition hover:bg-[#44464d]">Not Now</button>
+              <button onClick={readyUp} className="rounded-[10px] bg-[#9BF00B] px-[22px] py-[12px] text-[15px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">Ready Up</button>
+            </>
+          )
         )}
       </div>
     </div>
@@ -1409,23 +1418,6 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                     >
                       Jump in
                     </h2>
-                    {/* "See who's on ARCADE" — opens the friends popup (Figma 1148:1562):
-                        dark-green pill, 30px avatars, Xbox-green ARCADE. */}
-                    <button
-                      onClick={onWhosOn}
-                      className="flex shrink-0 items-center gap-[10px] rounded-[12px] bg-[#092000] px-[24px] py-[9px] transition hover:brightness-125"
-                    >
-                      <div className="flex items-center">
-                        {[AVATAR.blue, AVATAR.pink, AVATAR.yellow].map((c, i) => (
-                          <Avatar key={i} color={c} size={22} style={{ marginRight: i < 2 ? -6 : 0, boxShadow: '0 0 0 2px #092000' }} />
-                        ))}
-                      </div>
-                      <span className="text-[16px] text-white">See who’s on</span>
-                      <span className="flex items-center gap-[3px]">
-                        <XboxLogo size={16} />
-                        <span className="text-[12px] font-bold uppercase tracking-wide text-[#9BF00B]">Arcade</span>
-                      </span>
-                    </button>
                   </div>
                   <div className="relative mt-[48px] w-full">
                     {myParty ? (
@@ -1433,13 +1425,16 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                     ) : (
                       <button
                         onClick={onStartParty}
-                        className="group flex items-center gap-[18px] rounded-[20px] border-2 border-[#9BF00B]/55 bg-[#0d1a06] px-[28px] py-[22px] text-left transition hover:border-[#9BF00B] hover:bg-[#112407]"
+                        className="group relative flex items-center gap-[18px] overflow-hidden rounded-[20px] border-2 border-[#9BF00B] px-[28px] py-[22px] text-left transition-colors duration-500 ease-out hover:border-[#b6ff3d] hover:bg-[#112407]"
                       >
-                        <span className="flex size-[54px] shrink-0 items-center justify-center transition group-hover:scale-105">
+                        {/* Black multiply fill — darkens the background mesh under the
+                            card instead of a solid color, so the texture shows through. */}
+                        <span className="pointer-events-none absolute inset-0 rounded-[20px] bg-black/70 mix-blend-multiply transition-opacity duration-500 ease-out group-hover:opacity-0" />
+                        <span className="relative flex size-[54px] shrink-0 items-center justify-center transition group-hover:scale-105">
                           <PartyGlyph size={40} className="text-[#9BF00B]" />
                         </span>
-                        <span>
-                          <span className="block text-[24px] font-bold text-white">Start a party</span>
+                        <span className="relative">
+                          <span className="block text-[24px] font-bold text-[#9BF00B]">Start a party</span>
                           <span className="block text-[15px] text-[#9db08f]">Pick a game and invite your friends to jump in.</span>
                         </span>
                       </button>
@@ -2869,6 +2864,9 @@ function LaunchToast({ title, onDone }) {
         <svg viewBox="0 0 24 24" className="size-[12px] text-white" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
       </span>
       <span className="text-[15px] text-white">Launching <span className="font-semibold">{title}</span>…</span>
+      <button onClick={onDone} aria-label="Dismiss" className="ml-[4px] shrink-0 text-[#7e7f87] transition hover:text-white">
+        <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
     </div>
   )
 }
@@ -3564,7 +3562,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
             ref={bannerRef}
             onTimeUpdate={onBannerTime}
             className="pointer-events-none absolute inset-0 size-full object-cover"
-            style={{ transition: 'opacity 1.5s ease-in-out' }}
+            // Pin the footage to its own GPU layer. Without this, some drivers
+            // re-rasterize it against overlapping content every frame and the
+            // header flickers/tears on lower-end machines.
+            style={{ transition: 'opacity 1.5s ease-in-out', transform: 'translateZ(0)', backfaceVisibility: 'hidden', willChange: 'opacity' }}
             src="/PartyHome.mp4"
             autoPlay
             muted
@@ -3647,7 +3648,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
             {/* Group activity — now lives in the header, to the right of the
                 title, so it clears the divider below. Shows three rows. */}
             <aside className="hidden w-[340px] shrink-0 self-stretch lg:block">
-              <div className="h-full rounded-[16px] border border-white/10 bg-[#121214]/95 p-[18px] backdrop-blur">
+              <div className="h-full rounded-[16px] border border-white/10 bg-[#121214] p-[18px]">
                 <p className="text-[16px] font-semibold text-white">What the group members are doing</p>
                 <p className="mt-[2px] text-[12px] text-[#7e7f87]">Activity only shows this group.</p>
                 <div className="mt-[18px] flex flex-col gap-[16px]">
@@ -6177,6 +6178,7 @@ const CheckBadge = () => (
 function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, clear, onLaunch }) {
   const launchNames = useNames()
   const [, tick] = useState(0)
+  const [dismissed, setDismissed] = useState(null) // local hide, keyed by party id
   useEffect(() => {
     const t = setInterval(() => tick((v) => v + 1), 1000)
     return () => clearInterval(t)
@@ -6197,6 +6199,7 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
   }, [launched])
 
   if (!launch || launched) return null
+  if (dismissed && dismissed === launch.id) return null
 
   const isInvitee = (launch.invitees || []).includes(SELF_NAME)
   if (!isHost && !isInvitee) return null // a bystander in the room sees nothing
@@ -6293,6 +6296,9 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
 
   return (
     <div className="pointer-events-auto fixed top-[24px] right-[24px] z-[200] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+      <button onClick={() => setDismissed(launch.id)} aria-label="Dismiss" className="absolute right-[8px] top-[8px] z-[1] flex size-[26px] items-center justify-center rounded-full bg-black/40 text-[#c7c9cb] transition hover:bg-black/60 hover:text-white">
+        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
       <div className="flex">
         {cover && <img alt="" src={cover} className="w-[116px] shrink-0 self-stretch object-cover" />}
         <div className="flex min-w-0 flex-1 flex-col gap-[12px] p-[16px]">{body}</div>
@@ -7377,40 +7383,64 @@ function PrivacyBadge({ kind }) {
   )
 }
 
-function ReviewCard({ r }) {
+function ReviewCard({ r, shots = [] }) {
   const down = r.thumb === 'down'
+  const [open, setOpen] = useState(false)
+  // A review carries its own attached images when written this session; otherwise
+  // show a varied 2–5 slice of the game's gameplay stills so not every card has
+  // the full set. Deterministic per reviewer so the count is stable across renders.
+  const hash = [...(r.name || '')].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7)
+  const pool = r.images && r.images.length ? r.images : shots
+  const pics = r.images && r.images.length ? r.images.slice(0, 5) : pool.slice(0, Math.min(pool.length, 2 + (hash % 4)))
   return (
-    <div className="flex gap-[18px] rounded-[8px] bg-[#1c1c1c] p-[16px]">
-      <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
-      {/* Reviewer meta — name, joined, skill, privacy badge */}
-      <div className="flex w-[200px] shrink-0 flex-col justify-start pt-[2px]">
-        <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
-        <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
-        <p className="text-[13px] text-[#6f7276]">Skill Level: <span className="text-[#9a9ba3]">{r.skill}</span></p>
-        <div className="mt-[12px]"><PrivacyBadge kind={r.privacy} /></div>
-      </div>
-      {/* Review panel — title + body on the left, big thumb on the right */}
-      <div className="flex flex-1 items-center gap-[16px] rounded-[8px] bg-[#121214] p-[18px]">
-        <div className="flex min-w-0 flex-1 flex-col">
-          <p className="text-[24px] font-semibold leading-tight text-white">{r.title}</p>
-          <p
-            className="mt-[8px] max-h-[96px] overflow-hidden text-[15px] leading-[1.5] text-transparent"
-            style={{ backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
-          >
-            {r.body}
-          </p>
-          {r.tags && r.tags.length > 0 && (
-            <div className="mt-[12px] flex flex-wrap gap-[6px]">
-              {r.tags.map((t, i) => (
-                <span key={i} className="rounded-full bg-[#26262a] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb]">{t}</span>
-              ))}
-            </div>
-          )}
+    <div
+      className="flex flex-col rounded-[8px] bg-[#1c1c1c] p-[16px] transition-colors hover:bg-[#202024]"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <div className="flex gap-[18px]">
+        <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
+        {/* Reviewer meta — name, joined, skill, privacy badge */}
+        <div className="flex w-[200px] shrink-0 flex-col justify-start pt-[2px]">
+          <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
+          <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
+          <p className="text-[13px] text-[#6f7276]">Skill Level: <span className="text-[#9a9ba3]">{r.skill}</span></p>
+          <div className="mt-[12px]"><PrivacyBadge kind={r.privacy} /></div>
         </div>
-        <div className="flex shrink-0 items-center pr-[10px] text-white">
-          <ThumbsUpGlyph size={46} className={down ? 'rotate-180' : undefined} />
+        {/* Review panel — title + body on the left, big thumb on the right */}
+        <div className="flex flex-1 items-center gap-[16px] rounded-[8px] bg-[#121214] p-[18px]">
+          <div className="flex min-w-0 flex-1 flex-col">
+            <p className="text-[24px] font-semibold leading-tight text-white">{r.title}</p>
+            <p
+              className={`mt-[8px] overflow-hidden text-[15px] leading-[1.5] transition-[max-height] duration-300 ${open ? 'max-h-[600px] text-[#b9bbc0]' : 'max-h-[96px] text-transparent'}`}
+              style={open ? undefined : { backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
+            >
+              {r.body}
+            </p>
+            {r.tags && r.tags.length > 0 && (
+              <div className="mt-[12px] flex flex-wrap gap-[6px]">
+                {r.tags.map((t, i) => (
+                  <span key={i} className="rounded-full bg-[#26262a] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb]">{t}</span>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center pr-[10px] text-white">
+            <ThumbsUpGlyph size={46} className={down ? 'rotate-180' : undefined} />
+          </div>
         </div>
       </div>
+      {/* Game screenshots revealed under the review as the card expands on hover.
+          Sits in the card but outside the text panel, aligned under the panel. */}
+      {pics.length > 0 && (
+        <div className={`overflow-hidden pl-[340px] transition-all duration-300 ${open ? 'mt-[12px] max-h-[160px] opacity-100' : 'mt-0 max-h-0 opacity-0'}`}>
+          <div className="flex gap-[8px] overflow-x-auto pb-[2px]">
+            {pics.map((src, i) => (
+              <img key={i} src={src} alt="" loading="lazy" className="aspect-[16/9] h-[104px] shrink-0 rounded-[6px] object-cover" />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -7420,7 +7450,7 @@ function ReviewCard({ r }) {
 // paginate the rest six at a time.
 const REVIEWS_PER_PAGE = 6
 const REVIEWS_PREVIEW = 3
-function ReviewsSection({ reviews = REVIEWS }) {
+function ReviewsSection({ reviews = REVIEWS, shots = [] }) {
   const [filter, setFilter] = useState('All') // 'All' | 'Friends Only' | 'Public'
   const [filterOpen, setFilterOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -7515,7 +7545,7 @@ function ReviewsSection({ reviews = REVIEWS }) {
       </div>
 
       <div className="mt-[16px] flex flex-col gap-[16px]">
-        {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} />)}
+        {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} shots={shots} />)}
         {visible.length === 0 && (
           <p className="rounded-[8px] bg-[#1c1c1c] py-[28px] text-center text-[14px] text-[#9a9ba3]">No {eFilter === 'All' ? '' : eFilter.toLowerCase() + ' '}reviews yet.</p>
         )}
@@ -7575,33 +7605,32 @@ function ReviewsSection({ reviews = REVIEWS }) {
   )
 }
 
-// Descriptive tags a reviewer can attach (Steam-style), shown as chips on the
-// posted review.
-const REVIEW_TAG_OPTIONS = ['Best with friends', 'Story Rich', 'Relaxing', 'Challenging', 'Replayable', 'Great soundtrack', 'Funny', 'Beautiful', 'Addictive', 'Grindy', 'Short & sweet', 'Great co-op', 'Atmospheric', 'Casual', 'Competitive', 'Cozy', 'Emotional', 'Fast-paced', 'Immersive', 'Innovative', 'Nostalgic', 'Open world', 'Skill-based', 'Strategic', 'Tactical', 'Underrated', 'Well-optimized', 'Buggy', 'Steep learning curve', 'Family-friendly', 'Retro', 'Wholesome', 'Chaotic', 'Creepy', 'Satisfying', 'Difficult'].sort((a, b) => a.localeCompare(b))
-
-// Compose a review on the detail page — thumb up/down, title, body, tags, and a
-// Friends Only / Public visibility toggle (mirrors the review privacy badges).
+// Compose a review on the detail page — thumb up/down, title, body, optional
+// images, and a Friends Only / Public visibility toggle (mirrors the review
+// privacy badges).
 function WriteReviewModal({ onClose, onSubmit }) {
   const [thumb, setThumb] = useState('up')
   const [privacy, setPrivacy] = useState('Public') // 'Public' | 'Friends Only'
   const [title, setTitle] = useState('')
   const [body, setBody] = useState('')
-  const [tags, setTags] = useState([])
-  const [tagQuery, setTagQuery] = useState('')
-  const toggleTag = (t) => setTags((cur) => cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t])
-  const addTag = (t) => { const v = t.trim(); if (v && !tags.includes(v)) setTags((cur) => [...cur, v]); setTagQuery('') }
-  const tq = tagQuery.trim().toLowerCase()
-  // Available (unselected) tags, filtered by the search box.
-  const tagMatches = REVIEW_TAG_OPTIONS.filter((t) => !tags.includes(t) && (!tq || t.toLowerCase().includes(tq)))
-  // Let the reviewer coin a tag that isn't in the preset list.
-  const canCoin = tq && !REVIEW_TAG_OPTIONS.some((t) => t.toLowerCase() === tq) && !tags.some((t) => t.toLowerCase() === tq)
+  const [images, setImages] = useState([]) // data URLs, up to 5
+  const fileRef = useRef(null)
+  // Read picked image files to data URLs, never exceeding 5 attached.
+  const addImages = (files) => {
+    const pick = Array.from(files || []).filter((f) => f.type.startsWith('image/')).slice(0, 5 - images.length)
+    pick.forEach((f) => {
+      const reader = new FileReader()
+      reader.onload = () => setImages((cur) => (cur.length >= 5 ? cur : [...cur, reader.result]))
+      reader.readAsDataURL(f)
+    })
+  }
   const dlg = useDialog(onClose, { label: 'Write a review' })
   const canPost = title.trim() && body.trim()
   const post = () => {
     if (!canPost) return
     onSubmit({
       name: capName(SELF_NAME), color: SELF, joined: '01/01/2024', skill: 'Intermediate',
-      privacy, thumb, title: title.trim(), body: body.trim(), tags,
+      privacy, thumb, title: title.trim(), body: body.trim(), images,
     })
   }
   const Vis = ({ value, glyph, label }) => (
@@ -7642,48 +7671,32 @@ function WriteReviewModal({ onClose, onSubmit }) {
           <textarea value={body} onChange={(e) => setBody(e.target.value)} placeholder="What did you think?" rows={4} className="w-full resize-none rounded-[8px] bg-[#111214] px-[12px] py-[10px] text-[14px] leading-[1.5] text-white outline-none ring-1 ring-white/10 placeholder:text-[#6f7276] focus:ring-[#5765f2]" />
         </div>
 
-        {/* Tags — searchable, multi-select, with the option to coin your own */}
+        {/* Images — optional, up to 5, shown under the review when it expands */}
         <div>
-          <p className="mb-[8px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Add tags <span className="font-normal normal-case text-[#6f7276]">(optional)</span></p>
-          {/* Selected tags — click to remove */}
-          {tags.length > 0 && (
-            <div className="mb-[10px] flex flex-wrap gap-[8px]">
-              {tags.map((t) => (
-                <button key={t} onClick={() => toggleTag(t)} className="flex items-center gap-[6px] rounded-full bg-white px-[11px] py-[5px] text-[13px] font-semibold text-black transition hover:brightness-95">
-                  {t}
-                  <svg viewBox="0 0 24 24" className="size-[12px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          <p className="mb-[8px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Add images <span className="font-normal normal-case text-[#6f7276]">(optional · up to 5)</span></p>
+          <div className="flex flex-wrap gap-[8px]">
+            {images.map((src, i) => (
+              <div key={i} className="relative">
+                <img src={src} alt="" className="aspect-[16/9] h-[64px] rounded-[6px] object-cover" />
+                <button
+                  onClick={() => setImages((cur) => cur.filter((_, j) => j !== i))}
+                  aria-label="Remove image"
+                  className="absolute -right-[6px] -top-[6px] flex size-[18px] items-center justify-center rounded-full bg-black/80 text-white ring-1 ring-white/20 transition hover:bg-black"
+                >
+                  <svg viewBox="0 0 24 24" className="size-[11px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                 </button>
-              ))}
-            </div>
-          )}
-          {/* Search box */}
-          <div className="kbd-ring flex h-[38px] items-center gap-[8px] rounded-[8px] bg-[#111214] px-[12px] ring-1 ring-white/10">
-            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-            <input
-              value={tagQuery}
-              onChange={(e) => setTagQuery(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); if (tagMatches[0]) toggleTag(tagMatches[0]); else if (canCoin) addTag(tagQuery) } }}
-              placeholder="Search tags…"
-              className="min-w-0 flex-1 bg-transparent text-[14px] text-white outline-none placeholder:text-[#6f7276]"
-            />
-          </div>
-          {/* Matching + coin-your-own options */}
-          <div className="mt-[10px] flex max-h-[132px] flex-wrap gap-[8px] overflow-y-auto">
-            {canCoin && (
-              <button onClick={() => addTag(tagQuery)} className="flex items-center gap-[5px] rounded-full bg-[#1f1f23] px-[11px] py-[5px] text-[13px] font-semibold text-white ring-1 ring-white/25 transition hover:bg-[#2a2a2f]">
-                <svg viewBox="0 0 24 24" className="size-[13px]" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
-                Add “{tagQuery.trim()}”
-              </button>
-            )}
-            {tagMatches.map((t) => (
-              <button key={t} onClick={() => toggleTag(t)} className="rounded-full bg-[#1f1f23] px-[11px] py-[5px] text-[13px] font-semibold text-[#c7c9cb] transition hover:bg-[#2a2a2f] hover:text-white">
-                {t}
-              </button>
+              </div>
             ))}
-            {tagMatches.length === 0 && !canCoin && (
-              <p className="py-[4px] text-[13px] text-[#6f7276]">No tags match “{tagQuery.trim()}”.</p>
+            {images.length < 5 && (
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex aspect-[16/9] h-[64px] items-center justify-center rounded-[6px] border border-dashed border-[#3a3d41] text-[#9a9ba3] transition hover:border-white/40 hover:text-white"
+              >
+                <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14" /></svg>
+              </button>
             )}
           </div>
+          <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={(e) => { addImages(e.target.files); e.target.value = '' }} />
         </div>
 
         {/* Visibility — Public / Friends Only */}
@@ -7858,6 +7871,14 @@ function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs, revie
 function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlist, onShare, onOpen, onPlay, onLibraryTag }) {
   const d = detailFor(gameKey)
   const slides = slidesFor(gameKey, d.image)
+  // A pool of up to 5 actual gameplay stills for this game, revealed under a
+  // review as its card expands on hover. YouTube auto-extracts three frames
+  // (1/2/3.jpg) from ~25/50/75% through a clip — mid-clip = real gameplay, not
+  // the title card the cover/mqdefault thumbnail shows. Pull from both the
+  // gameplay clip and the trailer to reach five, falling back to the cover art.
+  const clipIds = [GAMEPLAY_LANDSCAPE[gameKey], VIDEOS[gameKey]].filter(Boolean)
+  const frames = [...new Set(clipIds.flatMap((id) => [1, 2, 3].map((n) => `https://i.ytimg.com/vi/${id}/${n}.jpg`)))]
+  const reviewShots = (frames.length ? frames : d.image ? [d.image] : []).slice(0, 5)
   // The game's Library facets, so its player + genre tags can jump into a
   // filtered Library. Only Starter-catalog games have these.
   const libGame = STARTER_BY_KEY[gameKey]
@@ -8031,7 +8052,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               <p className="text-[14px] text-[#9a9ba3]">Be the first to suggest this to your PlayList and share what you think.</p>
             </section>
           )}
-          <ReviewsSection reviews={unplayed ? REVIEWS : [...friendReviews, ...REVIEWS]} />
+          <ReviewsSection reviews={unplayed ? REVIEWS : [...friendReviews, ...REVIEWS]} shots={reviewShots} />
 
           {/* Friends Also Liked — compact cinematic cards, consistent with the
               Recommended page. */}
