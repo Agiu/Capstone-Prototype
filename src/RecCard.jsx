@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/index.js'
 
 // Set by Landing to a handler(tagText) that opens the Library filtered by a
@@ -19,6 +19,25 @@ export const SpectateHoverCtx = createContext(null)
 // the mirror. Identity-based (not geometry) so it survives row scrolling.
 export const SpectateAvCtx = createContext(null)
 export const avKey = (title, name) => `${title || ''}::${name || ''}`
+
+// Whether THIS specific card instance should force its hover reveal on the
+// moderator mirror. The publisher sends a per-instance token `title#occurrence`
+// (occurrence = the card's index among same-titled cards in document order), so
+// duplicate cards of the same game no longer all light up together. Each card
+// computes its own occurrence from the DOM; the layout is identical in the live
+// and mirror trees, so the indices line up. Live testers pass spHover=null and
+// skip all of this (real :hover drives the reveal).
+export function useSpectateReveal(ref, title) {
+  const spHover = useContext(SpectateHoverCtx)
+  const [occ, setOcc] = useState(0)
+  useLayoutEffect(() => {
+    if (!spHover || !ref.current) return
+    const same = [...document.querySelectorAll('[data-game]')].filter((n) => n.getAttribute('data-game') === title)
+    const i = same.indexOf(ref.current)
+    setOcc(i < 0 ? 0 : i)
+  })
+  return !!spHover && spHover === `${title}#${occ}`
+}
 
 // Expanded (hover) card width — used to compute how far the row must scroll to
 // keep the whole card on-screen.
@@ -752,13 +771,15 @@ export function RecCard({ avatars, label, image, players, details, video, shared
  */
 export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, mini, onWishlist, onShare, onViewDetails, onOpen, forceReveal, onAddToWheel }) {
   const open = () => (onViewDetails || onOpen)?.(title)
-  // On the moderator's mirror, force the reveal when this card is the one the
-  // participant is hovering (there's no real :hover on the mirror).
-  const spHover = useContext(SpectateHoverCtx)
+  // On the moderator's mirror, force the reveal when this exact card instance is
+  // the one the participant is hovering (per-instance, so duplicate cards of the
+  // same game don't all light up). There's no real :hover on the mirror.
+  const cardRef = useRef(null)
+  const spReveal = useSpectateReveal(cardRef, title)
   // Keyboard parity: focusing the card (or any control inside it) forces the same
   // reveal a mouse hover gives — the trailer + overlay cross-fade in on focus.
   const [kbFocus, setKbFocus] = useState(false)
-  forceReveal = forceReveal || kbFocus || (!!spHover && spHover === title)
+  forceReveal = forceReveal || kbFocus || spReveal
   // `compact` scales the card down a notch; `mini` smaller still (denser rows).
   const CARD_W = mini ? 'w-[300px]' : compact ? 'w-[416px]' : 'w-[520px]'
   const IMG_H = mini ? 'h-[169px]' : compact ? 'h-[234px]' : 'h-[292px]'
@@ -816,6 +837,7 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
       <p className="whitespace-nowrap text-[13px] font-semibold leading-[18px] text-white">{label}</p>
     </div>
     <div
+      ref={cardRef}
       data-game={title}
       onClick={open}
       role="button"
@@ -947,9 +969,11 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
  * and user-tag pills.
  */
 export function PortraitCard({ image, video, title, publisher, released, recommend, avatars, multiplayer, tags = [], belowAvatars, onWishlist, onShare, onOpen, forceReveal }) {
-  // On the moderator's mirror, force the reveal for the hovered card.
-  const spHoverP = useContext(SpectateHoverCtx)
-  forceReveal = forceReveal || (!!spHoverP && spHoverP === title)
+  // On the moderator's mirror, force the reveal for the exact hovered card
+  // instance (per-instance token, so duplicate same-game cards don't co-reveal).
+  const cardRef = useRef(null)
+  const spReveal = useSpectateReveal(cardRef, title)
+  forceReveal = forceReveal || spReveal
   const shortRec = recommend ? recommend.replace(/ (have|has) played recently$/, '') : ''
   // "N friends…" shows up to 2 pics (with a "+" at 3+); a personal line like
   // "Sauhee said …" or "Meera has played recently" shows a single profile pic.
@@ -998,6 +1022,7 @@ export function PortraitCard({ image, video, title, publisher, released, recomme
       </div>
     )}
     <div
+      ref={cardRef}
       data-game={title}
       onClick={() => onOpen?.(title)}
       onMouseEnter={() => setHover(true)}

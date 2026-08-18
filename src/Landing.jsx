@@ -1,6 +1,6 @@
 import { createContext, Fragment, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey } from './RecCard.jsx'
+import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey, useSpectateReveal } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import {
   discordLogo,
@@ -52,6 +52,7 @@ const IS_OVERVIEW = _params.get('overview') === '1'
 const IS_MULTI = _params.get('multi') === '1'
 const IS_LIVE = !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW && !IS_MULTI
 const SPECTATE_PATH = `spectate/${SELF_NAME}` // where this identity's mirror lives
+const NOOP = () => {} // inert handler for spectate (context consumers still render)
 
 /* ── Discord dark palette (from the reference screenshot) ──────────────────
  * A darker-than-default Discord: near-black rail, very dark panel, raised
@@ -1280,7 +1281,10 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
   // A card keeps its hover reveal while its right-click/More menu is open, so
   // moving the cursor onto the menu doesn't collapse the card.
   const titleOf = (k) => STARTER_BY_KEY[k]?.title || CATALOG[k]?.title
-  const revealed = (k) => (IS_SPECTATE && eHover === titleOf(k)) || (!!menuGame && menuGame === titleOf(k))
+  // Card hover-reveal on the mirror is handled per-instance by useSpectateReveal
+  // (so duplicate same-game cards don't co-reveal); here we only force the reveal
+  // for the right-clicked card so its menu target stays highlighted.
+  const revealed = (k) => (!!menuGame && menuGame === titleOf(k))
   const { blends, setBlends, patchBlendById } = useRoomCtx()
   const recs = RECS[SELF_NAME] || RECS.clarisse
 
@@ -1462,7 +1466,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         {/* Curated homepage shelves over the Starter catalog (Figma 937:8591) */}
         <div className="mx-auto w-full max-w-[1400px] px-[40px]">
           {/* Recommended by Your Friends — wide cinematic cards */}
-          <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} menuGame={menuGame} revealTitle={eHover} />
+          <HighlyRatedRow items={HOME_HIGHLY_RATED} onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} menuGame={menuGame} revealTitle={null} />
 
           {/* Trending in Your Communities — compact list */}
           <TrendingRow items={HOME_TRENDING} onOpen={onOpen} onShare={onShare} />
@@ -2239,11 +2243,12 @@ function LibraryTile({ g, onClick, metric, showThumb, onWishlist, onShare }) {
   const onWheelAdd = useContext(WheelCtx)
   // On the moderator's mirror, force this tile's hover reveal when it's the card
   // the participant is hovering.
-  const spHover = useContext(SpectateHoverCtx)
+  const tileRef = useRef(null)
+  const spReveal = useSpectateReveal(tileRef, g.title)
   // Keyboard parity: focusing the tile (or a control in it) forces the same
   // reveal a mouse hover gives (Add-to-Mix / More buttons + ring).
   const [kbFocus, setKbFocus] = useState(false)
-  const fr = kbFocus || (!!spHover && spHover === g.title)
+  const fr = kbFocus || spReveal
   const localArt = g.key && CATALOG[g.key]?.image
   // Cover: local art → Steam capsule → the game's YouTube still (for the handful
   // of console-only games with no Steam page) → gradient fallback.
@@ -2257,6 +2262,7 @@ function LibraryTile({ g, onClick, metric, showThumb, onWishlist, onShare }) {
   }
   return (
     <div
+      ref={tileRef}
       onClick={onClick}
       data-game={g.title}
       role="button"
@@ -4049,7 +4055,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
               <section className="mt-[200px]">
                 <ShelfRow title="Recommended for this PlayList" padTop={30}>
                   {blend.games.map((k) => (
-                    <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={!!eHover && eHover === (CATALOG[k]?.title || STARTER_BY_KEY[k]?.title)} />
+                    <CinematicCard key={k} {...cineCard(k)} mini onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} />
                   ))}
                 </ShelfRow>
               </section>
@@ -6920,9 +6926,12 @@ function GameMessage({ msg, onOpen }) {
 }
 
 function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
-  const { blends, setBlends, patchBlendById } = useRoomCtx()
+  const { blends, setBlends, patchBlendById, online } = useRoomCtx()
   const names = useNames()
   const fname = dispName(friend.name, names)
+  // Presence must match the sidebar DmRow: green "In a call" only while they're
+  // actually heartbeating in the room, otherwise "Offline". (Was hardcoded "Online".)
+  const isOnline = (online || []).includes(friend.name)
   const msgs = useDM(friend.name)
   const [draft, setDraft] = useState('')
   const scrollRef = useRef(null)
@@ -6975,10 +6984,20 @@ function DMPage({ friend, onBack, onOpenBlend, onOpen }) {
   return (
     <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <header className="flex h-[56px] shrink-0 items-center gap-[12px] border-b border-[#1c1d21] px-[20px]">
-        <Avatar color={friend.color} size={30} />
+        <div className="relative shrink-0">
+          <Avatar color={friend.color} size={30} />
+          <span className="absolute -bottom-[1px] -right-[1px] size-[11px] rounded-full" style={{ backgroundColor: isOnline ? D.green : '#43454b', border: '3px solid #0c0c0e' }} />
+        </div>
         <div className="leading-tight">
           <div className="text-[16px] font-semibold text-white">{fname}</div>
-          <div className="text-[12px]" style={{ color: D.mute }}>Online</div>
+          {isOnline ? (
+            <div className="flex items-center gap-[5px] text-[12px] font-medium" style={{ color: D.green }}>
+              <svg viewBox="0 0 24 24" className="size-[13px]" fill="currentColor"><path d="M6.6 10.8a15.6 15.6 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.2.4 2.4.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.4c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.4 0 .8-.2 1l-2.2 2.2z" /></svg>
+              In a call
+            </div>
+          ) : (
+            <div className="text-[12px]" style={{ color: D.mute }}>Offline</div>
+          )}
         </div>
       </header>
 
@@ -8333,7 +8352,7 @@ function OverviewPage() {
           </p>
           <div className="mt-[16px] flex flex-wrap gap-[8px]">
             <a href={OV_LINK('u=1')} className="rounded-[8px] bg-[#5765f2] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Open the prototype ↗</a>
-            <a href={OV_LINK('multi=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Multi-user view ↗</a>
+            <a href={OV_LINK('multi=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Multi view ↗</a>
             <a href={OV_LINK('moderator=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Moderator wall ↗</a>
           </div>
         </header>
@@ -8485,7 +8504,7 @@ function MultiUserView() {
   return (
     <div className="flex h-screen w-screen flex-col bg-[#0b0b0d] text-white">
       <header className="flex items-center gap-[14px] border-b border-[#1c1d21] px-[20px] py-[12px]">
-        <span className="text-[17px] font-bold">Multi-user view</span>
+        <span className="text-[17px] font-bold">Multi view</span>
         <span className="rounded-full bg-[#1c1d21] px-[10px] py-[3px] text-[12px] text-[#b5bac1]">room: {ROOM_ID}</span>
         <span className="hidden text-[12px] text-[#80848e] sm:inline">Each pane is a live, interactive screen — pick who's on it to see both sides at once.</span>
         <div className="ml-auto flex items-center gap-[8px]">
@@ -8493,7 +8512,7 @@ function MultiUserView() {
             <button onClick={addPane} className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">+ Add screen</button>
           )}
           <button onClick={() => setNonce((n) => n + 1)} title="Reload every pane" className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">Reload all</button>
-          <a href={OV_LINK('overview=1')} className="rounded-[8px] border border-[#4e5058] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-white/[0.06]">Overview ↗</a>
+          <a href={OV_LINK('u=1')} className="rounded-[8px] border border-[#4e5058] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-white/[0.06]">Single view ↗</a>
         </div>
       </header>
       <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: `repeat(${panes.length}, minmax(0,1fr))` }}>
@@ -8712,7 +8731,7 @@ export default function Landing() {
   const [jamDismissed, setJamDismissed] = useState(null) // startedAt of a dismissed jam invite
   // Observation plumbing. A live tester publishes their nav + pointer/scroll;
   // a spectator instance reads it back and drives the view read-only.
-  const nav = { blendId, detailKey, dmName, decide, mixesTab, libraryTab, createOpen, wishlistGame, shareGame, prefsForId, playKey, whoOpen, gameMenu, wheelOpen, wheelKeys, wheelLive: jamLive && inJam }
+  const nav = { blendId, detailKey, dmName, decide, mixesTab, libraryTab, createOpen, wishlistGame, shareGame, prefsForId, playKey, whoOpen, gameMenu, wheelOpen, wheelKeys, startPartyOpen, partyGameInit, wheelLive: jamLive && inJam }
   useMirrorPublish(nav)
   const [mirror] = useRoomNode(IS_SPECTATE ? SPECTATE_PATH : 'spectate/__none', null)
   const [cmd] = useRoomNode(IS_LIVE ? `${SPECTATE_PATH}/cmd` : 'spectate/__nocmd', null)
@@ -8792,6 +8811,8 @@ export default function Landing() {
   const eLibraryTab = IS_SPECTATE ? !!mv.libraryTab : libraryTab
   const eWheelOpen = IS_SPECTATE ? !!mv.wheelOpen : wheelOpen
   const eWheelKeys = IS_SPECTATE ? (mv.wheelKeys || []) : wheelKeys
+  const eStartPartyOpen = IS_SPECTATE ? !!mv.startPartyOpen : startPartyOpen
+  const ePartyGameInit = IS_SPECTATE ? (mv.partyGameInit ?? null) : partyGameInit
   // Nav context — defined here (after the mirror `mv`/`eWheelKeys` it reads) so the
   // spectate branch doesn't hit those consts in their temporal dead zone, which
   // was crashing the entire moderator view. The button shows "live" only when I've
@@ -8839,7 +8860,16 @@ export default function Landing() {
           if (el) setGameMenu({ x: e.clientX, y: e.clientY, title: el.getAttribute('data-game') })
         }}
         onMouseOver={IS_LIVE ? (e) => {
-          const gEl = e.target.closest?.('[data-game]'); publishHoverGame(gEl ? gEl.getAttribute('data-game') : null)
+          // Publish a per-instance token (title#occurrence) so the mirror reveals
+          // only the exact card hovered, not every card of the same game.
+          const gEl = e.target.closest?.('[data-game]')
+          let token = null
+          if (gEl) {
+            const t = gEl.getAttribute('data-game')
+            const same = [...document.querySelectorAll('[data-game]')].filter((n) => n.getAttribute('data-game') === t)
+            token = `${t}#${Math.max(0, same.indexOf(gEl))}`
+          }
+          publishHoverGame(token)
           const aEl = e.target.closest?.('[data-av]'); publishHoverAv(aEl ? aEl.getAttribute('data-av') : null)
         } : undefined}
         onMouseLeave={IS_LIVE ? () => { publishHoverGame(null); publishHoverAv(null) } : undefined}
@@ -8847,8 +8877,11 @@ export default function Landing() {
         <SpectateHoverCtx.Provider value={eHoverGame}>
         <SpectateAvCtx.Provider value={eHoverAv}>
         <TagCtx.Provider value={handleCardTag}>
-        <PartyCtx.Provider value={IS_SPECTATE ? null : startPartyForTitle}>
-        <WheelCtx.Provider value={IS_SPECTATE ? null : addToWheel}>
+        {/* In spectate, hand these a no-op (not null) so the cards still render
+            their "Start a party" / "Add to Wheel" hover actions on the moderator
+            wall — the spectate root is pointer-events-none, so they stay inert. */}
+        <PartyCtx.Provider value={IS_SPECTATE ? NOOP : startPartyForTitle}>
+        <WheelCtx.Provider value={IS_SPECTATE ? NOOP : addToWheel}>
         <NavCtx.Provider value={navCtx}>
         <TopBar />
         <div className="group/rail relative flex min-h-0 flex-1 overflow-hidden" style={{ backgroundColor: D.rail }}>
@@ -8897,9 +8930,9 @@ export default function Landing() {
         <div className="absolute bottom-[8px] left-[8px] z-[40] w-[298px]"><VoiceUserPanel /></div>
         </div>
         {eCreateOpen && <CreateBlendModal onClose={() => setCreateOpen(false)} onCreated={(id) => { setCreateOpen(false); setBlendId(id) }} />}
-        {startPartyOpen && !IS_SPECTATE && (
+        {eStartPartyOpen && (
           <StartPartyModal
-            initialGame={partyGameInit}
+            initialGame={ePartyGameInit}
             recent={recentGames}
             onOpenGame={(k) => { setStartPartyOpen(false); setPartyGameInit(null); openGame(k, { party: true }) }}
             onClose={() => { setStartPartyOpen(false); setPartyGameInit(null) }}
