@@ -6127,9 +6127,21 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
   const [gameQ, setGameQ] = useState('') // game search
   const [gameKey, setGameKey] = useState(initialGame?.key || null)
   const dlg = useDialog(onClose, { label: 'Start a party' })
+  // Mirror the modal's internal navigation to the moderator wall, so it advances
+  // with the participant — selected-game vs. search screen, typed queries and
+  // invite checkboxes all follow along (was frozen on whatever it opened at).
+  const [spUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/startPartyUI` : 'spectate/__nospui', {})
+  useEffect(() => {
+    if (!IS_LIVE) return
+    writeRoomPath(`${SPECTATE_PATH}/startPartyUI`, { gameKey: gameKey || null, gameQ: gameQ || '', q: q || '', sel: sel || {} })
+  }, [gameKey, gameQ, q, sel])
+  const eGameKey = IS_SPECTATE ? (spUI?.gameKey ?? null) : gameKey
+  const eGameQ = IS_SPECTATE ? (spUI?.gameQ || '') : gameQ
+  const eQ = IS_SPECTATE ? (spUI?.q || '') : q
+  const eSel = IS_SPECTATE ? (spUI?.sel || {}) : sel
   const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
-  const chosen = Object.keys(sel).filter((n) => sel[n])
-  const gameQuery = gameQ.trim().toLowerCase()
+  const chosen = Object.keys(eSel).filter((n) => eSel[n])
+  const gameQuery = eGameQ.trim().toLowerCase()
   const gameResults = Object.entries(CATALOG)
     .filter(([, v]) => gameQuery && (v.title.toLowerCase().includes(gameQuery) || (v.genre || '').toLowerCase().includes(gameQuery)))
     .slice(0, 6)
@@ -6137,9 +6149,9 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
   const recentEntries = recent.map((k) => [k, CATALOG[k] || STARTER_BY_KEY[k]]).filter(([, v]) => v)
   // Resolve the picked game from the local-art catalog OR the Starter catalog so
   // cards from any shelf can start a party.
-  const selected = gameKey ? (CATALOG[gameKey] || STARTER_BY_KEY[gameKey] || (initialGame?.key === gameKey ? initialGame : null)) : null
+  const selected = eGameKey ? (CATALOG[eGameKey] || STARTER_BY_KEY[eGameKey] || (initialGame?.key === eGameKey ? initialGame : null)) : null
   const gameImg = (k) => CATALOG[k]?.image || (initialGame?.key === k ? initialGame?.image : null) || null
-  const friendFiltered = elsewhere.filter((d) => capName(d.name).toLowerCase().includes(q.toLowerCase()))
+  const friendFiltered = elsewhere.filter((d) => capName(d.name).toLowerCase().includes(eQ.toLowerCase()))
 
   const Row = ({ d }) => (
     <button onClick={() => toggle(d.name)} className="flex w-full items-center gap-[12px] py-[8px]">
@@ -6148,8 +6160,8 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
         <p className="text-[15px] font-semibold text-white">{capName(d.name)}</p>
         <p className="truncate text-[13px] text-[#9a9ba3]">{online.includes(d.name) ? 'On Arcade' : 'Offline'}</p>
       </div>
-      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (sel[d.name] ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
-        {sel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (eSel[d.name] ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+        {eSel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
       </span>
     </button>
   )
@@ -6177,7 +6189,7 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
           <p className="mb-[6px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Game</p>
           {selected ? (
             <div className="flex items-center gap-[12px] rounded-[10px] bg-[#1e1f22] p-[10px]">
-              {gameImg(gameKey) && <img alt="" src={gameImg(gameKey)} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" />}
+              {gameImg(eGameKey) && <img alt="" src={gameImg(eGameKey)} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" />}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[15px] font-semibold text-white">{selected.title}</p>
                 <p className="truncate text-[13px] text-[#9a9ba3]">{capName(selected.genre || 'game')} · {selected.players} players</p>
@@ -6188,7 +6200,7 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
             <>
               <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
                 <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-                <input data-autofocus value={gameQ} onChange={(e) => setGameQ(e.target.value)} placeholder="Search games" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+                <input data-autofocus value={eGameQ} onChange={(e) => setGameQ(e.target.value)} placeholder="Search games" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
               </div>
               {gameQuery ? (
                 /* Typed a query — pick a game for the party. */
@@ -6237,7 +6249,7 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
           {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on right now — search below.</p>}
           <div className="mt-[10px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
             <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+            <input value={eQ} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
           </div>
           {friendFiltered.map((d) => <Row key={d.name} d={d} />)}
         </div>
