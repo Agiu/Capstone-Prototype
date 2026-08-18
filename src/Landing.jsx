@@ -8581,25 +8581,80 @@ function MultiUserView() {
 // The launcher home screen — one shareable link. Pick a player to enter as a
 // single live view, or open the multi view to drive everyone on one screen.
 function LauncherPage() {
-  const link = (q) => `${window.location.pathname}?${q}${roomAmp}`
+  // A room must be named before entering. The typed name is slugged and prefixed
+  // with "guest-" to form the actual room; every entry point carries it, and the
+  // buttons stay disabled until there's a valid name. The name is remembered — via
+  // the URL when returning through a room-carrying link, else localStorage — so it
+  // stays filled in when you leave to a view and come back.
+  const [room, setRoom] = useState(() => {
+    if (ROOM_Q) return ROOM_Q.replace(/^guest-/, '')
+    try { return localStorage.getItem('guestRoom') || '' } catch { return '' }
+  })
+  useEffect(() => { try { localStorage.setItem('guestRoom', room) } catch { /* storage blocked */ } }, [room])
+  const slug = room.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  const roomName = slug ? `guest-${slug}` : ''
+  // The room must be explicitly "set" (Enter or the button) — that commit is what
+  // enables the options and shows the saved confirmation. A stored/URL room starts
+  // already committed. Editing the text after saving un-commits it until re-set.
+  const [savedRoom, setSavedRoom] = useState(roomName)
+  const [editing, setEditing] = useState(false) // field focused → show the editable look
+  const isSaved = !!savedRoom && savedRoom === roomName
+  const confirmed = isSaved && !editing // the green "saved" visual only when not being edited
+  const ready = isSaved
+  const save = () => { if (roomName) setSavedRoom(roomName) }
+  // Only auto-focus the field on a fresh start (no room yet). Returning from a
+  // view with a room already set stays in the entered state — actively blur so a
+  // browser focus-restore can't drop it into editing mode.
+  const inputRef = useRef(null)
+  useEffect(() => {
+    if (!roomName) inputRef.current?.focus()
+    else { inputRef.current?.blur(); setEditing(false) }
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  const link = (q) => (ready ? `${window.location.pathname}?${q}&room=${encodeURIComponent(roomName)}` : undefined)
+  // href only when ready; otherwise the anchor is inert + marked disabled.
+  const gate = (q) => (ready ? { href: link(q) } : { 'aria-disabled': true, tabIndex: -1 })
+  const off = ready ? '' : ' pointer-events-none opacity-40'
   return (
     <div className="no-scrollbar flex min-h-screen w-screen flex-col items-center overflow-y-auto bg-[#0b0b0d] px-[24px] py-[56px] text-white">
       <div className="w-full max-w-[880px]">
         <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#8aa0ff]">Prototype</p>
         <h1 className="mt-[8px] text-[40px] font-bold leading-tight tracking-tight">XBOX ARCADE</h1>
         <p className="mt-[10px] max-w-[560px] text-[16px] leading-relaxed text-[#b5bac1]">
-          Pick a player to explore the prototype as them, or open the multi view to drive
-          every side of a flow on one screen — no need to juggle separate links.
+          Name a room, then pick a player to explore the prototype as them, or open the
+          multi view to drive every side of a flow on one screen.
+        </p>
+
+        {/* Room name — gates everything below */}
+        <p className="mt-[36px] text-[13px] font-semibold uppercase tracking-wide text-[#6d7078]">Room name</p>
+        <div className={'mt-[10px] flex max-w-[440px] items-center gap-[2px] rounded-[10px] border bg-[#111114] px-[14px] py-[12px] transition ' + (confirmed ? 'border-[#9BF00B]/70 bg-[#0d1a06]' : editing ? 'border-[#5765f2]' : 'border-[#1c1d21]')}>
+          <span className="text-[15px] font-semibold text-[#80848e]">guest-</span>
+          <input
+            ref={inputRef}
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
+            onFocus={() => setEditing(true)}
+            onBlur={() => setEditing(false)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); save(); e.currentTarget.blur() } }}
+            placeholder="final-presentation"
+            className="min-w-0 flex-1 bg-transparent text-[15px] font-semibold text-white outline-none placeholder:font-normal placeholder:text-[#6d7078]"
+          />
+        </div>
+        <p className="mt-[8px] text-[13px]">
+          {confirmed
+            ? <span className="inline-flex items-center gap-[5px] font-semibold text-[#9BF00B]"><svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>Entered</span>
+            : roomName
+              ? <span className="text-[#7e7f87]">Press <span className="font-semibold text-white">Enter</span> to lock it in.</span>
+              : <span className="text-[#7e7f87]">Enter a room name to enable the options below.</span>}
         </p>
 
         {/* Enter as a player */}
-        <p className="mt-[40px] text-[13px] font-semibold uppercase tracking-wide text-[#6d7078]">Enter as a player</p>
+        <p className="mt-[32px] text-[13px] font-semibold uppercase tracking-wide text-[#6d7078]">Enter as a player</p>
         <div className="mt-[14px] grid grid-cols-2 gap-[12px] sm:grid-cols-3 lg:grid-cols-5">
           {MULTI_IDENTITIES.map((name) => (
             <a
               key={name}
-              href={link(`u=${NAME_TO_U[name]}`)}
-              className="group flex flex-col items-center gap-[12px] rounded-[16px] border border-[#1c1d21] bg-[#111114] px-[16px] py-[22px] text-center transition hover:border-[#5765f2] hover:bg-[#16171b]"
+              {...gate(`u=${NAME_TO_U[name]}`)}
+              className={'group flex flex-col items-center gap-[12px] rounded-[16px] border border-[#1c1d21] bg-[#111114] px-[16px] py-[22px] text-center transition hover:border-[#5765f2] hover:bg-[#16171b]' + off}
             >
               <Avatar color={COLOR_OF[name]} size={64} className="transition group-hover:scale-105" />
               <span className="text-[16px] font-semibold text-white">{capName(name)}</span>
@@ -8609,24 +8664,24 @@ function LauncherPage() {
 
         {/* Multi view — the headline option */}
         <a
-          href={link('multi=1')}
-          className="mt-[28px] flex items-center gap-[18px] rounded-[18px] border-2 border-[#9BF00B]/55 bg-[#0d1a06] px-[26px] py-[22px] transition hover:border-[#9BF00B] hover:bg-[#112407]"
+          {...gate('multi=1')}
+          className={'group mt-[28px] flex items-center gap-[18px] rounded-[18px] border border-[#1c1d21] bg-[#111114] px-[26px] py-[22px] transition hover:border-[#5765f2] hover:bg-[#16171b]' + off}
         >
-          <span className="flex size-[52px] shrink-0 items-center justify-center rounded-[14px] bg-[#9BF00B]/15 text-[#9BF00B]">
+          <span className="flex size-[52px] shrink-0 items-center justify-center rounded-[14px] bg-white/[0.06] text-white">
             {/* Split panes — represents the side-by-side multi view, distinct from
                 the party glyph used elsewhere. */}
             <svg viewBox="0 0 24 24" className="size-[28px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M12 4v16" /></svg>
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-[22px] font-bold text-[#9BF00B]">Open multi view</span>
-            <span className="block text-[15px] text-[#9db08f]">Every player live, side by side on one screen — drive both sides of a flow at once.</span>
+            <span className="block text-[22px] font-bold text-white">Open multi view</span>
+            <span className="block text-[15px] text-[#9a9ba3]">Every player live, side by side on one screen — drive both sides of a flow at once.</span>
           </span>
-          <span className="shrink-0 text-[22px] text-[#9BF00B]">→</span>
+          <span className="shrink-0 text-[22px] text-[#80848e] transition group-hover:text-white">→</span>
         </a>
 
         {/* Secondary tools */}
         <div className="mt-[24px] flex flex-wrap gap-[10px]">
-          <a href={link('moderator=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Moderator wall ↗</a>
+          <a {...gate('moderator=1')} className={'rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]' + off}>Moderator wall ↗</a>
         </div>
       </div>
     </div>
