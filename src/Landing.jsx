@@ -979,8 +979,8 @@ function BlendCard({ id, name, color, members, games = [], wishlist = [], cover,
           )}
         </div>
       </button>
-      <div className="mt-[10px] flex items-center gap-[6px]">
-        <button onClick={onOpen} onContextMenu={onContext} className="min-w-0 flex-1 truncate text-left text-[16px] font-semibold text-white">{name}</button>
+      <div className="mt-[10px] flex items-start gap-[6px]">
+        <button onClick={onOpen} onContextMenu={onContext} className="min-w-0 flex-1 break-words text-left text-[16px] font-semibold leading-tight text-white">{name}</button>
         {onMenu && (
           <button
             onClick={openMenu}
@@ -3320,6 +3320,10 @@ function usePlaylistDrag(displayKeys, onCommit) {
 
   const onPointerDown = (k) => (e) => {
     if (e.button !== 0) return
+    // Never start a drag from an interactive control inside the tile (vote
+    // buttons, links). Capturing the pointer here would also steal the click,
+    // so a vote tap would fall through to the card's open-game handler.
+    if (e.target.closest('button, a, input, [role="menuitem"]')) return
     const keys = displayKeys.slice()
     const from = keys.indexOf(k); if (from < 0) return
     const cellRects = keys.map((kk) => els.current.get(kk)?.getBoundingClientRect())
@@ -4528,16 +4532,17 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
     const r = el.getBoundingClientRect()
     return { right: Math.min(Math.max(vw - r.right, 12), vw - 300), bottom: Math.min(Math.max(vh - r.top + GAP, 12), vh - 60) }
   }
-  // Position, recomputed fresh on every render (so it stays correct after any
-  // re-render, e.g. toggling a PlayList). Anchors to the "+" button when we have
-  // one, else to the click point, else centered.
-  const styleFor = () => {
+  // Position is frozen once, at open time — anchored to the "+" button if we have
+  // one, else the click point, else centered. Recomputing every render made the
+  // popover jump when toggling a PlayList shifted the card's hover/anchor; scroll
+  // and resize both close it, so a fixed position never goes stale.
+  const [pos] = useState(() => {
     const vw = window.innerWidth, vh = window.innerHeight
     const p = fromEl()
     if (p) return { right: p.right, bottom: p.bottom }
     if (LAST_POINTER.x == null) return { left: '50%', top: '50%', transform: 'translate(-50%,-50%)' }
     return { right: Math.min(Math.max(vw - LAST_POINTER.x, 12), vw - 300), bottom: Math.min(Math.max(vh - LAST_POINTER.y + GAP, 12), vh - 60) }
-  }
+  })
   // The popover is anchored to the card, so following it during scroll would
   // always risk lag. Instead we just close it the moment the page scrolls —
   // rock-solid, nothing to track. (App content scrolls in an inner container,
@@ -4565,7 +4570,7 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
       <div
         ref={ref} role="menu" aria-label="Add to PlayList"
         className={'fixed z-[300] w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]' + (IS_SPECTATE ? ' pointer-events-none select-none' : '')}
-        style={styleFor()}
+        style={pos}
       >
         <div className="flex items-center justify-between gap-[8px] px-[14px] pb-[6px] pt-[6px]">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7e7f87]">Add “{game}” to</p>
