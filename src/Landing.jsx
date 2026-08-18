@@ -7122,24 +7122,38 @@ function useMirrorPublish(nav) {
       if (t - vpThrottle < 120) return
       vpThrottle = t; setVp()
     }
-    let lastMove = 0
+    // Pointer + scroll both use a leading throttle PLUS a trailing flush, so the
+    // final resting position always lands — a plain leading throttle drops the
+    // last event and leaves the mirror parked at a stale spot.
+    let lastMove = 0, moveTrail = null, lastPt = null
+    const pubMove = () => { if (lastPt && ok()) writeRoomPath(`${SPECTATE_PATH}/pointer`, { x: lastPt.x / window.innerWidth, y: lastPt.y / window.innerHeight, t: Date.now() }) }
     const onMove = (e) => {
+      lastPt = { x: e.clientX, y: e.clientY }
+      clearTimeout(moveTrail); moveTrail = setTimeout(pubMove, 60)
       const t = Date.now()
-      if (t - lastMove < 55 || !ok()) return
-      lastMove = t
-      writeRoomPath(`${SPECTATE_PATH}/pointer`, { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight, t })
+      if (t - lastMove < 45) return
+      lastMove = t; pubMove()
     }
     const onDown = (e) => { if (ok()) writeRoomPath(`${SPECTATE_PATH}/click`, { x: e.clientX / window.innerWidth, y: e.clientY / window.innerHeight, t: Date.now() }) }
-    let lastScroll = 0
+    let lastScroll = 0, scrollTrail = null, lastScrollEl = null
     // Scroll containers share the .no-scrollbar class, so the same ordered list
-    // exists on the mirror — index into it to replay the exact scroll.
-    const onScroll = (e) => {
-      const t = Date.now()
-      if (t - lastScroll < 70) return
-      lastScroll = t
-      const i = [...document.querySelectorAll('.no-scrollbar')].indexOf(e.target)
+    // exists on the mirror — index into it to replay. Publish the total count too
+    // so the mirror can skip replay when the DOMs diverge (rather than scrolling
+    // the wrong container).
+    const pubScroll = () => {
+      const el = lastScrollEl
+      if (!el) return
+      const all = [...document.querySelectorAll('.no-scrollbar')]
+      const i = all.indexOf(el)
       if (i < 0) return
-      writeRoomPath(`${SPECTATE_PATH}/scroll`, { i, top: e.target.scrollTop || 0, left: e.target.scrollLeft || 0, t })
+      writeRoomPath(`${SPECTATE_PATH}/scroll`, { i, n: all.length, top: el.scrollTop || 0, left: el.scrollLeft || 0, t: Date.now() })
+    }
+    const onScroll = (e) => {
+      lastScrollEl = e.target
+      clearTimeout(scrollTrail); scrollTrail = setTimeout(pubScroll, 80)
+      const t = Date.now()
+      if (t - lastScroll < 60) return
+      lastScroll = t; pubScroll()
     }
     writeRoomPath(`${SPECTATE_PATH}/ts`, Date.now())
     const beat = setInterval(() => writeRoomPath(`${SPECTATE_PATH}/ts`, Date.now()), 4000)
@@ -7155,6 +7169,7 @@ function useMirrorPublish(nav) {
       window.removeEventListener('pointermove', onMove, true)
       window.removeEventListener('pointerdown', onDown, true)
       window.removeEventListener('scroll', onScroll, true)
+      clearTimeout(moveTrail); clearTimeout(scrollTrail)
       clearInterval(beat)
     }
   }, [])
@@ -8798,9 +8813,13 @@ export default function Landing() {
   // Replay the mirrored scroll onto the matching container.
   useEffect(() => {
     if (!IS_SPECTATE || !mirror?.scroll) return
-    const { i, top, left } = mirror.scroll
+    const { i, top, left, n } = mirror.scroll
     const id = requestAnimationFrame(() => {
-      const el = document.querySelectorAll('.no-scrollbar')[i]
+      const all = document.querySelectorAll('.no-scrollbar')
+      // If the container list diverged from what the participant saw, skip rather
+      // than scroll the wrong element to a bogus position.
+      if (n != null && all.length !== n) return
+      const el = all[i]
       if (el) { el.scrollTop = top; el.scrollLeft = left }
     })
     return () => cancelAnimationFrame(id)
