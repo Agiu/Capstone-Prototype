@@ -3071,7 +3071,9 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
   }
   const Tile = ({ src, label, active, children }) => (
     <button
-      onClick={() => { onSave({ cover: src }); onClose() }}
+      // Default = clear the cover. Send null (not undefined) so Firebase actually
+      // removes the key — an undefined write is rejected and the cover would stick.
+      onClick={() => { onSave({ cover: src ?? null }); onClose() }}
       className={'relative aspect-square overflow-hidden rounded-[12px] ring-2 transition ' + (active ? 'ring-[#5765f2]' : 'ring-transparent hover:ring-white/30')}
     >
       {children}
@@ -3507,18 +3509,6 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
 
   const games = blend.games.map((k) => CATALOG[k]).filter(Boolean)
   const m = blend.members
-  // A blend can hold any number of games, so the feed wraps rather than
-  // assuming there are four to name.
-  const g = (i) => (games.length ? games[i % games.length] : { title: 'a game' })
-  // Activity feed — includes you (green/sauhee) alongside the other members.
-  const feed = [
-    { who: SELF, pre: 'PlayListed', game: g(2).title, when: '1h' },
-    { who: m[1] || SELF, pre: 'finished', game: g(0).title, post: ' and left it five stars', when: '2h' },
-    { who: m[2] || m[1] || SELF, pre: 'is in a', game: g(1).title, post: ' lobby — one seat open', when: 'live' },
-    { who: SELF, pre: 'added', game: g(3).title, post: ' to the group list', when: 'yest' },
-    { who: m[1] || SELF, text: `pinned ${blend.when} as their free window`, when: '2d' },
-  ]
-
   // Rankable group wishlist — shared. Dragging reorders blend.wishlist for
   // everyone in the room (writes the new order to the realtime DB).
   // The PlayList is exactly what the group curates — empty until they add games.
@@ -3646,6 +3636,25 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const guessColor = (key) => { const pool = m.length ? m : [SELF]; return pool[ratingHash(blend.id + key, 'addedby') % pool.length] }
   const adderColor = (key) => { const rec = blend.addedBy?.[key]; return rec ? (COLOR_OF[rec] || guessColor(key)) : guessColor(key) }
   const adderName = (key) => { const rec = blend.addedBy?.[key]; return capName((rec || NAME[guessColor(key)]) || 'a member') }
+  // Activity feed — real member activity: who added which game (newest first),
+  // plus the "created this PlayList" event once the group's list is short enough
+  // to show it. Empty new PlayLists show just the creation line.
+  const relTime = (ts) => {
+    if (!ts) return ''
+    const s = Math.floor((Date.now() - ts) / 1000)
+    if (s < 60) return 'just now'
+    if (s < 3600) return `${Math.max(1, Math.floor(s / 60))}m`
+    if (s < 86400) return `${Math.floor(s / 3600)}h`
+    return `${Math.floor(s / 86400)}d`
+  }
+  const feed = []
+  ;[...(blend.wishlist || [])].reverse().forEach((key) => {
+    const title = CATALOG[key]?.title || STARTER_BY_KEY[key]?.title
+    if (title) feed.push({ who: adderColor(key), pre: 'added', game: title, post: ' to the PlayList', when: '' })
+  })
+  if (blend.createdBy && COLOR_OF[blend.createdBy]) {
+    feed.push({ who: COLOR_OF[blend.createdBy], text: `created ${blend.name}`, when: relTime(blend.createdAt) })
+  }
   // Who voted which way — read live from the shared vote data. Powers the tooltips.
   const voterNames = (key, dir) => {
     const forKey = votesFor(key)
@@ -3779,7 +3788,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                 <p className="text-[16px] font-semibold text-white">What the group members are doing</p>
                 <p className="mt-[2px] text-[12px] text-[#7e7f87]">Activity only shows this group.</p>
                 <div className="mt-[18px] flex flex-col gap-[16px]">
-                  {feed.slice(0, 3).map((f, i) => <FeedRow key={i} {...f} onOpen={onOpen} />)}
+                  {feed.length === 0
+                    ? <p className="text-[13px] text-[#7e7f87]">No activity yet — add a game to get things going.</p>
+                    : feed.slice(0, 3).map((f, i) => <FeedRow key={i} {...f} onOpen={onOpen} />)}
                 </div>
               </div>
             </aside>
@@ -4208,6 +4219,8 @@ function WhosOnModal({ onClose, onCreated }) {
       name,
       color: BLEND_COLORS[blends.length % BLEND_COLORS.length],
       when: 'just now',
+      createdBy: SELF_NAME,     // for the activity feed's "created this PlayList" entry
+      createdAt: Date.now(),
       members: [SELF],
       invited: chosen.map((f) => f.color),
       games,
@@ -4418,6 +4431,8 @@ function CreateBlendModal({ onClose, onCreated }) {
       name,
       color: BLEND_COLORS[blends.length % BLEND_COLORS.length],
       when: 'just now',
+      createdBy: SELF_NAME,     // for the activity feed's "created this PlayList" entry
+      createdAt: Date.now(),
       // Only the creator is a member up front; invitees join once they accept.
       members: [SELF],
       invited: selectedFriends.map((f) => f.color),

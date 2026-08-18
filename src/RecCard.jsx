@@ -901,7 +901,9 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
             {players}
           </LightPill>
           {genre && <LightPill tagValue={genre}>{genre}</LightPill>}
-          {genre2 && <LightPill tagValue={genre2}>{genre2}</LightPill>}
+          {/* mini cards (the dense "Recommended for this PlayList" row) stay at two
+              tags — players + genre — so a stray second genre never crowds them. */}
+          {genre2 && !mini && <LightPill tagValue={genre2}>{genre2}</LightPill>}
         </div>
       </div>
 
