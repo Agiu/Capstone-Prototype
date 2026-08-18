@@ -50,7 +50,10 @@ const IS_OVERVIEW = _params.get('overview') === '1'
 // panes, each impersonating a different tester in the same room — so one person
 // can drive both the sender and recipient sides of a flow at once.
 const IS_MULTI = _params.get('multi') === '1'
-const IS_LIVE = !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW && !IS_MULTI
+// No player picked and no special mode → the launcher home screen: pick a player
+// to enter as a single view, or open the multi view. One link to share, not five.
+const IS_LAUNCH = !_u && !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW && !IS_MULTI
+const IS_LIVE = !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW && !IS_MULTI && !IS_LAUNCH
 const SPECTATE_PATH = `spectate/${SELF_NAME}` // where this identity's mirror lives
 const NOOP = () => {} // inert handler for spectate (context consumers still render)
 
@@ -8539,7 +8542,7 @@ function MultiUserView() {
             <button onClick={addPane} className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">+ Add screen</button>
           )}
           <button onClick={() => setNonce((n) => n + 1)} title="Reload every pane" className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">Reload all</button>
-          <a href={OV_LINK('u=1')} className="rounded-[8px] border border-[#4e5058] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-white/[0.06]">Single view ↗</a>
+          <a href={window.location.pathname} className="rounded-[8px] border border-[#4e5058] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-white/[0.06]">Home ↗</a>
         </div>
       </header>
       <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: `repeat(${panes.length}, minmax(0,1fr))` }}>
@@ -8569,7 +8572,62 @@ function MultiUserView() {
   )
 }
 
+// The launcher home screen — one shareable link. Pick a player to enter as a
+// single live view, or open the multi view to drive everyone on one screen.
+function LauncherPage() {
+  const link = (q) => `${window.location.pathname}?${q}`
+  return (
+    <div className="no-scrollbar flex min-h-screen w-screen flex-col items-center overflow-y-auto bg-[#0b0b0d] px-[24px] py-[56px] text-white">
+      <div className="w-full max-w-[880px]">
+        <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#8aa0ff]">Prototype</p>
+        <h1 className="mt-[8px] text-[40px] font-bold leading-tight tracking-tight">XBOX ARCADE × Discord</h1>
+        <p className="mt-[10px] max-w-[560px] text-[16px] leading-relaxed text-[#b5bac1]">
+          Pick a player to explore the prototype as them, or open the multi view to drive
+          every side of a flow on one screen — no need to juggle separate links.
+        </p>
+
+        {/* Enter as a player */}
+        <p className="mt-[40px] text-[13px] font-semibold uppercase tracking-wide text-[#6d7078]">Enter as a player</p>
+        <div className="mt-[14px] grid grid-cols-2 gap-[12px] sm:grid-cols-3 lg:grid-cols-5">
+          {MULTI_IDENTITIES.map((name) => (
+            <a
+              key={name}
+              href={link(`u=${NAME_TO_U[name]}`)}
+              className="group flex flex-col items-center gap-[12px] rounded-[16px] border border-[#1c1d21] bg-[#111114] px-[16px] py-[22px] text-center transition hover:border-[#5765f2] hover:bg-[#16171b]"
+            >
+              <Avatar color={COLOR_OF[name]} size={64} className="transition group-hover:scale-105" />
+              <span className="text-[16px] font-semibold text-white">{capName(name)}</span>
+            </a>
+          ))}
+        </div>
+
+        {/* Multi view — the headline option */}
+        <a
+          href={link('multi=1')}
+          className="mt-[28px] flex items-center gap-[18px] rounded-[18px] border-2 border-[#9BF00B]/55 bg-[#0d1a06] px-[26px] py-[22px] transition hover:border-[#9BF00B] hover:bg-[#112407]"
+        >
+          <span className="flex size-[52px] shrink-0 items-center justify-center rounded-[14px] bg-[#9BF00B]/15">
+            <PartyGlyph size={30} className="text-[#9BF00B]" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-[22px] font-bold text-[#9BF00B]">Open multi view</span>
+            <span className="block text-[15px] text-[#9db08f]">Every player live, side by side on one screen — drive both sides of a flow at once.</span>
+          </span>
+          <span className="shrink-0 text-[22px] text-[#9BF00B]">→</span>
+        </a>
+
+        {/* Secondary tools */}
+        <div className="mt-[24px] flex flex-wrap gap-[10px]">
+          <a href={link('moderator=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Moderator wall ↗</a>
+          <a href={link('overview=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Prototype overview ↗</a>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
+  if (IS_LAUNCH) return <LauncherPage />
   if (IS_OVERVIEW) return <OverviewPage />
   if (IS_MULTI) return <MultiUserView />
   if (IS_MODERATOR) return <ModeratorWall />
