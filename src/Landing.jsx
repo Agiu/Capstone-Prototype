@@ -56,6 +56,11 @@ const IS_LAUNCH = !_u && !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW && !IS_MU
 const IS_LIVE = !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW && !IS_MULTI && !IS_LAUNCH
 const SPECTATE_PATH = `spectate/${SELF_NAME}` // where this identity's mirror lives
 const NOOP = () => {} // inert handler for spectate (context consumers still render)
+// Carry the current room through launcher/home links, so a shared room (e.g.
+// ?room=final-presentation) is kept when entering a player, multi view or wall.
+const ROOM_Q = _params.get('room')
+const roomAmp = ROOM_Q ? `&room=${encodeURIComponent(ROOM_Q)}` : ''
+const roomQonly = ROOM_Q ? `?room=${encodeURIComponent(ROOM_Q)}` : ''
 
 /* ── Discord dark palette (from the reference screenshot) ──────────────────
  * A darker-than-default Discord: near-black rail, very dark panel, raised
@@ -7254,23 +7259,9 @@ function ModeratorTile({ name, displayName, onRename, color, vp, online, view, s
           <span className="absolute -bottom-[1px] -right-[1px] size-[9px] rounded-full" style={{ backgroundColor: online ? '#9BF00B' : '#5c5e66', border: '2px solid #111114' }} />
         </span>
         <div className="min-w-0 flex-1">
-          {/* Editable display name — the moderator can rename each participant;
-              the name syncs to the room and shows across that person's screens.
-              Styled as an obvious input (border + pencil) so it reads as editable. */}
-          <label className="mb-[2px] block text-[9px] font-bold uppercase tracking-wide text-[#6d7078]">Display name · click to edit</label>
-          <div className="group/name flex items-center gap-[6px] rounded-[6px] bg-[#1c1d21] px-[8px] py-[3px] ring-1 ring-white/15 transition hover:ring-white/30 focus-within:bg-[#26272b] focus-within:ring-[#5765f2]">
-            <input
-              key={displayName}
-              defaultValue={displayName}
-              onBlur={(e) => onRename(e.target.value.trim())}
-              onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
-              placeholder="Add a name…"
-              title="Rename this participant"
-              className="w-full min-w-0 bg-transparent text-[14px] font-semibold leading-tight text-white outline-none placeholder:font-normal placeholder:text-[#6d7078]"
-            />
-            <svg viewBox="0 0 24 24" className="size-[13px] shrink-0 text-[#80848e] transition group-hover/name:text-[#c7c9cb] group-focus-within/name:text-[#8b95f6]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
-          </div>
-          <div className="mt-[3px] truncate px-[1px] text-[11px] text-[#80848e]">{online ? describeView(view) : 'offline'}</div>
+          {/* Read-only display name — the moderator observes, but can't rename. */}
+          <p className="truncate text-[15px] font-semibold leading-tight text-white">{displayName || capName(name)}</p>
+          <div className="mt-[3px] truncate text-[11px] text-[#80848e]">{online ? describeView(view) : 'offline'}</div>
         </div>
         <div className="ml-auto flex shrink-0 gap-[6px]">
           <button onClick={onHide} title={hidden ? 'Show this participant' : 'Hide this participant'} className="rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">{hidden ? 'Show' : 'Hide'}</button>
@@ -8542,7 +8533,7 @@ function MultiUserView() {
             <button onClick={addPane} className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">+ Add screen</button>
           )}
           <button onClick={() => setNonce((n) => n + 1)} title="Reload every pane" className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">Reload all</button>
-          <a href={window.location.pathname} className="rounded-[8px] border border-[#4e5058] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-white/[0.06]">Home ↗</a>
+          <a href={`${window.location.pathname}${roomQonly}`} className="rounded-[8px] border border-[#4e5058] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-white/[0.06]">Home ↗</a>
         </div>
       </header>
       <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: `repeat(${panes.length}, minmax(0,1fr))` }}>
@@ -8575,12 +8566,12 @@ function MultiUserView() {
 // The launcher home screen — one shareable link. Pick a player to enter as a
 // single live view, or open the multi view to drive everyone on one screen.
 function LauncherPage() {
-  const link = (q) => `${window.location.pathname}?${q}`
+  const link = (q) => `${window.location.pathname}?${q}${roomAmp}`
   return (
     <div className="no-scrollbar flex min-h-screen w-screen flex-col items-center overflow-y-auto bg-[#0b0b0d] px-[24px] py-[56px] text-white">
       <div className="w-full max-w-[880px]">
         <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#8aa0ff]">Prototype</p>
-        <h1 className="mt-[8px] text-[40px] font-bold leading-tight tracking-tight">XBOX ARCADE × Discord</h1>
+        <h1 className="mt-[8px] text-[40px] font-bold leading-tight tracking-tight">XBOX ARCADE</h1>
         <p className="mt-[10px] max-w-[560px] text-[16px] leading-relaxed text-[#b5bac1]">
           Pick a player to explore the prototype as them, or open the multi view to drive
           every side of a flow on one screen — no need to juggle separate links.
@@ -8606,8 +8597,10 @@ function LauncherPage() {
           href={link('multi=1')}
           className="mt-[28px] flex items-center gap-[18px] rounded-[18px] border-2 border-[#9BF00B]/55 bg-[#0d1a06] px-[26px] py-[22px] transition hover:border-[#9BF00B] hover:bg-[#112407]"
         >
-          <span className="flex size-[52px] shrink-0 items-center justify-center rounded-[14px] bg-[#9BF00B]/15">
-            <PartyGlyph size={30} className="text-[#9BF00B]" />
+          <span className="flex size-[52px] shrink-0 items-center justify-center rounded-[14px] bg-[#9BF00B]/15 text-[#9BF00B]">
+            {/* Split panes — represents the side-by-side multi view, distinct from
+                the party glyph used elsewhere. */}
+            <svg viewBox="0 0 24 24" className="size-[28px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M12 4v16" /></svg>
           </span>
           <span className="min-w-0 flex-1">
             <span className="block text-[22px] font-bold text-[#9BF00B]">Open multi view</span>
@@ -8619,7 +8612,6 @@ function LauncherPage() {
         {/* Secondary tools */}
         <div className="mt-[24px] flex flex-wrap gap-[10px]">
           <a href={link('moderator=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Moderator wall ↗</a>
-          <a href={link('overview=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Prototype overview ↗</a>
         </div>
       </div>
     </div>
@@ -8761,7 +8753,11 @@ export default function Landing() {
     const pageEl = el.lastElementChild || el
     const target = pageEl.querySelector('[data-page-heading], h1, h2') || pageEl
     if (!target.hasAttribute('tabindex')) target.setAttribute('tabindex', '-1')
-    target.focus()
+    // Focus for the screen-reader announcement, but suppress the visible ring —
+    // a static heading isn't an interactive control, so the blue box just reads
+    // as an unwanted selection when landing on a page.
+    target.classList.add('focus-ring-none')
+    target.focus({ preventScroll: true })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [blendId, detailKey, dmName, decide, mixesTab, libraryTab])
   const applyView = (v) => {
