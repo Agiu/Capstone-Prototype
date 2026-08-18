@@ -46,7 +46,11 @@ const IS_MODERATOR = _params.get('moderator') === '1'
 const IS_SPECTATE = _params.get('spectate') === '1'
 // ?overview=1 → a solo feature-tour + notification simulator (no room needed).
 const IS_OVERVIEW = _params.get('overview') === '1'
-const IS_LIVE = !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW
+// ?multi=1 → a dual-screen "multi-user view": two (or more) live, interactive
+// panes, each impersonating a different tester in the same room — so one person
+// can drive both the sender and recipient sides of a flow at once.
+const IS_MULTI = _params.get('multi') === '1'
+const IS_LIVE = !IS_MODERATOR && !IS_SPECTATE && !IS_OVERVIEW && !IS_MULTI
 const SPECTATE_PATH = `spectate/${SELF_NAME}` // where this identity's mirror lives
 
 /* ── Discord dark palette (from the reference screenshot) ──────────────────
@@ -930,13 +934,23 @@ function BlendCard({ id, name, color, members, games = [], wishlist = [], cover,
   // Games inside this PlayList — shown in a popover on hover. Mirror the actual
   // shared PlayList (`wishlist`), which is what the detail page's grid renders,
   // so the peek always matches the real list (not the recommended `games` set).
-  const [peek, setPeek] = useState(false)
+  const [peekLocal, setPeekLocal] = useState(false)
+  // Mirror the cover-hover peek to the moderator wall: publish which card is
+  // peeked (one at a time across the app) and let a spectate instance force it.
+  const [peekNode] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/peekBlend` : 'spectate/__nopeek', null)
+  const firstPeek = useRef(true)
+  useEffect(() => {
+    if (!IS_LIVE) return
+    if (firstPeek.current) { firstPeek.current = false; if (!peekLocal) return } // skip the mount-time false
+    writeRoomPath(`${SPECTATE_PATH}/peekBlend`, peekLocal ? (id || name) : null)
+  }, [peekLocal, id, name])
+  const peek = IS_SPECTATE ? peekNode === (id || name) : peekLocal
   const gameTitles = wishlist.map((k) => CATALOG[k]?.title || STARTER_BY_KEY[k]?.title).filter(Boolean)
   return (
     <div className="group relative flex w-[200px] shrink-0 flex-col text-left">
       {/* The game-list popover only opens while hovering the thumbnail or title —
           not the member avatars below. */}
-      <div className="relative" onMouseEnter={() => setPeek(true)} onMouseLeave={() => setPeek(false)}>
+      <div className="relative" onMouseEnter={() => setPeekLocal(true)} onMouseLeave={() => setPeekLocal(false)}>
       {/* Peek popover: a passive preview of the games inside this PlayList,
           anchored to the right of the cover. Fully non-interactive — it's just a
           glance, and it closes the instant the pointer leaves the cover/title
@@ -7494,9 +7508,8 @@ function PrivacyBadge({ kind }) {
   )
 }
 
-function ReviewCard({ r, shots = [] }) {
+function ReviewCard({ r, shots = [], open = false, onHoverChange }) {
   const down = r.thumb === 'down'
-  const [open, setOpen] = useState(false)
   // A review carries its own attached images when written this session; otherwise
   // show a varied 2–5 slice of the game's gameplay stills so not every card has
   // the full set. Deterministic per reviewer so the count is stable across renders.
@@ -7508,8 +7521,8 @@ function ReviewCard({ r, shots = [] }) {
   return (
     <div
       className="flex flex-col rounded-[8px] bg-[#1c1c1c] p-[16px] transition-colors hover:bg-[#202024]"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => onHoverChange?.(true)}
+      onMouseLeave={() => onHoverChange?.(false)}
     >
       <div className="flex gap-[18px]">
         <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
@@ -7575,10 +7588,14 @@ function ReviewsSection({ reviews = REVIEWS, shots = [] }) {
   // Publish the reviews list state (filter, pagination, composer, session
   // reviews) so the moderator's mirror matches what the participant sees.
   const [rUI] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/reviewsUI` : 'spectate/__norui', {})
+  // Which review is hovered/expanded — owned here (not per-card) so it can be
+  // published and the mirror expands the same one.
+  const [hoverIdx, setHoverIdx] = useState(null)
   useEffect(() => {
     if (!IS_LIVE) return
-    writeRoomPath(`${SPECTATE_PATH}/reviewsUI`, { filter, filterOpen: !!filterOpen, expanded: !!expanded, page, writing: !!writing, added: added || [] })
-  }, [filter, filterOpen, expanded, page, writing, added])
+    writeRoomPath(`${SPECTATE_PATH}/reviewsUI`, { filter, filterOpen: !!filterOpen, expanded: !!expanded, page, writing: !!writing, added: added || [], hoverIdx: hoverIdx ?? null })
+  }, [filter, filterOpen, expanded, page, writing, added, hoverIdx])
+  const eHoverIdx = IS_SPECTATE ? (rUI?.hoverIdx ?? null) : hoverIdx
   const eFilter = IS_SPECTATE ? (rUI?.filter || 'All') : filter
   const eFilterOpen = IS_SPECTATE ? !!rUI?.filterOpen : filterOpen
   const filterPop = usePopover(eFilterOpen, () => setFilterOpen(false), { menu: true })
@@ -7658,7 +7675,7 @@ function ReviewsSection({ reviews = REVIEWS, shots = [] }) {
       </div>
 
       <div className="mt-[16px] flex flex-col gap-[16px]">
-        {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} shots={shots} />)}
+        {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} shots={shots} open={eHoverIdx === i} onHoverChange={(v) => { if (!IS_LIVE) return; setHoverIdx(v ? i : (cur) => (cur === i ? null : cur)) }} />)}
         {visible.length === 0 && (
           <p className="rounded-[8px] bg-[#1c1c1c] py-[28px] text-center text-[14px] text-[#9a9ba3]">No {eFilter === 'All' ? '' : eFilter.toLowerCase() + ' '}reviews yet.</p>
         )}
@@ -8316,6 +8333,7 @@ function OverviewPage() {
           </p>
           <div className="mt-[16px] flex flex-wrap gap-[8px]">
             <a href={OV_LINK('u=1')} className="rounded-[8px] bg-[#5765f2] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Open the prototype ↗</a>
+            <a href={OV_LINK('multi=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Multi-user view ↗</a>
             <a href={OV_LINK('moderator=1')} className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Moderator wall ↗</a>
           </div>
         </header>
@@ -8426,8 +8444,88 @@ function OverviewPage() {
   )
 }
 
+// Scales a full-size app iframe to FILL its pane's width (and fill height by
+// asking the app to render taller), so each live pane looks like a zoomed-out
+// desktop rather than a letterboxed thumbnail. Pointer events map through the
+// transform, so the pane stays fully interactive.
+function LiveFrame({ src, baseW = 1180 }) {
+  const ref = useRef(null)
+  const [box, setBox] = useState({ w: 0, h: 0 })
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const measure = () => setBox({ w: el.clientWidth, h: el.clientHeight })
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    measure()
+    return () => ro.disconnect()
+  }, [])
+  const scale = box.w ? box.w / baseW : 0
+  const h = scale ? box.h / scale : 0
+  return (
+    <div ref={ref} className="relative size-full overflow-hidden bg-black">
+      {scale > 0 && (
+        <iframe title="live pane" src={src} className="absolute left-0 top-0 origin-top-left border-0" style={{ width: baseW, height: h, transform: `scale(${scale})` }} />
+      )}
+    </div>
+  )
+}
+
+// Dual-screen "multi-user view": two or more live, interactive panes, each
+// impersonating a different tester in the SAME room. One person can drive both
+// sides of a flow (sender + recipient) at once — no need to share several links.
+const MULTI_IDENTITIES = ['clarisse', 'caleb', 'sauhee', 'meera', 'yessenia']
+function MultiUserView() {
+  const [panes, setPanes] = useState(['clarisse', 'caleb'])
+  const [nonce, setNonce] = useState(0) // bump to hard-reload every pane
+  const liveSrc = (name) => `${window.location.pathname}?u=${NAME_TO_U[name] || name}&room=${ROOM_ID}&n=${nonce}`
+  const setPane = (i, name) => setPanes((p) => p.map((x, j) => (j === i ? name : x)))
+  const addPane = () => setPanes((p) => (p.length < 4 ? [...p, MULTI_IDENTITIES.find((n) => !p.includes(n)) || 'clarisse'] : p))
+  const removePane = (i) => setPanes((p) => (p.length > 1 ? p.filter((_, j) => j !== i) : p))
+  return (
+    <div className="flex h-screen w-screen flex-col bg-[#0b0b0d] text-white">
+      <header className="flex items-center gap-[14px] border-b border-[#1c1d21] px-[20px] py-[12px]">
+        <span className="text-[17px] font-bold">Multi-user view</span>
+        <span className="rounded-full bg-[#1c1d21] px-[10px] py-[3px] text-[12px] text-[#b5bac1]">room: {ROOM_ID}</span>
+        <span className="hidden text-[12px] text-[#80848e] sm:inline">Each pane is a live, interactive screen — pick who's on it to see both sides at once.</span>
+        <div className="ml-auto flex items-center gap-[8px]">
+          {panes.length < 4 && (
+            <button onClick={addPane} className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">+ Add screen</button>
+          )}
+          <button onClick={() => setNonce((n) => n + 1)} title="Reload every pane" className="rounded-[8px] bg-[#2b2d31] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-[#35373c]">Reload all</button>
+          <a href={OV_LINK('overview=1')} className="rounded-[8px] border border-[#4e5058] px-[12px] py-[6px] text-[13px] font-semibold transition hover:bg-white/[0.06]">Overview ↗</a>
+        </div>
+      </header>
+      <div className="grid min-h-0 flex-1" style={{ gridTemplateColumns: `repeat(${panes.length}, minmax(0,1fr))` }}>
+        {panes.map((name, i) => (
+          <div key={i} className={'flex min-h-0 min-w-0 flex-col ' + (i < panes.length - 1 ? 'border-r border-[#1c1d21]' : '')}>
+            <div className="flex items-center gap-[9px] border-b border-[#1c1d21] px-[12px] py-[8px]">
+              <Avatar color={COLOR_OF[name]} size={22} />
+              <label className="text-[11px] font-bold uppercase tracking-wide text-[#6d7078]">Screen {i + 1}</label>
+              <select
+                value={name}
+                onChange={(e) => setPane(i, e.target.value)}
+                className="rounded-[6px] bg-[#1c1d21] px-[8px] py-[4px] text-[13px] font-semibold text-white outline-none ring-1 ring-white/15 transition hover:ring-white/30 focus:ring-[#5765f2]"
+              >
+                {MULTI_IDENTITIES.map((n) => <option key={n} value={n}>{capName(n)}</option>)}
+              </select>
+              {panes.length > 1 && (
+                <button onClick={() => removePane(i)} aria-label={`Remove screen ${i + 1}`} className="ml-auto rounded-[6px] bg-[#2b2d31] px-[8px] py-[4px] text-[11px] font-semibold transition hover:bg-[#35373c]">Remove</button>
+              )}
+            </div>
+            <div className="relative min-h-0 flex-1">
+              <LiveFrame key={`${name}-${nonce}`} src={liveSrc(name)} />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export default function Landing() {
   if (IS_OVERVIEW) return <OverviewPage />
+  if (IS_MULTI) return <MultiUserView />
   if (IS_MODERATOR) return <ModeratorWall />
   const room = useRoom({ self: IS_LIVE ? SELF_NAME : null, seedBlends: SEED_BLENDS })
   const blends = room.blends || SEED_BLENDS
