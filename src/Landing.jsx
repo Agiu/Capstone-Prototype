@@ -1,7 +1,9 @@
 import { createContext, Fragment, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey, useSpectateReveal } from './RecCard.jsx'
+import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, START_PARTY, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey, useSpectateReveal } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
+import { REDESIGN, setRedesign, rd } from './redesign.js'
+import { AsciiVideo } from './AsciiVideo.jsx'
 import {
   discordLogo,
   xboxSprite,
@@ -94,8 +96,40 @@ function Avatar({ color, size = 32, className, style }) {
   )
 }
 
+// Spin-wheel accent lines + notch (inline styles, so the CSS green remap can't
+// reach them). Redesign: the one Xbox lime instead of the older #3dbf1e.
+const SPIN_GREEN = rd('#3dbf1e', '#9BF00B')
+const SPIN_LINE = rd(
+  'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))',
+  'linear-gradient(90deg, rgba(155,240,11,0), #9BF00B 15%, #9BF00B 85%, rgba(155,240,11,0))',
+)
+const SPIN_GLOW = rd('0 0 18px rgba(61,191,30,0.8)', '0 0 18px rgba(155,240,11,0.6)')
+const SPIN_NOTCH_GLOW = rd('drop-shadow(0 0 8px rgba(61,191,30,0.7))', 'drop-shadow(0 0 8px rgba(155,240,11,0.6))')
+
 /** Xbox logo cropped from the sprite sheet, matching the store view. */
 function XboxLogo({ size }) {
+  // Redesign: recolour to the project's Xbox lime. The sprite's X is cut out as
+  // transparency, so it works as a mask — same crop, filled with #9BF00B.
+  if (REDESIGN) return (
+    <div
+      role="img"
+      aria-label="Xbox"
+      className="shrink-0"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: '#9BF00B',
+        WebkitMaskImage: `url(${xboxSprite})`,
+        maskImage: `url(${xboxSprite})`,
+        WebkitMaskSize: '331.43% 100.24%',
+        maskSize: '331.43% 100.24%',
+        WebkitMaskPosition: '0 50%',
+        maskPosition: '0 50%',
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+      }}
+    />
+  )
   return (
     <div className="relative shrink-0 overflow-hidden" style={{ width: size, height: size }}>
       <img
@@ -886,6 +920,52 @@ const COVER_ICONS = [
   'M10 3h4v7h7v4h-7v7h-4v-7H3v-4h7z',                                                         // plus
   'M3 7l4 4 5-7 5 7 4-4v11H3z',                                                               // crown
 ]
+// Redesign: one colour that represents a PlayList's art, as [r, g, b] 0–1 —
+// used to tint its ASCII banner. A custom cover → its dominant vivid colour
+// (pixels weighted by saturation × brightness, so dark/grey areas don't wash
+// it out); the default cover → the same hue its glyph pattern uses.
+function hslRgb(h, s, l) {
+  const k = (n) => (n + h / 30) % 12
+  const a = s * Math.min(l, 1 - l)
+  const f = (n) => l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1))
+  return [f(0), f(8), f(4)]
+}
+function useCoverTint(blend) {
+  const seed = blend?.id || blend?.name || ''
+  const cover = blend?.cover || null
+  const [fromImg, setFromImg] = useState(null)
+  useEffect(() => {
+    setFromImg(null)
+    if (!REDESIGN || !cover) return
+    let live = true
+    const img = new Image()
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas')
+        c.width = c.height = 32
+        const g = c.getContext('2d', { willReadFrequently: true })
+        g.drawImage(img, 0, 0, 32, 32)
+        const d = g.getImageData(0, 0, 32, 32).data
+        let r = 0, gr = 0, b = 0, w = 0
+        for (let i = 0; i < d.length; i += 4) {
+          const R = d[i] / 255, G = d[i + 1] / 255, B = d[i + 2] / 255
+          const mx = Math.max(R, G, B), mn = Math.min(R, G, B)
+          const wt = (mx - mn) * mx + 0.002 // saturation × value, tiny floor for greyscale art
+          r += R * wt; gr += G * wt; b += B * wt; w += wt
+        }
+        const avg = [r / w, gr / w, b / w]
+        const m = Math.max(...avg) || 1
+        if (live) setFromImg(avg.map((v) => v / m)) // full brightness; the shader shades it
+      } catch { /* cross-origin art — fall through to the seeded hue */ }
+    }
+    img.src = cover
+    return () => { live = false }
+  }, [cover])
+  if (!REDESIGN) return null
+  if (cover) return fromImg
+  return hslRgb(coverHash(seed) % 360, 0.52, 0.53)
+}
+
 function DefaultCover({ seed = '' }) {
   const h = coverHash(seed)
   const baseHue = h % 360
@@ -1040,7 +1120,7 @@ function CreateBlendCard({ onClick }) {
     <button onClick={onClick} className="group flex w-[200px] shrink-0 flex-col text-left">
       {/* Dark tile with a green ring + the same plus glyph as the "Add to PlayList"
           button (Figma 1135:1711). */}
-      <div className="flex size-[200px] items-center justify-center rounded-[20px] bg-[#0f0f12] ring-[1.5px] ring-[#9BF00B]/35 transition duration-200 group-hover:-translate-y-[3px] group-hover:ring-[#9BF00B]/70">
+      <div data-shelf-art className="flex size-[200px] items-center justify-center rounded-[20px] bg-[#0f0f12] ring-[1.5px] ring-[#9BF00B]/35 transition duration-200 group-hover:-translate-y-[3px] group-hover:ring-[#9BF00B]/70">
         <svg viewBox="0 0 17 18" className="size-[40px] transition group-hover:scale-110 group-hover:[filter:drop-shadow(0_0_10px_rgba(155,240,11,0.6))]" fill="none" style={{ color: '#9BF00B' }}>
           <path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
         </svg>
@@ -1209,8 +1289,14 @@ function PageNav({ active, onHome, onLibrary, onMixes, onBack }) {
         </button>
       )}
       <div className={'flex items-center gap-[32px]' + groupAnim} onKeyDown={onTabsKeyDown}>
-        <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
-        <Tab label="Recommended" isActive={active === 'recommended'} onClick={onHome} />
+        {REDESIGN ? (
+          <button onClick={onHome} data-tab aria-current={active === 'recommended' ? 'page' : undefined} aria-label="Xbox Arcade home" className={'flex h-[56px] shrink-0 items-center border-b-2 transition hover:opacity-80 ' + (active === 'recommended' ? 'border-[#9BF00B]' : 'border-transparent')}><XboxLogo size={24} /></button>
+        ) : (
+          <>
+            <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
+            <Tab label="Recommended" isActive={active === 'recommended'} onClick={onHome} />
+          </>
+        )}
         <Tab label="Library" isActive={active === 'library'} onClick={onLibrary} />
         <Tab label="PlayLists" isActive={active === 'mixes'} onClick={onMixes} badge={inviteCount} />
       </div>
@@ -1232,32 +1318,33 @@ function HomePartyCard({ party, launch, onOpen }) {
   const game = launch.game || {}
   const readyCount = 1 + readyInvitees.length // host is always ready
   const total = 1 + invitees.length
-  return (
-    <div className="flex w-full max-w-[720px] items-center gap-[20px] rounded-[20px] border border-white/10 bg-[#121214] p-[16px]">
-      <button
-        onClick={() => onOpen?.(game.title)}
-        className="relative h-[132px] w-[234px] shrink-0 overflow-hidden rounded-[12px] bg-[#1a1a1d] focus-ring-strong"
-        aria-label={`Open ${game.title}`}
-      >
-        {game.image && <img alt="" src={game.image} className="size-full object-cover" />}
-        <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25">
-          <span className="flex size-[46px] items-center justify-center rounded-full bg-black/55 backdrop-blur">
-            <svg viewBox="0 0 24 24" className="size-[22px] text-white" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
-          </span>
+  const cover = (
+    <button
+      onClick={() => onOpen?.(game.title)}
+      className="relative h-[132px] w-[234px] shrink-0 overflow-hidden rounded-[12px] bg-[#1a1a1d] focus-ring-strong"
+      aria-label={`Open ${game.title}`}
+    >
+      {game.image && <img alt="" src={game.image} className="size-full object-cover" />}
+      <span className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/25">
+        <span className="flex size-[46px] items-center justify-center rounded-full bg-black/55 backdrop-blur">
+          <svg viewBox="0 0 24 24" className="size-[22px] text-white" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
         </span>
-      </button>
-      <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-[7px] text-[13px] font-semibold uppercase tracking-wide text-[#9BF00B]">
-          <span className="size-[8px] animate-pulse rounded-full bg-[#9BF00B]" /> Live party
-        </p>
-        <p className="mt-[4px] truncate text-[24px] font-bold text-white">{game.title}</p>
-        <div className="mt-[12px] flex items-center gap-[10px]">
-          <PartyAvatars launch={launch} />
-          <span className="text-[14px] text-[#9a9ba3]">{readyCount}/{total} ready</span>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-[10px] pr-[6px]">
-        {isHost ? (
+      </span>
+    </button>
+  )
+  const live = (
+    <p className="flex items-center gap-[7px] text-[13px] font-semibold uppercase tracking-wide text-[#9BF00B]">
+      <span className="size-[8px] animate-pulse rounded-full bg-[#9BF00B]" /> Live party
+    </p>
+  )
+  const roster = (
+    <>
+      <PartyAvatars launch={launch} />
+      <span className="text-[14px] text-[#9a9ba3]">{readyCount}/{total} ready</span>
+    </>
+  )
+  const actions = (
+        isHost ? (
           <>
             {/* Host: cancel the whole party, then launch — "Launch Anyways" until
                 everyone has readied up, "Launch" once the party is fully ready. */}
@@ -1275,13 +1362,51 @@ function HomePartyCard({ party, launch, onOpen }) {
               <button onClick={readyUp} className="rounded-[10px] bg-[#9BF00B] px-[22px] py-[12px] text-[15px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">Ready Up</button>
             </>
           )
-        )}
+        )
+  )
+  // Redesign: the title gets the full width of its column (it was squeezed
+  // between the cover and two wide buttons and truncated to "Minecraft Du…").
+  // Status + title on top; roster and actions share a row below, wrapping the
+  // buttons under the roster if the card gets narrow. Long titles wrap to two
+  // lines before clamping, with the full name in a tooltip.
+  //
+  // Second pass: the roster sits in the info column's top-right corner, level
+  // with the Live party label, and the actions sit directly under the title,
+  // so status → title → action reads top-down.
+  if (REDESIGN) return (
+    <div className="flex w-full max-w-[720px] items-center gap-[20px] rounded-[20px] border border-white/10 bg-[#121214] p-[16px]">
+      {cover}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-start justify-between gap-[12px]">
+          <div className="min-w-0 pt-[2px]">{live}</div>
+          <div className="flex shrink-0 items-center gap-[8px] whitespace-nowrap">
+            <span className="text-[13px] text-[#9a9ba3]">{readyCount}/{total} ready</span>
+            <PartyAvatars launch={launch} size={28} ring="#121214" />
+          </div>
+        </div>
+        <p className="mt-[4px] line-clamp-2 text-[24px] font-bold leading-[1.15] text-white" title={game.title}>{game.title}</p>
+        <div className="mt-[14px] flex flex-wrap items-center gap-[10px]">{actions}</div>
       </div>
+    </div>
+  )
+  return (
+    <div className="flex w-full max-w-[720px] items-center gap-[20px] rounded-[20px] border border-white/10 bg-[#121214] p-[16px]">
+      {cover}
+      <div className="min-w-0 flex-1">
+        {live}
+        <p className="mt-[4px] truncate text-[24px] font-bold text-white">{game.title}</p>
+        <div className="mt-[12px] flex items-center gap-[10px]">{roster}</div>
+      </div>
+      <div className="flex shrink-0 items-center gap-[10px] pr-[6px]">{actions}</div>
     </div>
   )
 }
 
 function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWhosOn, onHome, onMixes, onLibrary, menuGame, party, onStartParty, onAddToWheel }) {
+  // Redesign: arriving from an inner page (its back button was showing) plays
+  // the nav animation in reverse — read before the reset below clears it.
+  const [navFromInner] = useState(() => REDESIGN && navBackWasShown)
+  const homeSlide = navFromInner ? ' [animation:navGroupSlideBack_.4s_cubic-bezier(0.16,1,0.3,1)_both]' : ''
   // Home has no back button, so re-arm the inner-page emerge animation for the
   // next time we drill into a page that does.
   useEffect(() => { navBackWasShown = false }, [])
@@ -1363,7 +1488,7 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
   }
 
   return (
-    <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+    <main data-xbox className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav — layered blur over the hero video (Figma 882:4898). The blur
           lives on its own masked layer so it fades out toward the bottom while
           the nav content stays crisp. */}
@@ -1381,10 +1506,23 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
         <div className="pointer-events-none absolute inset-0 -z-10 bg-black/25 backdrop-blur-md" />
         {/* Discord-style thin divider under the nav */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-white/10" />
-        <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
-        <button data-tab aria-current="page" className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Recommended</button>
-        <button onClick={onLibrary} data-tab className="flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">Library</button>
-        <button onClick={onMixes} data-tab className="relative flex h-[56px] items-center gap-[7px] border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white">
+        {/* Redesign: the Xbox logo *is* the home tab (it carries the active
+            underline here, in Xbox green); the separate "Recommended" tab is gone. */}
+        {navFromInner && (
+          <span aria-hidden className="pointer-events-none absolute left-[40px] top-1/2 -mt-[15px] flex size-[30px] items-center justify-center text-[#3fbf3f] [animation:navBackOut_.25s_cubic-bezier(0.16,1,0.3,1)_both]">
+            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </span>
+        )}
+        {REDESIGN ? (
+          <button onClick={onHome} data-tab aria-current="page" aria-label="Xbox Arcade home" className={'flex h-[56px] shrink-0 items-center border-b-2 border-[#9BF00B] transition hover:opacity-80' + homeSlide}><XboxLogo size={24} /></button>
+        ) : (
+          <>
+            <button onClick={onHome} aria-label="Xbox Arcade home" className="flex shrink-0 items-center transition hover:opacity-80"><XboxLogo size={24} /></button>
+            <button data-tab aria-current="page" className="flex h-[56px] items-center border-b-2 border-white text-[16px] font-medium text-white">Recommended</button>
+          </>
+        )}
+        <button onClick={onLibrary} data-tab className={'flex h-[56px] items-center border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white' + homeSlide}>Library</button>
+        <button onClick={onMixes} data-tab className={'relative flex h-[56px] items-center gap-[7px] border-b-2 border-transparent text-[16px] font-medium text-[#c7c9cb] transition hover:text-white' + homeSlide}>
           PlayLists
           {inviteCount > 0 && (
             <span className="relative inline-flex shrink-0" title={`${inviteCount} PlayList invite${inviteCount === 1 ? '' : 's'}`}>
@@ -1408,17 +1546,28 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
       >
         {/* Hero + Mixes over the full-bleed background video (Figma 863:3726) */}
         <section className="relative overflow-hidden">
-          <video
-            ref={videoRef}
-            onTimeUpdate={onVideoTime}
-            className="pointer-events-none absolute left-0 top-0 h-[135%] w-full object-cover will-change-transform"
-            style={{ transition: 'opacity 1.5s ease-in-out' }}
-            src="/PartyHome.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          {/* Redesign: the wireframe footage re-drawn as ASCII (same colours). */}
+          {REDESIGN ? (
+            <AsciiVideo
+              ref={videoRef}
+              onTimeUpdate={onVideoTime}
+              className="pointer-events-none absolute left-0 top-0 h-[135%] w-full will-change-transform"
+              style={{ transition: 'opacity 1.5s ease-in-out' }}
+              src="/PartyHome.mp4"
+            />
+          ) : (
+            <video
+              ref={videoRef}
+              onTimeUpdate={onVideoTime}
+              className="pointer-events-none absolute left-0 top-0 h-[135%] w-full object-cover will-change-transform"
+              style={{ transition: 'opacity 1.5s ease-in-out' }}
+              src="/PartyHome.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          )}
           {/* Darken the footage and fade it into the page background at the bottom */}
           <div
             className="absolute inset-0"
@@ -1450,17 +1599,21 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
                     ) : (
                       <button
                         onClick={onStartParty}
-                        className="group relative flex items-center gap-[18px] overflow-hidden rounded-[20px] border-2 border-[#9BF00B] px-[28px] py-[22px] text-left transition-colors duration-500 ease-out hover:border-[#b6ff3d] hover:bg-[#112407]"
+                        className={'group relative flex items-center gap-[18px] overflow-hidden rounded-[20px] border-2 border-[#9BF00B] px-[28px] py-[22px] text-left transition-colors duration-500 ease-out ' + rd('hover:border-[#b6ff3d] hover:bg-[#112407]', '')}
                       >
                         {/* Black multiply fill — darkens the background mesh under the
                             card instead of a solid color, so the texture shows through. */}
                         <span className="pointer-events-none absolute inset-0 rounded-[20px] bg-black/70 mix-blend-multiply transition-opacity duration-500 ease-out group-hover:opacity-0" />
+                        {/* Redesign: on hover the border green slices in from the
+                            bottom-right corner to the top-left, and the copy flips
+                            to dark so it stays legible on the fill. */}
+                        {REDESIGN && <span className="party-slice pointer-events-none absolute inset-0 bg-[#9BF00B]" />}
                         <span className="relative flex size-[54px] shrink-0 items-center justify-center transition group-hover:scale-105">
-                          <PartyGlyph size={40} className="text-[#9BF00B]" />
+                          <PartyGlyph size={40} className={rd('text-[#9BF00B]', 'text-[#9BF00B] transition-colors duration-300 group-hover:text-[#0c0c0e]')} />
                         </span>
                         <span className="relative">
-                          <span className="block text-[24px] font-bold text-[#9BF00B]">Start a party</span>
-                          <span className="block text-[15px] text-[#9db08f]">Pick a game and invite your friends to jump in.</span>
+                          <span className={rd('block text-[24px] font-bold text-[#9BF00B]', 'block text-[24px] font-bold text-[#9BF00B] transition-colors duration-300 group-hover:text-[#0c0c0e]')}>{START_PARTY}</span>
+                          <span className={rd('block text-[15px] text-[#9db08f]', 'block text-[15px] text-[#9db08f] transition-colors duration-300 group-hover:text-[#0c0c0e]/75')}>Pick a game and invite your friends to jump in.</span>
                         </span>
                       </button>
                     )}
@@ -1497,11 +1650,45 @@ function Content({ onOpenBlend, onCreateBlend, onWishlist, onShare, onOpen, onWh
           <WorthACloserLook gameKey={HOME_CLOSER_LOOK} onOpen={onOpen} onShare={onShare} revealTitle={eHover} />
 
           {/* Something Different for You — horizontal cinematic cards (compact) */}
-          <ShelfRow title="Something Different for You" padTop={30}>
+          <ShelfRow title={rd('Something Different for You', 'Something Different For You')} padTop={30}>
             {HOME_DIFFERENT.map((k) => (
               <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={revealed(k)} />
             ))}
           </ShelfRow>
+
+          {/* Redesign: a glimpse of your PlayLists closes out the home page —
+              pinned first, capped at six, with "See all" into the full tab.
+              No hover "⋯" button here (it's a preview); right-click still
+              opens the PlayList menu. */}
+          {REDESIGN && (() => {
+            const mine = blends.filter((b) => (b.members || []).includes(SELF))
+            const glimpse = [...mine].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0)).slice(0, 6)
+            return (
+              <ShelfRow
+                title="Your PlayLists"
+                bleed
+                subtitle={mine.length ? null : 'Start one with friends to collect and rank games together.'}
+                padTop={20}
+                action={
+                  <button onClick={onMixes} className="flex items-center gap-[4px] text-[15px] font-semibold text-[#9BF00B] transition hover:brightness-125">
+                    See all{mine.length > glimpse.length ? ` ${mine.length}` : ''}
+                    <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                  </button>
+                }
+              >
+                <CreateBlendCard onClick={onCreateBlend} />
+                {glimpse.map((b) => (
+                  <BlendCard
+                    key={b.id}
+                    {...b}
+                    onOpen={() => onOpenBlend(b)}
+                    onOpenGame={onOpen}
+                    onContext={(e) => openMixMenu(e, b)}
+                  />
+                ))}
+              </ShelfRow>
+            )
+          })()}
         </div>
       </div>
 
@@ -1574,7 +1761,7 @@ function MixesPage({ onHome, onLibrary, onOpenBlend, onCreate, onOpen }) {
   const eInviteFor = IS_SPECTATE ? bybid(mUI?.inviteForId) : inviteFor
   const eSearchOpen = IS_SPECTATE ? !!mUI?.searchOpen : searchOpen
   return (
-    <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+    <main data-xbox className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <PageNav active="mixes" onHome={onHome} onLibrary={onLibrary} onBack={onHome} />
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
         <div className="mx-auto w-full max-w-[1400px]">
@@ -2059,7 +2246,7 @@ function TrendingThumb({ gameKey }) {
 function TrendingRow({ items, onOpen, onShare }) {
   return (
     <section className="mt-[56px]">
-      <p className="text-[24px] font-semibold text-white">Trending amongst Your Friends</p>
+      <p className="text-[24px] font-semibold text-white">{rd('Trending amongst Your Friends', 'Trending Amongst Your Friends')}</p>
       <div className="mt-[16px] flex flex-col gap-[4px]">
         {items.map((k) => {
           const g = STARTER_BY_KEY[k]
@@ -2188,7 +2375,7 @@ function HighlyRatedRow({ items, onOpen, onWishlist, onShare, menuGame, revealTi
   // Force the hover reveal when the participant's mirrored pointer (revealTitle)
   // or an open right-click menu (menuGame) is on this card.
   return (
-    <ShelfRow title="Recommended by Your Friends" padTop={30}>
+    <ShelfRow title={rd('Recommended by Your Friends', 'Recommended By Your Friends')} padTop={30}>
       {items.map((k) => <CinematicCard key={k} {...cineCard(k)} compact onOpen={onOpen} onWishlist={onWishlist} onShare={onShare} forceReveal={(!!menuGame && menuGame === titleOf(k)) || (!!revealTitle && revealTitle === titleOf(k))} />)}
     </ShelfRow>
   )
@@ -2206,7 +2393,7 @@ function WorthACloserLook({ gameKey, onOpen, onShare, revealTitle }) {
   const shown = hover || (!!revealTitle && revealTitle === title)
   return (
     <section className="mt-[56px]">
-      <p className="text-[24px] font-semibold text-white">Worth a Closer Look</p>
+      <p className="text-[24px] font-semibold text-white">{rd('Worth a Closer Look', 'Worth A Closer Look')}</p>
       <div className="mt-[20px] flex flex-col gap-[28px] lg:flex-row">
         <button
           data-game={title}
@@ -2297,8 +2484,8 @@ function LibraryTile({ g, onClick, metric, showThumb, onWishlist, onShare }) {
             OUTSIDE the image's overflow-hidden so the + hover-menu isn't clipped. */}
         <div className={'absolute bottom-[14px] right-[16px] flex items-center gap-[16px] opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100' + (fr ? ' !opacity-100' : '')}>
           {onParty && (
-            <button type="button" onClick={(e) => { e.stopPropagation(); onParty(g.title) }} aria-label="Start a party" className="group/party relative flex size-[28px] items-center justify-center">
-              <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/party:opacity-100 group-focus-within/party:opacity-100">Start a party</span>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onParty(g.title) }} aria-label={START_PARTY} className="group/party relative flex size-[28px] items-center justify-center">
+              <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/party:opacity-100 group-focus-within/party:opacity-100">{START_PARTY}</span>
               <PartyGlyph size={22} className="text-[#9BF00B] transition-[scale,filter] duration-200 group-hover/party:scale-110 group-hover/party:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" />
             </button>
           )}
@@ -2512,7 +2699,7 @@ function LibraryPage({ onHome, onMixes, onOpen, initialFilter, onWishlist, onSha
   }
 
   return (
-    <main className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+    <main data-xbox className="relative flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <PageNav active="library" onHome={onHome} onMixes={onMixes} onBack={onHome} />
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[36px]">
         <div className="mx-auto w-full max-w-[1400px]">
@@ -2787,7 +2974,7 @@ function ContextMenu({ x, y, items, onClose }) {
   const left = Math.min(x, (typeof window !== 'undefined' ? window.innerWidth : 9999) - 220)
   const topY = Math.min(y, (typeof window !== 'undefined' ? window.innerHeight : 9999) - (items.length * 40 + 16))
   return (
-    <div
+    <div data-xbox
       ref={menuRef}
       role="menu"
       aria-orientation="vertical"
@@ -2886,7 +3073,7 @@ function LaunchToast({ title, onDone }) {
     return () => clearTimeout(t)
   }, [onDone, title])
   return (
-    <div className="fixed top-[24px] right-[24px] z-[200] flex items-center gap-[12px] rounded-[12px] border border-[#1c1d21] bg-[#111214] px-[20px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+    <div data-xbox className="fixed top-[24px] right-[24px] z-[200] flex items-center gap-[12px] rounded-[12px] border border-[#1c1d21] bg-[#111214] px-[20px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
       <span className="flex size-[24px] items-center justify-center rounded-full bg-[#107C10]">
         <svg viewBox="0 0 24 24" className="size-[12px] text-white" fill="currentColor"><path d="M8 5v14l11-7z" /></svg>
       </span>
@@ -3007,13 +3194,21 @@ function useDialog(onClose, { label, labelledBy } = {}) {
 // matches the rest of the app). `danger` tints the confirm button red.
 function ConfirmModal({ title, body, confirmLabel = 'Confirm', cancelLabel = 'Cancel', danger, onConfirm, onClose }) {
   const dlg = useDialog(onClose, { label: title })
+  const overlay = useModalOverlay('fixed inset-0 z-[110] flex justify-center bg-black/60 p-4')
   return (
-    <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div {...overlay} onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[400px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
-        <div className="px-[24px] pb-[8px] pt-[22px]">
-          <p className="text-[20px] font-bold text-white">{title}</p>
-          {body && <p className="mt-[8px] text-[15px] leading-snug text-[#b5bac1]">{body}</p>}
-        </div>
+        {REDESIGN ? (
+          <>
+            <ModalHeader title={title} onClose={onClose} />
+            {body && <p className="px-[24px] pt-[20px] text-[15px] leading-snug text-[#b5bac1]">{body}</p>}
+          </>
+        ) : (
+          <div className="px-[24px] pb-[8px] pt-[22px]">
+            <p className="text-[20px] font-bold text-white">{title}</p>
+            {body && <p className="mt-[8px] text-[15px] leading-snug text-[#b5bac1]">{body}</p>}
+          </div>
+        )}
         <div className="flex items-center justify-end gap-[10px] px-[24px] py-[16px]">
           <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">{cancelLabel}</button>
           <button data-autofocus onClick={onConfirm} className={'rounded-[8px] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 ' + (danger ? 'bg-[#d83c3e]' : 'bg-[#5765f2]')}>{confirmLabel}</button>
@@ -3080,11 +3275,19 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
       <span className="absolute inset-x-0 bottom-0 bg-black/55 py-[3px] text-[11px] font-semibold text-white">{label}</span>
     </button>
   )
+  const overlay = useModalOverlay('fixed inset-0 z-[95] flex justify-center bg-black/60 p-4')
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[460px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
-        <h3 className="text-[20px] font-bold text-white">Change cover image</h3>
-        <p className="mt-[4px] text-[14px] text-[#b5bac1]">Pick a cover for <span className="font-semibold text-white">{blend.name}</span>.</p>
+    <div {...overlay} onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className={'w-[460px] max-w-full rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)] ' + rd('p-[24px]', 'overflow-hidden')}>
+        {REDESIGN ? (
+          <ModalHeader title="Change cover image" sub={<>Pick a cover for <span className="font-semibold">{blend.name}</span>.</>} onClose={onClose} />
+        ) : (
+          <>
+            <h3 className="text-[20px] font-bold text-white">Change cover image</h3>
+            <p className="mt-[4px] text-[14px] text-[#b5bac1]">Pick a cover for <span className="font-semibold text-white">{blend.name}</span>.</p>
+          </>
+        )}
+        <div className={rd('', 'px-[24px] pb-[24px]')}>
         <div className="mt-[18px] grid grid-cols-3 gap-[12px]">
           {/* Default = the seeded color pattern */}
           <Tile src={undefined} label="Default" active={!blend.cover}>
@@ -3108,6 +3311,7 @@ function CoverPickerModal({ blend, games, onClose, onSave }) {
         <div className="mt-[18px] flex justify-end">
           <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Done</button>
         </div>
+        </div>
       </div>
     </div>
   )
@@ -3117,10 +3321,12 @@ function RenameMixModal({ blend, onClose, onSave }) {
   const [name, setName] = useState(blend.name)
   const dlg = useDialog(onClose, { label: 'Rename PlayList' })
   const save = () => { const n = name.trim().slice(0, PLAYLIST_NAME_MAX); if (n) onSave({ name: n }); onClose() }
+  const overlay = useModalOverlay('fixed inset-0 z-[95] flex justify-center bg-black/60 p-4')
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
-        <h3 className="text-[20px] font-bold text-white">Rename PlayList</h3>
+    <div {...overlay} onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className={'w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)] ' + rd('p-[24px]', 'overflow-hidden')}>
+        {REDESIGN ? <ModalHeader title="Rename PlayList" onClose={onClose} /> : <h3 className="text-[20px] font-bold text-white">Rename PlayList</h3>}
+        <div className={rd('', 'px-[24px] pb-[24px]')}>
         <input
           value={name}
           autoFocus
@@ -3135,6 +3341,7 @@ function RenameMixModal({ blend, onClose, onSave }) {
           <button onClick={onClose} className="rounded-[8px] bg-[#4e5058] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#5a5c64]">Cancel</button>
           <button onClick={save} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[9px] text-[14px] font-semibold text-white transition hover:brightness-110">Save</button>
         </div>
+        </div>
       </div>
     </div>
   )
@@ -3148,7 +3355,7 @@ function InviteMembersModal({ blend, onClose, onSave }) {
   const invited = new Set(blend.invited || [])
   const isMember = (c) => (blend.members || []).includes(c)
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div data-discord className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[420px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <h3 className="text-[20px] font-bold text-white">Manage members</h3>
         <p className="mt-[4px] text-[14px] text-[#b5bac1]">Choose who’s in <span className="font-semibold text-white">{blend.name}</span>.</p>
@@ -3209,9 +3416,11 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
   const results = Object.entries(CATALOG)
     .filter(([, v]) => !query || v.title.toLowerCase().includes(query) || (v.genre || '').toLowerCase().includes(query))
     .slice(0, 6)
+  const overlay = useModalOverlay('fixed inset-0 z-[95] flex justify-center bg-black/60 p-4')
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[600px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+    <div {...overlay} onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className={'flex w-[600px] max-w-full flex-col overflow-hidden rounded-[16px] shadow-[0_16px_48px_rgba(0,0,0,0.6)] ' + rd('max-h-[86vh] bg-[#17181b]', 'max-h-[calc(88vh-32px)] bg-[#2b2d31]')}>
+        {REDESIGN ? <ModalHeader title="Your PlayList" sub="Drag to rank" onClose={onClose} /> : (
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
             <h3 className="text-[20px] font-bold text-white">Your PlayList</h3>
@@ -3221,6 +3430,7 @@ function PlaylistModal({ blend, keys, onClose, onReorder, onToggle }) {
             <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
+        )}
 
         {/* Search — above the ranking grid */}
         <div className="border-b border-black/30 px-[24px] py-[16px]">
@@ -3429,6 +3639,8 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   // the node rather than through props, so this page's frequent re-renders
   // (votes, spins) don't reset the fade mid-loop.
   const bannerRef = useRef(null)
+  // Redesign: the ASCII banner takes the colour of this PlayList's cover art.
+  const bannerTint = useCoverTint(blend)
   useEffect(() => {
     if (bannerRef.current) bannerRef.current.style.opacity = '0'
   }, [])
@@ -3530,7 +3742,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const [voteData, setVoteData] = useRoomNode('votes/' + blend.id, {})
   const votesFor = (key) => voteData[key] || {}
   const myVoteFor = (key) => votesFor(key)[SELF_NAME] || 0
-  const [plSort, setPlSort] = useState('manual') // default: custom order (votes don't reorder)
+  // Redesign: the group's votes ARE the ranking — the list opens sorted by
+  // votes and there's no hand-arranged "Custom order" (or drag) to fight it.
+  const [plSort, setPlSort] = useState(rd('manual', 'votes')) // before: custom order (votes don't reorder)
   const [plSortOpen, setPlSortOpen] = useState(false)
   // Drag-to-reorder — moving a game switches the list to the manual "Custom order".
   // Move the dragged game to sit right after its new predecessor in the shared
@@ -3572,7 +3786,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   }
   // Same sort menu the Library offers, plus the group's own vote ranking.
   const PL_SORTS = [
-    { id: 'manual', label: 'Custom order' },
+    ...(REDESIGN ? [] : [{ id: 'manual', label: 'Custom order' }]),
     { id: 'votes', label: 'Top voted' },
     { id: 'az', label: 'A to Z' },
     { id: 'hours', label: 'Avg friend playtime' },
@@ -3582,7 +3796,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   ]
   // Playlist display — grid (4 per row) or list, with an expand/collapse after
   // four rows.
-  const [playlistView, setPlaylistView] = useState('grid')
+  // Redesign: the ranked list is the primary view (grid stays one tap away).
+  const [playlistView, setPlaylistView] = useState(rd('grid', 'list'))
+  // Redesign: each game's wheel odds, from the votes.
+  const { oddsOf } = usePlaylistOdds(blend)
   const [playlistExpanded, setPlaylistExpanded] = useState(false)
   // Whether vote tallies are always visible. Off by default → votes only appear on
   // a card's hover (except the "Top voted" sort, where they're the ranking).
@@ -3603,8 +3820,8 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   }, [blend.id, playlistView, playlistExpanded, showVotes, playlistSearch, hover, launching])
   const [bUI2] = useRoomNode(IS_SPECTATE ? `${SPECTATE_PATH}/blendUI2` : 'spectate/__nobui2', {})
   const bui2 = IS_SPECTATE && bUI2?.blendId === blend.id ? bUI2 : null
-  const ePlaylistView = IS_SPECTATE ? (bui2?.playlistView || 'grid') : playlistView
-  const eShowVotes = IS_SPECTATE ? !!bui2?.showVotes : showVotes
+  const ePlaylistView = IS_SPECTATE ? (bui2?.playlistView || rd('grid', 'list')) : playlistView
+  const eShowVotes = REDESIGN || (IS_SPECTATE ? !!bui2?.showVotes : showVotes)
   const ePlaylistExpanded = IS_SPECTATE ? !!bui2?.playlistExpanded : playlistExpanded
   const ePlaylistSearch = IS_SPECTATE ? (bui2?.playlistSearch || '') : playlistSearch
   // See the note in Content: live view never force-reveals by title (that would
@@ -3630,7 +3847,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
   const wishShown = ePlaylistExpanded ? plList : plList.slice(0, PLAYLIST_LIMIT)
   // Pointer-drag reorder (manual sort only) — moves the real tile, not a ghost.
   const plDrag = usePlaylistDrag(wishShown.map((g) => g.key), commitOrder)
-  const canDrag = plSort === 'manual' && !IS_SPECTATE
+  const canDrag = plSort === 'manual' && !IS_SPECTATE && !REDESIGN
+  // Redesign: rank changes glide + flash an up/down arrow (list and grid).
+  const rankFlip = useRankFlip(wishShown.map((g) => g.key), ePlaylistView + ':' + plSort)
   // Who added each game. Prefer the recorded adder (blend.addedBy, written on add);
   // fall back to a stable per-(blend,game) guess from the members for legacy games.
   const guessColor = (key) => { const pool = m.length ? m : [SELF]; return pool[ratingHash(blend.id + key, 'addedby') % pool.length] }
@@ -3682,7 +3901,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
     setOverIdx(null)
   }
   return (
-    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+    <main data-xbox className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav — same Home / Library / Mixes header as the other pages */}
       <PageNav onHome={onHome} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
       {/* The gutters live on the inner wrappers (not the scroll container) so
@@ -3694,20 +3913,31 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
       >
         {/* Header banner — the same wireframe footage the home page runs on */}
         <section className="relative overflow-hidden">
-          <video
-            ref={bannerRef}
-            onTimeUpdate={onBannerTime}
-            className="pointer-events-none absolute inset-0 size-full object-cover"
-            // Pin the footage to its own GPU layer. Without this, some drivers
-            // re-rasterize it against overlapping content every frame and the
-            // header flickers/tears on lower-end machines.
-            style={{ transition: 'opacity 1.5s ease-in-out', transform: 'translateZ(0)', backfaceVisibility: 'hidden', willChange: 'opacity' }}
-            src="/PartyHome.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-          />
+          {REDESIGN ? (
+            <AsciiVideo
+              ref={bannerRef}
+              onTimeUpdate={onBannerTime}
+              tint={bannerTint}
+              className="pointer-events-none absolute inset-0 size-full"
+              style={{ transition: 'opacity 1.5s ease-in-out', transform: 'translateZ(0)', backfaceVisibility: 'hidden', willChange: 'opacity' }}
+              src="/PartyHome.mp4"
+            />
+          ) : (
+            <video
+              ref={bannerRef}
+              onTimeUpdate={onBannerTime}
+              className="pointer-events-none absolute inset-0 size-full object-cover"
+              // Pin the footage to its own GPU layer. Without this, some drivers
+              // re-rasterize it against overlapping content every frame and the
+              // header flickers/tears on lower-end machines.
+              style={{ transition: 'opacity 1.5s ease-in-out', transform: 'translateZ(0)', backfaceVisibility: 'hidden', willChange: 'opacity' }}
+              src="/PartyHome.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
+          )}
           {/* Darken the footage and settle it into the page background */}
           <div
             className="absolute inset-0"
@@ -3893,7 +4123,9 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                       </>
                     )}
                   </div>
-                  {/* Show-votes toggle — when off, votes only reveal on hover. */}
+                  {/* Show-votes toggle — when off, votes only reveal on hover.
+                      Redesign: removed; votes drive the ranking, so they always show. */}
+                  {!REDESIGN && (
                   <button
                     onClick={() => setShowVotes((v) => !v)}
                     aria-pressed={eShowVotes}
@@ -3902,6 +4134,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                   >
                     Show votes
                   </button>
+                  )}
                   {/* List / grid view toggle */}
                   <div className="flex items-center gap-[2px] rounded-[9px] bg-[#151517] p-[3px]">
                     <button onClick={() => setPlaylistView('list')} aria-label="List view" className={'flex size-[30px] items-center justify-center rounded-[6px] transition ' + (ePlaylistView === 'list' ? 'bg-[#2b2d31] text-white' : 'text-[#9a9ba3] hover:text-white')}>
@@ -3969,10 +4202,11 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                 ) : plList.length === 0 ? (
                   <p className="rounded-[12px] bg-[#151517] py-[28px] text-center text-[14px] text-[#9a9ba3]">No games match the filter.</p>
                 ) : ePlaylistView === 'grid' ? (
-                  <div className="grid grid-cols-4 gap-[20px]">
+                  <div ref={rankFlip.ref} className="grid grid-cols-4 gap-[20px]">
                     {wishShown.map((g, i) => (
                       <div
                         key={g.key}
+                        data-flip={g.key}
                         onClick={() => { if (plDrag.wasDragged()) return; onOpen?.(g.title) }}
                         onContextMenu={(e) => openMenu(e, g.title)}
                         role="button"
@@ -3988,6 +4222,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                               card (native img drag would otherwise ghost just the image). */}
                           <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
                           <span className="absolute left-[10px] top-[10px] flex size-[30px] items-center justify-center rounded-[9px] bg-black/75 text-[15px] font-bold text-white">{i + 1}</span>
+                          <RankMove dir={rankFlip.moves[g.key]} className="absolute left-[46px] top-[15px]" />
                           {/* Who added this game — profile + name, bottom-left. */}
                           <span title={`Added by ${adderName(g.key)}`} className="absolute bottom-[8px] left-[8px] flex max-w-[calc(100%-16px)] items-center gap-[6px] rounded-full bg-black/70 py-[3px] pl-[3px] pr-[10px]">
                             <Avatar color={adderColor(g.key)} size={18} />
@@ -4016,10 +4251,11 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                     ))}
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-[10px]">
+                  <div ref={rankFlip.ref} className="flex flex-col gap-[10px]">
                     {wishShown.map((g, i) => (
                       <div
                         key={g.key}
+                        data-flip={g.key}
                         onClick={() => { if (plDrag.wasDragged()) return; onOpen?.(g.title) }}
                         onContextMenu={(e) => openMenu(e, g.title)}
                         role="button"
@@ -4030,7 +4266,10 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                         {...(canDrag ? plDrag.tileProps(g.key) : {})}
                         className={'group/card group relative flex select-none items-center gap-[16px] rounded-[12px] p-[8px] ring-2 transition-[box-shadow] hover:bg-[#151517] ' + (canDrag ? 'cursor-grab touch-none active:cursor-grabbing ' : 'cursor-pointer ') + (isHit(g.title) ? 'ring-[#9BF00B] [box-shadow:0_0_0_3px_#9BF00B,0_0_28px_5px_rgba(155,240,11,0.6)]' : 'ring-transparent')}
                       >
-                        <span className="flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">{i + 1}</span>
+                        <span className="relative flex size-[26px] shrink-0 items-center justify-center rounded-[8px] bg-white/10 text-[14px] font-bold text-white">
+                          {i + 1}
+                          <RankMove dir={rankFlip.moves[g.key]} className="absolute -right-[12px] -top-[10px] size-[18px]" />
+                        </span>
                         <div className="h-[68px] w-[121px] shrink-0 overflow-hidden rounded-[10px] bg-[#1a1a1d]">
                           <img alt="" src={g.image} draggable={false} className="size-full object-cover" />
                         </div>
@@ -4052,6 +4291,14 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                               <span className="inline-flex items-center gap-[4px]"><svg viewBox="0 0 24 24" className="size-[12px]" fill="currentColor"><path d="M7 10v11H4a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1h3zm0 0 4.5-7a2 2 0 0 1 3.5 1.3V9h4.6a2 2 0 0 1 2 2.4l-1.4 7A2 2 0 0 1 20.2 20H7" /></svg>{sortRating(g.key)}</span>
                             )}
                           </div>
+                        )}
+                        {/* Redesign: this game's chance on the PlayList's wheel — votes
+                            weight the spin, so the ranking has a visible payoff. */}
+                        {oddsOf(g.key) != null && (
+                          <span title="Chance of landing when this PlayList is spun on the wheel. More votes, bigger slice." className="hidden shrink-0 flex-col items-end leading-tight sm:flex">
+                            <span className="text-[15px] font-bold tabular-nums text-white">{oddsOf(g.key)}%</span>
+                            <span className="text-[11px] text-[#7e7f87]">wheel odds</span>
+                          </span>
                         )}
                         <span className={'shrink-0 transition-opacity ' + (plSort === 'votes' || eShowVotes || eHover === g.title ? 'opacity-100' : 'opacity-0 focus-within:opacity-100 group-hover/card:opacity-100')}>
                           <VoteControl score={scoreOf(g.key)} mine={myVoteFor(g.key)} onUp={() => applyVote(g.key, 1)} onDown={() => applyVote(g.key, -1)} upVoters={voterNames(g.key, 1)} downVoters={voterNames(g.key, -1)} />
@@ -4090,7 +4337,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
           y={eMenu.y}
           onClose={() => setMenu(null)}
           items={[
-            { label: 'Start a party', icon: PLAY_GLYPH, primary: true, onClick: () => launch(eMenu.title) },
+            { label: START_PARTY, icon: PLAY_GLYPH, primary: true, onClick: () => launch(eMenu.title) },
             { divider: true },
             (blend.wishlist || []).includes(KEY_OF_TITLE[eMenu.title] || eMenu.title)
               ? { label: 'Remove from PlayList', icon: REMOVE_MENU_GLYPH, onClick: () => setPlaylistMembership(eMenu.title, false) }
@@ -4236,7 +4483,7 @@ function WhosOnModal({ onClose, onCreated }) {
     onCreated?.(newBlend.id)
   }
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div data-discord className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
@@ -4349,9 +4596,13 @@ function GiftArcadeModal({ onClose }) {
   const list = OFF_ARCADE_FRIENDS.filter((f) => !query || capName(f.name).toLowerCase().includes(query))
   const toggle = (n) => setSel((s) => ({ ...s, [n]: !s[n] }))
   const chosen = OFF_ARCADE_FRIENDS.filter((f) => sel[f.name])
+  // Redesign: opened from the Xbox page's nav, so it takes the Xbox modal shell
+  // (green header, Xbox greens) instead of staying Discord-styled.
+  const overlay = useModalOverlay('fixed inset-0 z-[95] flex justify-center bg-black/60 p-4')
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
+    <div {...(REDESIGN ? overlay : { 'data-discord': true, className: 'fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4' })} onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className={'flex w-[460px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)] ' + rd('max-h-[86vh]', 'max-h-[calc(88vh-32px)]')}>
+        {REDESIGN ? <ModalHeader title="Gift Nitro" sub="Pick friends who aren’t on Arcade yet." onClose={onClose} /> : (
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
             <p className="text-[22px] font-bold text-white">Gift Nitro</p>
@@ -4361,6 +4612,7 @@ function GiftArcadeModal({ onClose }) {
             <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
+        )}
         <div className="px-[24px] pt-[16px]">
           <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
             <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
@@ -4449,15 +4701,18 @@ function CreateBlendModal({ onClose, onCreated }) {
     })
     onCreated?.(newBlend.id)
   }
+  const overlay = useModalOverlay('fixed inset-0 z-50 flex justify-center bg-black/60 p-4')
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div {...overlay} onClick={onClose}>
       <div
         ref={dlg.ref}
         {...dlg.props}
         onClick={(e) => e.stopPropagation()}
         className="w-[480px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
       >
-        <div className="p-[24px]">
+        {REDESIGN && <ModalHeader title="Create a PlayList" sub="Select who you want to create a PlayList with." onClose={onClose} />}
+        <div className={rd('p-[24px]', 'px-[24px] pb-[24px] pt-[2px]')}>
+          {!REDESIGN && (
           <div className="flex items-start justify-between gap-[12px]">
             <div>
               <h3 className="text-[22px] font-bold text-white">Create a PlayList</h3>
@@ -4467,6 +4722,7 @@ function CreateBlendModal({ onClose, onCreated }) {
               <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
           </div>
+          )}
 
           <div className="mt-[16px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[10px]">
             <svg viewBox="0 0 24 24" className="size-[18px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
@@ -4610,7 +4866,7 @@ function WishlistModal({ game, onClose, onAddToWheel }) {
   // Portaled to <body> so it escapes any transformed/clipped ancestor and always
   // stacks above the nav and toasts.
   return createPortal(
-      <div
+      <div data-xbox
         ref={ref} role="menu" aria-label="Add to PlayList"
         className={'fixed z-[300] w-[288px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-[#1c1d21] bg-[#111214] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]' + (IS_SPECTATE ? ' pointer-events-none select-none' : '')}
         style={pos}
@@ -4699,15 +4955,18 @@ function PreferenceModal({ blend, onClose, onContinue }) {
     setInput('')
   }
 
+  const overlay = useModalOverlay('fixed inset-0 z-50 flex justify-center bg-black/60 p-4')
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div {...overlay} onClick={onClose}>
       <div
         ref={dlg.ref}
         {...dlg.props}
         onClick={(e) => e.stopPropagation()}
         className="w-[520px] max-w-full overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"
       >
-        <div className="p-[24px]">
+        {REDESIGN && <ModalHeader title="Add Your Preferences" sub="What are you in the mood for tonight?" onClose={onClose} />}
+        <div className={rd('p-[24px]', 'px-[24px] pb-[24px] pt-[2px]')}>
+          {!REDESIGN && (
           <div className="flex items-start justify-between gap-[12px]">
             <div>
               <h3 className="text-[22px] font-bold italic text-white">Add Your Preferences</h3>
@@ -4717,6 +4976,7 @@ function PreferenceModal({ blend, onClose, onContinue }) {
               <svg viewBox="0 0 24 24" className="size-[24px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
           </div>
+          )}
 
           {/* Input + n/3 counter */}
           <div className="mt-[18px] flex items-stretch gap-[10px]">
@@ -4811,12 +5071,19 @@ const ART_NONE = 12
 
 // Everything that makes one spin unique. The spinner rolls it once and writes
 // it to the room, so every screen runs the identical animation.
-function rollSpin(count, lastTarget) {
+function rollSpin(count, lastTarget, weights = null) {
   // Never land on the game we just picked — a re-roll that repeats itself reads
   // as broken, however fair it is.
   const pool = [...Array(count).keys()].filter((i) => count > 2 ? i !== lastTarget : true)
+  // Redesign: with weights (a PlayList's vote odds), pick proportionally.
+  let target = pool[Math.floor(Math.random() * pool.length)]
+  if (weights) {
+    const total = pool.reduce((t, i) => t + (weights[i] || 0), 0)
+    let r = Math.random() * total
+    for (const i of pool) { r -= weights[i] || 0; if (r <= 0) { target = i; break } }
+  }
   return {
-    target: pool[Math.floor(Math.random() * pool.length)],
+    target,
     turns: MIN_TURNS + Math.floor(Math.random() * (MAX_TURNS - MIN_TURNS + 1)),
     // Land off-center inside the slice so the pointer doesn't stop dead
     // straight every time.
@@ -4888,7 +5155,7 @@ function spinTally(spin) {
   return { people, votes, yes, no, waiting, allIn: people.length > 0 && waiting.length === 0 && no.length === 0 }
 }
 
-function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
+function DecisionWheel({ games, weights = null, spin, remaining, onSpin, disabled, spinning }) {
   const [rotation, setRotation] = useState(0)
   const [dur, setDur] = useState(0)
   const shown = useRef(null)
@@ -4900,6 +5167,11 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
   const R = 198
   const C = 210
   const seg = n ? 360 / n : 360
+  // Redesign: weighted wheels (a PlayList's vote odds) give each game a slice
+  // sized to its chance; otherwise every slice is the same `seg`.
+  const wsum = weights && weights.length === n ? weights.reduce((t, w) => t + w, 0) : 0
+  const segs = games.map((_, i) => (wsum ? (weights[i] / wsum) * 360 : seg))
+  const starts = segs.map((_, i) => segs.slice(0, i).reduce((t, d) => t + d, 0))
   // Point on the wheel at `deg` measured clockwise from the top (12 o'clock).
   const pt = (deg, rad = R) => {
     const a = (deg * Math.PI) / 180
@@ -4914,14 +5186,15 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
   // bounding box, dropped on the slice's axis so each wedge shows its own art
   // rather than a shared crop of the whole wheel.
   const slices = games.map((g, i) => {
-    const [x0, y0] = pt(i * seg)
-    const [x1, y1] = pt((i + 1) * seg)
+    const a0 = starts[i], d = segs[i]
+    const [x0, y0] = pt(a0)
+    const [x1, y1] = pt(a0 + d)
     return {
       g,
       i,
-      center: i * seg + seg / 2,
-      wedge: `M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${seg > 180 ? 1 : 0} 1 ${x1} ${y1} Z`,
-      side: Math.max(2 * R * Math.sin((Math.min(seg, 180) / 2) * (Math.PI / 180)), R) * 1.02,
+      center: a0 + d / 2,
+      wedge: `M ${C} ${C} L ${x0} ${y0} A ${R} ${R} 0 ${d > 180 ? 1 : 0} 1 ${x1} ${y1} Z`,
+      side: Math.max(2 * R * Math.sin((Math.min(d, 180) / 2) * (Math.PI / 180)), R) * 1.02,
       clip: `${uid}-slice-${i}`,
     }
   })
@@ -4941,7 +5214,7 @@ function DecisionWheel({ games, spin, remaining, onSpin, disabled, spinning }) {
     shown.current = spin.id
     // Where under the pointer this spin should stop, measured clockwise from
     // the top — offset inside the slice by the shared jitter.
-    const stop = (target + 0.5 + (spin.jitter || 0)) * seg
+    const stop = (starts[target] ?? target * seg) + (0.5 + (spin.jitter || 0)) * (segs[target] ?? seg)
     const rest = (360 - (stop % 360) + 360) % 360
     // Carry on from wherever the last spin left the wheel, so a re-roll picks
     // up speed instead of snapping back to zero first.
@@ -5219,6 +5492,74 @@ function StatusRow({ name, vote }) {
   )
 }
 
+// Redesign: a wheel opened on a PlayList page weights each game by that
+// PlayList's votes — every game starts at 1, each net upvote adds 1, downvotes
+// take it down to a floor of 0.25 (still on the wheel, just unlikely). Opened
+// anywhere else, the wheel stays equal-odds.
+const wheelWeight = (score) => Math.max(0.25, 1 + score)
+// Each PlayList game's vote weight, and its odds if this PlayList's games go
+// on the wheel together.
+function usePlaylistOdds(blend) {
+  const [voteData] = useRoomNode('votes/' + blend.id, {})
+  const weightOf = (k) => wheelWeight(Object.values(voteData[k] || {}).reduce((t, v) => t + (v || 0), 0))
+  const keys = blend.wishlist || []
+  const total = keys.reduce((t, k) => t + weightOf(k), 0)
+  const oddsOf = (k) => (REDESIGN && total && keys.includes(k) ? Math.round((weightOf(k) / total) * 100) : null)
+  return { weightOf, oddsOf }
+}
+
+// Redesign: animate rank changes (FLIP). Each render measures every
+// [data-flip] tile relative to the container; when the order changes (same
+// games, new ranking) each moved tile glides from its old spot, and `moves`
+// marks which way it went for a moment so the arrows can show it. A new
+// `resetKey` (view or sort switch) or a different set of games just snaps.
+function useRankFlip(keys, resetKey) {
+  const ref = useRef(null)
+  const prev = useRef({ sig: null, reset: null, rects: new Map(), order: [] })
+  const [moves, setMoves] = useState({})
+  const sig = keys.join('|')
+  useLayoutEffect(() => {
+    const root = ref.current
+    if (!REDESIGN || !root) return
+    const base = root.getBoundingClientRect()
+    const els = [...root.querySelectorAll('[data-flip]')]
+    const rects = new Map(els.map((el) => { const r = el.getBoundingClientRect(); return [el.dataset.flip, { x: r.left - base.left, y: r.top - base.top }] }))
+    const p = prev.current
+    const reordered = p.sig !== null && p.sig !== sig && p.reset === resetKey &&
+      p.order.length === keys.length && keys.every((k) => p.order.includes(k))
+    if (reordered) {
+      const mv = {}
+      els.forEach((el) => {
+        const k = el.dataset.flip, a = p.rects.get(k), b = rects.get(k)
+        if (!a || !b) return
+        const dx = a.x - b.x, dy = a.y - b.y
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return
+        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: 520, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+        const from = p.order.indexOf(k), to = keys.indexOf(k)
+        if (from !== to) mv[k] = to < from ? 'up' : 'down'
+      })
+      if (Object.keys(mv).length) setMoves(mv)
+    }
+    prev.current = { sig, reset: resetKey, rects, order: keys }
+  })
+  useEffect(() => {
+    if (!Object.keys(moves).length) return
+    const t = setTimeout(() => setMoves({}), 1600)
+    return () => clearTimeout(t)
+  }, [moves])
+  return { ref, moves }
+}
+// The ▲ / ▼ that flashes on a game that just moved in the ranking.
+function RankMove({ dir, className = '' }) {
+  if (!dir) return null
+  const up = dir === 'up'
+  return (
+    <span aria-hidden className={'pointer-events-none flex size-[20px] items-center justify-center rounded-full [animation:rankMove_1.6s_cubic-bezier(0.16,1,0.3,1)_both] ' + (up ? 'bg-[#9BF00B] text-[#0c0c0e]' : 'bg-[#f04747] text-white') + ' ' + className} style={{ '--rank-from': up ? '6px' : '-6px' }}>
+      <svg viewBox="0 0 24 24" className={'size-[12px] ' + (up ? '' : 'rotate-180')} fill="currentColor"><path d="M12 5l8 11H4z" /></svg>
+    </span>
+  )
+}
+
 function SpinPanel({ blend, state, onLaunch }) {
   const { online } = useRoomCtx()
   const { spin, writeSpin, phase, remaining, picked, vote, clear } = state
@@ -5306,16 +5647,16 @@ function SpinPanel({ blend, state, onLaunch }) {
         <div
           className="absolute inset-x-0 top-0 h-[3px]"
           style={{
-            background: 'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))',
-            boxShadow: '0 0 18px rgba(61,191,30,0.8)',
+            background: SPIN_LINE,
+            boxShadow: SPIN_GLOW,
           }}
         />
         {/* Matching bottom edge — same horizon, no notch. */}
         <div
           className="absolute inset-x-0 bottom-0 h-[3px]"
           style={{
-            background: 'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))',
-            boxShadow: '0 0 18px rgba(61,191,30,0.8)',
+            background: SPIN_LINE,
+            boxShadow: SPIN_GLOW,
           }}
         />
         {/* The band goes near-black while the wheel is actually turning. */}
@@ -5332,8 +5673,8 @@ function SpinPanel({ blend, state, onLaunch }) {
             style={{
               borderLeft: '13px solid transparent',
               borderRight: '13px solid transparent',
-              borderBottom: '10px solid #3dbf1e',
-              filter: 'drop-shadow(0 0 8px rgba(61,191,30,0.7))',
+              borderBottom: `10px solid ${SPIN_GREEN}`,
+              filter: SPIN_NOTCH_GLOW,
             }}
           />
 
@@ -5500,7 +5841,10 @@ function SpinNotification({ state }) {
 // the party it starts when it lands — that snapshots whoever's on the call right
 // then, which is exactly why membership can keep changing without breaking it.
 const CALL_WHEEL_EXPIRY = 20 * 60 * 1000
-function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin }) {
+function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin, voteBlend = null }) {
+  // Redesign: opened over a PlayList page, that PlayList's votes weight the
+  // spin (games outside it count as 1). Opened anywhere else → equal odds.
+  const [wheelVotes] = useRoomNode('votes/' + (voteBlend?.id || '__none'), {})
   // Two modes. Personal (default): your own list, local spin. Jam ("Sync with
   // call"): a shared, hosted session keyed to the room — one person starts it
   // empty, everyone else JOINS the live one (inheriting its games) and watches
@@ -5609,6 +5953,11 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const spinRemaining = activeSpin ? activeSpin.startedAt + SPIN_MS - Date.now() : 0
   const phase = !activeSpin ? 'idle' : spinRemaining > 0 ? 'spinning' : 'result'
   const boardGames = activeKeys.map((k) => ({ key: k, title: wheelTitle(k) })).filter((g) => CATALOG[g.key] || STARTER_BY_KEY[g.key])
+  const voteWeight = (k) => wheelWeight(Object.values(wheelVotes?.[k] || {}).reduce((t, v) => t + (v || 0), 0))
+  const rawWeights = voteBlend ? boardGames.map((g) => voteWeight(g.key)) : null
+  // All-equal weights are just a normal wheel — don't bother weighting.
+  const boardWeights = rawWeights && rawWeights.some((w) => w !== rawWeights[0]) ? rawWeights : null
+  const weightSum = boardWeights ? boardWeights.reduce((t, w) => t + w, 0) : 0
   // Mid-spin the wheel is locked to the exact list the spin rolled against.
   const games = phase !== 'idle' && activeSpin?.games ? activeSpin.games : boardGames
   const picked = phase === 'result' && activeSpin?.games ? activeSpin.games[activeSpin.target] : null
@@ -5659,8 +6008,8 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
 
   function doSpin() {
     if (!canSpin) return
-    const roll = rollSpin(boardGames.length, activeSpin?.target)
-    const s = { id: Date.now().toString(36), ...roll, games: boardGames, startedAt: Date.now(), by: SELF_NAME }
+    const roll = rollSpin(boardGames.length, activeSpin?.target, boardWeights)
+    const s = { id: Date.now().toString(36), ...roll, games: boardGames, ...(boardWeights ? { weights: boardWeights } : {}), startedAt: Date.now(), by: SELF_NAME }
     if (synced) patchJam({ spin: s })
     else setLocalSpin(s)
   }
@@ -5678,9 +6027,9 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
   const backToWheel = () => { if (synced) patchJam({ spin: null }); else setLocalSpin(null) }
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/70 p-4" onClick={phase === 'spinning' ? undefined : onClose}>
+    <div data-xbox className="fixed inset-0 z-[95] flex items-center justify-center bg-black/70 p-4" onClick={phase === 'spinning' ? undefined : onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="relative flex max-h-[92vh] w-[980px] max-w-full flex-col overflow-hidden rounded-[20px] border border-[#1c1d21] bg-[#0c0c0e] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ background: 'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))', boxShadow: '0 0 18px rgba(61,191,30,0.8)' }} />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px]" style={{ background: SPIN_LINE, boxShadow: SPIN_GLOW }} />
         <div className="pointer-events-none absolute inset-0" style={{ background: 'radial-gradient(90% 60% at 28% 0%, rgba(45,160,0,0.18), transparent 60%)' }} />
         <button onClick={onClose} aria-label="Close" className="absolute right-[16px] top-[16px] z-10 text-[#9a9ba3] transition hover:text-white">
           <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -5690,7 +6039,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
           {/* Wheel */}
           <div className="flex shrink-0 flex-col items-center">
             {games.length > 0 ? (
-              <DecisionWheel games={games} spin={activeSpin} remaining={Math.max(0, spinRemaining || SPIN_MS)} onSpin={doSpin} spinning={phase === 'spinning'} disabled={!canSpin} />
+              <DecisionWheel games={games} weights={phase !== 'idle' && activeSpin?.games ? (activeSpin.weights || null) : boardWeights} spin={activeSpin} remaining={Math.max(0, spinRemaining || SPIN_MS)} onSpin={doSpin} spinning={phase === 'spinning'} disabled={!canSpin} />
             ) : (
               <div className="flex size-[420px] items-center justify-center rounded-full border-2 border-dashed border-[#2b2d31] p-[40px] text-center">
                 <p className="max-w-[220px] text-[15px] text-[#7e7f87]">{synced ? 'The call wheel is empty. Anyone can add games or load a PlayList.' : 'Your wheel is empty. Add games or load a PlayList.'}</p>
@@ -5719,7 +6068,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                 <div className="mt-[24px] flex flex-wrap items-center gap-[12px]">
                   <button onClick={startPartyNow} className="flex items-center gap-[10px] rounded-[12px] bg-[#9BF00B] px-[24px] py-[14px] text-[16px] font-bold text-[#0c0c0e] shadow-[0_2px_12px_rgba(45,160,0,0.4)] transition hover:brightness-110">
                     <PartyGlyph size={20} />
-                    Start a party
+                    {START_PARTY}
                   </button>
                   <button onClick={backToWheel} className="flex items-center gap-[9px] rounded-[12px] bg-[#1c1c1f] px-[22px] py-[14px] text-[16px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#26262a]">
                     <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8M3 4v4h4" /></svg>
@@ -5806,10 +6155,11 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                   </div>
                   <div className="no-scrollbar flex max-h-[168px] min-h-[64px] flex-wrap content-start gap-[8px] overflow-y-auto">
                     {boardGames.length === 0 && <p className="text-[13px] text-[#7e7f87]">Nothing yet — pick a PlayList above, search a game, or right-click any game &rarr; &ldquo;Add to Wheel&rdquo;.</p>}
-                    {boardGames.map((g) => (
+                    {boardGames.map((g, gi) => (
                       <span key={g.key} className="flex h-fit items-center gap-[8px] rounded-[8px] bg-[#1c1c1f] py-[6px] pl-[8px] pr-[6px] text-[13px] text-white ring-1 ring-white/5">
                         {wheelThumb(g.key) ? <img alt="" src={wheelThumb(g.key)} className="h-[22px] w-[38px] rounded-[4px] object-cover" /> : <span className="h-[22px] w-[38px] rounded-[4px] bg-[#2b2d31]" />}
                         <span className="max-w-[150px] truncate">{g.title}</span>
+                        {boardWeights && <span className="text-[12px] font-semibold tabular-nums text-[#9BF00B]">{Math.round((boardWeights[gi] / weightSum) * 100)}%</span>}
                         <button onClick={() => removeKey(g.key)} aria-label={`Remove ${g.title}`} className="text-[#7e7f87] transition hover:text-white">
                           <svg viewBox="0 0 24 24" className="size-[15px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                         </button>
@@ -5817,6 +6167,7 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin 
                     ))}
                   </div>
                   {boardGames.length === 1 && <p className="mt-[10px] text-[12px] text-[#f0b232]">Add at least 2 games to spin.</p>}
+                  {boardWeights && <p className="mt-[10px] text-[12px] text-[#9a9ba3]">Odds follow the votes in <span className="font-semibold text-white">{voteBlend.name}</span>. More votes, bigger slice.</p>}
                 </div>
 
                 {/* Spin the wheel — the primary action */}
@@ -5967,7 +6318,7 @@ function WheelInviteStep({ online, onCancel, onStart, popover }) {
 function WheelJamToast({ host, count, onJoin, onDismiss }) {
   const names = useNames()
   return (
-    <div className="pointer-events-none fixed top-[24px] right-[24px] z-[200] flex justify-end px-4">
+    <div data-xbox className="pointer-events-none fixed top-[24px] right-[24px] z-[200] flex justify-end px-4">
       <div className="pointer-events-auto flex items-center gap-[14px] rounded-[14px] border border-[#1c1d21] bg-[#111214] px-[18px] py-[13px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
         <span className="relative flex size-[34px] shrink-0 items-center justify-center">
           <span className="absolute inset-0 animate-ping rounded-full bg-[#3dbf1e]/40" />
@@ -6098,7 +6449,7 @@ function WhosPlayingModal({ game, onClose, onStart }) {
   )
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div data-discord className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
           <div>
@@ -6139,7 +6490,143 @@ function WhosPlayingModal({ game, onClose, onStart }) {
 
 // Start a party from the home page: pick a game (search/select), invite friends,
 // then launch a ready-up party. One modal for the whole flow.
-function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGame }) {
+
+// Redesign: the shared Xbox modal shell, lifted from Start A Party — a solid
+// Xbox-green header band with black type and a heavier close X.
+function ModalHeader({ title, sub, onClose }) {
+  return (
+    <div className="flex shrink-0 items-center justify-between gap-[12px] bg-[#9BF00B] px-[24px] py-[20px]">
+      <div className="min-w-0">
+        <h3 className="text-[22px] font-bold leading-[1.1] text-black">{title}</h3>
+        {sub && <p className="mt-[2px] text-[15px] leading-[1.25] text-black/80">{sub}</p>}
+      </div>
+      {onClose && (
+        <button onClick={onClose} aria-label="Close" className="shrink-0 text-black transition hover:opacity-70">
+          <svg viewBox="0 0 24 24" className="size-[26px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+      )}
+    </div>
+  )
+}
+
+// Redesign: overlay placement shared by the Xbox modals — centered on the
+// screen and top-aligned at 12vh, so the header doesn't jump as content grows.
+// `base` is the overlay's classes minus vertical alignment.
+function useModalOverlay(base) {
+  return {
+    'data-xbox': true,
+    className: base + ' ' + rd('items-center', 'items-start pt-[12vh]'),
+  }
+}
+
+// "1 player" / "1-4 players" — single-player games were reading "1 players".
+const playersLabel = (p) => (p === '1' ? '1 player' : `${p} players`)
+
+// Animated show/hide to the content's natural height (grid rows 0fr ↔ 1fr) with
+// a fade. `inert` while closed keeps hidden controls out of the tab order.
+// Module-level (not defined inside a render) so open/close never remounts the
+// children — a search field inside keeps its focus and value.
+function Collapse({ open, children }) {
+  return (
+    <div
+      className="grid transition-[grid-template-rows,opacity] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+      style={{ gridTemplateRows: open ? '1fr' : '0fr', opacity: open ? 1 : 0 }}
+      {...(!open && { inert: '' })}
+    >
+      <div className="min-h-0 overflow-hidden">{children}</div>
+    </div>
+  )
+}
+
+// Redesign: the Start-a-party game picker as a search field with a floating,
+// text-only dropdown — it overlays the modal instead of growing it. Opens only
+// when the field is clicked or typed in (not on the dialog's autofocus); shows
+// recent picks for an empty query, else the matches. ↑/↓ + Enter to pick.
+function GameSearchField({ value, onChange, query, results, recent, onPick }) {
+  const inputRef = useRef(null)
+  const [open, setOpen] = useState(false)
+  const [active, setActive] = useState(0)
+  const [rect, setRect] = useState(null)
+  const items = query ? results : recent
+  // Position: `fixed` under the field, so the scrolling modal body can't clip
+  // it or grow around it. Re-measured on open and on resize.
+  const measure = () => { const r = inputRef.current?.parentElement.getBoundingClientRect(); if (r) setRect(r) }
+  const show = () => { measure(); setOpen(true) }
+  useEffect(() => {
+    if (!open) return
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [open])
+  useEffect(() => { setActive(0) }, [query])
+  // Escape closes just the dropdown. Native listener so it runs before the
+  // dialog's own (native) Escape handler, which would close the whole modal.
+  useEffect(() => {
+    const el = inputRef.current
+    const onKey = (e) => { if (e.key === 'Escape' && open) { e.stopPropagation(); setOpen(false) } }
+    el?.addEventListener('keydown', onKey)
+    return () => el?.removeEventListener('keydown', onKey)
+  }, [open])
+  const pick = (k) => { setOpen(false); onPick(k) }
+  const onKeyDown = (e) => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); if (!open) return show(); setActive((i) => Math.min(i + 1, items.length - 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive((i) => Math.max(i - 1, 0)) }
+    else if (e.key === 'Enter' && open && items[active]) { e.preventDefault(); pick(items[active][0]) }
+  }
+  const meta = (v) => `${capName(v.genre || 'game')} · ${playersLabel(v.players)}`
+  return (
+    <>
+      <div className="flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+        <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+        <input
+          ref={inputRef}
+          data-autofocus
+          value={value}
+          onChange={(e) => { onChange(e.target.value); if (!open) show() }}
+          onMouseDown={show}
+          onKeyDown={onKeyDown}
+          onBlur={() => setOpen(false)}
+          role="combobox"
+          aria-expanded={open}
+          aria-controls="party-game-list"
+          aria-activedescendant={open && items[active] ? `party-game-${items[active][0]}` : undefined}
+          placeholder="Search games"
+          className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none"
+        />
+      </div>
+      {open && rect && (
+        <div
+          id="party-game-list"
+          role="listbox"
+          className="fixed z-[120] max-h-[280px] overflow-y-auto rounded-[8px] border border-white/10 bg-[#1e1f22] py-[6px] shadow-[0_16px_40px_rgba(0,0,0,0.7)]"
+          style={{ top: rect.bottom + 6, left: rect.left, width: rect.width }}
+        >
+          {!query && items.length > 0 && <p className="px-[12px] pb-[4px] pt-[2px] text-[12px] font-semibold text-[#87898c]">Recent</p>}
+          {items.map(([k, v], i) => (
+            <div
+              key={k}
+              id={`party-game-${k}`}
+              role="option"
+              aria-selected={i === active}
+              // mousedown + preventDefault keeps focus in the field, so its blur
+              // doesn't close the list before the pick lands.
+              onMouseDown={(e) => { e.preventDefault(); pick(k) }}
+              onMouseEnter={() => setActive(i)}
+              className={'flex cursor-pointer items-baseline justify-between gap-[12px] px-[12px] py-[8px] ' + (i === active ? 'bg-white/[0.06]' : '')}
+            >
+              <span className="truncate text-[14px] font-semibold text-white">{v.title}</span>
+              <span className="shrink-0 text-[13px] text-[#87898c]">{meta(v)}</span>
+            </div>
+          ))}
+          {items.length === 0 && (
+            <p className="px-[12px] py-[8px] text-[13px] text-[#6f7276]">{query ? `No games match “${value}”.` : 'Start typing to search games.'}</p>
+          )}
+        </div>
+      )}
+    </>
+  )
+}
+
+function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGame, onRecord }) {
   const { online } = useRoomCtx()
   const hiddenP = useHidden()
   const others = DMS.filter((d) => d.name !== SELF_NAME && !hiddenP[d.name])
@@ -6149,7 +6636,7 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
   const [q, setQ] = useState('')        // friend search
   const [gameQ, setGameQ] = useState('') // game search
   const [gameKey, setGameKey] = useState(initialGame?.key || null)
-  const dlg = useDialog(onClose, { label: 'Start a party' })
+  const dlg = useDialog(onClose, { label: START_PARTY })
   // Mirror the modal's internal navigation to the moderator wall, so it advances
   // with the participant — selected-game vs. search screen, typed queries and
   // invite checkboxes all follow along (was frozen on whatever it opened at).
@@ -6175,16 +6662,41 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
   const selected = eGameKey ? (CATALOG[eGameKey] || STARTER_BY_KEY[eGameKey] || (initialGame?.key === eGameKey ? initialGame : null)) : null
   const gameImg = (k) => CATALOG[k]?.image || (initialGame?.key === k ? initialGame?.image : null) || null
   const friendFiltered = elsewhere.filter((d) => capName(d.name).toLowerCase().includes(eQ.toLowerCase()))
+  // Redesign: inviting unlocks only once a game is picked (always open before).
+  const inviteOpen = !REDESIGN || !!selected
+  // Redesign: a game picked here counts as a recent search too (before, only
+  // opening a game's detail page did), so it shows up in the recents grid.
+  const pickGame = (k) => { setGameKey(k); if (REDESIGN) onRecord?.(k) }
+  // Redesign: the last picked game, so its row can keep rendering while it
+  // animates closed after "Change" (selected is already null by then).
+  const lastKeyRef = useRef(null)
+  if (eGameKey) lastKeyRef.current = eGameKey
+  const shownKey = eGameKey || lastKeyRef.current
+  const shown = shownKey ? (CATALOG[shownKey] || STARTER_BY_KEY[shownKey] || (initialGame?.key === shownKey ? initialGame : null)) : null
+  // Redesign: single-player pick → invites still allowed, but friends watch a
+  // stream instead of playing (the note above the invite list says so). Keyed
+  // off the last pick so the note stays put while the list animates closed.
+  const soloGame = REDESIGN && shown?.players === '1'
+  // Change → back to the picker with the cursor in the search field (focus
+  // only — the dropdown still waits for a click or typing).
+  const changeGame = () => {
+    setGameKey(null); setGameQ('')
+    requestAnimationFrame(() => dlg.ref.current?.querySelector('input[placeholder="Search games"]')?.focus())
+  }
 
+  // Redesign: friend rows were edge-to-edge with the search field — avatars on
+  // its left edge, checkboxes on its right. Now inset 12px each side with a
+  // hover row behind them, and everything a notch smaller (32px avatars, 20px
+  // checkboxes) so the list breathes and the modal stays short.
   const Row = ({ d }) => (
-    <button onClick={() => toggle(d.name)} className="flex w-full items-center gap-[12px] py-[8px]">
-      <Avatar color={d.color} size={40} />
+    <button onClick={() => toggle(d.name)} className={'flex w-full items-center text-left ' + rd('gap-[12px] py-[8px]', 'gap-[10px] rounded-[6px] px-[12px] py-[6px] transition hover:bg-white/[0.04]')}>
+      <Avatar color={d.color} size={rd(40, 32)} />
       <div className="min-w-0 flex-1 text-left">
-        <p className="text-[15px] font-semibold text-white">{capName(d.name)}</p>
-        <p className="truncate text-[13px] text-[#9a9ba3]">{online.includes(d.name) ? 'On Arcade' : 'Offline'}</p>
+        <p className={'font-semibold text-white ' + rd('text-[15px]', 'text-[14px] leading-[1.2]')}>{capName(d.name)}</p>
+        <p className={'truncate text-[#9a9ba3] ' + rd('text-[13px]', 'text-[12px]')}>{online.includes(d.name) ? 'On Arcade' : 'Offline'}</p>
       </div>
-      <span className={'flex size-[24px] shrink-0 items-center justify-center rounded-[6px] border-2 ' + (eSel[d.name] ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
-        {eSel[d.name] && <svg viewBox="0 0 24 24" className="size-[14px] text-white" fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
+      <span className={'flex shrink-0 items-center justify-center border-2 ' + rd('size-[24px] rounded-[6px] ', 'size-[20px] rounded-[4px] ') + (eSel[d.name] ? 'border-[#5765f2] bg-[#5765f2]' : 'border-[#4a4d55]')}>
+        {eSel[d.name] && <svg viewBox="0 0 24 24" className={rd('size-[14px]', 'size-[12px]') + ' text-white'} fill="none" stroke="currentColor" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>}
       </span>
     </button>
   )
@@ -6195,22 +6707,70 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
   }
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
-        <div className="flex items-start justify-between gap-[12px] px-[24px] pt-[22px]">
+    <div data-xbox className={'fixed inset-0 z-[95] flex justify-center bg-black/60 p-4 ' + rd('items-center', 'items-start pt-[12vh]')} onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className={"flex " + rd("max-h-[86vh]", "max-h-[calc(88vh-32px)]") + " w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]"}>
+        {/* Redesign: a solid Xbox-green header band with black type, so the
+            modal's purpose reads at a glance and it's unmistakably Xbox. */}
+        <div className={'flex justify-between gap-[12px] px-[24px] ' + rd('items-start pt-[22px]', 'items-center bg-[#9BF00B] py-[20px]')}>
           <div>
-            <p className="text-[22px] font-bold text-white">Start a party</p>
-            <p className="mt-[4px] text-[15px] text-[#b5bac1]">Pick a game and invite friends to jump in.</p>
+            <p className={'text-[22px] font-bold ' + rd('text-white', 'leading-[1.1] text-black')}>{START_PARTY}</p>
+            <p className={'text-[15px] ' + rd('mt-[4px] text-[#b5bac1]', 'mt-[2px] leading-[1.25] text-black/80')}>Pick a game and invite friends to jump in.</p>
           </div>
-          <button onClick={onClose} aria-label="Close" className="mt-[2px] shrink-0 text-[#b5bac1] transition hover:text-white">
-            <svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          <button onClick={onClose} aria-label="Close" className={'shrink-0 transition ' + rd('mt-[2px] text-[#b5bac1] hover:text-white', 'text-black hover:opacity-70')}>
+            <svg viewBox="0 0 24 24" className={rd('size-[22px]', 'size-[26px]')} fill="none" stroke="currentColor" strokeWidth={rd(2, 2.6)} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
 
         <div className="no-scrollbar flex-1 overflow-y-auto px-[24px] py-[16px]">
           {/* Game selection */}
           <p className="mb-[6px] text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Game</p>
-          {selected ? (
+          {REDESIGN ? (
+            <>
+              {/* Redesign: picker and picked-game row are both always mounted and
+                  cross-collapse on the same 400ms curve as the invite list, so
+                  picking / changing a game glides instead of snapping. */}
+              <Collapse open={!selected}>
+                {/* Recents live in the modal as a quick-pick grid (not in the
+                    dropdown, which is only for typed matches). */}
+                <GameSearchField value={eGameQ} onChange={setGameQ} query={gameQuery} results={gameResults} recent={[]} onPick={pickGame} />
+                {recentEntries.length > 0 && (
+                  <>
+                    <p className="mb-[8px] mt-[14px] text-[12px] font-semibold tracking-wide text-[#87898c]">Recent searches</p>
+                    {/* At most two, side by side — a quick pick, not a list. Compact
+                        rows (small thumb + text) keep the section short, so the
+                        modal never has to scroll and clip the art; object-contain
+                        shows each cover whole, whatever its exact ratio. */}
+                    <div className="grid grid-cols-2 gap-[8px]">
+                      {recentEntries.slice(0, 2).map(([k, v]) => (
+                        <button key={k} onClick={() => pickGame(k)} title={v.title} className="group/recent flex min-w-0 items-center gap-[10px] rounded-[8px] p-[6px] text-left transition hover:bg-white/5">
+                          {v.image
+                            ? <img alt="" src={v.image} className="aspect-video w-[80px] shrink-0 rounded-[4px] bg-black object-contain ring-1 ring-white/5 transition group-hover/recent:ring-2 group-hover/recent:ring-[#9BF00B]" />
+                            : <span className="block aspect-video w-[80px] shrink-0 rounded-[4px] bg-white/10" />}
+                          <span className="min-w-0">
+                            <span className="block truncate text-[13px] font-semibold text-white">{v.title}</span>
+                            <span className="block truncate text-[12px] text-[#9a9ba3]">{playersLabel(v.players)}</span>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </Collapse>
+              <Collapse open={!!selected}>
+                {/* Keeps showing the last game while it collapses after Change. */}
+                {shown && (
+                  <div className="flex items-center gap-[12px] rounded-[10px] bg-[#1e1f22] p-[10px]">
+                    {gameImg(shownKey) && <img alt="" src={gameImg(shownKey)} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" />}
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[15px] font-semibold text-white">{shown.title}</p>
+                      <p className="truncate text-[13px] text-[#9a9ba3]">{capName(shown.genre || 'game')} · {playersLabel(shown.players)}</p>
+                    </div>
+                    <button onClick={changeGame} className="shrink-0 text-[13px] font-semibold text-[#8aa0ff] transition hover:underline">Change</button>
+                  </div>
+                )}
+              </Collapse>
+            </>
+          ) : selected ? (
             <div className="flex items-center gap-[12px] rounded-[10px] bg-[#1e1f22] p-[10px]">
               {gameImg(eGameKey) && <img alt="" src={gameImg(eGameKey)} className="h-[46px] w-[82px] shrink-0 rounded-[6px] object-cover" />}
               <div className="min-w-0 flex-1">
@@ -6267,14 +6827,36 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
 
           {/* Invitees */}
           <div className="mt-[18px] flex items-center gap-[12px]">
-            <span className="text-[13px] font-semibold tracking-wide text-[#9a9ba3]">Invite</span>
+            <span className={'text-[13px] font-semibold tracking-wide transition-colors duration-300 ' + (inviteOpen ? 'text-[#9a9ba3]' : 'text-[#5a5c64]')}>Invite</span>
+            {!inviteOpen && <span className="text-[13px] text-[#5a5c64]">Pick a game first</span>}
           </div>
-          {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on right now — search below.</p>}
-          <div className="mt-[10px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
-            <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
-            <input value={eQ} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+          {/* Redesign: the invite list stays collapsed until a game is picked —
+              the flow is game → people, so there's nothing to invite to yet.
+              Grid rows 0fr → 1fr animates to the content's natural height;
+              `inert` keeps the hidden rows out of the tab order. */}
+          <div
+            className="grid transition-[grid-template-rows,opacity] duration-[400ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+            style={{ gridTemplateRows: inviteOpen ? '1fr' : '0fr', opacity: inviteOpen ? 1 : 0 }}
+            {...(!inviteOpen && { inert: '' })}
+          >
+            <div className="min-h-0 overflow-hidden">
+              {/* Redesign: a single-player game can still have a party — friends
+                  watch it streamed — so say that up front rather than letting
+                  "invite" imply they'll play too. */}
+              {soloGame && (
+                <p className="mb-[8px] mt-[6px] flex items-start gap-[8px] rounded-[6px] bg-[#9BF00B]/10 px-[10px] py-[8px] text-[13px] leading-[1.35] text-[#c7c9cb]">
+                  <svg viewBox="0 0 24 24" className="mt-[1px] size-[16px] shrink-0 text-[#9BF00B]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16.2 7.8a6 6 0 0 1 0 8.4M7.8 16.2a6 6 0 0 1 0-8.4M19 5a10 10 0 0 1 0 14M5 19A10 10 0 0 1 5 5" /><circle cx="12" cy="12" r="2" /></svg>
+                  <span><span className="font-semibold text-white">{shown.title}</span> is single-player. Friends you invite will watch it streamed from your game.</span>
+                </p>
+              )}
+              {inCall.length ? inCall.map((d) => <Row key={d.name} d={d} />) : <p className="py-[6px] text-[13px] text-[#6f7276]">No one else is on right now — search below.</p>}
+              <div className="mt-[10px] flex items-center gap-[8px] rounded-[8px] bg-[#1e1f22] px-[12px] py-[9px]">
+                <svg viewBox="0 0 24 24" className="size-[16px] text-[#87898c]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" strokeLinecap="round" /></svg>
+                <input value={eQ} onChange={(e) => setQ(e.target.value)} placeholder="Search friends" className="w-full bg-transparent text-[14px] text-white placeholder:text-[#87898c] focus:outline-none" />
+              </div>
+              <div className={rd("", "mt-[6px]")}>{friendFiltered.map((d) => <Row key={d.name} d={d} />)}</div>
+            </div>
           </div>
-          {friendFiltered.map((d) => <Row key={d.name} d={d} />)}
         </div>
 
         <div className="flex items-center justify-end gap-[10px] border-t border-black/20 px-[24px] py-[16px]">
@@ -6294,7 +6876,7 @@ function StartPartyModal({ onClose, onStart, initialGame, recent = [], onOpenGam
 }
 
 // The party roster row: each member's avatar with a green check once ready.
-function PartyAvatars({ launch }) {
+function PartyAvatars({ launch, size = 38, ring = '#17181b' }) {
   const { ready, declined } = launchTally(launch)
   const members = [launch.host, ...(launch.invitees || [])]
   return (
@@ -6304,8 +6886,8 @@ function PartyAvatars({ launch }) {
         const isDeclined = declined[n]
         // ready → green check, declined → red X, still deciding → no badge (dim).
         return (
-          <span key={n} className="relative" style={{ marginRight: i < members.length - 1 ? -8 : 0 }}>
-            <Avatar color={COLOR_OF[n] || '#4a4d55'} size={38} style={{ boxShadow: '0 0 0 2px #17181b', opacity: isReady ? 1 : isDeclined ? 0.45 : 0.55 }} />
+          <span key={n} className="relative" style={{ marginRight: i < members.length - 1 ? -Math.round(size * 0.21) : 0 }}>
+            <Avatar color={COLOR_OF[n] || '#4a4d55'} size={size} style={{ boxShadow: `0 0 0 2px ${ring}`, opacity: isReady ? 1 : isDeclined ? 0.45 : 0.55 }} />
             {isReady ? (
               <span className="absolute -bottom-[1px] -right-[1px] flex size-[15px] items-center justify-center rounded-full bg-[#23a55a] ring-2 ring-[#17181b]">
                 <svg viewBox="0 0 24 24" className="size-[9px] text-white" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg>
@@ -6331,7 +6913,7 @@ const CheckBadge = () => (
 // The cross-page party toast (Figma 863:4361 / 4425 / 4382 / 4469). Which face it
 // shows depends on whether you're the host or an invitee and your ready state.
 // Rendered once at the app root so it follows you across every page.
-function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, clear, onLaunch }) {
+function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, clear, onLaunch, hideForHost }) {
   const launchNames = useNames()
   const [, tick] = useState(0)
   const [dismissed, setDismissed] = useState(null) // local hide, keyed by party id
@@ -6359,6 +6941,10 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
 
   const isInvitee = (launch.invitees || []).includes(SELF_NAME)
   if (!isHost && !isInvitee) return null // a bystander in the room sees nothing
+  // Redesign: the host on Home already has the Live Party card with the same
+  // status + actions — don't double it with a toast. (Render-only: the launch
+  // effect above still runs, so the host still clears the party.)
+  if (isHost && hideForHost) return null
 
   const iReady = !!(launch.ready || {})[SELF_NAME]
   const iDeclined = !!(launch.declined || {})[SELF_NAME]
@@ -6451,7 +7037,7 @@ function LaunchNotification({ launch, readyUp, undoReady, decline, launchNow, cl
   }
 
   return (
-    <div className="pointer-events-auto fixed top-[24px] right-[24px] z-[200] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+    <div data-xbox className="pointer-events-auto fixed top-[24px] right-[24px] z-[200] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
       <button onClick={() => setDismissed(launch.id)} aria-label="Dismiss" className="absolute right-[8px] top-[8px] z-[1] flex size-[26px] items-center justify-center rounded-full bg-black/40 text-[#c7c9cb] transition hover:bg-black/60 hover:text-white">
         <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
       </button>
@@ -6476,7 +7062,7 @@ function WheelNotification({ spin, onOpenWheel, onStartParty, onRestart, onDismi
   const iSpun = by === SELF_NAME
   const cover = picked && (CATALOG[picked.key]?.image || STARTER_BY_KEY[picked.key]?.image)
   return (
-    <div className="pointer-events-auto fixed right-[24px] top-[72px] z-[190] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
+    <div data-xbox className="pointer-events-auto fixed right-[24px] top-[72px] z-[190] w-[416px] max-w-[calc(100vw-32px)] overflow-hidden rounded-[14px] border border-[#1c1d21] bg-[#17181b] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
       <div className="flex">
         {!spinning && (cover ? <img alt="" src={cover} className="w-[116px] shrink-0 self-stretch object-cover" /> : <span className="w-[116px] shrink-0 self-stretch bg-[#2b2d31]" />)}
         <div className="flex min-w-0 flex-1 flex-col gap-[12px] p-[16px]">
@@ -6505,7 +7091,7 @@ function WheelNotification({ spin, onOpenWheel, onStartParty, onRestart, onDismi
               <div className="flex flex-wrap gap-[8px]">
                 <button onClick={() => onStartParty(picked)} className="flex items-center gap-[7px] rounded-[8px] bg-[#9BF00B] px-[14px] py-[8px] text-[13px] font-bold text-[#0c0c0e] transition hover:brightness-110">
                   <PartyGlyph size={15} />
-                  Start a party
+                  {START_PARTY}
                 </button>
                 <button onClick={onOpenWheel} className="rounded-[8px] bg-[#3a3c42] px-[14px] py-[8px] text-[13px] font-semibold text-white transition hover:bg-[#44464d]">Go to wheel</button>
               </div>
@@ -6539,7 +7125,7 @@ function DecidePage({ blend, prefs, onBack }) {
   const selectedLabels = [...new Set(prefs.map((p) => p.label))]
 
   return (
-    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+    <main data-xbox className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[28px]">
         <div className="mx-auto w-full max-w-[1200px]">
 
@@ -6730,7 +7316,7 @@ function ShareModal({ game, initialFriend, onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div data-discord className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex max-h-[86vh] w-[480px] max-w-full flex-col overflow-hidden rounded-[16px] bg-[#2b2d31] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="p-[24px] pb-[12px]">
           <div className="flex items-start justify-between gap-[12px]">
@@ -6894,7 +7480,7 @@ function QuickShareModal({ game, to, hrs, onClose }) {
     setTimeout(onClose, 700)
   }
   return (
-    <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
+    <div data-discord className="fixed inset-0 z-[96] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
       <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="w-[440px] max-w-full rounded-[16px] bg-[#2b2d31] p-[24px] shadow-[0_16px_48px_rgba(0,0,0,0.6)]">
         <div className="flex items-start justify-between gap-[12px]">
           <div className="flex items-center gap-[12px]">
@@ -7826,13 +8412,17 @@ function WriteReviewModal({ onClose, onSubmit }) {
       {glyph}{label}
     </button>
   )
+  const overlay = useModalOverlay('fixed inset-0 z-[96] flex justify-center bg-black/70 p-4')
   return (
-    <div className="fixed inset-0 z-[96] flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
-      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className="flex w-[520px] max-w-full flex-col gap-[18px] rounded-[16px] border border-[#1c1d21] bg-[#1c1c1f] p-[24px] shadow-[0_24px_80px_rgba(0,0,0,0.7)]">
+    <div {...overlay} onClick={onClose}>
+      <div ref={dlg.ref} {...dlg.props} onClick={(e) => e.stopPropagation()} className={'flex w-[520px] max-w-full flex-col shadow-[0_24px_80px_rgba(0,0,0,0.7)] rounded-[16px] ' + rd('gap-[18px] border border-[#1c1d21] bg-[#1c1c1f] p-[24px]', 'max-h-[calc(88vh-32px)] overflow-hidden bg-[#2b2d31]')}>
+        {REDESIGN ? <ModalHeader title="Write a review" onClose={onClose} /> : (
         <div className="flex items-center justify-between">
           <h3 className="text-[22px] font-bold text-white">Write a review</h3>
           <button onClick={onClose} aria-label="Close" className="text-[#9a9ba3] transition hover:text-white"><svg viewBox="0 0 24 24" className="size-[22px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
         </div>
+        )}
+        <div className={rd('contents', 'no-scrollbar flex min-h-0 flex-1 flex-col gap-[18px] overflow-y-auto p-[24px]')}>
 
         {/* Recommend? — thumb up / down */}
         <div>
@@ -7896,6 +8486,7 @@ function WriteReviewModal({ onClose, onSubmit }) {
         <div className="flex justify-end gap-[10px]">
           <button onClick={onClose} className="rounded-[8px] bg-[#3a3c42] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:bg-[#44464d]">Cancel</button>
           <button onClick={post} disabled={!canPost} className="rounded-[8px] bg-[#5765f2] px-[18px] py-[10px] text-[14px] font-semibold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40">Post review</button>
+        </div>
         </div>
       </div>
     </div>
@@ -8089,7 +8680,7 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
   const eSearchOpen = IS_SPECTATE ? !!dUI?.searchOpen : searchOpen
 
   return (
-    <main className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
+    <main data-xbox className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
       {/* Top nav — same Home / Library / Mixes header as the homepage */}
       <PageNav onHome={onHome || onBack} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
       {eSearchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
@@ -8614,11 +9205,30 @@ function LauncherPage() {
   // href only when ready; otherwise the anchor is inert + marked disabled.
   const gate = (q) => (ready ? { href: link(q) } : { 'aria-disabled': true, tabIndex: -1 })
   const off = ready ? '' : ' pointer-events-none opacity-40'
+  // Redesign preview — not gated on the room; applies to whatever is opened next.
+  const [redesignOn, setRedesignOn] = useState(REDESIGN)
+  const toggleRedesign = () => { const next = !redesignOn; setRedesignOn(next); setRedesign(next) }
   return (
-    <div className="no-scrollbar flex min-h-screen w-screen flex-col items-center overflow-y-auto bg-[#0b0b0d] px-[24px] py-[56px] text-white">
+    <div data-xbox className="no-scrollbar flex min-h-screen w-screen flex-col items-center overflow-y-auto bg-[#0b0b0d] px-[24px] py-[56px] text-white">
       <div className="w-full max-w-[880px]">
         <p className="text-[13px] font-semibold uppercase tracking-[0.14em] text-[#8aa0ff]">Prototype</p>
-        <h1 className="mt-[8px] text-[40px] font-bold leading-tight tracking-tight">XBOX ARCADE</h1>
+        <div className="mt-[8px] flex items-center justify-between gap-[16px]">
+          <h1 className="text-[40px] font-bold leading-tight tracking-tight">XBOX ARCADE</h1>
+          {/* Redesign preview — flips every view between the as-tested prototype
+              and the redesigned elements (see REDESIGN_LOG.md). */}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={redesignOn}
+            onClick={toggleRedesign}
+            className="flex shrink-0 items-center gap-[10px] rounded-full py-[4px] pl-[12px] pr-[4px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]"
+          >
+            Redesign
+            <span className={'relative h-[24px] w-[40px] rounded-full transition ' + (redesignOn ? 'bg-[#5765f2]' : 'bg-[#4e5058]')}>
+              <span className={'absolute top-[3px] size-[18px] rounded-full bg-white transition-all ' + (redesignOn ? 'left-[19px]' : 'left-[3px]')} />
+            </span>
+          </button>
+        </div>
         <p className="mt-[10px] max-w-[560px] text-[16px] leading-relaxed text-[#b5bac1]">
           Name a room, then pick a player to explore the prototype as them, or open the
           multi view to drive every side of a flow on one screen.
@@ -9089,6 +9699,7 @@ export default function Landing() {
           <StartPartyModal
             initialGame={ePartyGameInit}
             recent={recentGames}
+            onRecord={recordRecent}
             onOpenGame={(k) => { setStartPartyOpen(false); setPartyGameInit(null); openGame(k, { party: true }) }}
             onClose={() => { setStartPartyOpen(false); setPartyGameInit(null) }}
             onStart={(game, invitees) => {
@@ -9118,6 +9729,7 @@ export default function Landing() {
           <StartPartyModal
             initialGame={{ key: ePlayKey, title: CATALOG[ePlayKey].title, image: CATALOG[ePlayKey].image }}
             recent={recentGames}
+            onRecord={recordRecent}
             onOpenGame={(k) => { setPlayKey(null); openGame(k) }}
             onClose={() => setPlayKey(null)}
             onStart={(game, invitees) => {
@@ -9136,7 +9748,7 @@ export default function Landing() {
             y={eGameMenu.y}
             onClose={() => setGameMenu(null)}
             items={[
-              { label: 'Start a party', icon: PLAY_GLYPH, primary: true, onClick: () => { const k = KEY_OF_TITLE[eGameMenu.title]; setGameMenu(null); if (k) setPlayKey(k) } },
+              { label: START_PARTY, icon: PLAY_GLYPH, primary: true, onClick: () => { const k = KEY_OF_TITLE[eGameMenu.title]; setGameMenu(null); if (k) setPlayKey(k) } },
               { divider: true },
               { label: 'Add to PlayList', icon: BOOKMARK_MENU_GLYPH, onClick: () => { setWishlistGame(eGameMenu.title); setGameMenu(null) } },
               { label: 'Add to Wheel', icon: WHEEL_MENU_GLYPH, onClick: () => { addToWheel(eGameMenu.title); setGameMenu(null) } },
@@ -9156,6 +9768,7 @@ export default function Landing() {
             online={room.online}
             onParty={startWheelParty}
             autoJoin={IS_SPECTATE ? false : wheelAutoJoin}
+            voteBlend={REDESIGN && blend && !decideBlend ? blend : null}
             onClose={() => { setWheelOpen(false); setWheelAutoJoin(false) }}
           />
         )}
@@ -9188,6 +9801,7 @@ export default function Landing() {
           launchNow={party.launchNow}
           clear={party.clear}
           onLaunch={setLaunching}
+          hideForHost={REDESIGN && !dmFriend && !decideBlend && !blend && !eDetailKey && !eLibraryTab && !eMixesTab}
         />
         {launching && <LaunchToast title={launching} onDone={() => setLaunching(null)} />}
 

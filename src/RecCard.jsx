@@ -1,5 +1,10 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/index.js'
+import { REDESIGN, rd } from './redesign.js'
+
+// The party action's label, shared by every button, tooltip and menu that starts
+// one. Redesign: title case, so it reads as the product's named action.
+export const START_PARTY = rd('Start a party', 'Start A Party')
 
 // Set by Landing to a handler(tagText) that opens the Library filtered by a
 // clicked card tag. null when no handler is provided (tags stay non-clickable).
@@ -50,11 +55,15 @@ function smoothScrollLeft(el, to, duration = 600) {
   const dist = to - start
   if (Math.abs(dist) < 1) return
   const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+  // Redesign: quick in, then a long ease-out — the row responds the instant
+  // the arrow is pressed and settles gently, instead of a slow wind-up.
+  const easeOutQuint = (t) => 1 - Math.pow(1 - t, 5)
+  const ease = REDESIGN ? easeOutQuint : easeInOutCubic
   let startT = null
   function step(ts) {
     if (startT === null) startT = ts
     const p = Math.min((ts - startT) / duration, 1)
-    el.scrollLeft = start + dist * easeInOutCubic(p)
+    el.scrollLeft = start + dist * ease(p)
     if (p < 1) requestAnimationFrame(step)
   }
   requestAnimationFrame(step)
@@ -874,6 +883,15 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
         </div>
       )}
 
+      {/* Redesign: a dark top scrim behind the title — the drop shadow alone
+          loses the text on bright footage. Fades with the rest of the overlay. */}
+      {REDESIGN && (
+        <div
+          className={`${pool} left-0 top-0 h-[60%] w-full`}
+          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0) 100%)' }}
+        />
+      )}
+
       {/* Title + studio · release date — no scrim. Legibility comes from a plain
           drop shadow, which keeps the text true white on any footage. */}
       <div
@@ -918,11 +936,11 @@ export function CinematicCard({ image, video, avatars, avatarTargets, label, pla
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onParty(title) }}
-            aria-label="Start a party"
+            aria-label={START_PARTY}
             className={`${reveal} group/party relative flex size-[28px] items-center justify-center`}
           >
             <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/party:opacity-100">
-              Start a party
+              {START_PARTY}
             </span>
             <PartyGlyph size={22} className={`transition-[scale,filter] duration-200 ${EASE} group-hover/party:scale-110 group-hover/party:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} style={{ color: ACCENT }} />
           </button>
@@ -1125,10 +1143,14 @@ function ChevronGlyph({ direction }) {
  *  card styles that don't go through RecCard. A left/right arrow appears over
  *  the row's edge whenever there are more cards scrolled out of view on that
  *  side, and disappears once scrolling reaches that end. */
-export function ShelfRow({ title, subtitle, gap = 24, padTop = 20, children }) {
+export function ShelfRow({ title, subtitle, action, bleed = false, gap = 24, padTop = 20, children }) {
   const rowRef = useRef(null)
   const [canLeft, setCanLeft] = useState(false)
   const [canRight, setCanRight] = useState(false)
+  // Redesign: center the arrows on the card art rather than the whole row — the
+  // row also holds the padding and any social line above each card, which
+  // pushed top-1/2 below the art's middle. null → fall back to top-1/2.
+  const [arrowTop, setArrowTop] = useState(null)
 
   useEffect(() => {
     const el = rowRef.current
@@ -1136,6 +1158,12 @@ export function ShelfRow({ title, subtitle, gap = 24, padTop = 20, children }) {
     const update = () => {
       setCanLeft(el.scrollLeft > 4)
       setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+      // `data-shelf-art` marks the art box on non-game cards (PlayLists).
+      const card = REDESIGN && el.querySelector('[data-game], [data-shelf-art]')
+      if (card) {
+        const r = card.getBoundingClientRect()
+        setArrowTop(r.top - el.parentElement.getBoundingClientRect().top + r.height / 2)
+      }
     }
     update()
     el.addEventListener('scroll', update, { passive: true })
@@ -1153,18 +1181,41 @@ export function ShelfRow({ title, subtitle, gap = 24, padTop = 20, children }) {
 
   return (
     <div className="mt-[56px] flex w-full shrink-0 flex-col">
-      <p className="text-[24px] font-semibold text-white">{title}</p>
+      {/* `action` — an optional link (e.g. "See all") right beside the title. */}
+      {action ? (
+        <div className="flex items-baseline gap-[16px]">
+          <p className="text-[24px] font-semibold text-white">{title}</p>
+          {action}
+        </div>
+      ) : (
+        <p className="text-[24px] font-semibold text-white">{title}</p>
+      )}
       {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
-      <div className="relative">
-        <div ref={rowRef} className="rec-row no-scrollbar flex w-full items-start overflow-x-auto pb-[4px]" style={{ gap, paddingTop: padTop }}>
+      {/* `bleed` — widen the row a few px past the gutter (content stays
+          aligned) so rings/outlines drawn outside a card aren't clipped. The
+          wrapper bleeds, not just the scroller, so the edge fades and arrows
+          cover the same span and nothing peeks out past the fade. */}
+      <div className={'relative' + (bleed ? ' -ml-[4px]' : '')}>
+        <div ref={rowRef} className={'rec-row no-scrollbar flex w-full items-start overflow-x-auto pb-[4px]' + (bleed ? ' pl-[4px]' : '')} style={{ gap, paddingTop: padTop }}>
           {children}
           <div aria-hidden className="w-[40px] shrink-0" />
         </div>
+        {/* Redesign: edge fades into the page black, shown only on a side that
+            has more cards to scroll to — a cue that the row continues. */}
+        {REDESIGN && ['left', 'right'].map((side) => (
+          <div
+            key={side}
+            aria-hidden
+            className={`pointer-events-none absolute inset-y-0 ${side === 'left' ? 'left-0' : 'right-0'} z-[5] w-[120px] transition-opacity duration-300 ` + ((side === 'left' ? canLeft : canRight) ? 'opacity-100' : 'opacity-0')}
+            style={{ background: `linear-gradient(to ${side}, rgba(12,12,14,0) 0%, #0c0c0e 100%)` }}
+          />
+        ))}
         {canLeft && (
           <button
             type="button"
             aria-label="Scroll left"
             onClick={() => scrollByPage(-1)}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
             className="absolute left-[8px] top-1/2 z-10 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-black/70 transition hover:bg-black/90"
           >
             <ChevronGlyph direction="left" />
@@ -1175,6 +1226,7 @@ export function ShelfRow({ title, subtitle, gap = 24, padTop = 20, children }) {
             type="button"
             aria-label="Scroll right"
             onClick={() => scrollByPage(1)}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
             className="absolute right-[8px] top-1/2 z-10 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-black/70 transition hover:bg-black/90"
           >
             <ChevronGlyph direction="right" />

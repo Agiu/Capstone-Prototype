@@ -69,6 +69,16 @@ html[data-kbd] .kbd-ring:focus-within {
   from { transform: translateX(-44px); }
   to { transform: translateX(0); }
 }
+/* Redesign: the reverse, played on the home nav when arriving from an inner
+   page — the back arrow fades out as the logo + tabs slide back left. */
+@keyframes navBackOut {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-8px); }
+}
+@keyframes navGroupSlideBack {
+  from { transform: translateX(44px); }
+  to { transform: translateX(0); }
+}
 
 /* Discord's "gg sans" — mapped to standard weights so font-normal (400),
    font-medium (500), font-semibold (600) and font-bold (700) all render. */
@@ -211,4 +221,161 @@ body,
   background: rgba(0, 0, 0, 0.72);
   animation: spin-scrim 420ms ease;
   transition: opacity 420ms ease;
+}
+
+/* ── Redesign: tight corners on Xbox surfaces ──────────────────────────────
+   With the redesign toggle on (html[data-redesign], set in redesign.js),
+   a [data-xbox] page or overlay, and anything inside it, that was rounded (a
+   rounded-* class or an inline radius) drops to a tight 2px — the root counts
+   too, since toasts and popovers are themselves the rounded card. Square stays
+   square, so full-bleed sections don't pick up corner notches.
+   [data-discord] marks Discord pieces nested inside (friend/chat pickers),
+   which keep their own rounding. !important so it also beats inline styles. */
+html[data-redesign] [data-xbox]:is([class*="rounded"], [style*="border-radius"]),
+html[data-redesign] [data-xbox] :is([class*="rounded"], [style*="border-radius"]):not([data-discord], [data-discord] *) {
+  border-radius: 2px !important;
+}
+/* Circles aren't corners — avatars, status dots and round icon buttons stay
+   round. A rounded-full with horizontal padding is a pill, and takes the 2px.
+   An inline radius means it's deliberately not a circle. */
+html[data-redesign] [data-xbox] .rounded-full:not([class^="px-"], [class*=" px-"], [class^="pl-"], [class*=" pl-"], [class^="pr-"], [class*=" pr-"], [style*="border-radius"]) {
+  border-radius: 9999px !important;
+}
+
+/* ── Redesign: darker surface greys ─────────────────────────────────────────
+   The modal/panel grey (#2b2d31) read too bright, flattening contrast with the
+   buttons on it. With the redesign on, it and the darker inset grey used for
+   inputs (#1e1f22) both step down, keeping the inset darker than its surface.
+   Remapped by class so every use across the project follows; borders and rings
+   in the surface grey are avatar cut-outs that must keep matching it. */
+html[data-redesign] {
+  --rd-surface: #1a1b1e; /* was #2b2d31 */
+  --rd-inset: #111214;   /* was #1e1f22 */
+}
+html[data-redesign] .bg-\[\#2b2d31\],
+html[data-redesign] .hover\:bg-\[\#2b2d31\]:hover {
+  background-color: var(--rd-surface) !important;
+}
+html[data-redesign] .border-\[\#2b2d31\] {
+  border-color: var(--rd-surface) !important;
+}
+html[data-redesign] .ring-\[\#2b2d31\] {
+  --tw-ring-color: var(--rd-surface) !important;
+}
+html[data-redesign] .bg-\[\#1e1f22\] {
+  background-color: var(--rd-inset) !important;
+}
+html[data-redesign] .bg-\[\#1e1f22\]\/90 {
+  background-color: rgb(17 18 20 / 0.9) !important;
+}
+html[data-redesign] .bg-\[\#1e1f22\]\/80 {
+  background-color: rgb(17 18 20 / 0.8) !important;
+}
+
+/* ── Redesign: Xbox green replaces Discord blurple on Xbox surfaces ─────────
+   Inside [data-xbox] (not [data-discord]), the blurple accent (#5765f2, plus
+   its light link tints #8aa0ff / #8b95ff) becomes Xbox green, so selected,
+   primary and link states speak Xbox. Remapped by class; blurple used as a data
+   colour (wheel segments, PlayList colours, avatars) is inline and untouched.
+   White text/icons on a filled green would fail contrast, so they go black. */
+html[data-redesign] {
+  --rd-green: #9bf00b;
+  --rd-on-green: #0c0c0e;
+}
+html[data-redesign] [data-xbox] :is(.bg-\[\#5765f2\]):not([data-discord] *) {
+  background-color: var(--rd-green) !important;
+}
+html[data-redesign] [data-xbox] :is(.bg-\[\#5765f2\], .bg-\[\#5765f2\] *):not([data-discord] *) {
+  color: var(--rd-on-green) !important;
+}
+html[data-redesign] [data-xbox] .bg-\[\#5765f2\]\/15:not([data-discord] *) {
+  background-color: rgb(155 240 11 / 0.15) !important;
+}
+html[data-redesign] [data-xbox] .bg-\[\#5765f2\]\/\[0\.08\]:not([data-discord] *) {
+  background-color: rgb(155 240 11 / 0.08) !important;
+}
+html[data-redesign] [data-xbox] :is(.border-\[\#5765f2\], .hover\:border-\[\#5765f2\]:hover):not([data-discord] *) {
+  border-color: var(--rd-green) !important;
+}
+html[data-redesign] [data-xbox] :is(
+  .ring-\[\#5765f2\],
+  .focus\:ring-\[\#5765f2\]:focus,
+  .hover\:ring-\[\#5865f2\]:hover,
+  .group\/av:hover .group-hover\/av\:ring-\[\#5765f2\],
+  .group\/av:focus-within .group-focus-within\/av\:ring-\[\#5765f2\]
+):not([data-discord] *) {
+  --tw-ring-color: var(--rd-green) !important;
+}
+html[data-redesign] [data-xbox] :is(.text-\[\#5765f2\], .text-\[\#8aa0ff\], .text-\[\#8b95ff\]):not([data-discord] *) {
+  color: var(--rd-green) !important;
+}
+
+/* ── Redesign: one Xbox green ───────────────────────────────────────────────
+   Xbox surfaces mixed four greens — classic #107C10 (play buttons, primary
+   actions), #3fbf3f / #3dbf1e (links, checks, wheel accents) and #0e8f0e
+   (hover) — next to the lime #9BF00B used everywhere else. All collapse to the
+   one lime (--rd-green, defined above). As with blurple, anything sitting on a
+   filled green switches to near-black for contrast. */
+html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\], .bg-\[\#3dbf1e\], .hover\:bg-\[\#107C10\]:hover):not([data-discord] *) {
+  background-color: var(--rd-green) !important;
+}
+html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\], .bg-\[\#107C10\] *, .bg-\[\#3dbf1e\], .bg-\[\#3dbf1e\] *, .hover\:bg-\[\#107C10\]:hover, .hover\:bg-\[\#107C10\]:hover *):not([data-discord] *) {
+  color: var(--rd-on-green) !important;
+}
+html[data-redesign] [data-xbox] .hover\:bg-\[\#0e8f0e\]:hover:not([data-discord] *) {
+  background-color: var(--rd-green) !important;
+  filter: brightness(1.1);
+}
+html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\]\/15, .hover\:bg-\[\#107C10\]\/15:hover):not([data-discord] *) { background-color: rgb(155 240 11 / 0.15) !important; }
+html[data-redesign] [data-xbox] .bg-\[\#107C10\]\/20:not([data-discord] *) { background-color: rgb(155 240 11 / 0.2) !important; }
+html[data-redesign] [data-xbox] .hover\:bg-\[\#107C10\]\/30:hover:not([data-discord] *) { background-color: rgb(155 240 11 / 0.3) !important; }
+html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\]\/40, .bg-\[\#3dbf1e\]\/40):not([data-discord] *) { background-color: rgb(155 240 11 / 0.4) !important; }
+html[data-redesign] [data-xbox] :is(.border-\[\#107C10\], .hover\:border-\[\#107C10\]:hover):not([data-discord] *) {
+  border-color: var(--rd-green) !important;
+}
+html[data-redesign] [data-xbox] .border-\[\#107C10\]\/50:not([data-discord] *) { border-color: rgb(155 240 11 / 0.5) !important; }
+html[data-redesign] [data-xbox] .ring-\[\#3dbf1e\]:not([data-discord] *) { --tw-ring-color: var(--rd-green) !important; }
+html[data-redesign] [data-xbox] .ring-\[\#107C10\]\/30:not([data-discord] *) { --tw-ring-color: rgb(155 240 11 / 0.3) !important; }
+html[data-redesign] [data-xbox] :is(.text-\[\#3fbf3f\], .hover\:text-\[\#3fbf3f\]:hover, .text-\[\#8dff5a\]):not([data-discord] *) {
+  color: var(--rd-green) !important;
+}
+html[data-redesign] [data-xbox] :is(.shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.45\)\], .shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.5\)\]):not([data-discord] *) {
+  box-shadow: 0 2px 12px rgb(155 240 11 / 0.35) !important;
+}
+
+/* Redesign: Start A Party hover slice. A triangle anchored at the bottom-right
+   corner grows until its diagonal edge passes the top-left corner, so the fill
+   sweeps corner to corner. Collapsed again on leave. */
+.party-slice {
+  clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
+  transition: clip-path 420ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.group:hover > .party-slice,
+.group:focus-visible > .party-slice {
+  clip-path: polygon(100% 100%, -100% 100%, 100% -100%);
+}
+@media (prefers-reduced-motion: reduce) {
+  .party-slice { transition: none; }
+}
+
+/* Redesign: secondary buttons are outlined, not filled. Filled grey competed
+   with the green primary for attention; an outline keeps the hierarchy clear
+   (one filled action per group). Covers every grey secondary style used on
+   Xbox surfaces — #3a3c42, #4e5058 and the dark #1c1c1f + white/10 ring. */
+html[data-redesign] [data-xbox] button:is(.bg-\[\#3a3c42\], .bg-\[\#4e5058\], .bg-\[\#1c1c1f\].ring-white\/10):not([data-discord] *) {
+  background-color: transparent !important;
+  box-shadow: inset 0 0 0 1.5px #4e5058 !important;
+}
+html[data-redesign] [data-xbox] button:is(.bg-\[\#3a3c42\], .bg-\[\#4e5058\], .bg-\[\#1c1c1f\].ring-white\/10):not([data-discord] *):hover {
+  background-color: rgb(255 255 255 / 0.06) !important;
+  box-shadow: inset 0 0 0 1.5px #7a7c85 !important;
+}
+
+/* Redesign: the up/down arrow that flashes on a game that moved in a PlayList's
+   vote ranking — pops in from the direction it came, holds, then fades. */
+@keyframes rankMove {
+  0% { opacity: 0; transform: translateY(var(--rank-from, 6px)) scale(0.6); }
+  14% { opacity: 1; transform: translateY(0) scale(1); }
+  75% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(0) scale(0.9); }
 }
