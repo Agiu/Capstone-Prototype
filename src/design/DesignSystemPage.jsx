@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { tokens, ms } from './tokens.js'
 import coverageFile from './generated/coverage.json'
+import sampleArt from '../assets/figma/duo_thumbnail_1.jpg'
 
 // ── Redesign design system page (/design.html) ─────────────────────────────
 // Everything here is read from colors.json / typography.json / components.json
@@ -38,7 +39,7 @@ export default function DesignSystemPage() {
   const classCount = Object.values(coverage).reduce((n, list) => n + list.length, 0)
   return (
     <div data-xbox className="min-h-screen text-white" style={{ background: v('page'), fontFamily: v('font-body') }}>
-      <header className="sticky top-0 z-20 border-b backdrop-blur" style={{ borderColor: v('hairline'), background: 'color-mix(in srgb, var(--rd-page) 85%, transparent)' }}>
+      <header className="sticky top-0 z-20 border-b backdrop-blur" style={{ borderColor: v('surface'), background: 'color-mix(in srgb, var(--rd-page) 85%, transparent)' }}>
         <div className="mx-auto flex max-w-[1180px] flex-wrap items-center gap-x-[24px] gap-y-[8px] px-[16px] py-[14px] sm:px-[32px]">
           <a href="/" className="text-[14px] font-semibold transition hover:opacity-80" style={{ color: v('accent') }}>← Launcher</a>
           <nav className="flex flex-wrap gap-x-[20px] gap-y-[6px]">
@@ -102,9 +103,9 @@ export default function DesignSystemPage() {
           </div>
 
           <h3 className="mt-[40px]" style={{ ...style['section-title'], fontSize: 20 }}>Styles</h3>
-          <div className="mt-[12px] divide-y" style={{ borderColor: v('hairline') }}>
+          <div className="mt-[12px] divide-y" style={{ borderColor: v('surface') }}>
             {Object.entries(typeFile.styles).map(([k, s]) => (
-              <div key={k} className="grid gap-[10px] py-[20px] md:grid-cols-[220px_1fr]" style={{ borderColor: v('hairline') }}>
+              <div key={k} className="grid gap-[10px] py-[20px] md:grid-cols-[220px_1fr]" style={{ borderColor: v('surface') }}>
                 <div>
                   <p className="text-[14px] font-semibold">{k}</p>
                   <p className="mt-[4px] font-mono text-[12px] leading-[1.6]" style={{ color: v('text-muted') }}>
@@ -173,7 +174,7 @@ export default function DesignSystemPage() {
 
 function Section({ id, title, file, about, children }) {
   return (
-    <section id={id} className="scroll-mt-[72px] border-t pt-[48px] mt-[48px]" style={{ borderColor: v('hairline') }}>
+    <section id={id} className="scroll-mt-[72px] border-t pt-[48px] mt-[48px]" style={{ borderColor: v('surface') }}>
       <div className="mb-[28px] flex flex-wrap items-end justify-between gap-[12px]">
         <h2 style={style['page-title']}>{title}</h2>
         <Tag mono>src/design/{file}</Tag>
@@ -286,6 +287,7 @@ const PREVIEW = {
       <span className="relative ml-auto text-[12px] [color:var(--rd-text-dim)] transition-colors duration-300 group-hover:[color:var(--pc-hover)]" style={{ '--pc-hover': c.textOnFill }}>hover me</span>
     </div>
   ),
+  'image-reveal': () => <ImageRevealPreview />,
   'rank-change': (c) => <RankPreview c={c} />,
   'ascii-hero': (c) => (
     <div className="flex w-full flex-col gap-[8px] overflow-hidden px-[14px] py-[12px]" style={{ background: '#000', borderRadius: v('radius-corner') }}>
@@ -306,7 +308,7 @@ function NavPreview({ c }) {
   const [tab, setTab] = useState('home')
   const tabs = [['home', null], ['library', 'Library'], ['playlists', 'PlayLists']]
   return (
-    <div className="flex w-full items-center gap-[24px] border-b px-[8px]" style={{ height: c.height, borderColor: v('hairline') }}>
+    <div className="flex w-full items-center gap-[24px] border-b px-[8px]" style={{ height: c.height, borderColor: v('surface') }}>
       {tabs.map(([k, label]) => (
         <button key={k} onClick={() => setTab(k)} className="flex h-full items-center border-b-2 transition" style={{ ...style['nav-tab'], color: tab === k ? '#fff' : c.tabText, borderColor: tab === k ? (k === 'home' ? c.homeUnderline : c.tabUnderline) : 'transparent', transitionDuration: c.duration, transitionTimingFunction: c.easing }}>
           {label || <span className="size-[22px] rounded-full" style={{ background: v('accent') }} />}
@@ -339,6 +341,21 @@ function RankPreview({ c }) {
         </div>
       ))}
       <button onClick={shuffle} className="mt-[4px] w-fit text-[12px] font-semibold" style={{ color: v('accent') }}>Vote #2 up →</button>
+    </div>
+  )
+}
+
+// Remounting the <img> makes it load again, which is what triggers the swipe
+// (imageReveal.js) — the same path the app's images take. data-rd-always lets
+// it replay past the once-per-session rule.
+function ImageRevealPreview() {
+  const [n, setN] = useState(0)
+  return (
+    <div data-xbox className="flex w-full flex-col items-center gap-[10px]">
+      <div className="relative aspect-video w-full max-w-[260px] overflow-hidden" style={{ background: v('surface'), borderRadius: v('radius-corner') }}>
+        <img key={n} alt="" src={sampleArt} data-rd-always="" className="absolute inset-0 size-full object-cover" />
+      </div>
+      <button onClick={() => setN(n + 1)} className="text-[12px] font-semibold" style={{ color: v('accent') }}>Load again →</button>
     </div>
   )
 }

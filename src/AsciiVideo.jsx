@@ -18,16 +18,14 @@ import { components } from './design/tokens.js'
 // Without WebGL it falls back to showing the plain video.
 // `tint` ([r, g, b], 0–1) recolours every glyph to one colour instead of the
 // footage's own; changes ease over ~half a second. null → footage colours.
+//
+// AsciiImage (below) draws a still picture the same way — the game page header.
 
 // Tuning lives in src/design/components.json → "ascii-hero".
 const HERO = components['ascii-hero']
 const RAMP = HERO.ramp // dark → bright; index 0 is blank so dark areas stay empty
-const CELL = HERO.cell // CSS px per character cell
 const MAX_DPR = HERO.maxDpr
 const FRAME_MS = 1000 / HERO.fps
-const GAIN = HERO.gain // the wireframe footage is mostly dark — lift it into the ramp
-const CUTOFF = HERO.cutoff // lifted brightness below this stays blank — keeps negative
-                           // space around the lines instead of a field of faint dots
 const SUB = 2 // downsample to SUB×SUB px per cell; the shader keeps the brightest,
               // so thin wireframe lines survive instead of averaging to a smudge
 
@@ -112,6 +110,96 @@ function drawAtlas(cellPx) {
   return c
 }
 
+// The shared WebGL glyph renderer behind AsciiVideo and AsciiImage. Returns
+// null when WebGL (or the shader) isn't available, so callers fall back.
+//  resize(w, h)       — CSS size of the canvas; rebuilds the grid and atlas
+//  setTint(rgba)      — [r, g, b, on] uniform values
+//  setCutoff(v)       — blank-below threshold (animatable)
+//  draw(src, sw, sh)  — object-fit: cover crop of src (w × h) into the grid
+function createRenderer(canvas, { cell, gain, cutoff }) {
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: false, preserveDrawingBuffer: false })
+  if (!gl) return null
+  let prog
+  try {
+    prog = gl.createProgram()
+    gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VERT))
+    gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FRAG))
+    gl.linkProgram(prog)
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog))
+  } catch {
+    return null
+  }
+  gl.useProgram(prog)
+  const buf = gl.createBuffer()
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf)
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
+  const aPos = gl.getAttribLocation(prog, 'aPos')
+  gl.enableVertexAttribArray(aPos)
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0)
+  const U = (n) => gl.getUniformLocation(prog, n)
+  const uGrid = U('uGrid'), uCanvas = U('uCanvas'), uCell = U('uCell')
+  const uTint = U('uTint'), uTintOn = U('uTintOn'), uCutoff = U('uCutoff')
+  gl.uniform1i(U('uFrame'), 0)
+  gl.uniform1i(U('uAtlas'), 1)
+  gl.uniform1f(U('uN'), RAMP.length)
+  gl.uniform1f(U('uGain'), gain)
+  gl.uniform1f(uCutoff, cutoff)
+  gl.uniform1f(uTintOn, 0)
+
+  const frameTex = makeTexture(gl)
+  const atlasTex = makeTexture(gl)
+  // The per-frame downsample target: SUB×SUB pixels per cell.
+  const small = document.createElement('canvas')
+  const sctx = small.getContext('2d', { willReadFrequently: false })
+  let cols = 0, rows = 0
+
+  return {
+    get ready() { return cols > 0 },
+    resize(w, h) {
+      if (!w || !h) return
+      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
+      canvas.width = Math.round(w * dpr)
+      canvas.height = Math.round(h * dpr)
+      const cellPx = cell * dpr
+      cols = Math.ceil(canvas.width / cellPx)
+      rows = Math.ceil(canvas.height / cellPx)
+      small.width = cols * SUB
+      small.height = rows * SUB
+      gl.viewport(0, 0, canvas.width, canvas.height)
+      gl.uniform2f(uGrid, cols, rows)
+      gl.uniform2f(uCanvas, canvas.width, canvas.height)
+      gl.uniform1f(uCell, cellPx)
+      gl.activeTexture(gl.TEXTURE1)
+      gl.bindTexture(gl.TEXTURE_2D, atlasTex)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, drawAtlas(Math.round(cellPx)))
+    },
+    setTint([r, g, b, on]) {
+      gl.uniform3f(uTint, r, g, b)
+      gl.uniform1f(uTintOn, on)
+    },
+    setCutoff(v) { gl.uniform1f(uCutoff, v) },
+    draw(src, sw, sh) {
+      if (!cols) return
+      const scale = Math.max(cols / sw, rows / sh)
+      const cw = cols / scale, ch = rows / scale
+      sctx.drawImage(src, (sw - cw) / 2, (sh - ch) / 2, cw, ch, 0, 0, cols * SUB, rows * SUB)
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, frameTex)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, small)
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    },
+    // Free the GL objects but keep the context alive: a canvas hands back the
+    // same context on the next getContext, so losing it here would break the
+    // remount (React StrictMode runs effects twice in dev).
+    destroy() {
+      gl.deleteTexture(frameTex)
+      gl.deleteTexture(atlasTex)
+      gl.deleteBuffer(buf)
+      gl.deleteProgram(prog)
+    },
+  }
+}
+
 export const AsciiVideo = forwardRef(function AsciiVideo({ src, className, style, onTimeUpdate, tint = null }, ref) {
   const tintRef = useRef(tint)
   tintRef.current = tint
@@ -124,65 +212,12 @@ export const AsciiVideo = forwardRef(function AsciiVideo({ src, className, style
   useEffect(() => {
     const wrap = wrapRef.current
     const video = videoRef.current
-    const canvas = canvasRef.current
-    const gl = canvas.getContext('webgl', { antialias: false, alpha: false, preserveDrawingBuffer: false })
-    if (!gl) { setFallback(true); return }
-
-    let prog
-    try {
-      prog = gl.createProgram()
-      gl.attachShader(prog, compile(gl, gl.VERTEX_SHADER, VERT))
-      gl.attachShader(prog, compile(gl, gl.FRAGMENT_SHADER, FRAG))
-      gl.linkProgram(prog)
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog))
-    } catch {
-      setFallback(true)
-      return
-    }
-    gl.useProgram(prog)
-    const buf = gl.createBuffer()
-    gl.bindBuffer(gl.ARRAY_BUFFER, buf)
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW)
-    const aPos = gl.getAttribLocation(prog, 'aPos')
-    gl.enableVertexAttribArray(aPos)
-    gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0)
-    const U = (n) => gl.getUniformLocation(prog, n)
-    const uGrid = U('uGrid'), uCanvas = U('uCanvas'), uCell = U('uCell')
-    const uTint = U('uTint'), uTintOn = U('uTintOn')
+    const r = createRenderer(canvasRef.current, HERO)
+    if (!r) { setFallback(true); return }
     // Eased tint state — starts at the target so the first frame is right.
     const cur = tintRef.current ? [...tintRef.current, 1] : [0, 0, 0, 0]
-    gl.uniform1i(U('uFrame'), 0)
-    gl.uniform1i(U('uAtlas'), 1)
-    gl.uniform1f(U('uN'), RAMP.length)
-    gl.uniform1f(U('uGain'), GAIN)
-    gl.uniform1f(U('uCutoff'), CUTOFF)
 
-    const frameTex = makeTexture(gl)
-    const atlasTex = makeTexture(gl)
-    // The per-frame downsample target: SUB×SUB pixels per cell.
-    const small = document.createElement('canvas')
-    const sctx = small.getContext('2d', { willReadFrequently: false })
-
-    let cols = 0, rows = 0, cellPx = CELL
-    const resize = () => {
-      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR)
-      const w = wrap.clientWidth, h = wrap.clientHeight
-      if (!w || !h) return
-      canvas.width = Math.round(w * dpr)
-      canvas.height = Math.round(h * dpr)
-      cellPx = CELL * dpr
-      cols = Math.ceil(canvas.width / cellPx)
-      rows = Math.ceil(canvas.height / cellPx)
-      small.width = cols * SUB
-      small.height = rows * SUB
-      gl.viewport(0, 0, canvas.width, canvas.height)
-      gl.uniform2f(uGrid, cols, rows)
-      gl.uniform2f(uCanvas, canvas.width, canvas.height)
-      gl.uniform1f(uCell, cellPx)
-      gl.activeTexture(gl.TEXTURE1)
-      gl.bindTexture(gl.TEXTURE_2D, atlasTex)
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, drawAtlas(Math.round(cellPx)))
-    }
+    const resize = () => r.resize(wrap.clientWidth, wrap.clientHeight)
     resize()
     const ro = new ResizeObserver(resize)
     ro.observe(wrap)
@@ -196,23 +231,14 @@ export const AsciiVideo = forwardRef(function AsciiVideo({ src, className, style
     const draw = (now) => {
       raf = requestAnimationFrame(draw)
       if (!onScreen || document.hidden || now - last < FRAME_MS) return
-      if (video.readyState < 2 || !cols || !video.videoWidth) return
+      if (video.readyState < 2 || !r.ready || !video.videoWidth) return
       last = now
       // Ease toward the current tint (or back to footage colours).
       const t = tintRef.current
       const target = t ? [t[0], t[1], t[2], 1] : [cur[0], cur[1], cur[2], 0]
       for (let i = 0; i < 4; i++) cur[i] += (target[i] - cur[i]) * 0.12
-      gl.uniform3f(uTint, cur[0], cur[1], cur[2])
-      gl.uniform1f(uTintOn, cur[3])
-      // object-fit: cover crop of the video into the cell grid.
-      const vw = video.videoWidth, vh = video.videoHeight
-      const scale = Math.max(cols / vw, rows / vh)
-      const sw = cols / scale, sh = rows / scale
-      sctx.drawImage(video, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, cols * SUB, rows * SUB)
-      gl.activeTexture(gl.TEXTURE0)
-      gl.bindTexture(gl.TEXTURE_2D, frameTex)
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, small)
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+      r.setTint(cur)
+      r.draw(video, video.videoWidth, video.videoHeight)
     }
     raf = requestAnimationFrame(draw)
 
@@ -220,13 +246,7 @@ export const AsciiVideo = forwardRef(function AsciiVideo({ src, className, style
       cancelAnimationFrame(raf)
       ro.disconnect()
       io.disconnect()
-      // Free the GL objects but keep the context alive: a canvas hands back the
-      // same context on the next getContext, so losing it here would break the
-      // remount (React StrictMode runs this effect twice in dev).
-      gl.deleteTexture(frameTex)
-      gl.deleteTexture(atlasTex)
-      gl.deleteBuffer(buf)
-      gl.deleteProgram(prog)
+      r.destroy()
     }
   }, [])
 
@@ -255,3 +275,84 @@ export const AsciiVideo = forwardRef(function AsciiVideo({ src, className, style
     </div>
   )
 })
+
+// ── ASCII image (redesign) ──────────────────────────────────────────────────
+// A still picture as ASCII, each glyph in the colour of the art under it — the
+// game page header. Tried in order through `srcs` (e.g. the wide hero art, then
+// the cover), loaded cross-origin so its pixels can be read; if none can be,
+// or WebGL is missing, it renders nothing and the page's colour wash stands in.
+// On first draw the glyphs "develop": the blank-below cutoff eases from blank down
+// to its resting value, so the art resolves out of the dark (skipped under
+// reduced motion). Redraws only on resize — there's no frame loop.
+// Tuning: `spec` — { cell, gain, cutoff, developDuration } from components.json.
+const START = 0.999 // "all blank" — not 1, which would divide by zero in the shader
+export function AsciiImage({ srcs, spec, className, style, onReady }) {
+  const wrapRef = useRef(null)
+  const readyRef = useRef(onReady)
+  readyRef.current = onReady
+  const canvasRef = useRef(null)
+  const [ok, setOk] = useState(true)
+  const key = srcs.filter(Boolean).join('|')
+
+  useEffect(() => {
+    const list = key ? key.split('|') : []
+    const wrap = wrapRef.current
+    const r = createRenderer(canvasRef.current, spec)
+    if (!r || !list.length) { setOk(false); readyRef.current?.(); return }
+    setOk(true)
+    let img = null, raf = 0, live = true
+
+    const paint = () => { if (img) r.draw(img, img.naturalWidth, img.naturalHeight) }
+    const resize = () => { r.resize(wrap.clientWidth, wrap.clientHeight); paint() }
+    const ro = new ResizeObserver(resize)
+
+    const develop = () => {
+      readyRef.current?.()
+      const dur = parseFloat(spec.developDuration) || 0
+      if (!dur || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { r.setCutoff(spec.cutoff); paint(); return }
+      const t0 = performance.now()
+      const step = (now) => {
+        const p = Math.min(1, (now - t0) / dur)
+        const e = 1 - Math.pow(1 - p, 3) // ease-out cubic
+        r.setCutoff(START - (START - spec.cutoff) * e)
+        paint()
+        if (p < 1) raf = requestAnimationFrame(step)
+      }
+      raf = requestAnimationFrame(step)
+    }
+
+    const load = (i) => {
+      if (i >= list.length) { if (live) { setOk(false); readyRef.current?.() } return }
+      const im = new Image()
+      im.crossOrigin = 'anonymous'
+      im.onload = () => {
+        if (!live) return
+        try {
+          img = im
+          r.resize(wrap.clientWidth, wrap.clientHeight)
+          r.setCutoff(START)
+          paint() // throws here if the pixels can't be read (no CORS)
+          ro.observe(wrap)
+          develop()
+        } catch { img = null; load(i + 1) }
+      }
+      im.onerror = () => { if (live) load(i + 1) }
+      im.src = list[i]
+    }
+    load(0)
+
+    return () => {
+      live = false
+      cancelAnimationFrame(raf)
+      ro.disconnect()
+      r.destroy()
+    }
+  }, [key]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  return (
+    <div ref={wrapRef} className={className} style={style} aria-hidden>
+      {/* Always mounted (a new src reuses it); hidden when nothing could be drawn. */}
+      <canvas ref={canvasRef} className={'absolute inset-0 size-full' + (ok ? '' : ' hidden')} />
+    </div>
+  )
+}

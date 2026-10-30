@@ -1,32 +1,10 @@
 {
   "coverage": {
-    "page-tint": [
+    "inset": [
       {
         "class": "bg-[#0a0f16]",
         "count": 1
-      }
-    ],
-    "page": [
-      {
-        "class": "bg-[#0b0b0d]",
-        "count": 4
       },
-      {
-        "class": "bg-[#0c0c0e]",
-        "count": 2
-      },
-      {
-        "class": "ring-[#0c0c0e]",
-        "count": 4
-      }
-    ],
-    "accent-shade-900": [
-      {
-        "class": "bg-[#0d1a06]",
-        "count": 1
-      }
-    ],
-    "inset": [
       {
         "class": "bg-[#0f0f12]",
         "count": 1
@@ -68,6 +46,30 @@
         "count": 2
       }
     ],
+    "page": [
+      {
+        "class": "bg-[#0b0b0d]",
+        "count": 4
+      },
+      {
+        "class": "bg-[#0c0c0e]",
+        "count": 2
+      },
+      {
+        "class": "ring-[#0c0c0e]",
+        "count": 4
+      }
+    ],
+    "accent-shade-800": [
+      {
+        "class": "bg-[#0d1a06]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#112407]",
+        "count": 1
+      }
+    ],
     "accent": [
       {
         "class": "bg-[#107C10]",
@@ -107,7 +109,7 @@
       },
       {
         "class": "bg-[#9BF00B]",
-        "count": 16
+        "count": 18
       },
       {
         "class": "bg-[#9BF00B]/10",
@@ -155,6 +157,10 @@
       },
       {
         "class": "border-[#9BF00B]/70",
+        "count": 1
+      },
+      {
+        "class": "focus-visible:ring-[#9BF00B]",
         "count": 1
       },
       {
@@ -210,6 +216,10 @@
         "count": 5
       },
       {
+        "class": "hover:border-[#9BF00B]",
+        "count": 1
+      },
+      {
         "class": "hover:border-[#9BF00B]/60",
         "count": 4
       },
@@ -219,7 +229,7 @@
       },
       {
         "class": "hover:text-[#9BF00B]",
-        "count": 5
+        "count": 6
       },
       {
         "class": "ring-[#107C10]/30",
@@ -310,7 +320,7 @@
         "count": 1
       }
     ],
-    "media": [
+    "surface": [
       {
         "class": "bg-[#1a1a1d]",
         "count": 12
@@ -318,9 +328,7 @@
       {
         "class": "bg-[#1c1c1c]",
         "count": 2
-      }
-    ],
-    "hairline": [
+      },
       {
         "class": "bg-[#1c1c1f]",
         "count": 11
@@ -334,8 +342,16 @@
         "count": 12
       },
       {
+        "class": "bg-[#2b2d31]",
+        "count": 39
+      },
+      {
         "class": "border-[#1c1d21]",
-        "count": 27
+        "count": 29
+      },
+      {
+        "class": "border-[#2b2d31]",
+        "count": 16
       },
       {
         "class": "hover:bg-[#1d1d20]",
@@ -344,6 +360,10 @@
       {
         "class": "hover:bg-[#202024]",
         "count": 1
+      },
+      {
+        "class": "ring-[#2b2d31]",
+        "count": 3
       }
     ],
     "raised-hover": [
@@ -366,6 +386,10 @@
       {
         "class": "hover:bg-[#26262a]",
         "count": 5
+      },
+      {
+        "class": "hover:bg-[#2a2a2f]",
+        "count": 9
       }
     ],
     "success": [
@@ -384,20 +408,6 @@
         "count": 2
       }
     ],
-    "surface": [
-      {
-        "class": "bg-[#2b2d31]",
-        "count": 38
-      },
-      {
-        "class": "border-[#2b2d31]",
-        "count": 16
-      },
-      {
-        "class": "ring-[#2b2d31]",
-        "count": 3
-      }
-    ],
     "control-alt": [
       {
         "class": "bg-[#3a3c42]",
@@ -408,12 +418,16 @@
         "count": 3
       },
       {
+        "class": "border-[#2f3136]",
+        "count": 1
+      },
+      {
         "class": "border-[#3a3c41]",
         "count": 2
       },
       {
         "class": "border-[#3a3c42]",
-        "count": 2
+        "count": 3
       },
       {
         "class": "border-[#3a3d41]",
@@ -428,6 +442,10 @@
         "count": 2
       },
       {
+        "class": "hover:bg-[#35373c]",
+        "count": 15
+      },
+      {
         "class": "hover:border-[#3a3c42]",
         "count": 1
       }
@@ -438,11 +456,23 @@
         "count": 10
       },
       {
+        "class": "border-[#4a4d55]",
+        "count": 9
+      },
+      {
         "class": "border-[#4e5058]",
-        "count": 14
+        "count": 15
+      },
+      {
+        "class": "hover:bg-[#4a4c52]",
+        "count": 1
       },
       {
         "class": "hover:bg-[#4e5058]/30",
+        "count": 2
+      },
+      {
+        "class": "text-[#4a4d55]",
         "count": 2
       }
     ],
@@ -466,6 +496,10 @@
       {
         "class": "bg-[#d83c3e]",
         "count": 1
+      },
+      {
+        "class": "hover:bg-[#da373c]",
+        "count": 1
       }
     ],
     "danger": [
@@ -478,21 +512,27 @@
         "count": 1
       },
       {
-        "class": "border-[#f04747]",
-        "count": 1
-      },
-      {
-        "class": "hover:bg-[#f04747]",
-        "count": 1
-      }
-    ],
-    "danger-text": [
-      {
         "class": "bg-[#f0505b]/12",
         "count": 2
       },
       {
         "class": "bg-[#f0505b]/20",
+        "count": 1
+      },
+      {
+        "class": "bg-[#f23f42]",
+        "count": 3
+      },
+      {
+        "class": "bg-[#f23f42]/15",
+        "count": 1
+      },
+      {
+        "class": "border-[#f04747]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#f04747]",
         "count": 1
       },
       {
@@ -506,6 +546,10 @@
       {
         "class": "text-[#f0505b]",
         "count": 2
+      },
+      {
+        "class": "text-[#f23f42]",
+        "count": 1
       }
     ],
     "warning": [
@@ -518,48 +562,26 @@
         "count": 2
       }
     ],
-    "danger-badge": [
-      {
-        "class": "bg-[#f23f42]",
-        "count": 3
-      },
-      {
-        "class": "bg-[#f23f42]/15",
-        "count": 1
-      },
-      {
-        "class": "text-[#f23f42]",
-        "count": 1
-      }
-    ],
-    "divider": [
-      {
-        "class": "border-[#2f3136]",
-        "count": 1
-      }
-    ],
-    "border-strong": [
-      {
-        "class": "border-[#4a4d55]",
-        "count": 9
-      },
-      {
-        "class": "hover:bg-[#4a4c52]",
-        "count": 1
-      },
-      {
-        "class": "text-[#4a4d55]",
-        "count": 2
-      }
-    ],
     "text-muted": [
       {
         "class": "border-[#7e7f87]",
         "count": 1
       },
       {
+        "class": "placeholder:text-[#87898c]",
+        "count": 22
+      },
+      {
         "class": "text-[#7e7f87]",
         "count": 52
+      },
+      {
+        "class": "text-[#80848e]",
+        "count": 9
+      },
+      {
+        "class": "text-[#87898c]",
+        "count": 27
       }
     ],
     "on-accent": [
@@ -573,12 +595,10 @@
       },
       {
         "class": "text-[#0c0c0e]",
-        "count": 13
-      }
-    ],
-    "accent-shade-800": [
+        "count": 15
+      },
       {
-        "class": "hover:bg-[#112407]",
+        "class": "text-[#0c0c0e]/70",
         "count": 1
       }
     ],
@@ -586,18 +606,6 @@
       {
         "class": "hover:bg-[#164700]",
         "count": 1
-      }
-    ],
-    "chip-hover": [
-      {
-        "class": "hover:bg-[#2a2a2f]",
-        "count": 9
-      }
-    ],
-    "control-subtle-hover": [
-      {
-        "class": "hover:bg-[#35373c]",
-        "count": 14
       }
     ],
     "control-alt-hover": [
@@ -611,12 +619,6 @@
       },
       {
         "class": "hover:bg-[#45474e]",
-        "count": 1
-      }
-    ],
-    "danger-hover": [
-      {
-        "class": "hover:bg-[#da373c]",
         "count": 1
       }
     ],
@@ -648,16 +650,6 @@
         "count": 16
       }
     ],
-    "text-placeholder": [
-      {
-        "class": "placeholder:text-[#87898c]",
-        "count": 22
-      },
-      {
-        "class": "text-[#87898c]",
-        "count": 27
-      }
-    ],
     "text-disabled": [
       {
         "class": "text-[#5a5c64]",
@@ -668,27 +660,19 @@
         "count": 1
       }
     ],
-    "text-status": [
-      {
-        "class": "text-[#80848e]",
-        "count": 9
-      }
-    ],
     "text-dim": [
       {
         "class": "text-[#9a9ba3]",
         "count": 81
+      },
+      {
+        "class": "text-[#a2a4ae]",
+        "count": 12
       }
     ],
     "accent-text-soft": [
       {
         "class": "text-[#9db08f]",
-        "count": 2
-      }
-    ],
-    "text-body-dim": [
-      {
-        "class": "text-[#a2a4ae]",
         "count": 2
       }
     ],
@@ -719,13 +703,11 @@
     "text-primary": [
       {
         "class": "text-[#dbdee1]",
-        "count": 20
-      }
-    ],
-    "text-strong": [
+        "count": 25
+      },
       {
         "class": "text-[#e7e7e7]",
-        "count": 11
+        "count": 13
       }
     ],
     "danger-soft": [

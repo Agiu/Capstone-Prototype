@@ -76,6 +76,33 @@
       "sliceEasing": "{motion.ease-out-soft}",
       "textOnFill": "{color.on-accent}"
     },
+    "game-header": {
+      "label": "Game page header",
+      "title": "{style.game-title}",
+      "cell": 11,
+      "gain": 2.1,
+      "cutoff": 0.16,
+      "developDuration": "1100ms",
+      "glyphOpacity": 0.95,
+      "washOpacity": 0.5,
+      "washBlur": "70px",
+      "blurMax": "28px",
+      "blurLayers": 5,
+      "blurStart": "18%",
+      "blurClear": "78%",
+      "artFadeDuration": "900ms",
+      "artFadeEasing": "ease-out",
+      "scrim": "linear-gradient(90deg, color-mix(in srgb, {color.page} 92%, transparent) 0px, color-mix(in srgb, {color.page} 86%, transparent) 640px, color-mix(in srgb, {color.page} 30%, transparent) 900px, color-mix(in srgb, {color.page} 12%, transparent) 100%)",
+      "fade": "linear-gradient(to bottom, color-mix(in srgb, {color.page} 35%, transparent) 0%, transparent 18%, transparent 62%, {color.page} 100%)",
+      "copy": "{color.text-nav}"
+    },
+    "image-reveal": {
+      "label": "Image load swipe",
+      "fill": "{color.accent}",
+      "duration": "760ms",
+      "easing": "{motion.ease-out-soft}",
+      "minSize": 20
+    },
     "rank-change": {
       "label": "PlayList rank change",
       "glideDuration": "520ms",

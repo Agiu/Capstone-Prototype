@@ -299,6 +299,37 @@ html[data-redesign] [data-xbox] [style*="Base Neue Black"] {
   .party-slice { transition: none; }
 }
 
+/* Redesign: green swipe when an image loads (added by design/imageReveal.js).
+   The band is the strip between two parallel diagonals. Its leading edge
+   sweeps from the bottom-right corner to the top-left, covering the image;
+   then its trailing edge follows, and the image is uncovered right behind it.
+   The easing runs per half, so each edge moves like the party slice.
+   Cover images are held hidden until imageReveal.js has seen them load
+   (data-rd-img), so a cached image can't flash in before its swipe. Opacity,
+   not a clip: Chrome won't lazy-load an image clipped to nothing. */
+html[data-redesign] [data-xbox] img.object-cover:not([data-rd-img]):not([data-discord] *) {
+  opacity: 0;
+}
+.rd-image-reveal-band {
+  position: absolute;
+  margin: 0;
+  pointer-events: none;
+  background: var(--rd-image-reveal-fill);
+  animation: rd-image-reveal-band var(--rd-image-reveal-duration) var(--rd-image-reveal-easing) both;
+}
+img[data-rd-img="playing"] {
+  animation: rd-image-reveal var(--rd-image-reveal-duration) var(--rd-image-reveal-easing) both;
+}
+@keyframes rd-image-reveal-band {
+  0% { clip-path: polygon(100% 100%, 100% 100%, 100% 100%, 100% 100%); }
+  50% { clip-path: polygon(100% -100%, -100% 100%, 100% 100%, 100% 100%); }
+  100% { clip-path: polygon(100% -100%, -100% 100%, -100% 100%, 100% -100%); }
+}
+@keyframes rd-image-reveal {
+  0%, 50% { clip-path: polygon(100% 100%, 100% 100%, 100% 100%); }
+  100% { clip-path: polygon(100% -100%, -100% 100%, 100% 100%); }
+}
+
 /* Redesign: secondary buttons are outlined, not filled. Filled grey competed
    with the green primary for attention; an outline keeps the hierarchy clear
    (one filled action per group). Covers every grey secondary style used on

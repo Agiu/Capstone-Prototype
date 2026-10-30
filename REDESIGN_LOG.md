@@ -39,6 +39,106 @@ for the player (or the moderator).
 
 ## Changes
 
+### 38. Game page rebuilt around the game's own art
+**Date:** 2026-10-29 · **Screen / element:** Game detail page (header, summary, reviews)
+
+**Problem.** The page had all the right information, but it was hard to act on.
+- **Buttons out of sight:** Start A Party sat under the carousel, away from the title,
+  and scrolled out of reach once you moved into the reviews.
+- **Unlabelled scores:** two percentages (79% green, 83% white) sat side by side with
+  no label saying which was friends and which was everyone.
+- **Confusing tags:** three tags filtered the Library and one didn't, but all four
+  looked the same. The player count read as a bare "1".
+- **Names hidden:** who had played the game showed only as avatars, with names in a
+  hover tooltip.
+- **Hard-to-read reviews:** review text faded to transparent, and only a mouse hover
+  could expand a review.
+- **Hidden filter:** the review filter was an unlabelled icon.
+
+**Change.**
+- **Header:** a full-width header redraws the game's wide key art as ASCII, each glyph
+  in the art's own colour, over a heavy blur of the same art. The page takes on each
+  game's palette. A dark scrim sized to the text column keeps the copy readable over
+  any art, and the glyphs develop out of the dark once on load.
+- **Progressive blur:** the art is sharp on the right and blurs progressively toward
+  the text on the left, so the busy glyphs soften where the copy sits. The wash, glyphs
+  and blur stay hidden until the art can be drawn, then fade in from the page colour
+  together, so sharp glyphs never show before the blur.
+- **Header content:** the title, who played it (by name), the facts and the actions sit
+  together. Facts that filter the Library are outlined buttons that say what they'll
+  show. The difficulty is plain text with no outline.
+- **Below the header:** the carousel sits beside a stacked summary in which every
+  number is labelled in words: "of your friends recommend it", "positive from 12K
+  player ratings", your group's history, then the credits.
+- **Sticky bar:** once the header's buttons scroll away, a slim bar with the title and
+  the same actions slides in at the top.
+- **Reviews:** the filter is now visible All / Friends / Public buttons with counts.
+  Review text is solid and clamped to two lines, and a card expands on keyboard focus
+  as well as hover. Each profile picture is exactly as tall as the details beside it,
+  so it ends level with the Public / Friends only badge.
+
+**Rationale.**
+- **Proximity:** the primary action belongs next to the thing it acts on, and should
+  stay reachable on a long page.
+- **Recognition over recall:** numbers need their meaning beside them.
+- **Affordance:** only things that are clickable should look clickable.
+- **Consistency:** the ASCII header carries the redesign's signature (the home hero and
+  PlayList banner) onto every game, in that game's colours. A plain blurred backdrop
+  is what every store page does.
+
+**Before / after.** `screenshots/38-before.png` · `screenshots/38-after.png`,
+`screenshots/38-after-narrow.png`, `screenshots/38-reviews-after.png`
+
+**Code.** `src/Landing.jsx`: `GameHeaderRD`, `GameOverviewRD`, `GameStickyBar`,
+`ProgressiveBlur`, `GameActions` and `FactLink`, plus the redesign branches in `GameDetailPage`,
+`ReviewsSection`, `ReviewCard` and `PrivacyBadge`. `src/AsciiVideo.jsx`: a shared
+renderer and the new `AsciiImage`. `src/design/components.json` (`game-header`) and
+`src/design/typography.json` (`game-title`).
+
+### 37. Game art swipes in green as it loads
+**Date:** 2026-10-29 · **Screen / element:** Every Xbox surface with game art (Library, home shelves, PlayLists, game page)
+
+**Problem.** Art popped in one tile at a time as it downloaded. The arrival read as
+loading jank rather than as part of the interface.
+
+**Change.** When a game image finishes loading, a green band sweeps across it corner
+to corner, with the same diagonal and easing as the Start A Party slice. The art is
+uncovered behind the band's trailing edge.
+- **When it plays:** each image swipes once per page load. Going back to a page shows
+  the art straight away, and a reload swipes it in again.
+- **No flash first:** art is held hidden until it has loaded, so a cached image can't
+  flash in before its swipe.
+- **What's skipped:** logos, avatars, icons, blurred backdrops and Discord pieces don't
+  swipe. Reduced motion turns it off.
+
+**Rationale.** Turning a loading artefact into a branded moment makes waiting feel
+deliberate. Tying it to the load event means it only plays when something actually
+arrives, never as decoration.
+
+**Before / after.** `screenshots/37-image-swipe.png` (mid-swipe in the Library)
+
+**Code.** `src/design/imageReveal.js`, `src/index.css` (`.rd-image-reveal-band`),
+`src/design/components.json` (`image-reveal`)
+
+### 36. Fewer, brighter colour tokens
+**Date:** 2026-10-29 · **Screen / element:** Whole redesign (system)
+
+**Problem.** The token set from entry 35 still had 47 colours. Many were near-duplicates
+nobody could tell apart, such as three dangers within a few RGB steps, three muted
+greys and four dark surfaces. The bigger the palette, the easier it was to pick the
+wrong one.
+
+**Change.** Fifteen tokens were folded into their nearest neighbour, leaving 32. Where
+the two colours differed, the brighter one won, because the theme is very dark. Pairs
+that sit on the same element (a fill and its hover, or a card and its border) were
+kept apart so state changes stay visible. The design-system page is now always
+linked from the launcher, under the Moderator wall.
+
+**Rationale.** A smaller palette is easier to apply consistently. Lifting the darkest
+greys and muted text slightly improves legibility on the near-black theme.
+
+**Code.** `src/design/colors.json`, `src/design/DesignSystemPage.jsx`, `src/Landing.jsx` (launcher link)
+
 ### 35. Design tokens and a design-system page
 **Date:** 2026-10-28 · **Screen / element:** Whole redesign (system), new `/design.html`
 

@@ -58,15 +58,9 @@
         },
         "accent-shade-800": {
           "value": "#112407",
-          "usage": "Accent-tinted card hover",
+          "usage": "Accent-tinted card hover and darkest accent tint",
           "replaces": [
-            "#112407"
-          ]
-        },
-        "accent-shade-900": {
-          "value": "#0d1a06",
-          "usage": "Darkest accent tint",
-          "replaces": [
+            "#112407",
             "#0d1a06"
           ]
         }
@@ -86,17 +80,10 @@
             "#0b0b0d"
           ]
         },
-        "page-tint": {
-          "value": "#0a0f16",
-          "usage": "Launcher card well (cool tint)",
-          "replaces": [
-            "#0a0f16"
-          ]
-        },
         "inset": {
           "value": "#111214",
           "scope": "all",
-          "usage": "Inputs, search fields, toasts, sunken cards",
+          "usage": "Inputs, search fields, toasts, sunken cards, launcher card well",
           "replaces": [
             "#1e1f22",
             "#111214",
@@ -106,7 +93,8 @@
             "#0f0f12",
             "#131316",
             "#141416",
-            "#151517"
+            "#151517",
+            "#0a0f16"
           ]
         },
         "raised": {
@@ -120,26 +108,14 @@
             "#191919"
           ]
         },
-        "media": {
-          "value": "#1a1a1d",
-          "usage": "Image placeholders behind cover art",
-          "replaces": [
-            "#1a1a1d",
-            "#1c1c1c"
-          ]
-        },
         "surface": {
-          "value": "#1a1b1e",
-          "scope": "all",
-          "usage": "Modal and panel surface (was Discord #2b2d31)",
-          "replaces": [
-            "#2b2d31"
-          ]
-        },
-        "hairline": {
           "value": "#1c1d21",
-          "usage": "Hairline borders and dark chips",
+          "scope": "all",
+          "usage": "Modal and panel surface (was Discord #2b2d31), image placeholders behind cover art, hairline borders and dark chips",
           "replaces": [
+            "#2b2d31",
+            "#1a1a1d",
+            "#1c1c1c",
             "#1c1d21",
             "#1d1d20",
             "#1c1c1f",
@@ -148,26 +124,13 @@
           ]
         },
         "raised-hover": {
-          "value": "#26262a",
-          "usage": "Hover on dark chips and panels",
+          "value": "#2a2a2f",
+          "usage": "Hover on dark chips, filter chips and panels",
           "replaces": [
             "#26262a",
             "#232428",
-            "#232327"
-          ]
-        },
-        "chip-hover": {
-          "value": "#2a2a2f",
-          "usage": "Hover on filter chips",
-          "replaces": [
+            "#232327",
             "#2a2a2f"
-          ]
-        },
-        "divider": {
-          "value": "#2f3136",
-          "usage": "Divider inside Discord-style panels",
-          "replaces": [
-            "#2f3136"
           ]
         }
       }
@@ -178,9 +141,11 @@
       "tokens": {
         "control": {
           "value": "#4e5058",
-          "usage": "Secondary button outline / fill",
+          "usage": "Secondary button outline / fill, unchecked checkbox borders, strong dividers",
           "replaces": [
-            "#4e5058"
+            "#4e5058",
+            "#4a4d55",
+            "#4a4c52"
           ]
         },
         "control-hover": {
@@ -199,11 +164,13 @@
         },
         "control-alt": {
           "value": "#3a3c42",
-          "usage": "Alternate secondary fill and control borders",
+          "usage": "Alternate secondary fill, control borders, list-row and menu hover, dividers in Discord-style panels",
           "replaces": [
             "#3a3c42",
             "#3a3d41",
-            "#3a3c41"
+            "#3a3c41",
+            "#35373c",
+            "#2f3136"
           ]
         },
         "control-alt-hover": {
@@ -214,21 +181,6 @@
             "#45474e",
             "#43474d"
           ]
-        },
-        "control-subtle-hover": {
-          "value": "#35373c",
-          "usage": "Hover on list rows and menu items",
-          "replaces": [
-            "#35373c"
-          ]
-        },
-        "border-strong": {
-          "value": "#4a4d55",
-          "usage": "Unchecked checkbox borders, strong dividers",
-          "replaces": [
-            "#4a4d55",
-            "#4a4c52"
-          ]
         }
       }
     },
@@ -236,18 +188,12 @@
       "label": "Text",
       "description": "Text greys from brightest to faintest (white itself is Tailwind's text-white).",
       "tokens": {
-        "text-strong": {
-          "value": "#e7e7e7",
-          "usage": "Emphasised body copy",
-          "replaces": [
-            "#e7e7e7"
-          ]
-        },
         "text-primary": {
-          "value": "#dbdee1",
-          "usage": "Primary copy on dark surfaces",
+          "value": "#e7e7e7",
+          "usage": "Primary and emphasised copy on dark surfaces",
           "replaces": [
-            "#dbdee1"
+            "#dbdee1",
+            "#e7e7e7"
           ]
         },
         "text-nav": {
@@ -267,39 +213,21 @@
             "#b9bbc0"
           ]
         },
-        "text-body-dim": {
+        "text-dim": {
           "value": "#a2a4ae",
-          "usage": "Long-form descriptions on game pages",
+          "usage": "Labels, metadata, section eyebrows, long-form descriptions",
           "replaces": [
+            "#9a9ba3",
             "#a2a4ae"
           ]
         },
-        "text-dim": {
-          "value": "#9a9ba3",
-          "usage": "Labels, metadata, section eyebrows",
-          "replaces": [
-            "#9a9ba3"
-          ]
-        },
-        "text-placeholder": {
-          "value": "#87898c",
-          "usage": "Placeholders and search icons",
-          "replaces": [
-            "#87898c"
-          ]
-        },
-        "text-status": {
-          "value": "#80848e",
-          "usage": "Offline / presence lines",
-          "replaces": [
-            "#80848e"
-          ]
-        },
         "text-muted": {
-          "value": "#7e7f87",
-          "usage": "Muted metadata, timestamps",
+          "value": "#87898c",
+          "usage": "Muted metadata, timestamps, presence lines, placeholders and search icons",
           "replaces": [
-            "#7e7f87"
+            "#7e7f87",
+            "#80848e",
+            "#87898c"
           ]
         },
         "text-faint": {
@@ -326,38 +254,20 @@
       "description": "Feedback colours: danger, success, warning.",
       "tokens": {
         "danger": {
-          "value": "#f04747",
-          "usage": "Downvotes, decline, rank-drop arrow",
-          "replaces": [
-            "#f04747"
-          ]
-        },
-        "danger-badge": {
-          "value": "#f23f42",
-          "usage": "Notification count badges",
-          "replaces": [
-            "#f23f42"
-          ]
-        },
-        "danger-text": {
           "value": "#f0505b",
-          "usage": "Destructive menu items",
+          "usage": "Downvotes, decline, rank-drop arrow, notification badges, destructive menu items",
           "replaces": [
+            "#f04747",
+            "#f23f42",
             "#f0505b"
-          ]
-        },
-        "danger-hover": {
-          "value": "#da373c",
-          "usage": "Destructive hover fill",
-          "replaces": [
-            "#da373c"
           ]
         },
         "danger-strong": {
           "value": "#d83c3e",
-          "usage": "Destructive confirm button",
+          "usage": "Destructive confirm button and destructive hover fill",
           "replaces": [
-            "#d83c3e"
+            "#d83c3e",
+            "#da373c"
           ]
         },
         "danger-soft": {

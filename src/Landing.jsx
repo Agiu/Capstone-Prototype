@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, AVATAR, PartyGlyph, START_PARTY, TagCtx, PartyCtx, WheelCtx, SpectateHoverCtx, SpectateAvCtx, avKey, useSpectateReveal } from './RecCard.jsx'
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import { REDESIGN, setRedesign, rd } from './redesign.js'
-import { AsciiVideo } from './AsciiVideo.jsx'
+import { AsciiVideo, AsciiImage } from './AsciiVideo.jsx'
 import { color as tk, components as tkc, ms as tkMs } from './design/tokens.js'
 import {
   discordLogo,
@@ -3631,7 +3631,7 @@ function usePlaylistDrag(displayKeys, onCommit) {
 }
 
 function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlist, onHome, onLibrary, onMixes }) {
-  const { addToWheel } = useContext(NavCtx)
+  const { addToWheel, openWheel } = useContext(NavCtx)
   const [menu, setMenu] = useState(null) // { x, y, title }
   const [launching, setLaunching] = useState(null)
 
@@ -4177,7 +4177,7 @@ function BlendPage({ blend, onBack, onDecide, onOpen, onPlay, onShare, onWishlis
                       {plList.length === wish.length ? `${wish.length} games` : `${plList.length} / ${wish.length} games`}
                     </p>
                     {!IS_SPECTATE && plList.length > 0 && (
-                      <button onClick={() => plList.forEach((g) => addToWheel(g.key))} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
+                      <button onClick={() => { plList.forEach((g) => addToWheel(g.key)); openWheel() }} className="flex items-center gap-[6px] rounded-full bg-[#1f1f23] px-[12px] py-[6px] text-[13px] font-semibold text-white ring-1 ring-white/10 transition hover:bg-[#2a2a2f]">
                         <svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
                         Add {plList.length} to Wheel
                       </button>
@@ -6020,9 +6020,9 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin,
   function startPartyNow() {
     if (!picked) return
     onParty(picked)
-    // Keep the modal open AND stay on the result view — don't auto-clear back to
-    // the wheel or close. The party toast pops up over the modal; use Restart to
-    // spin again for another round.
+    // Stay on the result view — don't auto-clear back to the wheel. The parent
+    // closes the modal on the homepage (the header shows the party there);
+    // elsewhere it stays open and the party toast pops up over it.
   }
   // Clear the result and return to the wheel-building view (no party started).
   const backToWheel = () => { if (synced) patchJam({ spin: null }); else setLocalSpin(null) }
@@ -6104,19 +6104,24 @@ function WheelModal({ keys, setKeys, blends, online, onParty, onClose, autoJoin,
                       <div className="fixed inset-0 z-[-1]" onClick={() => setMixMenu(false)} />
                       <div className="absolute left-0 right-0 top-[52px] overflow-hidden rounded-[10px] border border-[#2b2d31] bg-[#1c1c1f] py-[6px] shadow-[0_16px_48px_rgba(0,0,0,0.7)]">
                         {myMixes.length ? myMixes.map((b) => {
-                          const count = mixGames(b).length
+                          const mg = mixGames(b)
+                          const count = mg.length
                           const empty = count === 0
+                          // Every game already on the wheel (e.g. arrived via the
+                          // PlayList page's "Add N to Wheel") — loading it is a no-op.
+                          const loaded = !empty && mg.every((k) => activeKeys.includes(k))
+                          const off = empty || loaded
                           return (
-                          <button key={b.id} onClick={() => !empty && loadMix(b)} disabled={empty} aria-disabled={empty} title={empty ? 'No games in this PlayList yet' : undefined} className={'flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] transition ' + (empty ? 'cursor-not-allowed text-[#6f7276] opacity-50' : 'text-[#dbdee1] hover:bg-white/5')}>
+                          <button key={b.id} onClick={() => !off && loadMix(b)} disabled={off} aria-disabled={off} title={empty ? 'No games in this PlayList yet' : loaded ? 'This PlayList is already on the wheel' : undefined} className={'flex w-full items-center gap-[10px] px-[12px] py-[8px] text-left text-[14px] transition ' + (off ? 'cursor-not-allowed text-[#6f7276] opacity-50' : 'text-[#dbdee1] hover:bg-white/5')}>
                             <span className="size-[36px] shrink-0 overflow-hidden rounded-[6px] bg-[#2b2d31]" style={b.color ? { backgroundColor: b.color } : undefined}>
                               {b.cover ? (
-                                <img alt="" src={b.cover} className={'size-full object-cover' + (empty ? ' grayscale' : '')} />
+                                <img alt="" src={b.cover} className={'size-full object-cover' + (off ? ' grayscale' : '')} />
                               ) : (
-                                <span className={'block size-full' + (empty ? ' grayscale' : '')}><DefaultCover seed={b.id || b.name} /></span>
+                                <span className={'block size-full' + (off ? ' grayscale' : '')}><DefaultCover seed={b.id || b.name} /></span>
                               )}
                             </span>
                             <span className="min-w-0 flex-1 truncate">{b.name}</span>
-                            <span className="shrink-0 text-[12px] text-[#7e7f87]">{empty ? 'No games' : `${count} games`}</span>
+                            <span className="shrink-0 text-[12px] text-[#7e7f87]">{empty ? 'No games' : loaded ? 'Already selected' : `${count} games`}</span>
                           </button>
                           )
                         }) : <p className="px-[14px] py-[8px] text-[13px] text-[#7e7f87]">You&rsquo;re not in any PlayLists yet.</p>}
@@ -8143,7 +8148,7 @@ function InfoLine({ label, children }) {
 function PrivacyBadge({ kind }) {
   const friends = kind === 'Friends Only'
   return (
-    <span className={'flex w-fit items-center gap-[7px] whitespace-nowrap rounded-[6px] border px-[11px] py-[5px] text-[13px] font-semibold ' + (friends ? 'border-[#9BF00B]/55 text-[#9BF00B]' : 'border-white/40 text-[#c7c9cb]')}>
+    <span className={'flex w-fit items-center gap-[7px] whitespace-nowrap rounded-[6px] border px-[11px] text-[13px] font-semibold ' + rd('py-[5px] ', 'h-[28px] ') + (friends ?'border-[#9BF00B]/55 text-[#9BF00B]' : 'border-white/40 text-[#c7c9cb]')}>
       {friends ? <StarGlyph size={14} /> : <PersonGlyph size={14} />}
       {kind}
     </span>
@@ -8160,31 +8165,57 @@ function ReviewCard({ r, shots = [], open = false, onHoverChange }) {
   const pics = r.images && r.images.length ? r.images.slice(0, 5) : pool.slice(0, Math.min(pool.length, 2 + (hash % 4)))
   // Total play time shown in place of skill level — a stable per-reviewer value.
   const totalHours = r.hours ?? 8 + (hash % 320)
+  // Redesign: the card can be expanded from the keyboard too (focus = hover).
+  const focusProps = REDESIGN && {
+    tabIndex: 0,
+    'aria-expanded': open,
+    onFocus: () => onHoverChange?.(true),
+    onBlur: (e) => { if (!e.currentTarget.contains(e.relatedTarget)) onHoverChange?.(false) },
+  }
   return (
     <div
-      className="flex flex-col rounded-[8px] bg-[#1c1c1c] p-[16px] transition-colors hover:bg-[#202024]"
+      className={'flex flex-col rounded-[8px] bg-[#1c1c1c] p-[16px] transition-colors hover:bg-[#202024]' + rd('', ' outline-none focus-visible:ring-2 focus-visible:ring-[#9BF00B]')}
       onMouseEnter={() => onHoverChange?.(true)}
       onMouseLeave={() => onHoverChange?.(false)}
+      {...focusProps}
     >
       <div className="flex gap-[18px]">
-        <Avatar color={r.color} size={104} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
+        {/* Redesign: the picture is exactly as tall as the meta column beside
+            it (24 + 6 + 2×20 + 10 + 28 = 108px), so it ends level with the
+            bottom of the privacy badge. */}
+        <Avatar color={r.color} size={rd(104, 108)} className="shrink-0 rounded-[6px]" style={{ borderRadius: 6 }} />
         {/* Reviewer meta — name, joined, total play time, privacy badge */}
+        {REDESIGN ? (
+          <div className="flex w-[200px] shrink-0 flex-col">
+            <p className="truncate text-[18px] font-bold leading-[24px] text-white">{r.name}</p>
+            <p className="mt-[6px] text-[13px] leading-[20px] text-[#a2a4ae]">Joined <span className="text-[#e7e7e7]">{r.joined}</span></p>
+            <p className="text-[13px] leading-[20px] text-[#a2a4ae]">Played <span className="text-[#e7e7e7]">{totalHours} hrs</span></p>
+            <div className="mt-[10px]"><PrivacyBadge kind={r.privacy} /></div>
+          </div>
+        ) : (
         <div className="flex w-[200px] shrink-0 flex-col justify-start pt-[2px]">
           <p className="text-[20px] font-bold leading-tight text-white">{r.name}</p>
           <p className="mt-[8px] text-[13px] text-[#6f7276]">Joined: <span className="text-[#9a9ba3]">{r.joined}</span></p>
           <p className="text-[13px] text-[#6f7276]">Total Play Time: <span className="text-[#9a9ba3]">{totalHours} hrs</span></p>
           <div className="mt-[12px]"><PrivacyBadge kind={r.privacy} /></div>
         </div>
+        )}
         {/* Review panel — title + body on the left, big thumb on the right */}
         <div className="flex flex-1 items-center gap-[16px] rounded-[8px] bg-[#121214] p-[18px]">
           <div className="flex min-w-0 flex-1 flex-col">
-            <p className="text-[24px] font-semibold leading-tight text-white">{r.title}</p>
+            <p className={rd('text-[24px]', 'text-[22px]') + ' font-semibold leading-tight text-white'}>{r.title}</p>
+            {/* Redesign: solid, readable copy clamped to two lines (no fade to
+                transparent); the whole review shows when the card opens. */}
+            {REDESIGN ? (
+              <p className={'mt-[8px] text-[15px] leading-[1.5] text-[#dbdee1]' + (open ? '' : ' line-clamp-2')}>{r.body}</p>
+            ) : (
             <p
               className={`mt-[8px] overflow-hidden text-[15px] leading-[1.5] transition-[max-height] duration-300 ${open ? 'max-h-[600px] text-[#b9bbc0]' : 'max-h-[96px] text-transparent'}`}
               style={open ? undefined : { backgroundImage: 'linear-gradient(to bottom, #b9bbc0 40%, rgba(18,19,21,0) 100%)', WebkitBackgroundClip: 'text', backgroundClip: 'text' }}
             >
               {r.body}
             </p>
+            )}
             {r.tags && r.tags.length > 0 && (
               <div className="mt-[12px] flex flex-wrap gap-[6px]">
                 {r.tags.map((t, i) => (
@@ -8201,7 +8232,7 @@ function ReviewCard({ r, shots = [], open = false, onHoverChange }) {
       {/* Game screenshots revealed under the review as the card expands on hover.
           Sits in the card but outside the text panel, aligned under the panel. */}
       {pics.length > 0 && (
-        <div className={`overflow-hidden pl-[340px] transition-all duration-300 ${open ? 'mt-[12px] max-h-[160px] opacity-100' : 'mt-0 max-h-0 opacity-0'}`}>
+        <div className={`overflow-hidden ${rd('pl-[340px]', 'pl-[344px]')} transition-all duration-300 ${open ? 'mt-[12px] max-h-[160px] opacity-100' : 'mt-0 max-h-0 opacity-0'}`}>
           <div className="flex gap-[8px] overflow-x-auto pb-[2px]">
             {pics.map((src, i) => (
               <img key={i} src={src} alt="" loading="lazy" className="aspect-[16/9] h-[104px] shrink-0 rounded-[6px] object-cover" />
@@ -8259,8 +8290,40 @@ function ReviewsSection({ reviews = REVIEWS, shots = [] }) {
 
   const FILTERS = ['All', 'Friends Only', 'Public']
 
+  // Redesign: the audience filter is a row of visible tabs with counts, instead
+  // of an icon that hides the options in a menu.
+  const countOf = (f) => (f === 'All' ? all.length : all.filter((r) => r.privacy === f).length)
+  const header = REDESIGN ? (
+    <div className="flex flex-wrap items-center justify-between gap-[16px]">
+      <div className="flex flex-wrap items-center gap-x-[24px] gap-y-[10px]">
+        <h2 className="text-[26px] font-bold text-white">Reviews</h2>
+        <div role="group" aria-label="Show reviews from" className="flex border border-[#3a3c42]">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              aria-pressed={eFilter === f}
+              onClick={() => pickFilter(f)}
+              className={'flex items-center gap-[7px] px-[14px] py-[7px] text-[14px] font-semibold transition ' + (eFilter === f ? 'bg-[#9BF00B] text-[#0c0c0e]' : 'text-[#dbdee1] hover:bg-white/[0.06] hover:text-white')}
+            >
+              {f === 'All' ? 'All' : f === 'Friends Only' ? 'Friends' : 'Public'}
+              <span className={eFilter === f ? 'text-[#0c0c0e]/70' : 'text-[#a2a4ae]'}>{countOf(f)}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <button
+        onClick={() => setWriting(true)}
+        className="flex items-center gap-[8px] rounded-[10px] bg-[#2b2d31] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-[#35373c]"
+      >
+        <svg viewBox="0 0 24 24" className="size-[16px]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" /></svg>
+        Write a review
+      </button>
+    </div>
+  ) : null
+
   return (
-    <section className="mt-[40px]">
+    <section className={rd('mt-[40px]', 'mt-[48px]')}>
+      {header || (
       <div className="flex items-center justify-between">
         <div className="flex items-baseline gap-[12px]">
           <h2 className="text-[26px] font-bold text-white">Reviews</h2>
@@ -8315,6 +8378,7 @@ function ReviewsSection({ reviews = REVIEWS, shots = [] }) {
         </div>
         </div>
       </div>
+      )}
 
       <div className="mt-[16px] flex flex-col gap-[16px]">
         {visible.map((r, i) => <ReviewCard key={`${r.name}-${i}`} r={r} shots={shots} open={eHoverIdx === i} onHoverChange={(v) => { if (!IS_LIVE) return; setHoverIdx(v ? i : (cur) => (cur === i ? null : cur)) }} />)}
@@ -8519,7 +8583,7 @@ function slidesFor(key, cover) {
 // Hero image/video carousel — arrow buttons wrap around, dots jump directly,
 // and left/right arrow keys page through. Only the active video slide mounts a
 // live trailer; the rest fall back to their poster so we never stack iframes.
-function HeroCarousel({ slides, children }) {
+function HeroCarousel({ slides, children, className = 'w-full shrink-0 lg:w-[560px]' }) {
   const [i, setI] = useState(0)
   const n = slides.length
   const go = (dir) => setI((p) => (p + dir + n) % n)
@@ -8533,7 +8597,7 @@ function HeroCarousel({ slides, children }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [n])
   return (
-    <div className="w-full shrink-0 lg:w-[560px]">
+    <div className={className}>
       <div className="group relative w-full overflow-hidden rounded-[10px] bg-black shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
         <div
           className="flex aspect-[16/10] w-full transition-transform duration-[450ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
@@ -8645,6 +8709,276 @@ function PlayerAvatar({ color, size, marginRight, gameTitle, onShare, hrs, revie
   )
 }
 
+// ── Redesign: game page header, summary and sticky actions ─────────────────
+// The header is the game's own art re-drawn as ASCII (each glyph in the art's
+// colour) over a heavy blur of the same art, so the page takes on the game's
+// palette. A left-to-right scrim keeps the text column dark enough to read.
+// Steam games use their wide, logo-free "library hero" art for the ASCII, with
+// the cover as the fallback.
+const GAME_HEADER = tkc['game-header']
+const heroArtFor = (src) => {
+  const m = typeof src === 'string' && src.match(/^(https:\/\/cdn\.cloudflare\.steamstatic\.com\/steam\/apps\/\d+)\//)
+  return m ? `${m[1]}/library_hero.jpg` : null
+}
+// "Meera", "Meera and Caleb", "Meera, Sauhee and Caleb", "Meera, Sauhee and 2 others"
+function listNames(names) {
+  if (names.length <= 1) return names[0] || ''
+  if (names.length <= 3) return names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1]
+  return `${names.slice(0, 2).join(', ')} and ${names.length - 2} others`
+}
+// 04/18/2026 → Apr 18, 2026 (anything else passes through)
+function prettyDate(s) {
+  const m = String(s).match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/)
+  if (!m) return s
+  return new Date(+m[3], +m[1] - 1, +m[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+const playerCountLabel = (p) => { const s = String(p).replace('-', '–'); return s === '1' ? '1 player' : `${s} players` }
+
+// A fact about the game that opens the Library filtered to it. Facts that
+// can't filter render as plain text instead, so only real links look clickable.
+function FactLink({ icon, onClick, title, children }) {
+  const cls = 'inline-flex items-center gap-[7px] rounded-[6px] border border-white/20 bg-black/40 px-[12px] py-[7px] text-[14px] font-semibold text-white backdrop-blur-sm'
+  if (!onClick) return <span className={cls}>{icon}{children}</span>
+  return (
+    <button type="button" onClick={onClick} title={title} className={cls + ' transition hover:border-[#9BF00B] hover:text-[#9BF00B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#9BF00B]'}>
+      {icon}{children}
+    </button>
+  )
+}
+
+function GameActions({ d, gameKey, onPlay, onWishlist, onShare, compact = false, actionsRef }) {
+  const pad = compact ? 'px-[16px] py-[9px] text-[14px]' : 'px-[22px] py-[14px] text-[16px]'
+  return (
+    <div ref={actionsRef} className="flex flex-wrap items-center gap-[10px]">
+      <button onClick={() => onPlay?.(gameKey)} className={'flex items-center gap-[9px] rounded-[8px] bg-[#9BF00B] font-bold text-[#0c0c0e] transition hover:brightness-110 ' + pad}>
+        <PartyGlyph size={compact ? 17 : 20} />
+        {START_PARTY}
+      </button>
+      <button onClick={() => onWishlist?.(d.title)} className={'flex items-center gap-[9px] rounded-[8px] border-2 border-white/85 font-bold text-white transition hover:bg-white/10 ' + (compact ? 'px-[14px] py-[7px] text-[14px]' : 'px-[20px] py-[12px] text-[16px]')}>
+        <svg viewBox="0 0 24 24" className={compact ? 'size-[18px]' : 'size-[22px]'} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
+        Add to PlayList
+      </button>
+      <button onClick={() => onShare?.(d.title)} aria-label={`Share ${d.title}`} title="Share" className={'flex shrink-0 items-center justify-center rounded-[8px] border-2 border-white/85 text-white transition hover:bg-white/10 ' + (compact ? 'size-[38px]' : 'size-[50px]')}>
+        <ShareGlyph size={compact ? 18 : 22} />
+      </button>
+    </div>
+  )
+}
+
+// Progressive blur over the header art: sharp on the right, softening toward
+// the text on the left. Stacked backdrop blurs, each stronger one masked to a
+// narrower strip from the left edge.
+function ProgressiveBlur({ spec }) {
+  const n = spec.blurLayers
+  const max = parseFloat(spec.blurMax)
+  const from = parseFloat(spec.blurStart)
+  const clear = parseFloat(spec.blurClear)
+  const ramp = (clear - from) * 0.4
+  return Array.from({ length: n }, (_, i) => {
+    const end = clear - ((clear - from - ramp) * i) / (n - 1)
+    const mask = `linear-gradient(to right, #000 ${end - ramp}%, transparent ${end}%)`
+    const blur = `blur(${max / 2 ** (n - 1 - i)}px)`
+    return (
+      <div
+        key={i}
+        className="absolute inset-0"
+        style={{ backdropFilter: blur, WebkitBackdropFilter: blur, maskImage: mask, WebkitMaskImage: mask }}
+      />
+    )
+  })
+}
+
+function GameHeaderRD({ d, gameKey, playedBy, reviewers, unplayed, libGame, onPlay, onWishlist, onShare, onLibraryTag, actionsRef }) {
+  const spec = GAME_HEADER
+  const names = playedBy.map((c) => FRIEND_NAMES[c]).filter(Boolean)
+  const capVal = maxPlayers(libGame?.players || d.players)
+  const genreVal = libGame ? libGame.genre : d.genre
+  const sh = sessionHours(gameKey)
+  const tag = (facet) => (onLibraryTag ? () => onLibraryTag(facet) : undefined)
+  // Which game the art is ready for — a new game starts hidden again.
+  const [readyFor, setReadyFor] = useState(null)
+  const artReady = readyFor === gameKey
+  return (
+    <section className="@container relative isolate overflow-hidden">
+      {/* The art (wash, glyphs and blur) stays hidden until the glyphs can be
+          drawn, then fades in from the page colour as one layer. */}
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 transition-opacity will-change-[opacity] motion-reduce:transition-none"
+        style={{
+          opacity: artReady ? 1 : 0,
+          transitionDuration: artReady ? spec.artFadeDuration : '0ms',
+          transitionTimingFunction: spec.artFadeEasing,
+        }}
+      >
+        {/* Colour wash: the art, blurred far past recognition — carries the
+            game's palette into the blank cells between glyphs. */}
+        {d.image && (
+          <img alt="" src={d.image} className="absolute inset-0 size-full scale-125 object-cover" style={{ filter: `blur(${spec.washBlur}) saturate(1.3)`, opacity: spec.washOpacity }} />
+        )}
+        <AsciiImage
+          srcs={[heroArtFor(d.image), d.image]}
+          spec={spec}
+          className="absolute inset-0 mix-blend-screen"
+          style={{ opacity: spec.glyphOpacity }}
+          onReady={() => setReadyFor(gameKey)}
+        />
+        <ProgressiveBlur spec={spec} />
+      </div>
+      <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: spec.scrim }} />
+      <div className="pointer-events-none absolute inset-0 -z-10" style={{ background: spec.fade }} />
+
+      {/* Text on the left; the right half is left open for the art. */}
+      <div className="mx-auto w-full max-w-[1240px] px-[40px] pb-[64px] pt-[60px]">
+        <div className="flex max-w-[620px] flex-col [text-shadow:0_1px_14px_rgba(0,0,0,0.85)]">
+          <h1 className="text-white [text-wrap:balance]" style={spec.title}>{d.title}</h1>
+
+          {/* Who's played it, by name — the social proof up front. */}
+          <div className="mt-[18px] flex min-h-[32px] items-center gap-[12px]">
+            {unplayed ? (
+              <p className="text-[15px]" style={{ color: spec.copy }}>None of your friends have played this yet.</p>
+            ) : (
+              <>
+                <span className="flex items-center">
+                  {playedBy.map((c, i) => (
+                    <PlayerAvatar key={i} color={c} size={30} marginRight={i < playedBy.length - 1 ? -8 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} reviewed={reviewers.includes(c)} />
+                  ))}
+                </span>
+                <p className="min-w-0 text-[15px]" style={{ color: spec.copy }}>
+                  <span className="font-semibold text-white">{listNames(names)}</span> played this
+                </p>
+              </>
+            )}
+          </div>
+
+          {/* Facts — the ones that can filter the Library are buttons. */}
+          <div className="mt-[20px] flex flex-wrap items-center gap-[8px]">
+            <FactLink
+              onClick={tag({ kind: 'cap', value: capVal })}
+              title={`Show games for up to ${capVal} players in your Library`}
+              icon={<img alt="" src={userGroup} className="size-[15px] -scale-x-100" />}
+            >{playerCountLabel(d.players)}</FactLink>
+            <FactLink
+              onClick={tag({ kind: 'session', value: sh })}
+              title={`Show games around ${sh} hours a session in your Library`}
+              icon={<svg viewBox="0 0 24 24" className="size-[14px]" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            >~{sh} hrs a session</FactLink>
+            <FactLink
+              onClick={tag(facetForTag(genreVal) || { kind: 'genre', value: genreVal })}
+              title={`Show ${d.genre} games in your Library`}
+            >{d.genre}</FactLink>
+            <span className="rounded-[6px] bg-black/40 px-[10px] py-[8px] text-[14px] backdrop-blur-sm" style={{ color: spec.copy }}>{d.difficulty} difficulty</span>
+          </div>
+
+          {d.description && <p className="mt-[20px] max-w-[60ch] text-[16px] leading-[1.55] text-[#dbdee1]">{d.description}</p>}
+
+          <div className="mt-[28px]">
+            <GameActions d={d} gameKey={gameKey} onPlay={onPlay} onWishlist={onWishlist} onShare={onShare} actionsRef={actionsRef} />
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Media beside the verdict: the screenshot/trailer carousel on the left, and
+// on the right what friends, everyone and your group make of it, then the
+// credits — every number with its meaning written next to it.
+function GameOverviewRD({ d, gameKey, slides, reviewers, unplayed, onShare }) {
+  const reviewerNames = reviewers.map((c) => FRIEND_NAMES[c]).filter(Boolean)
+  const credits = d.publisher === d.developer
+    ? [['Developer and publisher', d.publisher], ['Released', d.released]]
+    : [['Publisher', d.publisher], ['Developer', d.developer], ['Released', d.released]]
+  const block = 'min-w-0 border-t border-[#1c1d21] py-[20px] first:border-t-0 first:pt-0'
+  const cell = block + ' flex flex-col gap-[10px]'
+  const facts = block + ' grid grid-cols-[auto_1fr] gap-x-[18px] gap-y-[6px] text-[14px]'
+  return (
+    <section className="@container">
+      <div className="flex flex-col gap-[36px] @min-[860px]:flex-row @min-[860px]:items-start">
+        <HeroCarousel slides={slides} className="w-full max-w-[640px] shrink-0 @min-[860px]:w-[56%]">
+          <div className="pointer-events-none absolute bottom-[16px] left-[16px] z-[1] flex items-center gap-[16px] text-white [filter:drop-shadow(0_1px_3px_rgba(0,0,0,0.8))]">
+            <WindowsGlyph size={24} />
+            <AppleGlyph size={30} />
+          </div>
+        </HeroCarousel>
+        <div className="flex min-w-0 flex-1 flex-col">
+        <div className={cell}>
+          {unplayed ? (
+            <>
+              <p className="text-[18px] font-semibold text-white">No friend reviews yet</p>
+              <p className="text-[14px] leading-[1.45] text-[#a2a4ae]">Add it to a PlayList to suggest it, or write the first review below.</p>
+            </>
+          ) : (
+            <>
+              <p className="flex items-baseline gap-[10px]">
+                <span className="text-[30px] font-bold leading-none text-[#9BF00B]">{d.recPct}</span>
+                <span className="text-[15px] text-[#dbdee1]">of your friends recommend it</span>
+              </p>
+              {reviewers.length > 0 && (
+                <div className="flex items-center gap-[10px]">
+                  <span className="flex items-center">
+                    {reviewers.map((c, i) => (
+                      <PlayerAvatar key={i} color={c} size={24} marginRight={i < reviewers.length - 1 ? -7 : 0} gameTitle={d.title} onShare={onShare} hrs={friendHours(gameKey, c)} reviewed />
+                    ))}
+                  </span>
+                  <span className="min-w-0 text-[13px] text-[#a2a4ae]">{listNames(reviewerNames)} reviewed it</span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        <div className={cell}>
+          <p className="flex items-baseline gap-[10px]">
+            <span className="text-[30px] font-bold leading-none text-white">{d.ratingPct}</span>
+            <span className="text-[15px] text-[#dbdee1]">positive</span>
+          </p>
+          <p className="text-[13px] text-[#a2a4ae]">From {d.ratingCount} player ratings</p>
+        </div>
+        {!unplayed && (
+          <dl className={facts}>
+            <dt className="text-[#a2a4ae]">Last played together</dt><dd className="font-semibold text-white">{prettyDate(d.lastSession)}</dd>
+            <dt className="text-[#a2a4ae]">Longest group session</dt><dd className="font-semibold text-white">{String(d.sessionRecord).toLowerCase()}</dd>
+            <dt className="text-[#a2a4ae]">Total time together</dt><dd className="font-semibold text-white">{String(d.totalTime).toLowerCase()}</dd>
+          </dl>
+        )}
+        <dl className={facts}>
+          {credits.map(([k, v]) => (
+            <Fragment key={k}><dt className="text-[#a2a4ae]">{k}</dt><dd className="font-semibold text-white">{v}</dd></Fragment>
+          ))}
+        </dl>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// Once the header's buttons scroll away, a slim bar keeps them in reach. It
+// sits in a zero-height sticky slot, so showing it never shifts the page.
+function GameStickyBar({ d, gameKey, scrollRef, actionsRef, onPlay, onWishlist, onShare }) {
+  const [show, setShow] = useState(false)
+  useEffect(() => {
+    const root = scrollRef.current, el = actionsRef.current
+    if (!root || !el) return
+    const io = new IntersectionObserver(([e]) => setShow(!e.isIntersecting && e.boundingClientRect.bottom < (e.rootBounds?.top ?? 0) + 1), { root })
+    io.observe(el)
+    return () => io.disconnect()
+  }, [scrollRef, actionsRef])
+  return (
+    <div className="sticky top-0 z-30 h-0">
+      <div
+        {...(!show && { inert: '' })}
+        className={'absolute inset-x-0 top-0 border-b border-[#1c1d21] backdrop-blur-md transition duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none ' + (show ? 'translate-y-0 opacity-100' : 'pointer-events-none -translate-y-full opacity-0')}
+        style={{ background: `color-mix(in srgb, ${tk.page} 88%, transparent)` }}
+      >
+        <div className="mx-auto flex w-full max-w-[1240px] items-center gap-[16px] px-[40px] py-[10px]">
+          {d.image && <img alt="" src={d.image} className="h-[38px] w-[68px] shrink-0 rounded-[4px] object-cover" />}
+          <p className="min-w-0 flex-1 truncate text-[16px] font-semibold text-white">{d.title}</p>
+          <GameActions d={d} gameKey={gameKey} onPlay={onPlay} onWishlist={onWishlist} onShare={onShare} compact />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlist, onShare, onOpen, onPlay, onLibraryTag }) {
   const d = detailFor(gameKey)
   const slides = slidesFor(gameKey, d.image)
@@ -8679,6 +9013,9 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
     writeRoomPath(`${SPECTATE_PATH}/detailUI`, { searchOpen: !!searchOpen })
   }, [searchOpen])
   const eSearchOpen = IS_SPECTATE ? !!dUI?.searchOpen : searchOpen
+  // Redesign: the sticky action bar watches the header's buttons scroll away.
+  const scrollRef = useRef(null)
+  const actionsRef = useRef(null)
 
   return (
     <main data-xbox className="flex h-full min-w-0 flex-1 flex-col" style={{ backgroundColor: '#0c0c0e' }}>
@@ -8686,8 +9023,14 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
       <PageNav onHome={onHome || onBack} onLibrary={onLibrary} onMixes={onMixes} onBack={onBack} />
       {eSearchOpen && <SearchModal onClose={() => setSearchOpen(false)} onOpen={onOpen} />}
 
-      <div className="no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[32px]">
-        <div className="mx-auto w-full max-w-[1240px]">
+      <div ref={scrollRef} className={rd('no-scrollbar flex-1 overflow-y-auto px-[40px] pb-[80px] pt-[32px]', 'no-scrollbar flex-1 overflow-y-auto pb-[80px]')}>
+        {/* Redesign: full-bleed ASCII header, then the summary band, with the
+            page gutters moving onto the inner column. */}
+        {REDESIGN && <GameStickyBar d={d} gameKey={gameKey} scrollRef={scrollRef} actionsRef={actionsRef} onPlay={onPlay} onWishlist={onWishlist} onShare={onShare} />}
+        {REDESIGN && <GameHeaderRD d={d} gameKey={gameKey} playedBy={playedBy} reviewers={reviewers} unplayed={unplayed} libGame={libGame} onPlay={onPlay} onWishlist={onWishlist} onShare={onShare} onLibraryTag={onLibraryTag} actionsRef={actionsRef} />}
+        <div className={rd('mx-auto w-full max-w-[1240px]', 'mx-auto w-full max-w-[1240px] px-[40px]')}>
+          {REDESIGN && <GameOverviewRD d={d} gameKey={gameKey} slides={slides} reviewers={reviewers} unplayed={unplayed} onShare={onShare} />}
+          {!REDESIGN && (<>
           {/* Hero — cover on the left, title/description/tags/ratings on the right */}
           <section className="flex flex-col gap-[32px] lg:flex-row">
             <HeroCarousel slides={slides}>
@@ -8819,10 +9162,12 @@ function GameDetailPage({ gameKey, onBack, onHome, onLibrary, onMixes, onWishlis
               </div>
             )}
           </section>
+          </>)}
 
           {/* Reviews — always available so every game has Write-a-review + Filter.
-              When no friend has played it yet, a note leads the section. */}
-          {unplayed && (
+              When no friend has played it yet, a note leads the section (the
+              redesign's summary band says it instead). */}
+          {unplayed && !REDESIGN && (
             <section className="mt-[36px] flex flex-col items-center gap-[8px] rounded-[16px] border border-dashed border-[#2b2d31] py-[28px] text-center">
               <svg viewBox="0 0 24 24" className="size-[26px] text-[#9BF00B]" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4 3.9.9 5.6L12 15l-4.9 2.5L8 11.9 4 8l5.6-.6L12 2z" /></svg>
               <p className="text-[16px] font-semibold text-white">No friend reviews yet</p>
@@ -9230,8 +9575,6 @@ function LauncherPage() {
             </span>
           </button>
         </div>
-        {/* Redesign: link to the design-system page (design.html). */}
-        {redesignOn && <a href="/design.html" className="mt-[6px] inline-block text-[14px] font-semibold text-[#9BF00B] transition hover:brightness-125">Design system →</a>}
         <p className="mt-[10px] max-w-[560px] text-[16px] leading-relaxed text-[#b5bac1]">
           Name a room, then pick a player to explore the prototype as them, or open the
           multi view to drive every side of a flow on one screen.
@@ -9295,6 +9638,10 @@ function LauncherPage() {
         {/* Secondary tools */}
         <div className="mt-[24px] flex flex-wrap gap-[10px]">
           <a {...gate('moderator=1')} className={'rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]' + off}>Moderator wall ↗</a>
+        </div>
+        {/* Design-system page (design.html) — not gated on the room. */}
+        <div className="mt-[10px] flex flex-wrap gap-[10px]">
+          <a href="/design.html" className="rounded-[8px] border border-[#4e5058] px-[16px] py-[9px] text-[14px] font-semibold text-white transition hover:bg-white/[0.06]">Design system ↗</a>
         </div>
       </div>
     </div>
@@ -9616,6 +9963,8 @@ export default function Landing() {
   const prefsFor = byId(ePrefsForId)
   const decideBlend = eDecide ? byId(eDecide.blendId) : null
   const dmFriend = eDmName ? DMS.find((d) => d.name === eDmName) : null
+  // Mirrors the page switch below: home is the Content fallthrough.
+  const onHomePage = !dmFriend && !decideBlend && !blend && !eDetailKey && !eLibraryTab && !eMixesTab
 
   return (
     <RoomProvider value={room}>
@@ -9769,7 +10118,9 @@ export default function Landing() {
             setKeys={setWheelKeys}
             blends={blends}
             online={room.online}
-            onParty={startWheelParty}
+            // On the homepage the header's party banner takes over, so close the
+            // wheel; elsewhere keep it open on the result (the party toast shows).
+            onParty={(game) => { startWheelParty(game); if (onHomePage) { setWheelOpen(false); setWheelAutoJoin(false) } }}
             autoJoin={IS_SPECTATE ? false : wheelAutoJoin}
             voteBlend={REDESIGN && blend && !decideBlend ? blend : null}
             onClose={() => { setWheelOpen(false); setWheelAutoJoin(false) }}

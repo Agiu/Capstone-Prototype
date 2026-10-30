@@ -46,6 +46,7 @@
   "styles": {
     "hero": { "family": "display", "size": "clamp(40px, 6vw, 88px)", "lineHeight": "0.95", "tracking": "0.02em", "transform": "uppercase", "usage": "JUMP IN" },
     "page-title": { "family": "display", "size": "clamp(30px, 3vw, 44px)", "lineHeight": "1", "tracking": "0.02em", "transform": "uppercase", "usage": "YOUR PLAYLISTS" },
+    "game-title": { "family": "display-heavy", "size": "clamp(38px, 4.2vw, 64px)", "lineHeight": "0.94", "tracking": "0.01em", "transform": "uppercase", "usage": "Game page title — BATMAN: ARKHAM KNIGHT" },
     "stage-title": { "family": "display-heavy", "size": "clamp(28px, 3vw, 44px)", "lineHeight": "0.92", "tracking": "0.02em", "transform": "uppercase", "usage": "SPIN THE WHEEL" },
     "section-title": { "family": "body", "size": "24px", "weight": "semibold", "lineHeight": "1.25", "usage": "Shelf titles — Recommended By Your Friends" },
     "card-title": { "family": "body", "size": "24px", "weight": "bold", "lineHeight": "1.15", "usage": "Live party game title" },
