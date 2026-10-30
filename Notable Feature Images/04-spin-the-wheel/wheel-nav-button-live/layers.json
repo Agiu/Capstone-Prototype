@@ -1,0 +1,82 @@
+{
+  "scene": "wheel-nav-button-live",
+  "group": "04-spin-the-wheel",
+  "note": "Wheel button while a sync is live — green glow + pulsing LIVE pill.",
+  "capturedAt": "2026-08-14T00:04:12.780Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1068,
+    "height": 408,
+    "cssWidth": 356,
+    "cssHeight": 136
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-a-wheel-sync-is-live-on-the-.png",
+      "kind": "shape",
+      "tag": "button",
+      "text": "6WheelLive",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 156,
+        "height": 34
+      }
+    },
+    {
+      "file": "layers/02-block-6.png",
+      "kind": "block",
+      "tag": "span",
+      "text": "6",
+      "rect": {
+        "x": 169,
+        "y": 17,
+        "width": 18,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/03-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 38,
+        "y": 32,
+        "width": 18,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/04-text-wheel.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Wheel",
+      "rect": {
+        "x": 65,
+        "y": 34,
+        "width": 38,
+        "height": 14
+      }
+    },
+    {
+      "file": "layers/05-block-live.png",
+      "kind": "block",
+      "tag": "span",
+      "text": "Live",
+      "rect": {
+        "x": 113,
+        "y": 33,
+        "width": 52,
+        "height": 17
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 18,
+      "height": 18
+    }
+  ]
+}

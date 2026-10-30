@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/index.js'
 import { REDESIGN, rd } from './redesign.js'
+import { components as tkc, ms as tkMs } from './design/tokens.js'
 
 // The party action's label, shared by every button, tooltip and menu that starts
 // one. Redesign: title case, so it reads as the product's named action.
@@ -50,7 +51,7 @@ const CARD_EXPANDED_W = 718
 
 // Gentle eased horizontal scroll — smoother and less abrupt than the browser's
 // native `behavior:'smooth'`, so the row glides rather than snaps.
-function smoothScrollLeft(el, to, duration = 600) {
+function smoothScrollLeft(el, to, duration = REDESIGN ? tkMs(tkc.shelf.scrollDuration) : 600) {
   const start = el.scrollLeft
   const dist = to - start
   if (Math.abs(dist) < 1) return
@@ -1206,8 +1207,8 @@ export function ShelfRow({ title, subtitle, action, bleed = false, gap = 24, pad
           <div
             key={side}
             aria-hidden
-            className={`pointer-events-none absolute inset-y-0 ${side === 'left' ? 'left-0' : 'right-0'} z-[5] w-[120px] transition-opacity duration-300 ` + ((side === 'left' ? canLeft : canRight) ? 'opacity-100' : 'opacity-0')}
-            style={{ background: `linear-gradient(to ${side}, rgba(12,12,14,0) 0%, #0c0c0e 100%)` }}
+            className={`pointer-events-none absolute inset-y-0 ${side === 'left' ? 'left-0' : 'right-0'} z-[5] transition-opacity duration-300 ` + ((side === 'left' ? canLeft : canRight) ? 'opacity-100' : 'opacity-0')}
+            style={{ width: tkc.shelf.edgeFadeWidth, background: `linear-gradient(to ${side}, transparent 0%, ${tkc.shelf.edgeFadeColor} 100%)` }}
           />
         ))}
         {canLeft && (

@@ -1,0 +1,29 @@
+/* Transparent stage: PNGs come out with a real alpha channel, so layers can be
+   stacked in After Effects without knocking a background out first. */
+html, body { background: transparent !important; margin: 0; }
+#stage { position: relative; }
+#stage.mg-pad { padding: 24px; box-sizing: content-box; }
+
+/* Layer isolation. visibility (not display) keeps every element in its exact
+   place, so an isolated layer registers pixel-for-pixel with the composite. */
+html.mg-iso * { visibility: hidden !important; }
+/* A layer is that element's OWN ink only — its children stay hidden, or every
+   container would re-render the whole composite. Raw text nodes have no
+   visibility of their own, so text layers still come through. */
+html.mg-iso .mg-on { visibility: visible !important; }
+/* …except graphics, whose children ARE the graphic (svg paths, picture sources). */
+html.mg-iso .mg-on.mg-deep * { visibility: visible !important; }
+
+/* Freeze anything that animates on a loop — spinners, ping rings — so repeated
+   runs are byte-identical. */
+html.mg-still *, html.mg-still *::before, html.mg-still *::after {
+  animation-play-state: paused !important;
+  transition: none !important;
+}
+
+.mg-index { font: 14px/1.6 ui-sans-serif, system-ui; color: #dbdee1; background: #0c0c0e; padding: 32px; min-height: 100vh; }
+.mg-index h1 { font-size: 22px; font-weight: 700; color: #fff; margin-bottom: 20px; }
+.mg-index h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .08em; color: #9BF00B; margin: 24px 0 8px; }
+.mg-index li { margin: 3px 0; }
+.mg-index a { color: #fff; font-weight: 600; }
+.mg-index span { color: #80848e; margin-left: 8px; }

@@ -4,6 +4,7 @@ import { RecCard, CardRow, CinematicCard, PortraitCard, ShelfRow, VideoTrailer, 
 import { useRoom, RoomProvider, useRoomCtx, useRoomNode, writeRoomPath, ROOM_ID } from './room.js'
 import { REDESIGN, setRedesign, rd } from './redesign.js'
 import { AsciiVideo } from './AsciiVideo.jsx'
+import { color as tk, components as tkc, ms as tkMs } from './design/tokens.js'
 import {
   discordLogo,
   xboxSprite,
@@ -97,19 +98,19 @@ function Avatar({ color, size = 32, className, style }) {
 }
 
 // Spin-wheel accent lines + notch (inline styles, so the CSS green remap can't
-// reach them). Redesign: the one Xbox lime instead of the older #3dbf1e.
-const SPIN_GREEN = rd('#3dbf1e', '#9BF00B')
+// reach them). Redesign: the wheel tokens from src/design/components.json.
+const SPIN_GREEN = rd('#3dbf1e', tkc.wheel.rim)
 const SPIN_LINE = rd(
   'linear-gradient(90deg, rgba(61,191,30,0), #3dbf1e 15%, #3dbf1e 85%, rgba(61,191,30,0))',
-  'linear-gradient(90deg, rgba(155,240,11,0), #9BF00B 15%, #9BF00B 85%, rgba(155,240,11,0))',
+  tkc.wheel.line,
 )
-const SPIN_GLOW = rd('0 0 18px rgba(61,191,30,0.8)', '0 0 18px rgba(155,240,11,0.6)')
-const SPIN_NOTCH_GLOW = rd('drop-shadow(0 0 8px rgba(61,191,30,0.7))', 'drop-shadow(0 0 8px rgba(155,240,11,0.6))')
+const SPIN_GLOW = rd('0 0 18px rgba(61,191,30,0.8)', tkc.wheel.glow)
+const SPIN_NOTCH_GLOW = rd('drop-shadow(0 0 8px rgba(61,191,30,0.7))', tkc.wheel.notchGlow)
 
 /** Xbox logo cropped from the sprite sheet, matching the store view. */
 function XboxLogo({ size }) {
   // Redesign: recolour to the project's Xbox lime. The sprite's X is cut out as
-  // transparency, so it works as a mask — same crop, filled with #9BF00B.
+  // transparency, so it works as a mask — same crop, filled with the accent token.
   if (REDESIGN) return (
     <div
       role="img"
@@ -118,7 +119,7 @@ function XboxLogo({ size }) {
       style={{
         width: size,
         height: size,
-        backgroundColor: '#9BF00B',
+        backgroundColor: tk.accent,
         WebkitMaskImage: `url(${xboxSprite})`,
         maskImage: `url(${xboxSprite})`,
         WebkitMaskSize: '331.43% 100.24%',
@@ -5534,7 +5535,7 @@ function useRankFlip(keys, resetKey) {
         if (!a || !b) return
         const dx = a.x - b.x, dy = a.y - b.y
         if (Math.abs(dx) < 1 && Math.abs(dy) < 1) return
-        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: 520, easing: 'cubic-bezier(0.16, 1, 0.3, 1)' })
+        el.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'translate(0, 0)' }], { duration: tkMs(tkc['rank-change'].glideDuration), easing: tkc['rank-change'].easing })
         const from = p.order.indexOf(k), to = keys.indexOf(k)
         if (from !== to) mv[k] = to < from ? 'up' : 'down'
       })
@@ -5544,7 +5545,7 @@ function useRankFlip(keys, resetKey) {
   })
   useEffect(() => {
     if (!Object.keys(moves).length) return
-    const t = setTimeout(() => setMoves({}), 1600)
+    const t = setTimeout(() => setMoves({}), tkMs(tkc['rank-change'].arrowHold))
     return () => clearTimeout(t)
   }, [moves])
   return { ref, moves }
@@ -6495,14 +6496,14 @@ function WhosPlayingModal({ game, onClose, onStart }) {
 // Xbox-green header band with black type and a heavier close X.
 function ModalHeader({ title, sub, onClose }) {
   return (
-    <div className="flex shrink-0 items-center justify-between gap-[12px] bg-[#9BF00B] px-[24px] py-[20px]">
+    <div className="flex shrink-0 items-center justify-between gap-[12px]" style={{ background: tkc.modal.headerBackground, padding: tkc.modal.headerPadding }}>
       <div className="min-w-0">
-        <h3 className="text-[22px] font-bold leading-[1.1] text-black">{title}</h3>
-        {sub && <p className="mt-[2px] text-[15px] leading-[1.25] text-black/80">{sub}</p>}
+        <h3 style={{ ...tkc.modal.title, color: tkc.modal.headerText }}>{title}</h3>
+        {sub && <p className="mt-[2px]" style={{ ...tkc.modal.subtitle, color: tkc.modal.headerSubtitle }}>{sub}</p>}
       </div>
       {onClose && (
-        <button onClick={onClose} aria-label="Close" className="shrink-0 text-black transition hover:opacity-70">
-          <svg viewBox="0 0 24 24" className="size-[26px]" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        <button onClick={onClose} aria-label="Close" className="shrink-0 transition hover:opacity-70" style={{ color: tkc.modal.headerText }}>
+          <svg viewBox="0 0 24 24" style={{ width: tkc.modal.closeIconSize, height: tkc.modal.closeIconSize }} fill="none" stroke="currentColor" strokeWidth={tkc.modal.closeIconStroke} strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
       )}
     </div>
@@ -9229,6 +9230,8 @@ function LauncherPage() {
             </span>
           </button>
         </div>
+        {/* Redesign: link to the design-system page (design.html). */}
+        {redesignOn && <a href="/design.html" className="mt-[6px] inline-block text-[14px] font-semibold text-[#9BF00B] transition hover:brightness-125">Design system →</a>}
         <p className="mt-[10px] max-w-[560px] text-[16px] leading-relaxed text-[#b5bac1]">
           Name a room, then pick a player to explore the prototype as them, or open the
           multi view to drive every side of a flow on one screen.

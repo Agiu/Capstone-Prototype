@@ -1,0 +1,442 @@
+{
+  "$about": "Redesign colour tokens — the single source of truth for every colour the redesign renders. Edit a token's `value` to recolour everything that uses it (redesign only; with the toggle off the prototype keeps its original hard-coded colours). `replaces` lists the original hard-coded colours this token takes over, optionally limited to one utility (`text:#0c0c0e` = only text-[#0c0c0e]). `scope`: `xbox` (default) = Xbox surfaces only, Discord pieces untouched; `all` = everywhere. Run `npm run tokens` (or just save — the dev server regenerates) after changing `replaces`.",
+  "groups": {
+    "accent": {
+      "label": "Accent",
+      "description": "Xbox green. One accent replaces the four greens and the Discord blurple the prototype mixed on Xbox surfaces.",
+      "tokens": {
+        "accent": {
+          "value": "#9bf00b",
+          "usage": "Primary buttons, selected states, links, checks, modal header band, active tab line",
+          "replaces": [
+            "#9bf00b",
+            "#5765f2",
+            "#5865f2",
+            "#8aa0ff",
+            "#8b95ff",
+            "#107c10",
+            "#3dbf1e",
+            "#3fbf3f",
+            "#8dff5a",
+            "#0e8f0e"
+          ]
+        },
+        "accent-bright": {
+          "value": "#b6ff3d",
+          "usage": "Accent hover on outlined accent elements",
+          "replaces": [
+            "#b6ff3d"
+          ]
+        },
+        "on-accent": {
+          "value": "#0c0c0e",
+          "usage": "Text and icons sitting on a filled accent",
+          "replaces": [
+            "text:#0c0c0e"
+          ]
+        },
+        "accent-text-soft": {
+          "value": "#9db08f",
+          "usage": "Secondary copy inside accent cards (Start A Party subtitle)",
+          "replaces": [
+            "#9db08f"
+          ]
+        },
+        "accent-shade-600": {
+          "value": "#164700",
+          "usage": "Deep accent hover fills",
+          "replaces": [
+            "#164700"
+          ]
+        },
+        "accent-shade-700": {
+          "value": "#123a00",
+          "usage": "Deep accent fills",
+          "replaces": [
+            "#123a00"
+          ]
+        },
+        "accent-shade-800": {
+          "value": "#112407",
+          "usage": "Accent-tinted card hover",
+          "replaces": [
+            "#112407"
+          ]
+        },
+        "accent-shade-900": {
+          "value": "#0d1a06",
+          "usage": "Darkest accent tint",
+          "replaces": [
+            "#0d1a06"
+          ]
+        }
+      }
+    },
+    "surface": {
+      "label": "Surfaces",
+      "description": "Backgrounds from darkest to lightest. Modal surface and inset are darker than the original Discord greys so buttons contrast.",
+      "tokens": {
+        "page": {
+          "value": "#0c0c0e",
+          "usage": "Page background, avatar cut-out rings on the page",
+          "replaces": [
+            "bg:#0c0c0e",
+            "ring:#0c0c0e",
+            "border:#0c0c0e",
+            "#0b0b0d"
+          ]
+        },
+        "page-tint": {
+          "value": "#0a0f16",
+          "usage": "Launcher card well (cool tint)",
+          "replaces": [
+            "#0a0f16"
+          ]
+        },
+        "inset": {
+          "value": "#111214",
+          "scope": "all",
+          "usage": "Inputs, search fields, toasts, sunken cards",
+          "replaces": [
+            "#1e1f22",
+            "#111214",
+            "#121214",
+            "#111114",
+            "#101012",
+            "#0f0f12",
+            "#131316",
+            "#141416",
+            "#151517"
+          ]
+        },
+        "raised": {
+          "value": "#17181b",
+          "usage": "Panels, toasts, hover cards",
+          "replaces": [
+            "#17181b",
+            "#16171b",
+            "#161618",
+            "#151518",
+            "#191919"
+          ]
+        },
+        "media": {
+          "value": "#1a1a1d",
+          "usage": "Image placeholders behind cover art",
+          "replaces": [
+            "#1a1a1d",
+            "#1c1c1c"
+          ]
+        },
+        "surface": {
+          "value": "#1a1b1e",
+          "scope": "all",
+          "usage": "Modal and panel surface (was Discord #2b2d31)",
+          "replaces": [
+            "#2b2d31"
+          ]
+        },
+        "hairline": {
+          "value": "#1c1d21",
+          "usage": "Hairline borders and dark chips",
+          "replaces": [
+            "#1c1d21",
+            "#1d1d20",
+            "#1c1c1f",
+            "#1f1f23",
+            "#202024"
+          ]
+        },
+        "raised-hover": {
+          "value": "#26262a",
+          "usage": "Hover on dark chips and panels",
+          "replaces": [
+            "#26262a",
+            "#232428",
+            "#232327"
+          ]
+        },
+        "chip-hover": {
+          "value": "#2a2a2f",
+          "usage": "Hover on filter chips",
+          "replaces": [
+            "#2a2a2f"
+          ]
+        },
+        "divider": {
+          "value": "#2f3136",
+          "usage": "Divider inside Discord-style panels",
+          "replaces": [
+            "#2f3136"
+          ]
+        }
+      }
+    },
+    "control": {
+      "label": "Controls",
+      "description": "Greys for secondary buttons, toggles and their borders. In the redesign secondary buttons render as outlines in `control`.",
+      "tokens": {
+        "control": {
+          "value": "#4e5058",
+          "usage": "Secondary button outline / fill",
+          "replaces": [
+            "#4e5058"
+          ]
+        },
+        "control-hover": {
+          "value": "#5a5c64",
+          "usage": "Secondary button hover fill, small status dots",
+          "replaces": [
+            "bg:#5a5c64",
+            "border:#5a5c64",
+            "#5c5e66"
+          ]
+        },
+        "control-outline-hover": {
+          "value": "#7a7c85",
+          "usage": "Outlined secondary button border on hover",
+          "replaces": []
+        },
+        "control-alt": {
+          "value": "#3a3c42",
+          "usage": "Alternate secondary fill and control borders",
+          "replaces": [
+            "#3a3c42",
+            "#3a3d41",
+            "#3a3c41"
+          ]
+        },
+        "control-alt-hover": {
+          "value": "#44464d",
+          "usage": "Hover on alternate controls",
+          "replaces": [
+            "#44464d",
+            "#45474e",
+            "#43474d"
+          ]
+        },
+        "control-subtle-hover": {
+          "value": "#35373c",
+          "usage": "Hover on list rows and menu items",
+          "replaces": [
+            "#35373c"
+          ]
+        },
+        "border-strong": {
+          "value": "#4a4d55",
+          "usage": "Unchecked checkbox borders, strong dividers",
+          "replaces": [
+            "#4a4d55",
+            "#4a4c52"
+          ]
+        }
+      }
+    },
+    "text": {
+      "label": "Text",
+      "description": "Text greys from brightest to faintest (white itself is Tailwind's text-white).",
+      "tokens": {
+        "text-strong": {
+          "value": "#e7e7e7",
+          "usage": "Emphasised body copy",
+          "replaces": [
+            "#e7e7e7"
+          ]
+        },
+        "text-primary": {
+          "value": "#dbdee1",
+          "usage": "Primary copy on dark surfaces",
+          "replaces": [
+            "#dbdee1"
+          ]
+        },
+        "text-nav": {
+          "value": "#c7c9cb",
+          "usage": "Inactive nav tabs, captions",
+          "replaces": [
+            "#c7c9cb",
+            "#c5c6ca",
+            "#c7c8ce"
+          ]
+        },
+        "text-secondary": {
+          "value": "#b5bac1",
+          "usage": "Secondary copy, close icons",
+          "replaces": [
+            "#b5bac1",
+            "#b9bbc0"
+          ]
+        },
+        "text-body-dim": {
+          "value": "#a2a4ae",
+          "usage": "Long-form descriptions on game pages",
+          "replaces": [
+            "#a2a4ae"
+          ]
+        },
+        "text-dim": {
+          "value": "#9a9ba3",
+          "usage": "Labels, metadata, section eyebrows",
+          "replaces": [
+            "#9a9ba3"
+          ]
+        },
+        "text-placeholder": {
+          "value": "#87898c",
+          "usage": "Placeholders and search icons",
+          "replaces": [
+            "#87898c"
+          ]
+        },
+        "text-status": {
+          "value": "#80848e",
+          "usage": "Offline / presence lines",
+          "replaces": [
+            "#80848e"
+          ]
+        },
+        "text-muted": {
+          "value": "#7e7f87",
+          "usage": "Muted metadata, timestamps",
+          "replaces": [
+            "#7e7f87"
+          ]
+        },
+        "text-faint": {
+          "value": "#6f7276",
+          "usage": "Empty states, faint hints",
+          "replaces": [
+            "#6f7276",
+            "#6d7078",
+            "#6a6d73"
+          ]
+        },
+        "text-disabled": {
+          "value": "#5a5c64",
+          "usage": "Disabled labels",
+          "replaces": [
+            "text:#5a5c64",
+            "#5f616a"
+          ]
+        }
+      }
+    },
+    "status": {
+      "label": "Status",
+      "description": "Feedback colours: danger, success, warning.",
+      "tokens": {
+        "danger": {
+          "value": "#f04747",
+          "usage": "Downvotes, decline, rank-drop arrow",
+          "replaces": [
+            "#f04747"
+          ]
+        },
+        "danger-badge": {
+          "value": "#f23f42",
+          "usage": "Notification count badges",
+          "replaces": [
+            "#f23f42"
+          ]
+        },
+        "danger-text": {
+          "value": "#f0505b",
+          "usage": "Destructive menu items",
+          "replaces": [
+            "#f0505b"
+          ]
+        },
+        "danger-hover": {
+          "value": "#da373c",
+          "usage": "Destructive hover fill",
+          "replaces": [
+            "#da373c"
+          ]
+        },
+        "danger-strong": {
+          "value": "#d83c3e",
+          "usage": "Destructive confirm button",
+          "replaces": [
+            "#d83c3e"
+          ]
+        },
+        "danger-soft": {
+          "value": "#f0a0a6",
+          "usage": "Inline warnings",
+          "replaces": [
+            "#f0a0a6",
+            "#f0a0a0"
+          ]
+        },
+        "danger-light": {
+          "value": "#ff8a8a",
+          "usage": "Selected thumbs-down text",
+          "replaces": [
+            "#ff8a8a"
+          ]
+        },
+        "success": {
+          "value": "#23a55a",
+          "usage": "Ready checks, online dots",
+          "replaces": [
+            "#23a55a"
+          ]
+        },
+        "success-strong": {
+          "value": "#248046",
+          "usage": "Accept buttons",
+          "replaces": [
+            "#248046"
+          ]
+        },
+        "warning": {
+          "value": "#f0b232",
+          "usage": "Pending invites, warnings",
+          "replaces": [
+            "#f0b232"
+          ]
+        },
+        "highlight": {
+          "value": "#8b46b0",
+          "usage": "Special-response buttons",
+          "replaces": [
+            "#8b46b0"
+          ]
+        }
+      }
+    }
+  },
+  "reference": {
+    "label": "Data colours (not themed)",
+    "description": "Colours that carry data rather than UI meaning — avatars, wheel slices, PlayList covers. Listed for tracking; they stay hard-coded so a theme change can't make two people or two slices look alike.",
+    "sets": {
+      "avatars": [
+        "#5165f6",
+        "#f5c518",
+        "#ff3737",
+        "#00a853",
+        "#eb459e"
+      ],
+      "playlistColors": [
+        "#5765f2",
+        "#e67e22",
+        "#16a085",
+        "#c0392b",
+        "#8e44ad",
+        "#2980b9",
+        "#d64b7e",
+        "#27ae60"
+      ],
+      "wheelSlices": [
+        "#5765f2",
+        "#23a55a",
+        "#eb459e",
+        "#f0b232",
+        "#9a45f7",
+        "#5165f6",
+        "#ff3737",
+        "#3ba55d"
+      ]
+    }
+  }
+}

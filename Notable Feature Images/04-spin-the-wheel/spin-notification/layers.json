@@ -1,0 +1,106 @@
+{
+  "scene": "spin-notification",
+  "group": "04-spin-the-wheel",
+  "note": "Top-right heads-up while the wheel is turning (the avatar has a ping ring).",
+  "capturedAt": "2026-08-14T00:04:19.089Z",
+  "scale": 3,
+  "canvas": {
+    "width": 2106,
+    "height": 252,
+    "cssWidth": 702,
+    "cssHeight": 84
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Caleb is spinning the wheel in The Late Night Crew — a game is about to be chose",
+      "rect": {
+        "x": 24,
+        "y": 11,
+        "width": 654,
+        "height": 62
+      }
+    },
+    {
+      "file": "layers/02-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 43,
+        "y": 25,
+        "width": 34,
+        "height": 34
+      }
+    },
+    {
+      "file": "layers/03-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 51,
+        "y": 32,
+        "width": 20,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/04-text-is-spinning-the-wheel-in-a-g.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Caleb is spinning the wheel in The Late Night Crew — a game is about to be chose",
+      "rect": {
+        "x": 91,
+        "y": 31,
+        "width": 532,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/05-text-caleb.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb",
+      "rect": {
+        "x": 91,
+        "y": 32,
+        "width": 38,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/06-text-the-late-night-crew.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "The Late Night Crew",
+      "rect": {
+        "x": 283,
+        "y": 32,
+        "width": 134,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/07-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 641,
+        "y": 33,
+        "width": 18,
+        "height": 18
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 18,
+      "height": 18
+    }
+  ]
+}

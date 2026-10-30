@@ -1,0 +1,148 @@
+{
+  "scene": "member-stack",
+  "group": "03-friend-activity",
+  "note": "The member face stack used on PlayList cards, with the +N overflow chip.",
+  "capturedAt": "2026-08-14T00:04:02.639Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1188,
+    "height": 408,
+    "cssWidth": 396,
+    "cssHeight": 136
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/03-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 56,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/04-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 62,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/05-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 88,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 94,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/07-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 120,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 126,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/09-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 152,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/10-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 158,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/11-block-2.png",
+      "kind": "block",
+      "tag": "span",
+      "text": "+2",
+      "rect": {
+        "x": 184,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    }
+  ],
+  "vectors": []
+}

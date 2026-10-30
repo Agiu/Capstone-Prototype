@@ -1,0 +1,200 @@
+{
+  "scene": "party-avatars",
+  "group": "05-ready-up",
+  "note": "The party face stack on its own — ready (green check), declined (red cross), undecided (dim).",
+  "capturedAt": "2026-08-14T00:04:28.206Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1068,
+    "height": 438,
+    "cssWidth": 356,
+    "cssHeight": 146
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 32,
+        "y": 32,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/03-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 48,
+        "y": 48,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/04-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 51,
+        "y": 51,
+        "width": 9,
+        "height": 9
+      }
+    },
+    {
+      "file": "layers/05-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 54,
+        "y": 24,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 62,
+        "y": 32,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/07-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 78,
+        "y": 48,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/08-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 81,
+        "y": 51,
+        "width": 9,
+        "height": 9
+      }
+    },
+    {
+      "file": "layers/09-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 84,
+        "y": 24,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/10-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 92,
+        "y": 32,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/11-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 114,
+        "y": 24,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/12-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 122,
+        "y": 32,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/13-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 138,
+        "y": 48,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/14-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 141,
+        "y": 51,
+        "width": 9,
+        "height": 9
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 9,
+      "height": 9
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 9,
+      "height": 9
+    },
+    {
+      "file": "vectors/03-icon.svg",
+      "width": 9,
+      "height": 9
+    }
+  ]
+}

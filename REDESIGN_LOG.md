@@ -39,6 +39,43 @@ for the player (or the moderator).
 
 ## Changes
 
+### 35. Design tokens and a design-system page
+**Date:** 2026-10-28 · **Screen / element:** Whole redesign (system), new `/design.html`
+
+**Problem.** The redesign's look lived in about 160 hand-written CSS overrides plus
+hex values scattered through the components. It had four greens, a dozen
+near-identical greys and no single place to see or change them. Re-theming meant
+hunting down every copy, and nothing showed what the system actually was.
+
+**Change.** Three JSON files in `src/design/` are now the source of truth for the
+redesign:
+- `colors.json` has 47 colour tokens in five groups. Each token lists the old hard-coded
+  colours it replaces.
+- `typography.json` has five font families and 14 named text styles.
+- `components.json` has radius, motion and specs for nine components: buttons, modal,
+  nav, shelf, party card, rank change, ASCII hero and wheel.
+
+A generator scans the source and writes a CSS override for every hard-coded colour
+class, pointing it at its token's variable. It also flags any colour that doesn't have
+a token yet. Components that set colours or timings in JavaScript now read them from
+the tokens too. A new page, `/design.html` (linked from the launcher when Redesign is
+on), lays out every token, text style and component, rendered live from those files.
+Nothing changed visually. Pixel diffs against the previous build show the original
+untouched, and the redesign within ≤4/255 per channel where invisible near-duplicate
+greys were merged into one token.
+
+**Rationale.** A design system needs one place where decisions live, so it can't drift.
+Changing `accent` in one file now re-colours every button, tab line, wheel rim and
+glow. The page turns the system into something you can review, not just code. Scoping
+everything to `html[data-redesign]` keeps the as-tested prototype exactly as it was.
+
+**Before / after.** `screenshots/35-design-system-page.png`
+
+**Code.** `src/design/` (`colors.json`, `typography.json`, `components.json`,
+`tokens.js`, `generate-remap.mjs`, `DesignSystemPage.jsx`, `README.md`), `design.html`,
+`vite.config.js` (token plugin, second page), `src/index.css`, `src/AsciiVideo.jsx`,
+`src/Landing.jsx`, `src/RecCard.jsx`
+
 ### 34. Rank changes animate, with direction arrows
 **Date:** 2026-10-24 · **Screen / element:** PlayList page list and grid
 

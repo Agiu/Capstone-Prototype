@@ -1,0 +1,284 @@
+{
+  "scene": "add-to-playlist-popover",
+  "group": "02-mix-add-and-rank",
+  "note": "The \"Add to PlayList\" context popover — one row per Mix, check = already in, + = add.",
+  "capturedAt": "2026-08-14T00:03:45.356Z",
+  "scale": 3,
+  "canvas": {
+    "width": 912,
+    "height": 492,
+    "cssWidth": 304,
+    "cssHeight": 164
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-add-to-playlist.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Add “Overcooked! 2” toThe Late Night CrewCaleb addedSunday Squad2 members",
+      "rect": {
+        "x": 8,
+        "y": 9,
+        "width": 288,
+        "height": 147
+      }
+    },
+    {
+      "file": "layers/02-text-add-overcooked-2-to.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Add “Overcooked! 2” to",
+      "rect": {
+        "x": 23,
+        "y": 22,
+        "width": 140,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/03-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 269,
+        "y": 22,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/04-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 21,
+        "y": 56,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/05-img-store-grounded.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 21,
+        "y": 56,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/06-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 37,
+        "y": 56,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/07-img-store-humanfallflat.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 21,
+        "y": 71,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/08-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 37,
+        "y": 71,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/09-text-the-late-night-crew.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "The Late Night Crew",
+      "rect": {
+        "x": 61,
+        "y": 51,
+        "width": 196,
+        "height": 21
+      }
+    },
+    {
+      "file": "layers/10-text-caleb-added.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb added",
+      "rect": {
+        "x": 61,
+        "y": 73,
+        "width": 196,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/11-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 61,
+        "y": 76,
+        "width": 12,
+        "height": 12
+      }
+    },
+    {
+      "file": "layers/12-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 64,
+        "y": 78,
+        "width": 7,
+        "height": 7
+      }
+    },
+    {
+      "file": "layers/13-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 267,
+        "y": 63,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/14-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 21,
+        "y": 108,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/15-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 21,
+        "y": 108,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/16-img-store-humanfallflat.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 37,
+        "y": 108,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/17-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 21,
+        "y": 123,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/18-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 37,
+        "y": 123,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/19-text-sunday-squad.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Sunday Squad",
+      "rect": {
+        "x": 61,
+        "y": 104,
+        "width": 196,
+        "height": 21
+      }
+    },
+    {
+      "file": "layers/20-text-2-member-s.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "2 members",
+      "rect": {
+        "x": 61,
+        "y": 125,
+        "width": 196,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/21-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 267,
+        "y": 115,
+        "width": 16,
+        "height": 16
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "file": "vectors/03-icon.svg",
+      "width": 16,
+      "height": 16
+    }
+  ]
+}

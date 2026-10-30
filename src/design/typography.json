@@ -1,0 +1,62 @@
+{
+  "$about": "Redesign type tokens. `families` are wired: changing a family's `stack` re-fonts every redesign surface that uses it (body copy, and the condensed display headings set inline in the code). `files` are the @font-face sources; add a new family with files and it's loaded automatically. `styles` are the named text styles the redesign uses — reference them from components.json and when building new UI.",
+  "families": {
+    "body": {
+      "label": "gg sans",
+      "stack": ["gg sans", "ABC Ginto Normal", "Noto Sans", "Helvetica Neue", "Helvetica", "Arial", "sans-serif"],
+      "usage": "All UI and body copy",
+      "matches": [],
+      "files": {
+        "400": "/fonts/gg-sans-Regular.ttf",
+        "500": "/fonts/gg-sans-Medium.ttf",
+        "600": "/fonts/gg-sans-Semibold.ttf",
+        "700": "/fonts/gg-sans-Bold.ttf"
+      }
+    },
+    "display": {
+      "label": "Base Neue Condensed Bold (oblique)",
+      "stack": ["Base Neue Cond Bold", "Impact", "sans-serif"],
+      "usage": "Hero and page titles — JUMP IN, YOUR PLAYLISTS",
+      "matches": ["Base Neue Cond Bold"],
+      "files": { "400": "/fonts/BaseNeueTrial-CondBoldObliq.ttf" }
+    },
+    "display-heavy": {
+      "label": "Base Neue Condensed Extra Bold (oblique)",
+      "stack": ["Base Neue Cond ExtBd", "Impact", "sans-serif"],
+      "usage": "Spin the Wheel, wheel results, game page titles",
+      "matches": ["Base Neue Cond ExtBd"],
+      "files": { "400": "/fonts/BaseNeueTrial-CondExtBdObliq.ttf" }
+    },
+    "display-black": {
+      "label": "Base Neue Black (oblique)",
+      "stack": ["Base Neue Black", "Impact", "sans-serif"],
+      "usage": "Reserved for oversized numerals and marks",
+      "matches": ["Base Neue Black"],
+      "files": { "400": "/fonts/BaseNeueTrial-BlackOblique.ttf" }
+    },
+    "mono": {
+      "label": "System monospace",
+      "stack": ["ui-monospace", "SFMono-Regular", "Menlo", "monospace"],
+      "usage": "ASCII hero glyphs",
+      "matches": [],
+      "files": {}
+    }
+  },
+  "weights": { "regular": 400, "medium": 500, "semibold": 600, "bold": 700 },
+  "styles": {
+    "hero": { "family": "display", "size": "clamp(40px, 6vw, 88px)", "lineHeight": "0.95", "tracking": "0.02em", "transform": "uppercase", "usage": "JUMP IN" },
+    "page-title": { "family": "display", "size": "clamp(30px, 3vw, 44px)", "lineHeight": "1", "tracking": "0.02em", "transform": "uppercase", "usage": "YOUR PLAYLISTS" },
+    "stage-title": { "family": "display-heavy", "size": "clamp(28px, 3vw, 44px)", "lineHeight": "0.92", "tracking": "0.02em", "transform": "uppercase", "usage": "SPIN THE WHEEL" },
+    "section-title": { "family": "body", "size": "24px", "weight": "semibold", "lineHeight": "1.25", "usage": "Shelf titles — Recommended By Your Friends" },
+    "card-title": { "family": "body", "size": "24px", "weight": "bold", "lineHeight": "1.15", "usage": "Live party game title" },
+    "modal-title": { "family": "body", "size": "22px", "weight": "bold", "lineHeight": "1.1", "usage": "Green modal header title" },
+    "modal-subtitle": { "family": "body", "size": "15px", "weight": "regular", "lineHeight": "1.25", "usage": "Green modal header subtitle" },
+    "nav-tab": { "family": "body", "size": "16px", "weight": "medium", "lineHeight": "1", "usage": "Library / PlayLists tabs" },
+    "body": { "family": "body", "size": "15px", "weight": "regular", "lineHeight": "1.4", "usage": "Default copy" },
+    "button": { "family": "body", "size": "15px", "weight": "bold", "lineHeight": "1", "usage": "Buttons" },
+    "label": { "family": "body", "size": "13px", "weight": "semibold", "lineHeight": "1.3", "tracking": "0.025em", "usage": "Field labels — Game, Invite friends" },
+    "eyebrow": { "family": "body", "size": "13px", "weight": "semibold", "lineHeight": "1.2", "tracking": "0.025em", "transform": "uppercase", "usage": "LIVE PARTY" },
+    "caption": { "family": "body", "size": "12px", "weight": "regular", "lineHeight": "1.3", "usage": "Metadata, wheel odds" },
+    "micro": { "family": "body", "size": "11px", "weight": "semibold", "lineHeight": "1.2", "usage": "Tiny badges" }
+  }
+}

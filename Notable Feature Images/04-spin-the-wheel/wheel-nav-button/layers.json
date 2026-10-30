@@ -1,0 +1,58 @@
+{
+  "scene": "wheel-nav-button",
+  "group": "04-spin-the-wheel",
+  "note": "The Wheel button in the top nav — resting state.",
+  "capturedAt": "2026-08-14T00:04:11.142Z",
+  "scale": 3,
+  "canvas": {
+    "width": 888,
+    "height": 408,
+    "cssWidth": 296,
+    "cssHeight": 136
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-spin-the-wheel.png",
+      "kind": "shape",
+      "tag": "button",
+      "text": "Wheel",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 93,
+        "height": 34
+      }
+    },
+    {
+      "file": "layers/02-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 38,
+        "y": 32,
+        "width": 18,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/03-text-wheel.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Wheel",
+      "rect": {
+        "x": 65,
+        "y": 34,
+        "width": 38,
+        "height": 14
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 18,
+      "height": 18
+    }
+  ]
+}

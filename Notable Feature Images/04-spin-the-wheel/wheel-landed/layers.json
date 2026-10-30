@@ -1,0 +1,75 @@
+{
+  "scene": "wheel-landed",
+  "group": "04-spin-the-wheel",
+  "note": "Landed on slice 3 — the pointer sits on the winning wedge.",
+  "capturedAt": "2026-08-14T00:04:09.327Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1608,
+    "height": 1608,
+    "cssWidth": 536,
+    "cssHeight": 536
+  },
+  "layers": [
+    {
+      "file": "layers/01-icon-pointer.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 220,
+        "y": 17,
+        "width": 29,
+        "height": 34
+      }
+    },
+    {
+      "file": "layers/02-icon-wheel.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": -53,
+        "y": -53,
+        "width": 574,
+        "height": 574
+      }
+    },
+    {
+      "file": "layers/03-shape-hub.png",
+      "kind": "shape",
+      "tag": "button",
+      "text": "SpinMe",
+      "rect": {
+        "x": 175,
+        "y": 175,
+        "width": 118,
+        "height": 118
+      }
+    },
+    {
+      "file": "layers/04-text-spin-me.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "SpinMe",
+      "rect": {
+        "x": 206,
+        "y": 208,
+        "width": 57,
+        "height": 53
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-pointer.svg",
+      "width": 29,
+      "height": 34
+    },
+    {
+      "file": "vectors/02-wheel.svg",
+      "width": 574,
+      "height": 574
+    }
+  ]
+}

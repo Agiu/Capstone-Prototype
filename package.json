@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "tokens": "node src/design/generate-remap.mjs"
   },
   "dependencies": {
     "firebase": "^12.17.0",

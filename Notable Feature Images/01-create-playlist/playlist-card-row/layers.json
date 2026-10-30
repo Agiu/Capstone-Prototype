@@ -1,0 +1,411 @@
+{
+  "scene": "playlist-card-row",
+  "group": "01-create-playlist",
+  "note": "Create-tile beside a finished card — the before/after pair for a \"new PlayList appears\" transition.",
+  "capturedAt": "2026-08-14T00:03:43.965Z",
+  "scale": 3,
+  "canvas": {
+    "width": 2328,
+    "height": 1128,
+    "cssWidth": 776,
+    "cssHeight": 376
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 200,
+        "height": 200
+      }
+    },
+    {
+      "file": "layers/02-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 104,
+        "y": 104,
+        "width": 40,
+        "height": 40
+      }
+    },
+    {
+      "file": "layers/03-text-create-a-new-playlist.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Create a new PlayList",
+      "rect": {
+        "x": 24,
+        "y": 234,
+        "width": 200,
+        "height": 24
+      }
+    },
+    {
+      "file": "layers/04-shape-panel.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "6 games in this PlayListOvercooked! 2GroundedAmong UsHuman: Fall FlatDeep Rock G",
+      "rect": {
+        "x": 452,
+        "y": 24,
+        "width": 236,
+        "height": 275
+      }
+    },
+    {
+      "file": "layers/05-text-6-game-s-in-this-playlist.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "6 games in this PlayList",
+      "rect": {
+        "x": 465,
+        "y": 37,
+        "width": 210,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/06-img-store-overcooked2.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 468,
+        "y": 65,
+        "width": 50,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/07-text-overcooked-2.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Overcooked! 2",
+      "rect": {
+        "x": 527,
+        "y": 69,
+        "width": 145,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/08-img-store-grounded.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 468,
+        "y": 103,
+        "width": 50,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/09-text-grounded.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Grounded",
+      "rect": {
+        "x": 527,
+        "y": 107,
+        "width": 145,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/10-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 468,
+        "y": 141,
+        "width": 50,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/11-text-among-us.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Among Us",
+      "rect": {
+        "x": 527,
+        "y": 145,
+        "width": 145,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/12-img-store-humanfallflat.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 468,
+        "y": 179,
+        "width": 50,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/13-text-human-fall-flat.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Human: Fall Flat",
+      "rect": {
+        "x": 527,
+        "y": 183,
+        "width": 145,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/14-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 468,
+        "y": 217,
+        "width": 50,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/15-text-deep-rock-galactic.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Deep Rock Galactic",
+      "rect": {
+        "x": 527,
+        "y": 221,
+        "width": 145,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/16-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 468,
+        "y": 255,
+        "width": 50,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/17-text-golf-with-your-friends.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Golf With Your Friends",
+      "rect": {
+        "x": 527,
+        "y": 259,
+        "width": 145,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/18-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 248,
+        "y": 24,
+        "width": 200,
+        "height": 200
+      }
+    },
+    {
+      "file": "layers/19-img-store-grounded.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 248,
+        "y": 24,
+        "width": 99,
+        "height": 99
+      }
+    },
+    {
+      "file": "layers/20-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 349,
+        "y": 24,
+        "width": 99,
+        "height": 99
+      }
+    },
+    {
+      "file": "layers/21-img-store-humanfallflat.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 248,
+        "y": 125,
+        "width": 99,
+        "height": 99
+      }
+    },
+    {
+      "file": "layers/22-img-header.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 349,
+        "y": 125,
+        "width": 99,
+        "height": 99
+      }
+    },
+    {
+      "file": "layers/23-text-the-late-night-crew.png",
+      "kind": "text",
+      "tag": "button",
+      "text": "The Late Night Crew",
+      "rect": {
+        "x": 248,
+        "y": 234,
+        "width": 170,
+        "height": 24
+      }
+    },
+    {
+      "file": "layers/24-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 427,
+        "y": 237,
+        "width": 18,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/25-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 248,
+        "y": 268,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/26-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 254,
+        "y": 274,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/27-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 280,
+        "y": 268,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/28-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 286,
+        "y": 274,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/29-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 312,
+        "y": 268,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/30-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 318,
+        "y": 274,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/31-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 344,
+        "y": 268,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/32-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 350,
+        "y": 274,
+        "width": 16,
+        "height": 16
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 40,
+      "height": 40
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 18,
+      "height": 18
+    }
+  ]
+}

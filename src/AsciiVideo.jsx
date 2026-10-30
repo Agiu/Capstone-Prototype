@@ -1,4 +1,5 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { components } from './design/tokens.js'
 
 // ── ASCII video (redesign) ──────────────────────────────────────────────────
 // Re-draws a looping background video as ASCII glyphs, keeping the footage's
@@ -18,13 +19,15 @@ import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from 're
 // `tint` ([r, g, b], 0–1) recolours every glyph to one colour instead of the
 // footage's own; changes ease over ~half a second. null → footage colours.
 
-const RAMP = ' .:-=+*#%@' // dark → bright; index 0 is blank so dark areas stay empty
-const CELL = 10 // CSS px per character cell
-const MAX_DPR = 1.5
-const FRAME_MS = 1000 / 30
-const GAIN = 2.4 // the wireframe footage is mostly dark — lift it into the ramp
-const CUTOFF = 0.22 // lifted brightness below this stays blank — keeps negative
-                    // space around the lines instead of a field of faint dots
+// Tuning lives in src/design/components.json → "ascii-hero".
+const HERO = components['ascii-hero']
+const RAMP = HERO.ramp // dark → bright; index 0 is blank so dark areas stay empty
+const CELL = HERO.cell // CSS px per character cell
+const MAX_DPR = HERO.maxDpr
+const FRAME_MS = 1000 / HERO.fps
+const GAIN = HERO.gain // the wireframe footage is mostly dark — lift it into the ramp
+const CUTOFF = HERO.cutoff // lifted brightness below this stays blank — keeps negative
+                           // space around the lines instead of a field of faint dots
 const SUB = 2 // downsample to SUB×SUB px per cell; the shader keeps the brightest,
               // so thin wireframe lines survive instead of averaging to a smudge
 

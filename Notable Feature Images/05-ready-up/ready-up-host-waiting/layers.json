@@ -1,0 +1,284 @@
+{
+  "scene": "ready-up-host-waiting",
+  "group": "05-ready-up",
+  "note": "Screen 3 — you are the host, still waiting on people.",
+  "capturedAt": "2026-08-14T00:04:25.411Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1296,
+    "height": 783,
+    "cssWidth": 432,
+    "cssHeight": 261
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-panel.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Getting the party readySea of Thieves1-4 playersWaiting for 2 members to respond",
+      "rect": {
+        "x": 8,
+        "y": 8,
+        "width": 416,
+        "height": 245
+      }
+    },
+    {
+      "file": "layers/02-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 9,
+        "y": 9,
+        "width": 116,
+        "height": 243
+      }
+    },
+    {
+      "file": "layers/03-text-getting-the-party-ready.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Getting the party ready",
+      "rect": {
+        "x": 141,
+        "y": 25,
+        "width": 266,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/04-text-sea-of-thieves.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Sea of Thieves",
+      "rect": {
+        "x": 141,
+        "y": 51,
+        "width": 266,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/05-block-1-4-players.png",
+      "kind": "block",
+      "tag": "span",
+      "text": "1-4 players",
+      "rect": {
+        "x": 141,
+        "y": 79,
+        "width": 98,
+        "height": 26
+      }
+    },
+    {
+      "file": "layers/06-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 152,
+        "y": 86,
+        "width": 13,
+        "height": 13
+      }
+    },
+    {
+      "file": "layers/07-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 141,
+        "y": 117,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/08-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 149,
+        "y": 125,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/09-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 165,
+        "y": 141,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/10-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 168,
+        "y": 144,
+        "width": 9,
+        "height": 9
+      }
+    },
+    {
+      "file": "layers/11-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 171,
+        "y": 117,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/12-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 179,
+        "y": 125,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/13-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 195,
+        "y": 141,
+        "width": 15,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/14-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 198,
+        "y": 144,
+        "width": 9,
+        "height": 9
+      }
+    },
+    {
+      "file": "layers/15-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 201,
+        "y": 117,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/16-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 209,
+        "y": 125,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/17-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 231,
+        "y": 117,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/18-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 239,
+        "y": 125,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/19-text-waiting-for-2-member-s-to-re.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Waiting for 2 members to respond…",
+      "rect": {
+        "x": 141,
+        "y": 167,
+        "width": 266,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/20-button-cancel.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Cancel",
+      "rect": {
+        "x": 141,
+        "y": 197,
+        "width": 74,
+        "height": 39
+      }
+    },
+    {
+      "file": "layers/21-button-launch-with-1-ready.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Launch with 1 Ready",
+      "rect": {
+        "x": 223,
+        "y": 197,
+        "width": 184,
+        "height": 39
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 13,
+      "height": 13
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 9,
+      "height": 9
+    },
+    {
+      "file": "vectors/03-icon.svg",
+      "width": 9,
+      "height": 9
+    }
+  ]
+}

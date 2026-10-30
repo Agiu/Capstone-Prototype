@@ -233,114 +233,55 @@ body,
    which keep their own rounding. !important so it also beats inline styles. */
 html[data-redesign] [data-xbox]:is([class*="rounded"], [style*="border-radius"]),
 html[data-redesign] [data-xbox] :is([class*="rounded"], [style*="border-radius"]):not([data-discord], [data-discord] *) {
-  border-radius: 2px !important;
+  border-radius: var(--rd-radius-corner) !important;
 }
 /* Circles aren't corners — avatars, status dots and round icon buttons stay
    round. A rounded-full with horizontal padding is a pill, and takes the 2px.
    An inline radius means it's deliberately not a circle. */
 html[data-redesign] [data-xbox] .rounded-full:not([class^="px-"], [class*=" px-"], [class^="pl-"], [class*=" pl-"], [class^="pr-"], [class*=" pr-"], [style*="border-radius"]) {
-  border-radius: 9999px !important;
+  border-radius: var(--rd-radius-round) !important;
 }
 
-/* ── Redesign: darker surface greys ─────────────────────────────────────────
-   The modal/panel grey (#2b2d31) read too bright, flattening contrast with the
-   buttons on it. With the redesign on, it and the darker inset grey used for
-   inputs (#1e1f22) both step down, keeping the inset darker than its surface.
-   Remapped by class so every use across the project follows; borders and rings
-   in the surface grey are avatar cut-outs that must keep matching it. */
-html[data-redesign] {
-  --rd-surface: #1a1b1e; /* was #2b2d31 */
-  --rd-inset: #111214;   /* was #1e1f22 */
-}
-html[data-redesign] .bg-\[\#2b2d31\],
-html[data-redesign] .hover\:bg-\[\#2b2d31\]:hover {
-  background-color: var(--rd-surface) !important;
-}
-html[data-redesign] .border-\[\#2b2d31\] {
-  border-color: var(--rd-surface) !important;
-}
-html[data-redesign] .ring-\[\#2b2d31\] {
-  --tw-ring-color: var(--rd-surface) !important;
-}
-html[data-redesign] .bg-\[\#1e1f22\] {
-  background-color: var(--rd-inset) !important;
-}
-html[data-redesign] .bg-\[\#1e1f22\]\/90 {
-  background-color: rgb(17 18 20 / 0.9) !important;
-}
-html[data-redesign] .bg-\[\#1e1f22\]\/80 {
-  background-color: rgb(17 18 20 / 0.8) !important;
-}
+/* ── Redesign colours come from the design tokens ────────────────────────────
+   src/design/colors.json is the source of truth. tokens.js turns every token
+   into a --rd-* variable (html[data-redesign] only) and generate-remap.mjs
+   writes design/generated/redesign-colors.css, re-pointing each hard-coded
+   colour class at its token — darker surface greys, blurple → Xbox green, the
+   four greens → one accent, and every text/control grey. The rules below are
+   the structural ones a colour swap can't express. */
 
-/* ── Redesign: Xbox green replaces Discord blurple on Xbox surfaces ─────────
-   Inside [data-xbox] (not [data-discord]), the blurple accent (#5765f2, plus
-   its light link tints #8aa0ff / #8b95ff) becomes Xbox green, so selected,
-   primary and link states speak Xbox. Remapped by class; blurple used as a data
-   colour (wheel segments, PlayList colours, avatars) is inline and untouched.
-   White text/icons on a filled green would fail contrast, so they go black. */
-html[data-redesign] {
-  --rd-green: #9bf00b;
-  --rd-on-green: #0c0c0e;
-}
-html[data-redesign] [data-xbox] :is(.bg-\[\#5765f2\]):not([data-discord] *) {
-  background-color: var(--rd-green) !important;
-}
-html[data-redesign] [data-xbox] :is(.bg-\[\#5765f2\], .bg-\[\#5765f2\] *):not([data-discord] *) {
-  color: var(--rd-on-green) !important;
-}
-html[data-redesign] [data-xbox] .bg-\[\#5765f2\]\/15:not([data-discord] *) {
-  background-color: rgb(155 240 11 / 0.15) !important;
-}
-html[data-redesign] [data-xbox] .bg-\[\#5765f2\]\/\[0\.08\]:not([data-discord] *) {
-  background-color: rgb(155 240 11 / 0.08) !important;
-}
-html[data-redesign] [data-xbox] :is(.border-\[\#5765f2\], .hover\:border-\[\#5765f2\]:hover):not([data-discord] *) {
-  border-color: var(--rd-green) !important;
-}
+/* Anything sitting on a filled accent (former blurple / classic green fills)
+   switches to the on-accent colour for contrast. */
 html[data-redesign] [data-xbox] :is(
-  .ring-\[\#5765f2\],
-  .focus\:ring-\[\#5765f2\]:focus,
-  .hover\:ring-\[\#5865f2\]:hover,
-  .group\/av:hover .group-hover\/av\:ring-\[\#5765f2\],
-  .group\/av:focus-within .group-focus-within\/av\:ring-\[\#5765f2\]
+  .bg-\[\#5765f2\], .bg-\[\#5765f2\] *,
+  .bg-\[\#107C10\], .bg-\[\#107C10\] *,
+  .bg-\[\#3dbf1e\], .bg-\[\#3dbf1e\] *,
+  .hover\:bg-\[\#107C10\]:hover, .hover\:bg-\[\#107C10\]:hover *
 ):not([data-discord] *) {
-  --tw-ring-color: var(--rd-green) !important;
+  color: var(--rd-on-accent) !important;
 }
-html[data-redesign] [data-xbox] :is(.text-\[\#5765f2\], .text-\[\#8aa0ff\], .text-\[\#8b95ff\]):not([data-discord] *) {
-  color: var(--rd-green) !important;
+/* The old darker-green hover becomes the accent, lifted slightly. */
+html[data-redesign] [data-xbox] .hover\:bg-\[\#0e8f0e\]:hover:not([data-discord] *) {
+  filter: var(--rd-button-primary-hover);
+}
+/* Classic-green button glows become the accent glow. */
+html[data-redesign] [data-xbox] :is(.shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.45\)\], .shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.5\)\]):not([data-discord] *) {
+  box-shadow: var(--rd-button-primary-glow) !important;
 }
 
-/* ── Redesign: one Xbox green ───────────────────────────────────────────────
-   Xbox surfaces mixed four greens — classic #107C10 (play buttons, primary
-   actions), #3fbf3f / #3dbf1e (links, checks, wheel accents) and #0e8f0e
-   (hover) — next to the lime #9BF00B used everywhere else. All collapse to the
-   one lime (--rd-green, defined above). As with blurple, anything sitting on a
-   filled green switches to near-black for contrast. */
-html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\], .bg-\[\#3dbf1e\], .hover\:bg-\[\#107C10\]:hover):not([data-discord] *) {
-  background-color: var(--rd-green) !important;
+/* Fonts follow typography.json: body copy on Xbox surfaces, and the condensed
+   display faces that the markup sets inline. */
+html[data-redesign] [data-xbox]:not([data-discord] *) {
+  font-family: var(--rd-font-body);
 }
-html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\], .bg-\[\#107C10\] *, .bg-\[\#3dbf1e\], .bg-\[\#3dbf1e\] *, .hover\:bg-\[\#107C10\]:hover, .hover\:bg-\[\#107C10\]:hover *):not([data-discord] *) {
-  color: var(--rd-on-green) !important;
+html[data-redesign] [data-xbox] [style*="Base Neue Cond Bold"] {
+  font-family: var(--rd-font-display) !important;
 }
-html[data-redesign] [data-xbox] .hover\:bg-\[\#0e8f0e\]:hover:not([data-discord] *) {
-  background-color: var(--rd-green) !important;
-  filter: brightness(1.1);
+html[data-redesign] [data-xbox] [style*="Base Neue Cond ExtBd"] {
+  font-family: var(--rd-font-display-heavy) !important;
 }
-html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\]\/15, .hover\:bg-\[\#107C10\]\/15:hover):not([data-discord] *) { background-color: rgb(155 240 11 / 0.15) !important; }
-html[data-redesign] [data-xbox] .bg-\[\#107C10\]\/20:not([data-discord] *) { background-color: rgb(155 240 11 / 0.2) !important; }
-html[data-redesign] [data-xbox] .hover\:bg-\[\#107C10\]\/30:hover:not([data-discord] *) { background-color: rgb(155 240 11 / 0.3) !important; }
-html[data-redesign] [data-xbox] :is(.bg-\[\#107C10\]\/40, .bg-\[\#3dbf1e\]\/40):not([data-discord] *) { background-color: rgb(155 240 11 / 0.4) !important; }
-html[data-redesign] [data-xbox] :is(.border-\[\#107C10\], .hover\:border-\[\#107C10\]:hover):not([data-discord] *) {
-  border-color: var(--rd-green) !important;
-}
-html[data-redesign] [data-xbox] .border-\[\#107C10\]\/50:not([data-discord] *) { border-color: rgb(155 240 11 / 0.5) !important; }
-html[data-redesign] [data-xbox] .ring-\[\#3dbf1e\]:not([data-discord] *) { --tw-ring-color: var(--rd-green) !important; }
-html[data-redesign] [data-xbox] .ring-\[\#107C10\]\/30:not([data-discord] *) { --tw-ring-color: rgb(155 240 11 / 0.3) !important; }
-html[data-redesign] [data-xbox] :is(.text-\[\#3fbf3f\], .hover\:text-\[\#3fbf3f\]:hover, .text-\[\#8dff5a\]):not([data-discord] *) {
-  color: var(--rd-green) !important;
-}
-html[data-redesign] [data-xbox] :is(.shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.45\)\], .shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.5\)\]):not([data-discord] *) {
-  box-shadow: 0 2px 12px rgb(155 240 11 / 0.35) !important;
+html[data-redesign] [data-xbox] [style*="Base Neue Black"] {
+  font-family: var(--rd-font-display-black) !important;
 }
 
 /* Redesign: Start A Party hover slice. A triangle anchored at the bottom-right
@@ -348,7 +289,7 @@ html[data-redesign] [data-xbox] :is(.shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.4
    sweeps corner to corner. Collapsed again on leave. */
 .party-slice {
   clip-path: polygon(100% 100%, 100% 100%, 100% 100%);
-  transition: clip-path 420ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: clip-path var(--rd-party-card-slice-duration, 420ms) var(--rd-party-card-slice-easing, cubic-bezier(0.22, 1, 0.36, 1));
 }
 .group:hover > .party-slice,
 .group:focus-visible > .party-slice {
@@ -363,12 +304,12 @@ html[data-redesign] [data-xbox] :is(.shadow-\[0_2px_10px_rgba\(16\,124\,16\,0\.4
    (one filled action per group). Covers every grey secondary style used on
    Xbox surfaces — #3a3c42, #4e5058 and the dark #1c1c1f + white/10 ring. */
 html[data-redesign] [data-xbox] button:is(.bg-\[\#3a3c42\], .bg-\[\#4e5058\], .bg-\[\#1c1c1f\].ring-white\/10):not([data-discord] *) {
-  background-color: transparent !important;
-  box-shadow: inset 0 0 0 1.5px #4e5058 !important;
+  background-color: var(--rd-button-secondary-background) !important;
+  box-shadow: inset 0 0 0 var(--rd-button-secondary-border-width) var(--rd-button-secondary-border) !important;
 }
 html[data-redesign] [data-xbox] button:is(.bg-\[\#3a3c42\], .bg-\[\#4e5058\], .bg-\[\#1c1c1f\].ring-white\/10):not([data-discord] *):hover {
-  background-color: rgb(255 255 255 / 0.06) !important;
-  box-shadow: inset 0 0 0 1.5px #7a7c85 !important;
+  background-color: var(--rd-button-secondary-hover-fill) !important;
+  box-shadow: inset 0 0 0 var(--rd-button-secondary-border-width) var(--rd-button-secondary-hover-border) !important;
 }
 
 /* Redesign: the up/down arrow that flashes on a game that moved in a PlayList's

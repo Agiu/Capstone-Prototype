@@ -1,0 +1,15 @@
+/* Design-system page only (design.html). */
+html { scroll-behavior: smooth; }
+.rd-ds-secondary {
+  background: var(--rd-button-secondary-background);
+  border-color: var(--rd-button-secondary-border);
+  transition: border-color 150ms, background-color 150ms;
+}
+.rd-ds-secondary:hover {
+  border-color: var(--rd-button-secondary-hover-border);
+  background: var(--rd-button-secondary-hover-fill);
+}
+@keyframes rdDsSlide {
+  from { left: 0; }
+  to { left: calc(100% - 14px); }
+}

@@ -1,0 +1,58 @@
+{
+  "scene": "create-card",
+  "group": "01-create-playlist",
+  "note": "The \"Create a new PlayList\" tile that leads the Mixes row.",
+  "capturedAt": "2026-08-14T00:03:33.494Z",
+  "scale": 3,
+  "canvas": {
+    "width": 948,
+    "height": 870,
+    "cssWidth": 316,
+    "cssHeight": 290
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 200,
+        "height": 200
+      }
+    },
+    {
+      "file": "layers/02-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 104,
+        "y": 104,
+        "width": 40,
+        "height": 40
+      }
+    },
+    {
+      "file": "layers/03-text-create-a-new-playlist.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Create a new PlayList",
+      "rect": {
+        "x": 24,
+        "y": 234,
+        "width": 200,
+        "height": 24
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 40,
+      "height": 40
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "scene": "wheel-spinning-toast",
+  "group": "04-spin-the-wheel",
+  "note": "The same toast mid-spin — \"Landing on a game…\" with the lime spinner.",
+  "capturedAt": "2026-08-14T00:04:21.323Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1296,
+    "height": 339,
+    "cssWidth": 432,
+    "cssHeight": 113
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Caleb is spinning the wheel…Landing on a game…",
+      "rect": {
+        "x": 8,
+        "y": 8,
+        "width": 416,
+        "height": 97
+      }
+    },
+    {
+      "file": "layers/02-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 25,
+        "y": 25,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/03-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 31,
+        "y": 31,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/04-text-is-spinning-the-wheel.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Caleb is spinning the wheel…",
+      "rect": {
+        "x": 64,
+        "y": 30,
+        "width": 172,
+        "height": 19
+      }
+    },
+    {
+      "file": "layers/05-text-caleb.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb",
+      "rect": {
+        "x": 64,
+        "y": 30,
+        "width": 35,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/06-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 389,
+        "y": 26,
+        "width": 18,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/07-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 23,
+        "y": 66,
+        "width": 23,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/08-text-landing-on-a-game.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Landing on a game…",
+      "rect": {
+        "x": 53,
+        "y": 67,
+        "width": 121,
+        "height": 21
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 18,
+      "height": 18
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 23,
+      "height": 23
+    }
+  ]
+}

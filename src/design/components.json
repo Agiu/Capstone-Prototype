@@ -1,0 +1,105 @@
+{
+  "$about": "Redesign component tokens: shape, motion and per-component specs. Values can reference other tokens with {color.<name>}, {style.<name>}, {font.<name>}, {motion.<name>} or {radius.<name>}. Everything here is wired — the redesign CSS and components read these values, so editing one changes every instance.",
+  "radius": {
+    "corner": "2px",
+    "round": "9999px"
+  },
+  "motion": {
+    "ease-out": "cubic-bezier(0.16, 1, 0.3, 1)",
+    "ease-out-soft": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "fast": "250ms",
+    "base": "400ms",
+    "slow": "600ms"
+  },
+  "components": {
+    "button-primary": {
+      "label": "Primary button",
+      "background": "{color.accent}",
+      "text": "{color.on-accent}",
+      "hover": "brightness(1.1)",
+      "glow": "0 2px 12px color-mix(in srgb, {color.accent} 35%, transparent)",
+      "radius": "{radius.corner}",
+      "typography": "{style.button}"
+    },
+    "button-secondary": {
+      "label": "Secondary button (outlined)",
+      "background": "transparent",
+      "border": "{color.control}",
+      "borderWidth": "1.5px",
+      "hoverBorder": "{color.control-outline-hover}",
+      "hoverFill": "rgb(255 255 255 / 0.06)",
+      "text": "#ffffff",
+      "radius": "{radius.corner}",
+      "typography": "{style.button}"
+    },
+    "modal": {
+      "label": "Modal",
+      "surface": "{color.surface}",
+      "headerBackground": "{color.accent}",
+      "headerText": "#000000",
+      "headerSubtitle": "rgb(0 0 0 / 0.8)",
+      "headerPadding": "20px 24px",
+      "title": "{style.modal-title}",
+      "subtitle": "{style.modal-subtitle}",
+      "closeIconSize": "26px",
+      "closeIconStroke": "2.6",
+      "top": "12vh",
+      "overlay": "rgb(0 0 0 / 0.6)",
+      "shadow": "0 16px 48px rgb(0 0 0 / 0.6)",
+      "radius": "{radius.corner}"
+    },
+    "nav": {
+      "label": "Top nav",
+      "height": "56px",
+      "homeUnderline": "{color.accent}",
+      "tabUnderline": "#ffffff",
+      "tabText": "{color.text-nav}",
+      "backArrow": "{color.accent}",
+      "slideDistance": "44px",
+      "duration": "{motion.base}",
+      "easing": "{motion.ease-out}"
+    },
+    "shelf": {
+      "label": "Carousel shelf",
+      "title": "{style.section-title}",
+      "edgeFadeWidth": "120px",
+      "edgeFadeColor": "{color.page}",
+      "scrollDuration": "{motion.slow}",
+      "arrowBackground": "rgb(0 0 0 / 0.7)",
+      "scrollEasing": "ease-out quint (JS)"
+    },
+    "party-card": {
+      "label": "Start A Party card",
+      "border": "{color.accent}",
+      "sliceFill": "{color.accent}",
+      "sliceDuration": "420ms",
+      "sliceEasing": "{motion.ease-out-soft}",
+      "textOnFill": "{color.on-accent}"
+    },
+    "rank-change": {
+      "label": "PlayList rank change",
+      "glideDuration": "520ms",
+      "arrowHold": "1600ms",
+      "up": "{color.accent}",
+      "down": "{color.danger}",
+      "easing": "{motion.ease-out}"
+    },
+    "ascii-hero": {
+      "label": "ASCII hero",
+      "ramp": " .:-=+*#%@",
+      "cell": 10,
+      "gain": 2.4,
+      "cutoff": 0.22,
+      "fps": 30,
+      "maxDpr": 1.5,
+      "font": "{font.mono}"
+    },
+    "wheel": {
+      "label": "Decision wheel",
+      "rim": "{color.accent}",
+      "line": "linear-gradient(90deg, transparent, {color.accent} 15%, {color.accent} 85%, transparent)",
+      "glow": "0 0 18px color-mix(in srgb, {color.accent} 60%, transparent)",
+      "notchGlow": "drop-shadow(0 0 8px color-mix(in srgb, {color.accent} 60%, transparent))"
+    }
+  }
+}

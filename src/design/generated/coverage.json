@@ -1,0 +1,749 @@
+{
+  "coverage": {
+    "page-tint": [
+      {
+        "class": "bg-[#0a0f16]",
+        "count": 1
+      }
+    ],
+    "page": [
+      {
+        "class": "bg-[#0b0b0d]",
+        "count": 4
+      },
+      {
+        "class": "bg-[#0c0c0e]",
+        "count": 2
+      },
+      {
+        "class": "ring-[#0c0c0e]",
+        "count": 4
+      }
+    ],
+    "accent-shade-900": [
+      {
+        "class": "bg-[#0d1a06]",
+        "count": 1
+      }
+    ],
+    "inset": [
+      {
+        "class": "bg-[#0f0f12]",
+        "count": 1
+      },
+      {
+        "class": "bg-[#101012]",
+        "count": 2
+      },
+      {
+        "class": "bg-[#111114]",
+        "count": 4
+      },
+      {
+        "class": "bg-[#111214]",
+        "count": 12
+      },
+      {
+        "class": "bg-[#121214]",
+        "count": 14
+      },
+      {
+        "class": "bg-[#131316]",
+        "count": 2
+      },
+      {
+        "class": "bg-[#141416]",
+        "count": 3
+      },
+      {
+        "class": "bg-[#151517]",
+        "count": 6
+      },
+      {
+        "class": "bg-[#1e1f22]",
+        "count": 24
+      },
+      {
+        "class": "hover:bg-[#151517]",
+        "count": 2
+      }
+    ],
+    "accent": [
+      {
+        "class": "bg-[#107C10]",
+        "count": 7
+      },
+      {
+        "class": "bg-[#107C10]/15",
+        "count": 7
+      },
+      {
+        "class": "bg-[#107C10]/20",
+        "count": 1
+      },
+      {
+        "class": "bg-[#107C10]/40",
+        "count": 1
+      },
+      {
+        "class": "bg-[#3dbf1e]",
+        "count": 1
+      },
+      {
+        "class": "bg-[#3dbf1e]/40",
+        "count": 1
+      },
+      {
+        "class": "bg-[#5765f2]",
+        "count": 32
+      },
+      {
+        "class": "bg-[#5765f2]/15",
+        "count": 2
+      },
+      {
+        "class": "bg-[#5765f2]/[0.08]",
+        "count": 1
+      },
+      {
+        "class": "bg-[#9BF00B]",
+        "count": 16
+      },
+      {
+        "class": "bg-[#9BF00B]/10",
+        "count": 1
+      },
+      {
+        "class": "bg-[#9BF00B]/12",
+        "count": 4
+      },
+      {
+        "class": "bg-[#9BF00B]/20",
+        "count": 1
+      },
+      {
+        "class": "bg-[#9BF00B]/[0.06]",
+        "count": 1
+      },
+      {
+        "class": "border-[#107C10]",
+        "count": 1
+      },
+      {
+        "class": "border-[#107C10]/50",
+        "count": 1
+      },
+      {
+        "class": "border-[#5765f2]",
+        "count": 13
+      },
+      {
+        "class": "border-[#9BF00B]",
+        "count": 5
+      },
+      {
+        "class": "border-[#9BF00B]/25",
+        "count": 1
+      },
+      {
+        "class": "border-[#9BF00B]/40",
+        "count": 1
+      },
+      {
+        "class": "border-[#9BF00B]/55",
+        "count": 1
+      },
+      {
+        "class": "border-[#9BF00B]/70",
+        "count": 1
+      },
+      {
+        "class": "focus:ring-[#5765f2]",
+        "count": 4
+      },
+      {
+        "class": "focus:ring-[#9BF00B]",
+        "count": 3
+      },
+      {
+        "class": "group-focus-within/av:ring-[#5765f2]",
+        "count": 2
+      },
+      {
+        "class": "group-hover/av:ring-[#5765f2]",
+        "count": 2
+      },
+      {
+        "class": "group-hover/recent:ring-[#9BF00B]",
+        "count": 1
+      },
+      {
+        "class": "group-hover:ring-[#9BF00B]/70",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#0e8f0e]",
+        "count": 4
+      },
+      {
+        "class": "hover:bg-[#107C10]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#107C10]/15",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#107C10]/30",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#9BF00B]/20",
+        "count": 4
+      },
+      {
+        "class": "hover:border-[#107C10]",
+        "count": 1
+      },
+      {
+        "class": "hover:border-[#5765f2]",
+        "count": 5
+      },
+      {
+        "class": "hover:border-[#9BF00B]/60",
+        "count": 4
+      },
+      {
+        "class": "hover:text-[#3fbf3f]",
+        "count": 1
+      },
+      {
+        "class": "hover:text-[#9BF00B]",
+        "count": 5
+      },
+      {
+        "class": "ring-[#107C10]/30",
+        "count": 1
+      },
+      {
+        "class": "ring-[#3dbf1e]",
+        "count": 1
+      },
+      {
+        "class": "ring-[#5765f2]",
+        "count": 2
+      },
+      {
+        "class": "ring-[#9BF00B]",
+        "count": 3
+      },
+      {
+        "class": "ring-[#9BF00B]/25",
+        "count": 4
+      },
+      {
+        "class": "ring-[#9BF00B]/35",
+        "count": 1
+      },
+      {
+        "class": "text-[#3fbf3f]",
+        "count": 16
+      },
+      {
+        "class": "text-[#5765f2]",
+        "count": 3
+      },
+      {
+        "class": "text-[#8aa0ff]",
+        "count": 7
+      },
+      {
+        "class": "text-[#8b95ff]",
+        "count": 1
+      },
+      {
+        "class": "text-[#8dff5a]",
+        "count": 1
+      },
+      {
+        "class": "text-[#9BF00B]",
+        "count": 34
+      }
+    ],
+    "accent-shade-700": [
+      {
+        "class": "bg-[#123a00]",
+        "count": 1
+      }
+    ],
+    "raised": [
+      {
+        "class": "bg-[#151518]",
+        "count": 1
+      },
+      {
+        "class": "bg-[#161618]",
+        "count": 6
+      },
+      {
+        "class": "bg-[#17181b]",
+        "count": 3
+      },
+      {
+        "class": "bg-[#17181b]/95",
+        "count": 1
+      },
+      {
+        "class": "bg-[#191919]",
+        "count": 2
+      },
+      {
+        "class": "hover:bg-[#16171b]",
+        "count": 2
+      },
+      {
+        "class": "ring-[#17181b]",
+        "count": 2
+      },
+      {
+        "class": "ring-[#191919]",
+        "count": 1
+      }
+    ],
+    "media": [
+      {
+        "class": "bg-[#1a1a1d]",
+        "count": 12
+      },
+      {
+        "class": "bg-[#1c1c1c]",
+        "count": 2
+      }
+    ],
+    "hairline": [
+      {
+        "class": "bg-[#1c1c1f]",
+        "count": 11
+      },
+      {
+        "class": "bg-[#1c1d21]",
+        "count": 7
+      },
+      {
+        "class": "bg-[#1f1f23]",
+        "count": 12
+      },
+      {
+        "class": "border-[#1c1d21]",
+        "count": 27
+      },
+      {
+        "class": "hover:bg-[#1d1d20]",
+        "count": 3
+      },
+      {
+        "class": "hover:bg-[#202024]",
+        "count": 1
+      }
+    ],
+    "raised-hover": [
+      {
+        "class": "bg-[#232428]",
+        "count": 6
+      },
+      {
+        "class": "bg-[#26262a]",
+        "count": 1
+      },
+      {
+        "class": "border-[#232428]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#232327]",
+        "count": 2
+      },
+      {
+        "class": "hover:bg-[#26262a]",
+        "count": 5
+      }
+    ],
+    "success": [
+      {
+        "class": "bg-[#23a55a]",
+        "count": 2
+      },
+      {
+        "class": "text-[#23a55a]",
+        "count": 2
+      }
+    ],
+    "success-strong": [
+      {
+        "class": "bg-[#248046]",
+        "count": 2
+      }
+    ],
+    "surface": [
+      {
+        "class": "bg-[#2b2d31]",
+        "count": 38
+      },
+      {
+        "class": "border-[#2b2d31]",
+        "count": 16
+      },
+      {
+        "class": "ring-[#2b2d31]",
+        "count": 3
+      }
+    ],
+    "control-alt": [
+      {
+        "class": "bg-[#3a3c42]",
+        "count": 12
+      },
+      {
+        "class": "bg-[#3a3d41]",
+        "count": 3
+      },
+      {
+        "class": "border-[#3a3c41]",
+        "count": 2
+      },
+      {
+        "class": "border-[#3a3c42]",
+        "count": 2
+      },
+      {
+        "class": "border-[#3a3d41]",
+        "count": 8
+      },
+      {
+        "class": "disabled:hover:border-[#3a3c41]",
+        "count": 1
+      },
+      {
+        "class": "disabled:hover:border-[#3a3d41]",
+        "count": 2
+      },
+      {
+        "class": "hover:border-[#3a3c42]",
+        "count": 1
+      }
+    ],
+    "control": [
+      {
+        "class": "bg-[#4e5058]",
+        "count": 10
+      },
+      {
+        "class": "border-[#4e5058]",
+        "count": 14
+      },
+      {
+        "class": "hover:bg-[#4e5058]/30",
+        "count": 2
+      }
+    ],
+    "control-hover": [
+      {
+        "class": "bg-[#5c5e66]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#5a5c64]",
+        "count": 9
+      }
+    ],
+    "highlight": [
+      {
+        "class": "bg-[#8b46b0]",
+        "count": 1
+      }
+    ],
+    "danger-strong": [
+      {
+        "class": "bg-[#d83c3e]",
+        "count": 1
+      }
+    ],
+    "danger": [
+      {
+        "class": "bg-[#f04747]",
+        "count": 3
+      },
+      {
+        "class": "bg-[#f04747]/15",
+        "count": 1
+      },
+      {
+        "class": "border-[#f04747]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#f04747]",
+        "count": 1
+      }
+    ],
+    "danger-text": [
+      {
+        "class": "bg-[#f0505b]/12",
+        "count": 2
+      },
+      {
+        "class": "bg-[#f0505b]/20",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#f0505b]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#f0505b]/12",
+        "count": 1
+      },
+      {
+        "class": "text-[#f0505b]",
+        "count": 2
+      }
+    ],
+    "warning": [
+      {
+        "class": "bg-[#f0b232]/15",
+        "count": 1
+      },
+      {
+        "class": "text-[#f0b232]",
+        "count": 2
+      }
+    ],
+    "danger-badge": [
+      {
+        "class": "bg-[#f23f42]",
+        "count": 3
+      },
+      {
+        "class": "bg-[#f23f42]/15",
+        "count": 1
+      },
+      {
+        "class": "text-[#f23f42]",
+        "count": 1
+      }
+    ],
+    "divider": [
+      {
+        "class": "border-[#2f3136]",
+        "count": 1
+      }
+    ],
+    "border-strong": [
+      {
+        "class": "border-[#4a4d55]",
+        "count": 9
+      },
+      {
+        "class": "hover:bg-[#4a4c52]",
+        "count": 1
+      },
+      {
+        "class": "text-[#4a4d55]",
+        "count": 2
+      }
+    ],
+    "text-muted": [
+      {
+        "class": "border-[#7e7f87]",
+        "count": 1
+      },
+      {
+        "class": "text-[#7e7f87]",
+        "count": 52
+      }
+    ],
+    "on-accent": [
+      {
+        "class": "group-hover:text-[#0c0c0e]",
+        "count": 2
+      },
+      {
+        "class": "group-hover:text-[#0c0c0e]/75",
+        "count": 1
+      },
+      {
+        "class": "text-[#0c0c0e]",
+        "count": 13
+      }
+    ],
+    "accent-shade-800": [
+      {
+        "class": "hover:bg-[#112407]",
+        "count": 1
+      }
+    ],
+    "accent-shade-600": [
+      {
+        "class": "hover:bg-[#164700]",
+        "count": 1
+      }
+    ],
+    "chip-hover": [
+      {
+        "class": "hover:bg-[#2a2a2f]",
+        "count": 9
+      }
+    ],
+    "control-subtle-hover": [
+      {
+        "class": "hover:bg-[#35373c]",
+        "count": 14
+      }
+    ],
+    "control-alt-hover": [
+      {
+        "class": "hover:bg-[#43474d]",
+        "count": 1
+      },
+      {
+        "class": "hover:bg-[#44464d]",
+        "count": 10
+      },
+      {
+        "class": "hover:bg-[#45474e]",
+        "count": 1
+      }
+    ],
+    "danger-hover": [
+      {
+        "class": "hover:bg-[#da373c]",
+        "count": 1
+      }
+    ],
+    "accent-bright": [
+      {
+        "class": "hover:border-[#b6ff3d]",
+        "count": 1
+      }
+    ],
+    "text-faint": [
+      {
+        "class": "placeholder:text-[#6d7078]",
+        "count": 1
+      },
+      {
+        "class": "placeholder:text-[#6f7276]",
+        "count": 2
+      },
+      {
+        "class": "text-[#6a6d73]",
+        "count": 1
+      },
+      {
+        "class": "text-[#6d7078]",
+        "count": 3
+      },
+      {
+        "class": "text-[#6f7276]",
+        "count": 16
+      }
+    ],
+    "text-placeholder": [
+      {
+        "class": "placeholder:text-[#87898c]",
+        "count": 22
+      },
+      {
+        "class": "text-[#87898c]",
+        "count": 27
+      }
+    ],
+    "text-disabled": [
+      {
+        "class": "text-[#5a5c64]",
+        "count": 2
+      },
+      {
+        "class": "text-[#5f616a]",
+        "count": 1
+      }
+    ],
+    "text-status": [
+      {
+        "class": "text-[#80848e]",
+        "count": 9
+      }
+    ],
+    "text-dim": [
+      {
+        "class": "text-[#9a9ba3]",
+        "count": 81
+      }
+    ],
+    "accent-text-soft": [
+      {
+        "class": "text-[#9db08f]",
+        "count": 2
+      }
+    ],
+    "text-body-dim": [
+      {
+        "class": "text-[#a2a4ae]",
+        "count": 2
+      }
+    ],
+    "text-secondary": [
+      {
+        "class": "text-[#b5bac1]",
+        "count": 45
+      },
+      {
+        "class": "text-[#b9bbc0]",
+        "count": 1
+      }
+    ],
+    "text-nav": [
+      {
+        "class": "text-[#c5c6ca]",
+        "count": 4
+      },
+      {
+        "class": "text-[#c7c8ce]",
+        "count": 1
+      },
+      {
+        "class": "text-[#c7c9cb]",
+        "count": 34
+      }
+    ],
+    "text-primary": [
+      {
+        "class": "text-[#dbdee1]",
+        "count": 20
+      }
+    ],
+    "text-strong": [
+      {
+        "class": "text-[#e7e7e7]",
+        "count": 11
+      }
+    ],
+    "danger-soft": [
+      {
+        "class": "text-[#f0a0a0]",
+        "count": 2
+      },
+      {
+        "class": "text-[#f0a0a6]",
+        "count": 2
+      }
+    ],
+    "danger-light": [
+      {
+        "class": "text-[#ff8a8a]",
+        "count": 1
+      }
+    ]
+  },
+  "unmapped": {}
+}
