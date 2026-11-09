@@ -1,0 +1,289 @@
+{
+  "scene": "wheel-invite-popover",
+  "group": "04-spin-the-wheel",
+  "note": "The wheel-sync invitation, in its compact popover form (top-right anchored).",
+  "capturedAt": "2026-08-14T00:04:14.712Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1548,
+    "height": 2028,
+    "cssWidth": 516,
+    "cssHeight": 676
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-panel.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Start a wheel syncInvite people to build the wheel and watch it spin with you — ",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 460,
+        "height": 620
+      }
+    },
+    {
+      "file": "layers/02-text-start-a-wheel-sync.png",
+      "kind": "text",
+      "tag": "h2",
+      "text": "Start a wheel sync",
+      "rect": {
+        "x": 45,
+        "y": 45,
+        "width": 418,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/03-text-invite-people-to-build-the-w.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Invite people to build the wheel and watch it spin with you — or copy a link to ",
+      "rect": {
+        "x": 45,
+        "y": 81,
+        "width": 418,
+        "height": 36
+      }
+    },
+    {
+      "file": "layers/04-button-copy-invite-link.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Copy invite link",
+      "rect": {
+        "x": 45,
+        "y": 135,
+        "width": 150,
+        "height": 41
+      }
+    },
+    {
+      "file": "layers/05-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 61,
+        "y": 147,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/06-text-in-your-call.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "In your call",
+      "rect": {
+        "x": 45,
+        "y": 198,
+        "width": 418,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/07-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 45,
+        "y": 227,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 53,
+        "y": 235,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/09-text-caleb.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb",
+      "rect": {
+        "x": 95,
+        "y": 235,
+        "width": 332,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/10-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 439,
+        "y": 234,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "file": "layers/11-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 444,
+        "y": 239,
+        "width": 14,
+        "height": 14
+      }
+    },
+    {
+      "file": "layers/12-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 45,
+        "y": 281,
+        "width": 38,
+        "height": 38
+      }
+    },
+    {
+      "file": "layers/13-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 53,
+        "y": 289,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/14-text-sauhee.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Sauhee",
+      "rect": {
+        "x": 95,
+        "y": 289,
+        "width": 332,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/15-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 439,
+        "y": 288,
+        "width": 24,
+        "height": 24
+      }
+    },
+    {
+      "file": "layers/16-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 444,
+        "y": 293,
+        "width": 14,
+        "height": 14
+      }
+    },
+    {
+      "file": "layers/17-text-invite-someone-else.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Invite someone else",
+      "rect": {
+        "x": 45,
+        "y": 499,
+        "width": 418,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/18-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 45,
+        "y": 527,
+        "width": 418,
+        "height": 39
+      }
+    },
+    {
+      "file": "layers/19-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 57,
+        "y": 539,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/20-button-cancel.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Cancel",
+      "rect": {
+        "x": 222,
+        "y": 582,
+        "width": 78,
+        "height": 41
+      }
+    },
+    {
+      "file": "layers/21-button-start-sync-invite-2.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Start sync · invite 2",
+      "rect": {
+        "x": 310,
+        "y": 582,
+        "width": 153,
+        "height": 41
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 14,
+      "height": 14
+    },
+    {
+      "file": "vectors/03-icon.svg",
+      "width": 14,
+      "height": 14
+    },
+    {
+      "file": "vectors/04-icon.svg",
+      "width": 16,
+      "height": 16
+    }
+  ]
+}

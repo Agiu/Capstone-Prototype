@@ -1,0 +1,292 @@
+{
+  "scene": "activity-feed",
+  "group": "03-friend-activity",
+  "note": "The friend-activity feed rows — who did what, to which game, how long ago.",
+  "capturedAt": "2026-08-14T00:04:01.576Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1728,
+    "height": 630,
+    "cssWidth": 576,
+    "cssHeight": 210
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/03-text-is-playing.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Caleb is playing Sea of Thieves",
+      "rect": {
+        "x": 62,
+        "y": 24,
+        "width": 456,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/04-text-caleb.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb",
+      "rect": {
+        "x": 62,
+        "y": 24,
+        "width": 33,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/05-text-sea-of-thieves.png",
+      "kind": "text",
+      "tag": "button",
+      "text": "Sea of Thieves",
+      "rect": {
+        "x": 151,
+        "y": 24,
+        "width": 82,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/06-text-live.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "live",
+      "rect": {
+        "x": 528,
+        "y": 24,
+        "width": 16,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/07-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 66,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 72,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/09-text-added-to-a-playlist.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Sauhee added Overcooked! 2 to a PlayList",
+      "rect": {
+        "x": 62,
+        "y": 66,
+        "width": 457,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/10-text-sauhee.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Sauhee",
+      "rect": {
+        "x": 62,
+        "y": 66,
+        "width": 42,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/11-text-overcooked-2.png",
+      "kind": "text",
+      "tag": "button",
+      "text": "Overcooked! 2",
+      "rect": {
+        "x": 145,
+        "y": 66,
+        "width": 81,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/12-text-2m.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "2m",
+      "rect": {
+        "x": 529,
+        "y": 66,
+        "width": 15,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/13-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 108,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/14-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 114,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/15-text-recommends.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Meera recommends Grounded",
+      "rect": {
+        "x": 62,
+        "y": 108,
+        "width": 462,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/16-text-meera.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Meera",
+      "rect": {
+        "x": 62,
+        "y": 108,
+        "width": 36,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/17-text-grounded.png",
+      "kind": "text",
+      "tag": "button",
+      "text": "Grounded",
+      "rect": {
+        "x": 176,
+        "y": 108,
+        "width": 56,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/18-text-1h.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "1h",
+      "rect": {
+        "x": 534,
+        "y": 108,
+        "width": 10,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/19-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 150,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/20-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 156,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/21-text-joined-the-late-night-crew.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Yessenia joined The Late Night Crew",
+      "rect": {
+        "x": 62,
+        "y": 150,
+        "width": 460,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/22-text-yessenia.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Yessenia",
+      "rect": {
+        "x": 62,
+        "y": 150,
+        "width": 49,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/23-text-3h.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "3h",
+      "rect": {
+        "x": 532,
+        "y": 150,
+        "width": 12,
+        "height": 17
+      }
+    }
+  ],
+  "vectors": []
+}

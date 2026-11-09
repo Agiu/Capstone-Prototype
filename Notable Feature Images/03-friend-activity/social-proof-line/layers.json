@@ -1,0 +1,112 @@
+{
+  "scene": "social-proof-line",
+  "group": "03-friend-activity",
+  "note": "The social-proof line on its own — face stack + count, the atom the rows are built from.",
+  "capturedAt": "2026-08-14T00:04:00.141Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1728,
+    "height": 408,
+    "cssWidth": 576,
+    "cssHeight": 136
+  },
+  "layers": [
+    {
+      "file": "layers/01-text-yessenia-13-hrs.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Yessenia · 13 hrs",
+      "rect": {
+        "x": -7,
+        "y": -4,
+        "width": 84,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/02-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/03-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 29,
+        "y": 29,
+        "width": 13,
+        "height": 13
+      }
+    },
+    {
+      "file": "layers/04-text-caleb-10-hrs.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb · 10 hrs",
+      "rect": {
+        "x": 14,
+        "y": -4,
+        "width": 70,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/05-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 38,
+        "y": 24,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 43,
+        "y": 29,
+        "width": 13,
+        "height": 13
+      }
+    },
+    {
+      "file": "layers/07-text-el.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "+",
+      "rect": {
+        "x": 63,
+        "y": 29,
+        "width": 6,
+        "height": 13
+      }
+    },
+    {
+      "file": "layers/08-text-3-friends-played-this-for-av.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "3 friends played this for avg. 12 hours",
+      "rect": {
+        "x": 78,
+        "y": 25,
+        "width": 209,
+        "height": 20
+      }
+    }
+  ],
+  "vectors": []
+}

@@ -1,0 +1,1250 @@
+import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { thumbsUp, appleLogo, userGroup, discordLogo } from './assets/figma/index.js'
+import { REDESIGN, rd } from './redesign.js'
+import { components as tkc, ms as tkMs } from './design/tokens.js'
+
+// The party action's label, shared by every button, tooltip and menu that starts
+// one. Redesign: title case, so it reads as the product's named action.
+export const START_PARTY = rd('Start a party', 'Start A Party')
+
+// Set by Landing to a handler(tagText) that opens the Library filtered by a
+// clicked card tag. null when no handler is provided (tags stay non-clickable).
+export const TagCtx = createContext(null)
+// Provides startParty(title) so any game card can offer a "start a party" action.
+export const PartyCtx = createContext(null)
+// Provides addToWheel(title) so any game card's + hover-menu can offer it.
+export const WheelCtx = createContext(null)
+
+// On a moderator's mirror, set to the game TITLE the participant is hovering, so
+// any game card can force its hover reveal on even though the moderator can't
+// actually hover it. null on a live tester (real :hover drives the reveal).
+export const SpectateHoverCtx = createContext(null)
+
+// Same idea for profile-pic tooltips: the KEY (`${title}::${name}`) of the
+// avatar chip the participant is hovering, so its name/label tooltip shows on
+// the mirror. Identity-based (not geometry) so it survives row scrolling.
+export const SpectateAvCtx = createContext(null)
+export const avKey = (title, name) => `${title || ''}::${name || ''}`
+
+// Whether THIS specific card instance should force its hover reveal on the
+// moderator mirror. The publisher sends a per-instance token `title#occurrence`
+// (occurrence = the card's index among same-titled cards in document order), so
+// duplicate cards of the same game no longer all light up together. Each card
+// computes its own occurrence from the DOM; the layout is identical in the live
+// and mirror trees, so the indices line up. Live testers pass spHover=null and
+// skip all of this (real :hover drives the reveal).
+export function useSpectateReveal(ref, title) {
+  const spHover = useContext(SpectateHoverCtx)
+  const [occ, setOcc] = useState(0)
+  useLayoutEffect(() => {
+    if (!spHover || !ref.current) return
+    const same = [...document.querySelectorAll('[data-game]')].filter((n) => n.getAttribute('data-game') === title)
+    const i = same.indexOf(ref.current)
+    setOcc(i < 0 ? 0 : i)
+  })
+  return !!spHover && spHover === `${title}#${occ}`
+}
+
+// Expanded (hover) card width — used to compute how far the row must scroll to
+// keep the whole card on-screen.
+const CARD_EXPANDED_W = 718
+
+// Gentle eased horizontal scroll — smoother and less abrupt than the browser's
+// native `behavior:'smooth'`, so the row glides rather than snaps.
+function smoothScrollLeft(el, to, duration = REDESIGN ? tkMs(tkc.shelf.scrollDuration) : 600) {
+  const start = el.scrollLeft
+  const dist = to - start
+  if (Math.abs(dist) < 1) return
+  const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2)
+  // Redesign: quick in, then a long ease-out — the row responds the instant
+  // the arrow is pressed and settles gently, instead of a slow wind-up.
+  const easeOutQuint = (t) => 1 - Math.pow(1 - t, 5)
+  const ease = REDESIGN ? easeOutQuint : easeInOutCubic
+  let startT = null
+  function step(ts) {
+    if (startT === null) startT = ts
+    const p = Math.min((ts - startT) / duration, 1)
+    el.scrollLeft = start + dist * ease(p)
+    if (p < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
+
+// Shared rec-card component used by the landing screen's "game card
+// recommendation rows". A simplified variant of the store card: no green glow,
+// no ownership-dots row, no Play/price footer — just avatars + label, cover
+// (trailer on hover), metadata pills, and a hover details column.
+
+// Friend avatar colors (solid Discord-style circles). Green is the user (sauhee).
+export const AVATAR = { blue: '#5165F6', yellow: '#F5C518', red: '#FF3737', green: '#00A853', pink: '#EB459E' }
+
+// The "Start a party" group glyph (three party-goers). fill=currentColor so each
+// button keeps its own color + hover treatment.
+const PARTY_GLYPH_D = "M18.3005 15.6953C18.3005 14.5563 19.5274 13.8242 20.5271 14.3965C22.3196 15.4229 23.7271 16.3104 25.4978 17.5049C26.5085 18.1866 26.3149 19.7159 25.1824 20.1406L20.3269 21.9619C19.3464 22.3293 18.3005 21.6038 18.3005 20.5566V15.6953ZM8.32593 12.7578C11.2114 10.8478 15.844 10.807 18.7869 12.6328C17.5942 12.8269 16.7997 13.9122 16.7996 15.6631V20.0732C16.7996 20.232 16.8063 20.3855 16.8191 20.5332C15.8172 20.8436 14.7336 21 13.6501 21C11.7185 20.9999 9.786 20.5063 8.31616 19.5195C6.99351 18.6376 6.25773 17.4406 6.25757 16.1494C6.25757 14.8581 6.99283 13.6503 8.32593 12.7578ZM1.37573 12.501C3.17106 11.0521 6.09049 10.6007 8.41089 11.2725C7.51863 11.5979 6.69919 12.0393 5.99585 12.5957C4.75723 13.5931 4.13795 14.8427 4.24292 16.1445C4.32691 17.0472 4.76764 17.8977 5.52319 18.5801C4.21098 18.6114 2.88741 18.3391 1.83765 17.7617C0.74611 17.1633 0.0955371 16.2809 0.0114746 15.2627C-0.0829901 14.2549 0.410085 13.2779 1.37573 12.501ZM18.8894 11.3291C21.2097 10.6573 24.1291 11.1089 25.9246 12.5576C26.8905 13.3346 27.3833 14.3114 27.2888 15.3193C27.2363 15.9561 26.9618 16.5391 26.4968 17.0332C26.2432 16.4294 25.7105 15.8571 24.8982 15.3877L22.9949 14.2852L22.5154 14.0068C22.2223 13.522 21.817 13.065 21.3044 12.6523C20.601 12.096 19.7818 11.6546 18.8894 11.3291ZM13.6501 0C16.4009 0.000255925 18.6373 2.23655 18.6375 4.9873C18.627 7.6858 16.5159 9.87034 13.8279 9.96484H13.7546C13.6917 9.95442 13.607 9.95437 13.5232 9.96484C10.7727 9.86988 8.66187 7.6855 8.66187 4.9873C8.66197 2.23655 10.8994 0.000257191 13.6501 0ZM21.115 2.17383C23.173 1.99533 25.0107 3.52844 25.1892 5.60742C25.357 7.64413 23.9083 9.42925 21.9031 9.6709H21.8503C21.7875 9.6709 21.724 9.67046 21.6716 9.69141C20.6535 9.74376 19.7187 9.41856 19.0154 8.82031C20.0969 7.85433 20.7165 6.40504 20.5906 4.83008C20.5171 3.97966 20.2229 3.20247 19.782 2.54102C20.1807 2.34168 20.6428 2.21588 21.115 2.17383ZM2.11108 5.54785C2.28957 3.46901 4.12749 1.93603 6.1853 2.11426C6.65745 2.15626 7.11954 2.28216 7.51831 2.48145C7.07741 3.14287 6.78322 3.92014 6.70972 4.77051C6.58374 6.34537 7.20358 7.79475 8.28491 8.76074C7.58149 9.35901 6.64692 9.68429 5.62866 9.63184C5.57624 9.611 5.51279 9.61133 5.44995 9.61133H5.39722C3.39217 9.3695 1.94324 7.5845 2.11108 5.54785Z"
+// `size` is the rendered HEIGHT in px; width is derived from the native 28:23
+// viewBox so the icon's proportions (and the gaps between the three figures) are
+// preserved exactly at any scale. Pass color/transform/filter via className.
+export function PartyGlyph({ size = 24, className, style }) {
+  return <svg viewBox="0 0 28 23" width={(size * 28) / 23} height={size} className={className} style={style} fill="currentColor"><path d={PARTY_GLYPH_D} /></svg>
+}
+
+/** A Discord-style avatar: colored circle with the white Discord logo. */
+function ProfileIcon({ color, className, style }) {
+  return (
+    <div
+      className={'relative shrink-0 overflow-hidden rounded-full ' + (className || '')}
+      style={{ backgroundColor: color, ...style }}
+    >
+      <img
+        alt=""
+        src={discordLogo}
+        className="absolute left-1/2 top-1/2 size-[58%] -translate-x-1/2 -translate-y-1/2 object-contain"
+      />
+    </div>
+  )
+}
+
+/** A rounded outline pill used for the game metadata tags. */
+function Pill({ children }) {
+  return (
+    <div className="flex shrink-0 items-center justify-center gap-[2px] whitespace-nowrap rounded-[16px] border border-[#7e7f87] px-[6px] py-[2px]">
+      {children}
+    </div>
+  )
+}
+
+function AvatarStack({ colors }) {
+  return (
+    <div className="flex items-center">
+      {(colors || []).map((c, i) => (
+        <ProfileIcon
+          key={i}
+          color={c}
+          className="size-[30px]"
+          style={{ marginRight: i < colors.length - 1 ? -14 : 0, zIndex: i + 1 }}
+        />
+      ))}
+    </div>
+  )
+}
+
+// Like AvatarStack, but each face is a share target: hover reveals "name · hrs",
+// click forwards the game straight to them. `targets[i]` is {to, name, hrs}
+// parallel to `colors`. Shows at most 2 faces, then a "+" if there are more.
+// Falls back to plain avatars when no share handler.
+function ShareAvatars({ colors, targets, title, onShare }) {
+  const list = colors || []
+  const shown = list.slice(0, 2)
+  const more = list.length > 2
+  const spAv = useContext(SpectateAvCtx)
+  // Keyboard parity: focusing an avatar shows its name tooltip like hover.
+  const [kbFocus, setKbFocus] = useState(null)
+  return (
+    <div className="flex items-center">
+      {shown.map((c, i) => {
+        const t = targets?.[i]
+        const mr = i < shown.length - 1 ? -8 : 0
+        if (!t || !t.to || !onShare) {
+          return <ProfileIcon key={i} color={c} className="size-[22px]" style={{ marginRight: mr, zIndex: i + 1, boxShadow: '0 0 0 2px #0c0c0e' }} />
+        }
+        const reveal = kbFocus === i || (!!spAv && spAv === avKey(title, t.name))
+        return (
+          <button
+            key={i}
+            type="button"
+            data-av={avKey(title, t.name)}
+            title={`Share ${title} with ${t.name}`}
+            onFocus={() => setKbFocus(i)}
+            onBlur={() => setKbFocus((f) => (f === i ? null : f))}
+            onClick={(e) => { e.stopPropagation(); onShare({ title, to: t.to, hrs: t.hrs }) }}
+            className="group/av pointer-events-auto relative shrink-0 rounded-full transition hover:z-10 hover:-translate-y-[2px]"
+            style={{ marginRight: mr, zIndex: reveal ? 10 : i + 1 }}
+          >
+            {/* Tooltip sits ABOVE the face and extends rightward (left-anchored)
+                so the row's horizontal scroll clip never crops it on the left.
+                Highest z so nothing covers it; the row leaves top headroom. */}
+            <span className={'pointer-events-none absolute bottom-[calc(100%+7px)] left-0 z-[200] inline-flex items-center gap-[4px] whitespace-nowrap rounded-[6px] bg-black/90 px-[8px] py-[3px] text-[12px] font-semibold text-white opacity-0 transition-opacity duration-150 group-hover/av:opacity-100 group-focus-within/av:opacity-100' + (reveal ? ' !opacity-100' : '')}>
+              <span>{t.name}{t.hrs != null ? ` · ${t.hrs} hrs` : ''}</span>
+              {/* Green thumbs-up only when this friend recommends the game. */}
+              {t.rec && (
+                <>
+                  <span aria-hidden className="text-white/60">·</span>
+                  <svg viewBox="0 0 24 24" className="size-[13px]" fill="#9BF00B" aria-label="Recommends"><path d="M7 10v10H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1h3Zm3.5 10a2 2 0 0 1-1.5-.7V10l4.2-6.6c.4-.7 1.3-.9 2-.5.6.4.9 1.1.7 1.8L14.9 9H20a2 2 0 0 1 2 2.4l-1.4 6.9A2.4 2.4 0 0 1 18.2 20H10.5Z" /></svg>
+                </>
+              )}
+            </span>
+            <ProfileIcon color={c} className="size-[22px] ring-2 ring-transparent transition group-hover/av:ring-[#5765f2] group-focus-within/av:ring-[#5765f2]" style={{ boxShadow: '0 0 0 2px #0c0c0e' }} />
+          </button>
+        )
+      })}
+      {more && <span className="ml-[3px] text-[13px] font-semibold leading-none text-white">+</span>}
+    </div>
+  )
+}
+
+function RatingRow({ pct, line1, line2, line2Bold }) {
+  return (
+    <div className="flex w-[210px] items-center gap-[8px]">
+      <img alt="" src={thumbsUp} className="size-[36px] shrink-0" />
+      <span className="whitespace-nowrap text-[28px] font-semibold text-white">{pct}</span>
+      <span className="whitespace-nowrap text-[12px] leading-tight text-[#e7e7e7]">
+        {line1}
+        <br />
+        <span className={line2Bold ? 'font-bold' : undefined}>{line2}</span>
+      </span>
+    </div>
+  )
+}
+
+/** Trailer/gameplay that plays on hover. Pass `mp4` (preferred) or `youTubeId`.
+ *  `bare` scales the iframe up so YouTube's title bar and end-screen cards fall
+ *  outside the crop — a clean, chrome-free background loop. */
+export function VideoTrailer({ mp4, youTubeId, poster, bare, vertical, start = 30, controls = false }) {
+  const frameRef = useRef(null)
+
+  // `cc_load_policy=0` only sets the *default* — YouTube still turns captions
+  // back on for anyone whose account or device has them switched on, which is
+  // why they keep showing up. The only way to actually kill them is to tell the
+  // player to drop its captions module over the JS API. The player ignores
+  // commands until it reports ready and gives us no cross-origin way to observe
+  // that, so we just re-send for a few seconds and stop. ('captions' and 'cc'
+  // are the module names for the two player generations — send both.)
+  useEffect(() => {
+    if (!youTubeId) return
+    const send = () => {
+      const w = frameRef.current?.contentWindow
+      if (!w) return
+      for (const mod of ['captions', 'cc']) {
+        w.postMessage(JSON.stringify({ event: 'command', func: 'unloadModule', args: [mod] }), '*')
+      }
+      // Ambient previews stay muted + playing so YouTube never parks the paused/
+      // "tap to play" overlay over the footage. With controls on, the viewer is
+      // in charge — don't fight their pause/unmute, only keep captions dropped.
+      if (controls) return
+      w.postMessage(JSON.stringify({ event: 'command', func: 'mute', args: [] }), '*')
+      w.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*')
+    }
+    send()
+    const tick = setInterval(send, 400)
+    // Interactive players only need the brief caption-drop window, then leave the
+    // viewer alone. Ambient previews keep the play/mute keep-alive running the
+    // whole time they're mounted (which is only while hovered) so YouTube never
+    // parks a paused ‖ overlay over the footage after the first few seconds.
+    const stop = controls ? setTimeout(() => clearInterval(tick), 6000) : null
+    return () => { clearInterval(tick); if (stop) clearTimeout(stop) }
+  }, [youTubeId, controls])
+
+  if (mp4) {
+    return (
+      <video
+        className="pointer-events-none absolute inset-0 size-full object-cover"
+        src={mp4}
+        poster={poster}
+        autoPlay
+        muted
+        loop
+        playsInline
+        // Jump past the intro so the preview opens on gameplay, not a logo.
+        onLoadedMetadata={start > 0 ? (e) => { const v = e.currentTarget; if (v.duration && v.duration > start + 2) v.currentTime = start } : undefined}
+      />
+    )
+  }
+  if (youTubeId) {
+    const params = new URLSearchParams({
+      autoplay: '1',
+      mute: '1',
+      controls: controls ? '1' : '0', // ambient previews show no chrome; interactive slides get the full control bar
+      loop: '1',
+      playlist: youTubeId,
+      start: String(start), // begin partway in — skips the trailer intro/logo
+      modestbranding: '1',
+      playsinline: '1',
+      rel: '0',
+      disablekb: controls ? '0' : '1',
+      iv_load_policy: '3', // no annotations
+      cc_load_policy: '0', // captions off by default; the effect above enforces it
+      fs: controls ? '1' : '0',
+      enablejsapi: '1', // opens the postMessage channel used to drop captions
+    })
+    // Interactive mode: letterbox (contain) so the whole frame — and its control
+    // bar — is always on-screen, and let the pointer through to the player.
+    const fit = controls
+      ? 'absolute inset-0 size-full border-0'
+      : 'pointer-events-none absolute left-1/2 top-1/2 h-auto w-auto min-h-full min-w-full max-w-none border-0 [translate:-50%_-50%] ' + (vertical ? 'aspect-[9/16]' : 'aspect-video') + (bare ? (vertical ? ' [scale:1.5]' : ' [scale:1.6]') : '')
+    return (
+      <>
+        {/* Cover the container regardless of its aspect: force 16:9 and let both
+            min-dimensions push it to fill (like object-fit: cover for the iframe). */}
+        <iframe
+          ref={frameRef}
+          title="Game footage"
+          className={fit}
+          src={`https://www.youtube-nocookie.com/embed/${youTubeId}?${params}`}
+          allow="autoplay; encrypted-media; fullscreen"
+          allowFullScreen={controls}
+        />
+        {/* Transparent shield so the player never sees the pointer — kills the
+            hover play/pause button that YouTube shows despite controls=0. Clicks
+            still bubble to the card, and the card's hover state is unaffected.
+            Omitted in interactive mode so the viewer can actually use the player. */}
+        {!controls && <div className="absolute inset-0 z-[1]" />}
+      </>
+    )
+  }
+  return null
+}
+
+const BOOKMARK_D =
+  'M3.99987 17.9809V9.70766C3.99987 6.07429 3.99987 4.25761 5.17144 3.12887C6.34302 2.00013 8.22863 2.00013 11.9999 2.00013C15.7711 2.00013 17.6568 2.00013 18.8283 3.12887C19.9999 4.25761 19.9999 6.07429 19.9999 9.70766V17.9809C19.9999 20.2868 19.9999 21.4397 19.2271 21.8524C17.7304 22.6515 14.9231 19.9853 13.5899 19.1825C12.8167 18.7169 12.4301 18.4841 11.9999 18.4841C11.5697 18.4841 11.1831 18.7169 10.4099 19.1825C9.07667 19.9853 6.26934 22.6515 4.77272 21.8524C3.99987 21.4397 3.99987 20.2868 3.99987 17.9809Z'
+function BookmarkGlyph({ filled, color = 'white' }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[24px] shrink-0" fill="none">
+      <path
+        d={BOOKMARK_D}
+        fill={filled ? color : 'none'}
+        stroke={color}
+        strokeWidth="1.66"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {!filled && <path d="M4 7H20" stroke={color} strokeWidth="1.66" />}
+    </svg>
+  )
+}
+
+const CHAT_BUBBLE_D =
+  'M10.0001 19C8.36502 19 6.83174 18.5639 5.51025 17.8018C5.3797 17.7265 5.31434 17.6888 5.25293 17.6719C5.19578 17.6561 5.14475 17.6507 5.08559 17.6548C5.02253 17.6591 4.9573 17.6808 4.82759 17.7241L2.51807 18.4939L2.51625 18.4947C2.02892 18.6572 1.7848 18.7386 1.62256 18.6807C1.4812 18.6303 1.36979 18.5187 1.31938 18.3774C1.26157 18.2152 1.34268 17.9719 1.50489 17.4853L1.50586 17.4823L2.27468 15.1758L2.27651 15.171C2.31936 15.0424 2.34106 14.9773 2.34535 14.9146C2.3494 14.8554 2.34401 14.804 2.32821 14.7469C2.31146 14.6863 2.27448 14.6221 2.20114 14.495L2.19819 14.4899C1.43604 13.1684 1 11.6351 1 10C1 5.02944 5.02944 1 10 1C14.9706 1 19 5.02944 19 10C19 14.9706 14.9707 19 10.0001 19Z'
+function ChatAddGlyph({ filled, color = 'white' }) {
+  return (
+    <svg viewBox="0 0 20 20" className="size-[24px] shrink-0" fill="none">
+      <path
+        d={CHAT_BUBBLE_D}
+        fill={filled ? color : 'none'}
+        stroke={color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10 13V7M7 10H13"
+        stroke={filled ? '#131416' : color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+// Add-to-Mix (plus) and Share (upload) — the exact icons from Figma 976:3604 /
+// 976:3600. They use currentColor so the card can tint + glow them on hover.
+function PlusGlyph({ className, style }) {
+  return (
+    <svg viewBox="0 0 17 18" fill="none" className={className} style={style}>
+      <path d="M8.67 1V17M1 9H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  )
+}
+function ShareUploadGlyph({ className, style }) {
+  return (
+    <svg viewBox="0 0 16 20" fill="currentColor" className={className} style={style}>
+      <path d="M7.293 0.292786C7.48053 0.105315 7.73484 0 8 0C8.26516 0 8.51947 0.105315 8.707 0.292786L11.707 3.29279C11.8892 3.48139 11.99 3.73399 11.9877 3.99619C11.9854 4.25838 11.8802 4.5092 11.6948 4.6946C11.5094 4.88001 11.2586 4.98518 10.9964 4.98746C10.7342 4.98974 10.4816 4.88894 10.293 4.70679L9 3.41379V12.9998C9 13.265 8.89464 13.5194 8.70711 13.7069C8.51957 13.8944 8.26522 13.9998 8 13.9998C7.73478 13.9998 7.48043 13.8944 7.29289 13.7069C7.10536 13.5194 7 13.265 7 12.9998V3.41379L5.707 4.70679C5.5184 4.88894 5.2658 4.98974 5.0036 4.98746C4.7414 4.98518 4.49059 4.88001 4.30518 4.6946C4.11977 4.5092 4.0146 4.25838 4.01233 3.99619C4.01005 3.73399 4.11084 3.48139 4.293 3.29279L7.293 0.292786ZM0 8.99979C0 8.46935 0.210714 7.96065 0.585786 7.58557C0.960859 7.2105 1.46957 6.99979 2 6.99979H4C4.26522 6.99979 4.51957 7.10514 4.70711 7.29268C4.89464 7.48022 5 7.73457 5 7.99979C5 8.265 4.89464 8.51936 4.70711 8.70689C4.51957 8.89443 4.26522 8.99979 4 8.99979H2V17.9998H14V8.99979H12C11.7348 8.99979 11.4804 8.89443 11.2929 8.70689C11.1054 8.51936 11 8.265 11 7.99979C11 7.73457 11.1054 7.48022 11.2929 7.29268C11.4804 7.10514 11.7348 6.99979 12 6.99979H14C14.5304 6.99979 15.0391 7.2105 15.4142 7.58557C15.7893 7.96065 16 8.46935 16 8.99979V17.9998C16 18.5302 15.7893 19.0389 15.4142 19.414C15.0391 19.7891 14.5304 19.9998 14 19.9998H2C1.46957 19.9998 0.960859 19.7891 0.585786 19.414C0.210714 19.0389 0 18.5302 0 17.9998V8.99979Z" />
+    </svg>
+  )
+}
+
+// Inline copy of the `userGroup` asset's paths. It's needed as a real SVG
+// (rather than the plain <img> used elsewhere) wherever the icon has to be
+// recolored — `userGroup` is stroke-only with no fill, and a stroke-only
+// image is an unreliable CSS mask source (renders as a solid block instead
+// of the icon shape in some browsers). An inline `<path stroke={color}>` has
+// no such issue.
+const USER_GROUP_PATHS = [
+  'M13.8493 12C14.3489 12 14.7462 11.6857 15.103 11.2461C15.8333 10.3463 14.6342 9.6272 14.1769 9.27507C13.712 8.91707 13.1929 8.71427 12.6667 8.66667M12 7.33333C12.9205 7.33333 13.6667 6.58714 13.6667 5.66667C13.6667 4.74619 12.9205 4 12 4',
+  'M2.15038 12C1.65084 12 1.25352 11.6857 0.896771 11.2461C0.166464 10.3463 1.36552 9.6272 1.82284 9.27507C2.28772 8.91707 2.80679 8.71427 3.33307 8.66667M3.6664 7.33333C2.74593 7.33333 1.99974 6.58714 1.99974 5.66667C1.99974 4.74619 2.74593 4 3.6664 4',
+  'M5.38894 10.0744C4.70776 10.4956 2.92173 11.3557 4.00954 12.4319C4.54092 12.9576 5.13275 13.3336 5.87682 13.3336H10.1227C10.8667 13.3336 11.4585 12.9576 11.9899 12.4319C13.0777 11.3557 11.2917 10.4956 10.6105 10.0744C9.01314 9.08666 6.98634 9.08666 5.38894 10.0744Z',
+  'M10.3331 4.99974C10.3331 6.28841 9.28841 7.33307 7.99974 7.33307C6.71107 7.33307 5.66641 6.28841 5.66641 4.99974C5.66641 3.71107 6.71107 2.66641 7.99974 2.66641C9.28841 2.66641 10.3331 3.71107 10.3331 4.99974Z',
+]
+function UserGroupGlyph({ color = '#7e7f87', className = 'size-[16px]' }) {
+  return (
+    <svg viewBox="0 0 16 16" fill="none" className={className}>
+      {USER_GROUP_PATHS.map((d, i) => (
+        <path key={i} d={d} stroke={color} strokeWidth="1.15254" strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  )
+}
+
+function CardIconButton({ glyph: Glyph, initialMine = false, othersActive = false, label }) {
+  const [mine, setMine] = useState(initialMine)
+  const active = mine || othersActive
+  const color = othersActive ? '#7e7f87' : 'white'
+  return (
+    <button
+      type="button"
+      onClick={() => setMine((v) => !v)}
+      title={label}
+      className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"
+    >
+      <Glyph filled={active} color={color} />
+    </button>
+  )
+}
+
+/**
+ * A rec card that expands horizontally on hover to reveal a details column.
+ * Collapsed → thumbnail column (420px); on hover → 718px and the 250px
+ * hover_content fades in.
+ */
+export function RecCard({ avatars, label, image, players, details, video, shared, overlay, steam, expanded, onWishlist, onShare, onOpen, reveal }) {
+  const wishlistedByMe = label === 'PlayListed this game' && (avatars || []).includes(AVATAR.green)
+  const cardRef = useRef(null)
+  const [fly, setFly] = useState(null)
+  // Clicking anywhere on the card (except the wishlist/share buttons, which
+  // stopPropagation) opens the game's content detail page.
+  const open = () => onOpen?.(details.title)
+
+  // Steam variant — the original game card in a horizontal row, with a detail
+  // flyout (same content as the expanded card). The flyout is fixed-positioned
+  // so the row can scroll horizontally without clipping it.
+  if (steam) {
+    const showFly = () => {
+      const r = cardRef.current?.getBoundingClientRect()
+      if (!r) return
+      const W = 300, H = 380, gap = 12
+      const flipLeft = window.innerWidth - r.right < W + gap + 16
+      let top = r.top
+      if (top + H > window.innerHeight - 8) top = window.innerHeight - H - 8
+      setFly({ top: Math.max(8, top), left: flipLeft ? r.left - W - gap : r.right + gap, w: W })
+    }
+    const hideFly = () => setFly(null)
+    return (
+      <div ref={cardRef} data-game={details.title} onClick={open} onMouseEnter={showFly} onMouseLeave={hideFly} className="relative flex h-[380px] w-[452px] shrink-0 cursor-pointer flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
+        <div className="flex h-[30px] w-full items-center gap-[8px]">
+          <AvatarStack colors={avatars} />
+          <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
+        </div>
+        <div className="relative h-[236px] w-[420px] overflow-hidden rounded-[16px] bg-black">
+          <img
+            alt=""
+            src={image}
+            loading="lazy"
+            decoding="async"
+            className={'absolute inset-0 size-full object-cover transition-opacity duration-300' + (video ? ' group-hover:opacity-0 group-hover:delay-[300ms]' : '')}
+          />
+          {video && (
+            <div
+              className="absolute inset-0 bg-black bg-cover bg-center opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-hover:delay-[300ms]"
+              style={video.poster ? { backgroundImage: `url(${video.poster})` } : undefined}
+            >
+              <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+            </div>
+          )}
+        </div>
+        <div className="flex h-[50px] w-full items-center gap-[8px]">
+          <div className="flex items-center gap-[4px]">
+            <Pill>
+              <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+                <img alt="" src={userGroup} className="size-[16px]" />
+              </span>
+              <span className="text-[12px] text-[#7e7f87]">{players}</span>
+            </Pill>
+            <Pill><span className="text-[12px] text-[#7e7f87]">{details.playtime}</span></Pill>
+            <Pill><span className="text-[12px] text-[#7e7f87]">{details.genre}</span></Pill>
+          </div>
+        </div>
+
+        {/* Detail flyout — fixed so the horizontal row doesn't clip it */}
+        {fly && (
+        <div className="pointer-events-none fixed z-[60]" style={{ top: fly.top, left: fly.left, width: fly.w }}>
+          <div className="h-[380px] rounded-[16px] bg-[#121214] p-[16px] shadow-[0_12px_40px_rgba(0,0,0,0.8)] ring-1 ring-white/10">
+            <div className="flex h-full flex-col gap-[16px]">
+              <div className="flex items-center justify-end gap-[8px]">
+                <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
+              </div>
+              <div className="flex flex-1 flex-col justify-between pb-[5px]">
+                <div className="flex flex-col gap-[24px]">
+                  <div className="flex flex-col gap-[8px] text-[#e7e7e7]">
+                    <p className="text-[20px] font-semibold leading-tight">{details.title}</p>
+                    <p className="whitespace-nowrap text-[12px]">by <span className="font-semibold">{details.developer}</span></p>
+                  </div>
+                  <div className="flex flex-col gap-[8px]">
+                    {details.ratings.map((r, i) => <RatingRow key={i} {...r} />)}
+                  </div>
+                  {details.age && (
+                    <div className="flex items-start gap-[6px] text-[12px] text-[#7e7f87]">
+                      <span className="whitespace-nowrap font-semibold">{details.age}</span>
+                      <span className="flex-1">{details.descriptors}</span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-end">
+                  <div className="flex items-center gap-[10px]">
+                    <div className="grid size-[16px] grid-cols-2 grid-rows-2 gap-px">
+                      <span className="bg-white" /><span className="bg-white" /><span className="bg-white" /><span className="bg-white" />
+                    </div>
+                    <img alt="" src={appleLogo} className="h-[16px] w-[13px]" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        )}
+      </div>
+    )
+  }
+
+  // Always-expanded variant — the card is shown in its expanded form (cover +
+  // details side by side) by default, with no hover expansion.
+  if (expanded) {
+    return (
+      <div data-game={details.title} onClick={open} className="group flex h-[380px] w-[718px] shrink-0 cursor-pointer gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
+        <div className="flex w-[420px] shrink-0 flex-col gap-[16px]">
+          <div className="flex h-[30px] w-full items-center gap-[8px]">
+            <AvatarStack colors={avatars} />
+            <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
+          </div>
+          <div className="relative w-[420px] flex-1 overflow-hidden rounded-[16px] bg-black">
+            <img
+              alt=""
+              src={image}
+              loading="lazy"
+              decoding="async"
+              className={'absolute inset-0 size-full object-cover transition-opacity duration-300' + (video ? ' group-hover:opacity-0 group-hover:delay-[300ms]' : '')}
+            />
+            {video && (
+              <div
+                className="absolute inset-0 bg-black bg-cover bg-center opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-hover:delay-[300ms]"
+                style={video.poster ? { backgroundImage: `url(${video.poster})` } : undefined}
+              >
+                <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px]">
+          <div className="flex items-center justify-end gap-[8px]">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
+          </div>
+          <div className="flex flex-1 flex-col justify-between pb-[5px]">
+            <div className="flex flex-col gap-[20px]">
+              <div className="flex flex-col gap-[8px] text-[#e7e7e7]">
+                <p className="text-[20px] font-semibold leading-tight">{details.title}</p>
+                <p className="whitespace-nowrap text-[12px]">by <span className="font-semibold">{details.developer}</span></p>
+              </div>
+              {/* tags sit between the developer and the reviews */}
+              <div className="flex flex-wrap items-center gap-[4px]">
+                <Pill>
+                  <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+                    <img alt="" src={userGroup} className="size-[16px]" />
+                  </span>
+                  <span className="text-[12px] text-[#7e7f87]">{players}</span>
+                </Pill>
+                <Pill><span className="text-[12px] text-[#7e7f87]">{details.playtime}</span></Pill>
+                <Pill><span className="text-[12px] text-[#7e7f87]">{details.genre}</span></Pill>
+              </div>
+              <div className="flex flex-col gap-[8px]">
+                {details.ratings.map((r, i) => <RatingRow key={i} {...r} />)}
+              </div>
+              {details.age && (
+                <div className="flex items-start gap-[6px] text-[12px] text-[#7e7f87]">
+                  <span className="whitespace-nowrap font-semibold">{details.age}</span>
+                  <span className="flex-1">{details.descriptors}</span>
+                </div>
+              )}
+            </div>
+            <div className="flex items-center justify-end">
+              <div className="flex items-center gap-[10px]">
+                <div className="grid size-[16px] grid-cols-2 grid-rows-2 gap-px">
+                  <span className="bg-white" /><span className="bg-white" /><span className="bg-white" /><span className="bg-white" />
+                </div>
+                <img alt="" src={appleLogo} className="h-[16px] w-[13px]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Overlay variant — the card keeps its size and the details fade in as a
+  // pop-up over the cover on hover (instead of the card expanding sideways).
+  if (overlay) {
+    return (
+      <div data-game={details.title} onClick={open} className="group relative flex h-[314px] w-[452px] shrink-0 cursor-pointer flex-col gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px]">
+        <div className="flex h-[30px] w-full items-center gap-[8px]">
+          <AvatarStack colors={avatars} />
+          <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
+        </div>
+
+        {/* 16:9 cover → trailer on hover (does not fill the whole card) */}
+        <div className="relative h-[236px] w-[420px] overflow-hidden rounded-[16px] bg-black">
+          <img
+            alt=""
+            src={image}
+            loading="lazy"
+            decoding="async"
+            className={'absolute inset-0 size-full object-cover transition-opacity duration-300' + (video ? ' group-hover:opacity-0 group-hover:delay-[300ms]' : '')}
+          />
+          {video && (
+            <div
+              className="absolute inset-0 bg-black bg-cover bg-center opacity-0 transition-opacity duration-500 group-hover:opacity-100 group-hover:delay-[300ms]"
+              style={video.poster ? { backgroundImage: `url(${video.poster})` } : undefined}
+            >
+              <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+            </div>
+          )}
+        </div>
+
+        {/* Hover pop-up — action buttons + the detail (title, review + tags),
+            over the bottom of the 16:9 cover. Fades in on hover. */}
+        <div className={'pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 ease-out group-hover:pointer-events-auto group-hover:opacity-100' + (reveal ? ' !opacity-100' : '')}>
+          <div className="absolute right-[16px] top-[16px] flex gap-[8px]">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+            <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
+          </div>
+          <div className="absolute inset-x-[16px] bottom-[16px] flex flex-col gap-[8px] rounded-b-[16px] bg-gradient-to-t from-black via-black/80 to-transparent px-[16px] pb-[14px] pt-[52px]">
+            <div className="flex flex-col text-[#e7e7e7]">
+              <p className="text-[19px] font-semibold leading-tight text-white">{details.title}</p>
+              <p className="text-[12px]">by <span className="font-semibold">{details.developer}</span></p>
+            </div>
+            <div className="flex items-center gap-[16px]">
+              {/* review info (left) */}
+              {details.ratings.slice(0, 1).map((r, i) => (
+                <div key={i} className="flex shrink-0 items-center gap-[7px]">
+                  <img alt="" src={thumbsUp} className="size-[22px] shrink-0" />
+                  <span className="text-[18px] font-semibold text-white">{r.pct}</span>
+                </div>
+              ))}
+              {/* tags (right of the review) */}
+              <div className="flex flex-wrap items-center gap-[4px]">
+                <Pill>
+                  <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+                    <img alt="" src={userGroup} className="size-[16px]" />
+                  </span>
+                  <span className="text-[12px] text-[#e7e7e7]">{players}</span>
+                </Pill>
+                <Pill><span className="text-[12px] text-[#e7e7e7]">{details.playtime}</span></Pill>
+                <Pill><span className="text-[12px] text-[#e7e7e7]">{details.genre}</span></Pill>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Once the card finishes expanding on hover, if its right edge runs off the
+  // row, slide the row left so the whole card shows — never cropping the cover
+  // on the left, and leaving a gap at the row edge. Runs on transition end so
+  // the row's scrollWidth has already grown (needed for the last card, which
+  // has no trailing cards to scroll into).
+  function handleExpandEnd(e) {
+    if (e.propertyName !== 'width') return
+    const el = cardRef.current
+    const row = el && el.closest('.rec-row')
+    if (!el || !row || !el.matches(':hover')) return
+    const pad = 56
+    const cardLeft = el.getBoundingClientRect().left - row.getBoundingClientRect().left + row.scrollLeft
+    const overflowRight = cardLeft + CARD_EXPANDED_W + pad - (row.scrollLeft + row.clientWidth)
+    if (overflowRight <= 0) return
+    const target = Math.max(0, Math.min(row.scrollLeft + overflowRight, cardLeft - pad))
+    if (target > row.scrollLeft + 1) smoothScrollLeft(row, target)
+  }
+
+  return (
+    <div
+      ref={cardRef}
+      data-game={details.title}
+      onClick={open}
+      onTransitionEnd={handleExpandEnd}
+      className="group flex h-[380px] w-[452px] shrink-0 cursor-pointer gap-[16px] overflow-hidden rounded-[16px] bg-[#121214] p-[16px] transition-[width] duration-[550ms] ease-[cubic-bezier(0.22,1,0.36,1)] hover:w-[718px] hover:delay-[450ms]"
+    >
+      {/* Left column — thumbnail_content */}
+      <div className="flex w-[420px] shrink-0 flex-col gap-[16px]">
+        {/* Header — avatars + label */}
+        <div className="flex h-[30px] w-full items-center gap-[8px]">
+          <AvatarStack colors={avatars} />
+          <p className="whitespace-nowrap text-[16px] text-white">{label}</p>
+        </div>
+
+        {/* Cover art → streaming trailer on hover */}
+        <div className="relative h-[236px] w-[420px] overflow-hidden rounded-[16px] bg-black">
+          <img
+            alt=""
+            src={image}
+            loading="lazy"
+            decoding="async"
+            className={
+              'absolute inset-0 size-full object-cover transition-opacity delay-[0ms] duration-300' +
+              (video ? ' group-hover:opacity-0 group-hover:delay-[500ms]' : '')
+            }
+          />
+          {video && (
+            <div
+              className="absolute inset-0 bg-black bg-cover bg-center opacity-0 transition-opacity delay-[0ms] duration-500 group-hover:opacity-100 group-hover:delay-[500ms]"
+              style={video.poster ? { backgroundImage: `url(${video.poster})` } : undefined}
+            >
+              <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} />
+            </div>
+          )}
+        </div>
+
+        {/* Metadata pills */}
+        <div className="flex h-[50px] w-full items-center gap-[8px]">
+          <div className="flex items-center gap-[4px]">
+            <Pill>
+              <span className="flex -scale-y-100 rotate-180 items-center justify-center">
+                <img alt="" src={userGroup} className="size-[16px]" />
+              </span>
+              <span className="text-[12px] text-[#7e7f87]">{players}</span>
+            </Pill>
+            <Pill>
+              <span className="text-[12px] text-[#7e7f87]">{details.playtime}</span>
+            </Pill>
+            <Pill>
+              <span className="text-[12px] text-[#7e7f87]">{details.genre}</span>
+            </Pill>
+          </div>
+        </div>
+      </div>
+
+      {/* Right column — hover_content; fades in as the card expands */}
+      <div className="flex h-[348px] w-[250px] shrink-0 flex-col gap-[16px] opacity-0 transition-opacity delay-[0ms] duration-[400ms] ease-out group-hover:opacity-100 group-hover:delay-[550ms]">
+        <div className="flex items-center justify-end gap-[8px]">
+          <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(details.title) }} title="Add to PlayList" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><BookmarkGlyph filled={wishlistedByMe} color="white" /></button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onShare?.(details.title) }} title="Share to chat" className="flex size-[24px] shrink-0 items-center justify-center transition hover:scale-110 hover:opacity-80"><ChatAddGlyph filled={shared} color="white" /></button>
+        </div>
+
+        <div className="flex flex-1 flex-col justify-between pb-[5px]">
+          <div className="flex flex-col gap-[24px]">
+            <div className="flex flex-col gap-[8px] text-[#e7e7e7]">
+              <p className="text-[20px] font-semibold leading-tight">{details.title}</p>
+              <p className="whitespace-nowrap text-[12px]">
+                by <span className="font-semibold">{details.developer}</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-[8px]">
+              {details.ratings.map((r, i) => (
+                <RatingRow key={i} {...r} />
+              ))}
+            </div>
+
+            {details.age && (
+              <div className="flex items-start gap-[6px] text-[12px] text-[#7e7f87]">
+                <span className="whitespace-nowrap font-semibold">{details.age}</span>
+                <span className="flex-1">{details.descriptors}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Platform row — Microsoft (windows) + Apple only */}
+          <div className="flex items-center justify-end">
+            <div className="flex items-center gap-[10px]">
+              <div className="grid size-[16px] grid-cols-2 grid-rows-2 gap-px">
+                <span className="bg-white" />
+                <span className="bg-white" />
+                <span className="bg-white" />
+                <span className="bg-white" />
+              </div>
+              <img alt="" src={appleLogo} className="h-[16px] w-[13px]" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Cinematic hover card (Figma 622:2733 default / 622:2755 hover). The card is a
+ * FIXED size. Collapsed it shows only the cover. On hover the trailer is cropped
+ * open across the WHOLE card and the copy converges into place on top of it.
+ *
+ * Legibility comes from two black gradients rather than a panel or a full-card
+ * scrim, so the footage stays bright everywhere it isn't competing with text.
+ * Title, the avatars/label row, and the description are stacked together in
+ * ONE pool, top-left — its gradient is the block's own background, so it grows
+ * with however many lines land in it. Tags are deliberately kept OUTSIDE that
+ * block: their own pool, at the bottom, unchanged in vertical position from
+ * before, but revealed with a much longer rise than the rest of the copy so
+ * they read as sliding up from beneath the card rather than settling in place.
+ *
+ * Motion is matched to the reference prototype:
+ *  · one expo-out curve for everything, ~450ms in and a quicker ~300ms unwind
+ *  · the trailer is revealed by an inset clip wiping leftward from the card's
+ *    right edge — it never translates — and cross-fades up out of Xbox green
+ */
+export function CinematicCard({ image, video, avatars, avatarTargets, label, players, playtime, genre, genre2, title, studio, released, recommendPct, avatarsPlus, compact, mini, onWishlist, onShare, onViewDetails, onOpen, forceReveal, onAddToWheel }) {
+  const open = () => (onViewDetails || onOpen)?.(title)
+  // On the moderator's mirror, force the reveal when this exact card instance is
+  // the one the participant is hovering (per-instance, so duplicate cards of the
+  // same game don't all light up). There's no real :hover on the mirror.
+  const cardRef = useRef(null)
+  const spReveal = useSpectateReveal(cardRef, title)
+  // Keyboard parity: focusing the card (or any control inside it) forces the same
+  // reveal a mouse hover gives — the trailer + overlay cross-fade in on focus.
+  const [kbFocus, setKbFocus] = useState(false)
+  forceReveal = forceReveal || kbFocus || spReveal
+  // `compact` scales the card down a notch; `mini` smaller still (denser rows).
+  const CARD_W = mini ? 'w-[300px]' : compact ? 'w-[416px]' : 'w-[520px]'
+  const IMG_H = mini ? 'h-[169px]' : compact ? 'h-[234px]' : 'h-[292px]'
+  const ACCENT = '#9BF00B' // Xbox bright green — pills, the + and its glow
+  const onTag = useContext(TagCtx)
+  const onParty = useContext(PartyCtx)
+  // The + opens a hover mini-menu (Add to PlayList / Add to Wheel) whenever a
+  // wheel handler is available — provided app-wide via WheelCtx.
+  const ctxWheel = useContext(WheelCtx)
+  const wheelAdd = onAddToWheel || ctxWheel
+  // Spectate mirroring: force the hover reveal on (a moderator can't hover).
+  const F = forceReveal ? ' !opacity-100 !translate-x-0 !translate-y-0' : ''
+  const LightPill = ({ children, tagValue }) => {
+    // Same look + hover as every other user tag, so it stays consistent.
+    const cls = 'flex shrink-0 items-center gap-[4px] whitespace-nowrap rounded-full bg-[#1f1f23] px-[10px] py-[3px] text-[12px] font-semibold text-[#c7c9cb] ring-1 ring-white/10'
+    if (onTag && tagValue) {
+      return (
+        <button type="button" title={`See ${tagValue} games`} onClick={(e) => { e.stopPropagation(); onTag(tagValue) }} className={cls + ' pointer-events-auto cursor-pointer transition hover:bg-[#2a2a2f] hover:text-white'}>
+          {children}
+        </button>
+      )
+    }
+    return <span className={cls}>{children}</span>
+  }
+  const EASE = 'ease-[cubic-bezier(0.16,1,0.3,1)]'
+  // Everything cross-fades in and out together — no slide, no stagger. One
+  // shared duration and no delays so the whole overlay appears at once.
+  const reveal =
+    `opacity-0 transition-opacity duration-[300ms] ${EASE}` +
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + F
+  const rise =
+    `opacity-0 transition-opacity duration-[300ms] ${EASE}` +
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + F
+  const riseUp =
+    `opacity-0 transition-opacity duration-[300ms] ${EASE}` +
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + F
+  const pool =
+    `pointer-events-none absolute opacity-0 transition-opacity duration-[300ms] ${EASE}` +
+    ' group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]' + (forceReveal ? ' !opacity-100' : '')
+  // The tags' own pool runs the full width as a flat horizontal band, which is
+  // what lets it cover the + as well — no separate pool needed in that corner.
+  // Recipe matched to the overlay card's hover scrim ("Because you love to
+  // build" etc — RecCard's `overlay` branch below): `from-black via-black/80
+  // to-transparent`, i.e. black at the bottom, 80% black at the midpoint, clear
+  // at the top.
+  const bottomBg =
+    'linear-gradient(to top, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) 50%, rgba(0,0,0,0) 100%)'
+  return (
+    <div className={`group/rec flex ${CARD_W} shrink-0 flex-col gap-[12px]`}>
+    {/* Friend social line — above the card, always visible. Each face is a share
+        target: hover shows the name, click forwards the game to that friend. */}
+    <div className="flex items-center gap-[10px] pl-[2px]">
+      <ShareAvatars colors={avatars} targets={avatarTargets} title={title} onShare={onShare} />
+      {avatarsPlus && <span className="-ml-[2px] text-[13px] font-semibold leading-none text-white">+</span>}
+      <p className="whitespace-nowrap text-[13px] font-semibold leading-[18px] text-white">{label}</p>
+    </div>
+    <div
+      ref={cardRef}
+      data-game={title}
+      onClick={open}
+      role="button"
+      tabIndex={0}
+      aria-label={title ? `${title} — open game` : 'Open game'}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open() } }}
+      onFocus={() => setKbFocus(true)}
+      onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setKbFocus(false) }}
+      className={`group relative ${IMG_H} w-full cursor-pointer overflow-hidden rounded-[16px] bg-[#121214] focus-ring-strong`}
+    >
+      {/* Cover — fills the whole card by default */}
+      <img
+        alt=""
+        src={image}
+        loading="lazy"
+        decoding="async"
+        className="absolute inset-0 size-full rounded-[16px] object-cover"
+      />
+
+      {/* Trailer — full-bleed, cross-fades straight from the cover on hover (no
+          color flash). Rounded to match the card so it never peeks past the
+          rounded corners. */}
+      {video && (
+        <div
+          className={`absolute inset-0 overflow-hidden rounded-[16px] bg-[#121214] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
+        >
+          <div
+            className={`absolute inset-0 opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]` + (forceReveal ? ' !opacity-100' : '')}
+          >
+            {/* `bare` scales the iframe up so YouTube's title/chrome falls outside
+                the crop — a clean, UI-free loop. */}
+            <VideoTrailer poster={video.poster} mp4={video.mp4} youTubeId={video.youTubeId} bare />
+          </div>
+        </div>
+      )}
+
+      {/* Redesign: a dark top scrim behind the title — the drop shadow alone
+          loses the text on bright footage. Fades with the rest of the overlay. */}
+      {REDESIGN && (
+        <div
+          className={`${pool} left-0 top-0 h-[60%] w-full`}
+          style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.45) 50%, rgba(0,0,0,0) 100%)' }}
+        />
+      )}
+
+      {/* Title + studio · release date — no scrim. Legibility comes from a plain
+          drop shadow, which keeps the text true white on any footage. */}
+      <div
+        className={`pointer-events-none absolute left-0 top-0 w-[340px] pb-[28px] pl-[24px] pr-[24px] pt-[20px] opacity-0 transition-opacity duration-[300ms] ${EASE} group-hover:opacity-100 group-hover:duration-[400ms] group-focus-within:opacity-100 group-focus-within:duration-[400ms]` + F}
+        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.7))' }}
+      >
+        <p className={`font-bold leading-[1.1] text-white ${mini ? 'text-[20px]' : compact ? 'text-[24px]' : 'text-[28px]'}`}>{title}</p>
+        {(studio || released) && (
+          <p className="mt-[6px] text-[13px] font-medium text-white/85">
+            {[studio, released && released.replace(/^Released on /, '')].filter(Boolean).join(' · ')}
+          </p>
+        )}
+      </div>
+
+      {/* Bottom pool — avatars/label sit directly above the tags, both in the
+          same band. Full width so it still covers the + and eye icons in the
+          far corner without needing a separate pool there. */}
+      <div
+        className={`${pool} bottom-0 left-0 z-[2] flex w-full flex-col items-start gap-[16px] pb-[18px] pl-[24px] pt-[30px]`}
+        style={{ background: bottomBg }}
+      >
+        <div className={`${riseUp} flex items-center gap-[4px]`}>
+          <LightPill tagValue={players}>
+            <UserGroupGlyph color="#ffffff" className="size-[16px] -scale-x-100" />
+            {players}
+          </LightPill>
+          {genre && <LightPill tagValue={genre}>{genre}</LightPill>}
+          {/* mini cards (the dense "Recommended for this PlayList" row) stay at two
+              tags — players + genre — so a stray second genre never crowds them. */}
+          {genre2 && !mini && <LightPill tagValue={genre2}>{genre2}</LightPill>}
+        </div>
+      </div>
+
+      {/* + add-to-Mix / eye view-details — bottom-right of the trailer half.
+          Both enter from the card's right edge with the crop (they start far
+          enough out that the card's own overflow clips them), just a short
+          slide rather than a long throw. Each button's own hover reveals its
+          label, so `group/add` and `group/view` are scoped to the button and
+          don't disturb the card-level `group` the rest of the reveal hangs off. */}
+      <div className="absolute bottom-[14px] right-[18px] z-[2] flex items-center gap-[16px]">
+        {onParty && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onParty(title) }}
+            aria-label={START_PARTY}
+            className={`${reveal} group/party relative flex size-[28px] items-center justify-center`}
+          >
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/party:opacity-100">
+              {START_PARTY}
+            </span>
+            <PartyGlyph size={22} className={`transition-[scale,filter] duration-200 ${EASE} group-hover/party:scale-110 group-hover/party:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} style={{ color: ACCENT }} />
+          </button>
+        )}
+        <div className={`${reveal} group/add relative flex size-[28px] items-center justify-center`}>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
+            aria-label="Add this game"
+            className="flex size-full items-center justify-center"
+          >
+            <PlusGlyph className={`size-[24px] transition-[scale,filter] duration-200 ${EASE} group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]`} style={{ color: ACCENT }} />
+          </button>
+          {wheelAdd ? (
+            /* Hover mini-menu: Add to PlayList / Add to Wheel. `bottom-full` + a
+               transparent `pb` keep the hover area continuous with the + so the
+               menu stays open while you move onto it. */
+            <div className="pointer-events-none absolute bottom-full right-0 z-[10] pb-[8px] opacity-0 transition-opacity duration-150 group-hover/add:pointer-events-auto group-hover/add:opacity-100">
+              <div className="w-[172px] overflow-hidden rounded-[10px] border border-[#1c1d21] bg-[#111214] py-[5px] shadow-[0_12px_40px_rgba(0,0,0,0.7)]">
+                <button type="button" onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }} className="flex w-full items-center gap-[9px] px-[12px] py-[8px] text-left text-[13px] font-medium text-[#dbdee1] transition hover:bg-white/5">
+                  <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-white" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 3h12v18l-6-4-6 4V3Z" /></svg>
+                  Add to PlayList
+                </button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); wheelAdd(title) }} className="flex w-full items-center gap-[9px] px-[12px] py-[8px] text-left text-[13px] font-medium text-[#dbdee1] transition hover:bg-white/5">
+                  <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-white" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="10" r="7.5" /><circle cx="12" cy="10" r="1.5" /><path d="M12 2.5v15M4.5 10h15M6.7 4.7l10.6 10.6M17.3 4.7 6.7 15.3" /><path d="M8.5 21.5 12 10l3.5 11.5M7 21.5h10" /></svg>
+                  Add to Wheel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">
+              Add this game
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+    </div>
+  )
+}
+
+/**
+ * Portrait tile that expands sideways on hover (Figma 620:2347 default /
+ * 620:2350 hover). Collapsed it's box art; on hover it widens and a dark panel
+ * slides in with title, publisher, release date, blurb, a recommendation line
+ * and user-tag pills.
+ */
+export function PortraitCard({ image, video, title, publisher, released, recommend, avatars, multiplayer, tags = [], belowAvatars, onWishlist, onShare, onOpen, forceReveal }) {
+  // On the moderator's mirror, force the reveal for the exact hovered card
+  // instance (per-instance token, so duplicate same-game cards don't co-reveal).
+  const cardRef = useRef(null)
+  const spReveal = useSpectateReveal(cardRef, title)
+  forceReveal = forceReveal || spReveal
+  const shortRec = recommend ? recommend.replace(/ (have|has) played recently$/, '') : ''
+  // "N friends…" shows up to 2 pics (with a "+" at 3+); a personal line like
+  // "Sauhee said …" or "Meera has played recently" shows a single profile pic.
+  const friendCount = parseInt(recommend || '', 10)
+  const isCount = Number.isFinite(friendCount)
+  const shownCount = isCount ? Math.min(Math.max(friendCount, 1), 2) : 1
+  const pair = (avatars && avatars.length ? avatars : [AVATAR.blue, AVATAR.yellow]).slice(0, shownCount)
+  const showPlus = isCount && friendCount >= 3
+  // The cover swaps to the trailer while hovered (Figma 979:1206).
+  const [hover, setHover] = useState(false)
+  const showVid = (hover || forceReveal) && video?.youTubeId
+  const onTag = useContext(TagCtx)
+  const Tag = ({ children, full }) => {
+    const cls = 'flex items-center justify-center whitespace-nowrap rounded-full bg-[#1f1f23] px-[9px] py-[3px] text-[11px] font-semibold text-[#c7c9cb] ' + (full ? 'w-full' : 'w-fit')
+    if (onTag && typeof children === 'string') {
+      return (
+        <button type="button" title={`See ${children} games`} onClick={(e) => { e.stopPropagation(); onTag(children) }} className={cls + ' transition hover:bg-[#2a2a2f] hover:text-white'}>
+          {children}
+        </button>
+      )
+    }
+    return <span className={cls}>{children}</span>
+  }
+  // Info copy just fades in and out — no slide.
+  const fade = 'opacity-0 transition-opacity duration-[450ms] ease-out group-hover:opacity-100'
+  // Spectate mirroring: force the expand + reveal on (a moderator can't hover).
+  const F = forceReveal ? ' !opacity-100' : ''
+  return (
+    <div className="group/rec flex shrink-0 flex-col">
+    {/* Profile pics above the cover — "who has played"; fades out on hover. */}
+    {belowAvatars && (
+      <div className="mb-[10px] flex w-[200px] items-center gap-[9px] transition-opacity duration-300 group-hover/rec:opacity-0">
+        {recommend ? (
+          <>
+            <div className="flex shrink-0 items-center">
+              {pair.map((c, i) => (
+                <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#0c0c0e]" style={{ marginRight: i < pair.length - 1 ? -6 : 0, zIndex: 2 - i }} />
+              ))}
+              {showPlus && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
+            </div>
+            <span className="truncate text-[12px] text-[#9a9ba3]">{shortRec}</span>
+          </>
+        ) : (
+          <span className="text-[12px] text-[#7e7f87]">No one has played yet</span>
+        )}
+      </div>
+    )}
+    <div
+      ref={cardRef}
+      data-game={title}
+      onClick={() => onOpen?.(title)}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className={'group relative flex h-[300px] w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-[12px] bg-[#191919] transition-[width] duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:w-[452px]' + (forceReveal ? ' !w-[452px]' : '')}
+    >
+      {/* Portrait cover (left) — becomes the trailer on hover. Keeps the cover-art
+          ratio; overflow-hidden stops it spilling into the info panel. */}
+      <div className="relative h-full w-[200px] shrink-0 overflow-hidden">
+        <img alt="" src={image} loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
+        {showVid && <VideoTrailer youTubeId={video.youTubeId} poster={image} bare vertical={video.vertical} />}
+        {video?.badge && (
+          <span className={'pointer-events-none absolute left-[8px] top-[8px] z-[2] rounded-[4px] bg-black/70 px-[7px] py-[2px] text-[10px] font-semibold uppercase tracking-wide text-white transition-opacity duration-[300ms] ease-out ' + (showVid ? 'opacity-100' : 'opacity-0')}>{video.badge}</span>
+        )}
+      </div>
+
+      {/* Info panel (right) — packs the copy at the top with even gaps; only the
+          action buttons are pushed to the bottom (Figma 979:1209). */}
+      <div className={`${fade}${F} flex h-full w-[252px] shrink-0 flex-col gap-[12px] overflow-hidden bg-[#191919] p-[16px] group-hover:delay-[100ms]`}>
+        <p className="text-[20px] font-bold leading-tight text-white">{title}</p>
+        <div className="flex flex-col gap-[13px]">
+          {recommend ? (
+            <div className="flex items-start gap-[9px]">
+              <div className="flex h-[18px] shrink-0 items-center">
+                {pair.map((c, i) => (
+                  <ProfileIcon key={i} color={c} className="size-[18px] ring-[2px] ring-[#191919]" style={{ marginRight: i < pair.length - 1 ? -6 : 0, zIndex: 2 - i }} />
+                ))}
+                {showPlus && <span className="ml-[3px] text-[12px] font-semibold leading-none text-white">+</span>}
+              </div>
+              <p className="text-[12px] leading-[1.5] text-white">{recommend}</p>
+            </div>
+          ) : (
+            <div className="flex items-center gap-[7px]">
+              <svg viewBox="0 0 24 24" className="size-[16px] shrink-0 text-[#9BF00B]" fill="currentColor"><path d="M12 2l2.4 5.4L20 8l-4 3.9.9 5.6L12 15l-4.9 2.5L8 11.9 4 8l5.6-.6L12 2z" /></svg>
+              <p className="text-[12px] font-medium leading-[1.2] text-[#9BF00B]">Be the first to suggest this!</p>
+            </div>
+          )}
+          <div className="flex flex-col text-[12px] leading-[1.3]">
+            {publisher && <span className="text-[#c5c6ca]">{publisher}</span>}
+            {released && <span className="text-[#e7e7e7]">{released}</span>}
+          </div>
+          <div className="flex flex-col gap-[4px]">
+            <p className="text-[10px] text-white">User Tags</p>
+            <div className="flex flex-col gap-[4px]">
+              {multiplayer && <Tag>{multiplayer}</Tag>}
+              <div className="flex flex-wrap gap-[4px]">
+                {tags.map((t, i) => <Tag key={i}>{t}</Tag>)}
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Add-to-Mix + Share — right-aligned, with a hover label + glow (Figma 979:1209) */}
+        <div className="mt-auto flex items-center justify-end gap-[18px] text-[#9BF00B]">
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onWishlist?.(title) }}
+            aria-label="Add to PlayList"
+            className="group/add relative flex size-[26px] items-center justify-center"
+          >
+            <span className="pointer-events-none absolute bottom-[34px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/add:opacity-100">
+              Add to PlayList
+            </span>
+            <PlusGlyph className="size-[22px] transition-[scale,filter] duration-200 ease-out group-hover/add:scale-110 group-hover/add:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" />
+          </button>
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onShare?.(title) }}
+            aria-label="Share"
+            className="group/share relative flex size-[26px] items-center justify-center"
+          >
+            <span className="pointer-events-none absolute bottom-[34px] right-0 whitespace-nowrap rounded-[6px] bg-black/75 px-[9px] py-[4px] text-[13px] font-semibold text-white opacity-0 transition-opacity duration-200 ease-out group-hover/share:opacity-100">
+              Share
+            </span>
+            <ShareUploadGlyph className="size-[20px] transition-[scale,filter] duration-200 ease-out group-hover/share:scale-110 group-hover/share:[filter:drop-shadow(0_0_8px_rgba(155,240,11,0.95))_drop-shadow(0_0_18px_rgba(155,240,11,0.5))]" />
+          </button>
+        </div>
+      </div>
+    </div>
+    </div>
+  )
+}
+
+function ChevronGlyph({ direction }) {
+  return (
+    <svg viewBox="0 0 24 24" className="size-[20px]" fill="none">
+      <path
+        d={direction === 'left' ? 'M15 6L9 12L15 18' : 'M9 6L15 12L9 18'}
+        stroke="white"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+/** A titled shelf wrapper (heading + horizontally-scrollable row) for bespoke
+ *  card styles that don't go through RecCard. A left/right arrow appears over
+ *  the row's edge whenever there are more cards scrolled out of view on that
+ *  side, and disappears once scrolling reaches that end. */
+export function ShelfRow({ title, subtitle, action, bleed = false, gap = 24, padTop = 20, children }) {
+  const rowRef = useRef(null)
+  const [canLeft, setCanLeft] = useState(false)
+  const [canRight, setCanRight] = useState(false)
+  // Redesign: center the arrows on the card art rather than the whole row — the
+  // row also holds the padding and any social line above each card, which
+  // pushed top-1/2 below the art's middle. null → fall back to top-1/2.
+  const [arrowTop, setArrowTop] = useState(null)
+
+  useEffect(() => {
+    const el = rowRef.current
+    if (!el) return
+    const update = () => {
+      setCanLeft(el.scrollLeft > 4)
+      setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 4)
+      // `data-shelf-art` marks the art box on non-game cards (PlayLists).
+      const card = REDESIGN && el.querySelector('[data-game], [data-shelf-art]')
+      if (card) {
+        const r = card.getBoundingClientRect()
+        setArrowTop(r.top - el.parentElement.getBoundingClientRect().top + r.height / 2)
+      }
+    }
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => { el.removeEventListener('scroll', update); ro.disconnect() }
+  }, [])
+
+  function scrollByPage(dir) {
+    const el = rowRef.current
+    if (!el) return
+    const target = el.scrollLeft + dir * el.clientWidth * 0.85
+    smoothScrollLeft(el, Math.max(0, Math.min(target, el.scrollWidth - el.clientWidth)))
+  }
+
+  return (
+    <div className="mt-[56px] flex w-full shrink-0 flex-col">
+      {/* `action` — an optional link (e.g. "See all") right beside the title. */}
+      {action ? (
+        <div className="flex items-baseline gap-[16px]">
+          <p className="text-[24px] font-semibold text-white">{title}</p>
+          {action}
+        </div>
+      ) : (
+        <p className="text-[24px] font-semibold text-white">{title}</p>
+      )}
+      {subtitle && <p className="mt-[4px] text-[15px] text-[#9a9ba3]">{subtitle}</p>}
+      {/* `bleed` — widen the row a few px past the gutter (content stays
+          aligned) so rings/outlines drawn outside a card aren't clipped. The
+          wrapper bleeds, not just the scroller, so the edge fades and arrows
+          cover the same span and nothing peeks out past the fade. */}
+      <div className={'relative' + (bleed ? ' -ml-[4px]' : '')}>
+        <div ref={rowRef} className={'rec-row no-scrollbar flex w-full items-start overflow-x-auto pb-[4px]' + (bleed ? ' pl-[4px]' : '')} style={{ gap, paddingTop: padTop }}>
+          {children}
+          <div aria-hidden className="w-[40px] shrink-0" />
+        </div>
+        {/* Redesign: edge fades into the page black, shown only on a side that
+            has more cards to scroll to — a cue that the row continues. */}
+        {REDESIGN && ['left', 'right'].map((side) => (
+          <div
+            key={side}
+            aria-hidden
+            className={`pointer-events-none absolute inset-y-0 ${side === 'left' ? 'left-0' : 'right-0'} z-[5] transition-opacity duration-300 ` + ((side === 'left' ? canLeft : canRight) ? 'opacity-100' : 'opacity-0')}
+            style={{ width: tkc.shelf.edgeFadeWidth, background: `linear-gradient(to ${side}, transparent 0%, ${tkc.shelf.edgeFadeColor} 100%)` }}
+          />
+        ))}
+        {canLeft && (
+          <button
+            type="button"
+            aria-label="Scroll left"
+            onClick={() => scrollByPage(-1)}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
+            className="absolute left-[8px] top-1/2 z-10 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-black/70 transition hover:bg-black/90"
+          >
+            <ChevronGlyph direction="left" />
+          </button>
+        )}
+        {canRight && (
+          <button
+            type="button"
+            aria-label="Scroll right"
+            onClick={() => scrollByPage(1)}
+            style={arrowTop != null ? { top: arrowTop } : undefined}
+            className="absolute right-[8px] top-1/2 z-10 flex size-[40px] -translate-y-1/2 items-center justify-center rounded-full bg-black/70 transition hover:bg-black/90"
+          >
+            <ChevronGlyph direction="right" />
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+/** A titled shelf: a heading over a horizontally-scrollable row of rec cards. */
+export function CardRow({ title, subtitle, cards, overlay, expanded, onWishlist, onShare, onOpen, revealTitle }) {
+  return (
+    <ShelfRow title={title} subtitle={subtitle} gap={40}>
+      {cards.map((c, i) => (
+        <RecCard key={i} {...c} overlay={overlay} expanded={expanded} onWishlist={onWishlist} onShare={onShare} onOpen={onOpen} reveal={!!revealTitle && c.details?.title === revealTitle} />
+      ))}
+    </ShelfRow>
+  )
+}

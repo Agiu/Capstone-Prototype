@@ -1,0 +1,112 @@
+{
+  "scene": "member-stack-pending",
+  "group": "03-friend-activity",
+  "note": "Same stack with an invited-but-not-joined member dimmed — the \"invite lands\" state.",
+  "capturedAt": "2026-08-14T00:04:03.588Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1188,
+    "height": 408,
+    "cssWidth": 396,
+    "cssHeight": 136
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/03-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 56,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/04-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 62,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/05-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 88,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 94,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/07-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 120,
+        "y": 24,
+        "width": 28,
+        "height": 28
+      }
+    },
+    {
+      "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 126,
+        "y": 30,
+        "width": 16,
+        "height": 16
+      }
+    }
+  ],
+  "vectors": []
+}

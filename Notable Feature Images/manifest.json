@@ -1,0 +1,7946 @@
+[
+  {
+    "scene": "create-card",
+    "group": "01-create-playlist",
+    "note": "The \"Create a new PlayList\" tile that leads the Mixes row.",
+    "capturedAt": "2026-08-14T00:03:33.494Z",
+    "scale": 3,
+    "canvas": {
+      "width": 948,
+      "height": 870,
+      "cssWidth": 316,
+      "cssHeight": 290
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 200,
+          "height": 200
+        }
+      },
+      {
+        "file": "layers/02-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 104,
+          "y": 104,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/03-text-create-a-new-playlist.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Create a new PlayList",
+        "rect": {
+          "x": 24,
+          "y": 234,
+          "width": 200,
+          "height": 24
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 40,
+        "height": 40
+      }
+    ]
+  },
+  {
+    "scene": "create-modal-empty",
+    "group": "01-create-playlist",
+    "note": "Step 1 — pick who the PlayList is with. Nobody selected yet, so the footer shows the invite link.",
+    "capturedAt": "2026-08-14T00:03:35.924Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1488,
+      "height": 1788,
+      "cssWidth": 496,
+      "cssHeight": 596
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-create-a-playlist.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Create a PlayListSelect who you want to create a PlayList with.Add friends or se",
+        "rect": {
+          "x": 8,
+          "y": 9,
+          "width": 480,
+          "height": 579
+        }
+      },
+      {
+        "file": "layers/02-text-create-a-playlist.png",
+        "kind": "text",
+        "tag": "h3",
+        "text": "Create a PlayList",
+        "rect": {
+          "x": 32,
+          "y": 33,
+          "width": 292,
+          "height": 33
+        }
+      },
+      {
+        "file": "layers/03-text-select-who-you-want-to-creat.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Select who you want to create a PlayList with.",
+        "rect": {
+          "x": 32,
+          "y": 70,
+          "width": 292,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/04-shape-close.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "",
+        "rect": {
+          "x": 440,
+          "y": 35,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 440,
+          "y": 35,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/06-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 108,
+          "width": 432,
+          "height": 41
+        }
+      },
+      {
+        "file": "layers/07-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 120,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/08-text-add-friends-or-server-member.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Add friends or server members to mixes",
+        "rect": {
+          "x": 32,
+          "y": 165,
+          "width": 432,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/09-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 199,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/10-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 208,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/11-text-caleb.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb",
+        "rect": {
+          "x": 88,
+          "y": 202,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/12-text-caleb.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "caleb",
+        "rect": {
+          "x": 88,
+          "y": 221,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 208,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/14-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 255,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/15-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 264,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/16-text-sauhee.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sauhee",
+        "rect": {
+          "x": 88,
+          "y": 258,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/17-text-sauhee.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "sauhee",
+        "rect": {
+          "x": 88,
+          "y": 277,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/18-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 264,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/19-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 311,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/20-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 320,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/21-text-meera.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Meera",
+        "rect": {
+          "x": 88,
+          "y": 314,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/22-text-meera.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "meera",
+        "rect": {
+          "x": 88,
+          "y": 333,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/23-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 320,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/24-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 367,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/25-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 376,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/26-text-yessenia.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Yessenia",
+        "rect": {
+          "x": 88,
+          "y": 370,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/27-text-yessenia.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "yessenia",
+        "rect": {
+          "x": 88,
+          "y": 389,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/28-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 376,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/29-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Or, send an invite linkhttps://discord.gg/sfsdkjsjfjsYour invite link expires in",
+        "rect": {
+          "x": 8,
+          "y": 439,
+          "width": 480,
+          "height": 148
+        }
+      },
+      {
+        "file": "layers/30-text-or-send-an-invite-link.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Or, send an invite link",
+        "rect": {
+          "x": 32,
+          "y": 463,
+          "width": 432,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/31-block-https-discord-gg-sfsdkjsjfjs.png",
+        "kind": "block",
+        "tag": "div",
+        "text": "https://discord.gg/sfsdkjsjfjs",
+        "rect": {
+          "x": 32,
+          "y": 494,
+          "width": 432,
+          "height": 43
+        }
+      },
+      {
+        "file": "layers/32-text-your-invite-link-expires-in-.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Your invite link expires in 24 hours.",
+        "rect": {
+          "x": 32,
+          "y": 545,
+          "width": 432,
+          "height": 18
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 24,
+        "height": 24
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "create-modal-selected",
+    "group": "01-create-playlist",
+    "note": "Step 2 — two friends checked, so the footer swaps to the name field + \"Create a new PlayList\".",
+    "capturedAt": "2026-08-14T00:03:38.759Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1488,
+      "height": 1860,
+      "cssWidth": 496,
+      "cssHeight": 620
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-create-a-playlist.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Create a PlayListSelect who you want to create a PlayList with.Add friends or se",
+        "rect": {
+          "x": 8,
+          "y": 9,
+          "width": 480,
+          "height": 603
+        }
+      },
+      {
+        "file": "layers/02-text-create-a-playlist.png",
+        "kind": "text",
+        "tag": "h3",
+        "text": "Create a PlayList",
+        "rect": {
+          "x": 32,
+          "y": 33,
+          "width": 292,
+          "height": 33
+        }
+      },
+      {
+        "file": "layers/03-text-select-who-you-want-to-creat.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Select who you want to create a PlayList with.",
+        "rect": {
+          "x": 32,
+          "y": 70,
+          "width": 292,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/04-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 440,
+          "y": 35,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/05-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 108,
+          "width": 432,
+          "height": 41
+        }
+      },
+      {
+        "file": "layers/06-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 120,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/07-text-add-friends-or-server-member.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Add friends or server members to mixes",
+        "rect": {
+          "x": 32,
+          "y": 165,
+          "width": 432,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/08-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 199,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/09-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 208,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/10-text-caleb.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb",
+        "rect": {
+          "x": 88,
+          "y": 202,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/11-text-caleb.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "caleb",
+        "rect": {
+          "x": 88,
+          "y": 221,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/12-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 208,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/13-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 439,
+          "y": 211,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/14-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 255,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/15-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 264,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/16-text-sauhee.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sauhee",
+        "rect": {
+          "x": 88,
+          "y": 258,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/17-text-sauhee.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "sauhee",
+        "rect": {
+          "x": 88,
+          "y": 277,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/18-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 264,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/19-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 439,
+          "y": 267,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/20-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 311,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/21-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 320,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/22-text-meera.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Meera",
+        "rect": {
+          "x": 88,
+          "y": 314,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/23-text-meera.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "meera",
+        "rect": {
+          "x": 88,
+          "y": 333,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/24-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 320,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/25-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 367,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/26-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 376,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/27-text-yessenia.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Yessenia",
+        "rect": {
+          "x": 88,
+          "y": 370,
+          "width": 336,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/28-text-yessenia.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "yessenia",
+        "rect": {
+          "x": 88,
+          "y": 389,
+          "width": 336,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/29-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 436,
+          "y": 376,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/30-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "PlayList Name (optional)CancelCreate a new PlayList",
+        "rect": {
+          "x": 8,
+          "y": 439,
+          "width": 480,
+          "height": 172
+        }
+      },
+      {
+        "file": "layers/31-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 469,
+          "width": 56,
+          "height": 56
+        }
+      },
+      {
+        "file": "layers/32-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 46,
+          "y": 483,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/33-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 67,
+          "y": 468,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/34-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 73,
+          "y": 473,
+          "width": 11,
+          "height": 11
+        }
+      },
+      {
+        "file": "layers/35-text-playlist-name-optional.png",
+        "kind": "text",
+        "tag": "label",
+        "text": "PlayList Name (optional)",
+        "rect": {
+          "x": 104,
+          "y": 467,
+          "width": 136,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/36-shape-box.png",
+        "kind": "shape",
+        "tag": "input",
+        "text": "",
+        "rect": {
+          "x": 104,
+          "y": 491,
+          "width": 360,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/37-button-cancel.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Cancel",
+        "rect": {
+          "x": 208,
+          "y": 548,
+          "width": 78,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/38-button-create-a-new-playlist.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Create a new PlayList",
+        "rect": {
+          "x": 296,
+          "y": 548,
+          "width": 168,
+          "height": 39
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 24,
+        "height": 24
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 18,
+        "height": 18
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/04-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/05-icon.svg",
+        "width": 28,
+        "height": 28
+      },
+      {
+        "file": "vectors/06-icon.svg",
+        "width": 11,
+        "height": 11
+      }
+    ]
+  },
+  {
+    "scene": "playlist-card",
+    "group": "01-create-playlist",
+    "note": "The finished PlayList card — collage cover, name, member faces.",
+    "capturedAt": "2026-08-14T00:03:41.284Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1668,
+      "height": 1128,
+      "cssWidth": 556,
+      "cssHeight": 376
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "6 games in this PlayListOvercooked! 2GroundedAmong UsHuman: Fall FlatDeep Rock G",
+        "rect": {
+          "x": 228,
+          "y": 24,
+          "width": 236,
+          "height": 275
+        }
+      },
+      {
+        "file": "layers/02-text-6-game-s-in-this-playlist.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "6 games in this PlayList",
+        "rect": {
+          "x": 241,
+          "y": 37,
+          "width": 210,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/03-img-store-overcooked2.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 244,
+          "y": 65,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/04-text-overcooked-2.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Overcooked! 2",
+        "rect": {
+          "x": 303,
+          "y": 69,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/05-img-store-grounded.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 244,
+          "y": 103,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/06-text-grounded.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Grounded",
+        "rect": {
+          "x": 303,
+          "y": 107,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/07-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 244,
+          "y": 141,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/08-text-among-us.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Among Us",
+        "rect": {
+          "x": 303,
+          "y": 145,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/09-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 244,
+          "y": 179,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/10-text-human-fall-flat.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Human: Fall Flat",
+        "rect": {
+          "x": 303,
+          "y": 183,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/11-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 244,
+          "y": 217,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/12-text-deep-rock-galactic.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Deep Rock Galactic",
+        "rect": {
+          "x": 303,
+          "y": 221,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/13-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 244,
+          "y": 255,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/14-text-golf-with-your-friends.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Golf With Your Friends",
+        "rect": {
+          "x": 303,
+          "y": 259,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/15-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 200,
+          "height": 200
+        }
+      },
+      {
+        "file": "layers/16-img-store-grounded.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/17-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 125,
+          "y": 24,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/18-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 125,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/19-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 125,
+          "y": 125,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/20-text-the-late-night-crew.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "The Late Night Crew",
+        "rect": {
+          "x": 24,
+          "y": 234,
+          "width": 170,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/21-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 203,
+          "y": 237,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/22-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/23-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 30,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/24-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 56,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/25-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 62,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/26-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 88,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/27-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 94,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/28-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 120,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/29-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 126,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "playlist-card-row",
+    "group": "01-create-playlist",
+    "note": "Create-tile beside a finished card — the before/after pair for a \"new PlayList appears\" transition.",
+    "capturedAt": "2026-08-14T00:03:43.965Z",
+    "scale": 3,
+    "canvas": {
+      "width": 2328,
+      "height": 1128,
+      "cssWidth": 776,
+      "cssHeight": 376
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 200,
+          "height": 200
+        }
+      },
+      {
+        "file": "layers/02-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 104,
+          "y": 104,
+          "width": 40,
+          "height": 40
+        }
+      },
+      {
+        "file": "layers/03-text-create-a-new-playlist.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Create a new PlayList",
+        "rect": {
+          "x": 24,
+          "y": 234,
+          "width": 200,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/04-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "6 games in this PlayListOvercooked! 2GroundedAmong UsHuman: Fall FlatDeep Rock G",
+        "rect": {
+          "x": 452,
+          "y": 24,
+          "width": 236,
+          "height": 275
+        }
+      },
+      {
+        "file": "layers/05-text-6-game-s-in-this-playlist.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "6 games in this PlayList",
+        "rect": {
+          "x": 465,
+          "y": 37,
+          "width": 210,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/06-img-store-overcooked2.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 468,
+          "y": 65,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/07-text-overcooked-2.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Overcooked! 2",
+        "rect": {
+          "x": 527,
+          "y": 69,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/08-img-store-grounded.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 468,
+          "y": 103,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/09-text-grounded.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Grounded",
+        "rect": {
+          "x": 527,
+          "y": 107,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/10-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 468,
+          "y": 141,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/11-text-among-us.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Among Us",
+        "rect": {
+          "x": 527,
+          "y": 145,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/12-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 468,
+          "y": 179,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/13-text-human-fall-flat.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Human: Fall Flat",
+        "rect": {
+          "x": 527,
+          "y": 183,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/14-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 468,
+          "y": 217,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/15-text-deep-rock-galactic.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Deep Rock Galactic",
+        "rect": {
+          "x": 527,
+          "y": 221,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/16-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 468,
+          "y": 255,
+          "width": 50,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/17-text-golf-with-your-friends.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Golf With Your Friends",
+        "rect": {
+          "x": 527,
+          "y": 259,
+          "width": 145,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/18-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 248,
+          "y": 24,
+          "width": 200,
+          "height": 200
+        }
+      },
+      {
+        "file": "layers/19-img-store-grounded.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 248,
+          "y": 24,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/20-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 349,
+          "y": 24,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/21-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 248,
+          "y": 125,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/22-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 349,
+          "y": 125,
+          "width": 99,
+          "height": 99
+        }
+      },
+      {
+        "file": "layers/23-text-the-late-night-crew.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "The Late Night Crew",
+        "rect": {
+          "x": 248,
+          "y": 234,
+          "width": 170,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/24-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 427,
+          "y": 237,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/25-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 248,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/26-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 254,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/27-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 280,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/28-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 286,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/29-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 312,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/30-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 318,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/31-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 344,
+          "y": 268,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/32-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 350,
+          "y": 274,
+          "width": 16,
+          "height": 16
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 40,
+        "height": 40
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "add-to-playlist-popover",
+    "group": "02-mix-add-and-rank",
+    "note": "The \"Add to PlayList\" context popover — one row per Mix, check = already in, + = add.",
+    "capturedAt": "2026-08-14T00:03:45.356Z",
+    "scale": 3,
+    "canvas": {
+      "width": 912,
+      "height": 492,
+      "cssWidth": 304,
+      "cssHeight": 164
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-add-to-playlist.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Add “Overcooked! 2” toThe Late Night CrewCaleb addedSunday Squad2 members",
+        "rect": {
+          "x": 8,
+          "y": 9,
+          "width": 288,
+          "height": 147
+        }
+      },
+      {
+        "file": "layers/02-text-add-overcooked-2-to.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Add “Overcooked! 2” to",
+        "rect": {
+          "x": 23,
+          "y": 22,
+          "width": 140,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/03-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 269,
+          "y": 22,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/04-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 21,
+          "y": 56,
+          "width": 30,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/05-img-store-grounded.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 21,
+          "y": 56,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/06-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 37,
+          "y": 56,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/07-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 21,
+          "y": 71,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/08-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 37,
+          "y": 71,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/09-text-the-late-night-crew.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "The Late Night Crew",
+        "rect": {
+          "x": 61,
+          "y": 51,
+          "width": 196,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/10-text-caleb-added.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb added",
+        "rect": {
+          "x": 61,
+          "y": 73,
+          "width": 196,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 61,
+          "y": 76,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/12-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 64,
+          "y": 78,
+          "width": 7,
+          "height": 7
+        }
+      },
+      {
+        "file": "layers/13-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 267,
+          "y": 63,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/14-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 21,
+          "y": 108,
+          "width": 30,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/15-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 21,
+          "y": 108,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/16-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 37,
+          "y": 108,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/17-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 21,
+          "y": 123,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/18-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 37,
+          "y": 123,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/19-text-sunday-squad.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sunday Squad",
+        "rect": {
+          "x": 61,
+          "y": 104,
+          "width": 196,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/20-text-2-member-s.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "2 members",
+        "rect": {
+          "x": 61,
+          "y": 125,
+          "width": 196,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/21-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 267,
+          "y": 115,
+          "width": 16,
+          "height": 16
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 16,
+        "height": 16
+      }
+    ]
+  },
+  {
+    "scene": "rank-modal",
+    "group": "02-mix-add-and-rank",
+    "note": "Your PlayList — the drag-to-rank grid. Rank badges are their own layers, so they can count up on reorder.",
+    "capturedAt": "2026-08-14T00:03:48.841Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1848,
+      "height": 1482,
+      "cssWidth": 616,
+      "cssHeight": 494
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-your-playlist.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Your PlayListDrag to rankSearch your PlayList1Sea of Thieves2Minecraft3Overcooke",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 600,
+          "height": 478
+        }
+      },
+      {
+        "file": "layers/02-text-your-playlist.png",
+        "kind": "text",
+        "tag": "h3",
+        "text": "Your PlayList",
+        "rect": {
+          "x": 32,
+          "y": 30,
+          "width": 117,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/03-text-drag-to-rank.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Drag to rank",
+        "rect": {
+          "x": 32,
+          "y": 62,
+          "width": 117,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-shape-close.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "",
+        "rect": {
+          "x": 562,
+          "y": 32,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 562,
+          "y": 32,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/06-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Search your PlayList",
+        "rect": {
+          "x": 8,
+          "y": 82,
+          "width": 600,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/07-text-search-your-playlist.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Search your PlayList",
+        "rect": {
+          "x": 32,
+          "y": 98,
+          "width": 552,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/08-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 124,
+          "width": 552,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/09-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 135,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/10-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "1Sea of Thieves",
+        "rect": {
+          "x": 32,
+          "y": 198,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "1",
+        "rect": {
+          "x": 32,
+          "y": 198,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/12-img-store-seaofthieves.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 198,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/13-text-1.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "1",
+        "rect": {
+          "x": 38,
+          "y": 204,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/14-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 184,
+          "y": 209,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/15-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 32,
+          "y": 296,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/16-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "2Minecraft",
+        "rect": {
+          "x": 221,
+          "y": 198,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/17-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "2",
+        "rect": {
+          "x": 221,
+          "y": 198,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/18-img-store-minecraft.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 221,
+          "y": 198,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/19-text-2.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "2",
+        "rect": {
+          "x": 227,
+          "y": 204,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/20-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 372,
+          "y": 209,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/21-text-minecraft.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Minecraft",
+        "rect": {
+          "x": 221,
+          "y": 296,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/22-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "3Overcooked! 2",
+        "rect": {
+          "x": 409,
+          "y": 198,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/23-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "3",
+        "rect": {
+          "x": 409,
+          "y": 198,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/24-img-store-overcooked2.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 409,
+          "y": 198,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/25-text-3.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "3",
+        "rect": {
+          "x": 415,
+          "y": 204,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/26-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 561,
+          "y": 209,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/27-text-overcooked-2.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Overcooked! 2",
+        "rect": {
+          "x": 409,
+          "y": 296,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/28-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "4Human: Fall Flat",
+        "rect": {
+          "x": 32,
+          "y": 340,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/29-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "4",
+        "rect": {
+          "x": 32,
+          "y": 340,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/30-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 340,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/31-text-4.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "4",
+        "rect": {
+          "x": 38,
+          "y": 346,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/32-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 184,
+          "y": 351,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/33-text-human-fall-flat.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Human: Fall Flat",
+        "rect": {
+          "x": 32,
+          "y": 438,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/34-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "5Grounded",
+        "rect": {
+          "x": 221,
+          "y": 340,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/35-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "5",
+        "rect": {
+          "x": 221,
+          "y": 340,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/36-img-store-grounded.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 221,
+          "y": 340,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/37-text-5.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "5",
+        "rect": {
+          "x": 227,
+          "y": 346,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/38-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 372,
+          "y": 351,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/39-text-grounded.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Grounded",
+        "rect": {
+          "x": 221,
+          "y": 438,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/40-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "6Monster Hunter Rise",
+        "rect": {
+          "x": 409,
+          "y": 340,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/41-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "6",
+        "rect": {
+          "x": 409,
+          "y": 340,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/42-img-store-monsterhunterrise.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 409,
+          "y": 340,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/43-text-6.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "6",
+        "rect": {
+          "x": 415,
+          "y": 346,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/44-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 561,
+          "y": 351,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/45-text-monster-hunter-rise.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Monster Hunter Rise",
+        "rect": {
+          "x": 409,
+          "y": 438,
+          "width": 175,
+          "height": 30
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 22,
+        "height": 22
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/04-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/05-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/06-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/07-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/08-icon.svg",
+        "width": 12,
+        "height": 12
+      }
+    ]
+  },
+  {
+    "scene": "rank-modal-search",
+    "group": "02-mix-add-and-rank",
+    "note": "Same modal with a search query open — the add/remove checkbox rows.",
+    "capturedAt": "2026-08-14T00:03:52.560Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1848,
+      "height": 1650,
+      "cssWidth": 616,
+      "cssHeight": 550
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-your-playlist.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Your PlayListDrag to rankSearch your PlayListSea of Thieves1Sea of Thieves2Minec",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 600,
+          "height": 534
+        }
+      },
+      {
+        "file": "layers/02-text-your-playlist.png",
+        "kind": "text",
+        "tag": "h3",
+        "text": "Your PlayList",
+        "rect": {
+          "x": 32,
+          "y": 30,
+          "width": 117,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/03-text-drag-to-rank.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Drag to rank",
+        "rect": {
+          "x": 32,
+          "y": 62,
+          "width": 117,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 562,
+          "y": 32,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/05-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Search your PlayListSea of Thieves",
+        "rect": {
+          "x": 8,
+          "y": 82,
+          "width": 600,
+          "height": 154
+        }
+      },
+      {
+        "file": "layers/06-text-search-your-playlist.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Search your PlayList",
+        "rect": {
+          "x": 32,
+          "y": 98,
+          "width": 552,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 124,
+          "width": 552,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/08-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 135,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/09-img-store-seaofthieves.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 38,
+          "y": 177,
+          "width": 64,
+          "height": 36
+        }
+      },
+      {
+        "file": "layers/10-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 112,
+          "y": 184,
+          "width": 434,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 556,
+          "y": 184,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/12-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 561,
+          "y": 188,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "1Sea of Thieves",
+        "rect": {
+          "x": 32,
+          "y": 254,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/14-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "1",
+        "rect": {
+          "x": 32,
+          "y": 254,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/15-img-store-seaofthieves.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 254,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/16-text-1.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "1",
+        "rect": {
+          "x": 38,
+          "y": 260,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/17-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 184,
+          "y": 265,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/18-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 32,
+          "y": 352,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/19-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "2Minecraft",
+        "rect": {
+          "x": 221,
+          "y": 254,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/20-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "2",
+        "rect": {
+          "x": 221,
+          "y": 254,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/21-img-store-minecraft.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 221,
+          "y": 254,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/22-text-2.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "2",
+        "rect": {
+          "x": 227,
+          "y": 260,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/23-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 372,
+          "y": 265,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/24-text-minecraft.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Minecraft",
+        "rect": {
+          "x": 221,
+          "y": 352,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/25-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "3Overcooked! 2",
+        "rect": {
+          "x": 409,
+          "y": 254,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/26-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "3",
+        "rect": {
+          "x": 409,
+          "y": 254,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/27-img-store-overcooked2.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 409,
+          "y": 254,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/28-text-3.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "3",
+        "rect": {
+          "x": 415,
+          "y": 260,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/29-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 561,
+          "y": 265,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/30-text-overcooked-2.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Overcooked! 2",
+        "rect": {
+          "x": 409,
+          "y": 352,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/31-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "4Human: Fall Flat",
+        "rect": {
+          "x": 32,
+          "y": 396,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/32-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "4",
+        "rect": {
+          "x": 32,
+          "y": 396,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/33-img-store-humanfallflat.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 396,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/34-text-4.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "4",
+        "rect": {
+          "x": 38,
+          "y": 402,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/35-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 184,
+          "y": 407,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/36-text-human-fall-flat.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Human: Fall Flat",
+        "rect": {
+          "x": 32,
+          "y": 494,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/37-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "5Grounded",
+        "rect": {
+          "x": 221,
+          "y": 396,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/38-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "5",
+        "rect": {
+          "x": 221,
+          "y": 396,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/39-img-store-grounded.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 221,
+          "y": 396,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/40-text-5.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "5",
+        "rect": {
+          "x": 227,
+          "y": 402,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/41-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 372,
+          "y": 407,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/42-text-grounded.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Grounded",
+        "rect": {
+          "x": 221,
+          "y": 494,
+          "width": 175,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/43-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "6Monster Hunter Rise",
+        "rect": {
+          "x": 409,
+          "y": 396,
+          "width": 175,
+          "height": 128
+        }
+      },
+      {
+        "file": "layers/44-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "6",
+        "rect": {
+          "x": 409,
+          "y": 396,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/45-img-store-monsterhunterrise.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 409,
+          "y": 396,
+          "width": 175,
+          "height": 98
+        }
+      },
+      {
+        "file": "layers/46-text-6.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "6",
+        "rect": {
+          "x": 415,
+          "y": 402,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/47-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 561,
+          "y": 407,
+          "width": 12,
+          "height": 12
+        }
+      },
+      {
+        "file": "layers/48-text-monster-hunter-rise.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Monster Hunter Rise",
+        "rect": {
+          "x": 409,
+          "y": 494,
+          "width": 175,
+          "height": 30
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 22,
+        "height": 22
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 13,
+        "height": 13
+      },
+      {
+        "file": "vectors/04-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/05-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/06-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/07-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/08-icon.svg",
+        "width": 12,
+        "height": 12
+      },
+      {
+        "file": "vectors/09-icon.svg",
+        "width": 12,
+        "height": 12
+      }
+    ]
+  },
+  {
+    "scene": "vote-control-neutral",
+    "group": "02-mix-add-and-rank",
+    "note": "Thumbs up / down, nothing cast.",
+    "capturedAt": "2026-08-14T00:03:53.407Z",
+    "scale": 3,
+    "canvas": {
+      "width": 768,
+      "height": 348,
+      "cssWidth": 256,
+      "cssHeight": 116
+    },
+    "layers": [
+      {
+        "file": "layers/01-text-thumbs-up.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "2",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 44,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/02-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 31,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/03-text-2-upvotes.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "2 upvotes",
+        "rect": {
+          "x": 10,
+          "y": -22,
+          "width": 51,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/04-text-thumbs-down.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "1",
+        "rect": {
+          "x": 72,
+          "y": 24,
+          "width": 42,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 80,
+          "y": 31,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/06-text-1-downvote.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "1 downvote",
+        "rect": {
+          "x": 64,
+          "y": -22,
+          "width": 58,
+          "height": 16
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 16,
+        "height": 16
+      }
+    ]
+  },
+  {
+    "scene": "vote-control-up",
+    "group": "02-mix-add-and-rank",
+    "note": "Upvote cast — the lime fill state.",
+    "capturedAt": "2026-08-14T00:03:54.257Z",
+    "scale": 3,
+    "canvas": {
+      "width": 768,
+      "height": 348,
+      "cssWidth": 256,
+      "cssHeight": 116
+    },
+    "layers": [
+      {
+        "file": "layers/01-text-thumbs-up.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "3",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 44,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/02-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 31,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/03-text-3-upvotes.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "3 upvotes",
+        "rect": {
+          "x": -2,
+          "y": -22,
+          "width": 51,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/04-text-thumbs-down.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "1",
+        "rect": {
+          "x": 72,
+          "y": 24,
+          "width": 42,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 80,
+          "y": 31,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/06-text-1-downvote.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "1 downvote",
+        "rect": {
+          "x": 64,
+          "y": -22,
+          "width": 58,
+          "height": 16
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 16,
+        "height": 16
+      }
+    ]
+  },
+  {
+    "scene": "vote-control-down",
+    "group": "02-mix-add-and-rank",
+    "note": "Downvote cast — the red fill state.",
+    "capturedAt": "2026-08-14T00:03:55.090Z",
+    "scale": 3,
+    "canvas": {
+      "width": 768,
+      "height": 348,
+      "cssWidth": 256,
+      "cssHeight": 116
+    },
+    "layers": [
+      {
+        "file": "layers/01-text-thumbs-up.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "1",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 42,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/02-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 31,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/03-text-1-upvote.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "1 upvote",
+        "rect": {
+          "x": 23,
+          "y": -22,
+          "width": 43,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/04-text-thumbs-down.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "2",
+        "rect": {
+          "x": 70,
+          "y": 24,
+          "width": 44,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 78,
+          "y": 31,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/06-text-2-downvotes.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "2 downvotes",
+        "rect": {
+          "x": 59,
+          "y": -22,
+          "width": 66,
+          "height": 16
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 16,
+        "height": 16
+      }
+    ]
+  },
+  {
+    "scene": "trending-row",
+    "group": "03-friend-activity",
+    "note": "\"Trending amongst Your Friends\" — stacked faces + \"N friends played this for avg. N hours\".",
+    "capturedAt": "2026-08-14T00:03:59.206Z",
+    "scale": 3,
+    "canvas": {
+      "width": 2868,
+      "height": 1668,
+      "cssWidth": 956,
+      "cssHeight": 556
+    },
+    "layers": [
+      {
+        "file": "layers/01-text-trending-amongst-your-friend.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Trending amongst Your Friends",
+        "rect": {
+          "x": 24,
+          "y": 80,
+          "width": 900,
+          "height": 36
+        }
+      },
+      {
+        "file": "layers/02-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 144,
+          "width": 185,
+          "height": 104
+        }
+      },
+      {
+        "file": "layers/03-text-hades.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Hades",
+        "rect": {
+          "x": 241,
+          "y": 154,
+          "width": 623,
+          "height": 27
+        }
+      },
+      {
+        "file": "layers/04-text-yessenia-13-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Yessenia · 13 hrs",
+        "rect": {
+          "x": 210,
+          "y": 161,
+          "width": 84,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/05-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 241,
+          "y": 189,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 246,
+          "y": 194,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/07-text-caleb-10-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb · 10 hrs",
+        "rect": {
+          "x": 231,
+          "y": 161,
+          "width": 70,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/08-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 255,
+          "y": 189,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/09-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 260,
+          "y": 194,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/10-text-el.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "+",
+        "rect": {
+          "x": 280,
+          "y": 194,
+          "width": 6,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/11-text-3-friends-played-this-for-av.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "3 friends played this for avg. 12 hours",
+        "rect": {
+          "x": 295,
+          "y": 190,
+          "width": 209,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/12-text-a-god-like-roguelike-fight-o.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "A god-like roguelike — fight out of Hell one perfect run at a time.",
+        "rect": {
+          "x": 241,
+          "y": 217,
+          "width": 623,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/13-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 889,
+          "y": 187,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/14-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 276,
+          "width": 185,
+          "height": 104
+        }
+      },
+      {
+        "file": "layers/15-text-doom-64.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Doom 64",
+        "rect": {
+          "x": 241,
+          "y": 286,
+          "width": 623,
+          "height": 27
+        }
+      },
+      {
+        "file": "layers/16-text-sauhee-5-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sauhee · 5 hrs",
+        "rect": {
+          "x": 215,
+          "y": 293,
+          "width": 73,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/17-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 241,
+          "y": 321,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/18-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 246,
+          "y": 326,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/19-text-meera-7-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Meera · 7 hrs",
+        "rect": {
+          "x": 233,
+          "y": 293,
+          "width": 67,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/20-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 255,
+          "y": 321,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/21-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 260,
+          "y": 326,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/22-text-el.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "+",
+        "rect": {
+          "x": 280,
+          "y": 326,
+          "width": 6,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/23-text-3-friends-played-this-for-av.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "3 friends played this for avg. 4 hours",
+        "rect": {
+          "x": 295,
+          "y": 322,
+          "width": 205,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/24-text-the-1997-cult-classic-restor.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "The 1997 cult classic, restored — pure retro demon-blasting.",
+        "rect": {
+          "x": 241,
+          "y": 349,
+          "width": 623,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/25-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 889,
+          "y": 319,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/26-img-header.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 36,
+          "y": 408,
+          "width": 185,
+          "height": 104
+        }
+      },
+      {
+        "file": "layers/27-text-vampire-survivors.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Vampire Survivors",
+        "rect": {
+          "x": 241,
+          "y": 418,
+          "width": 623,
+          "height": 27
+        }
+      },
+      {
+        "file": "layers/28-text-sauhee-10-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sauhee · 10 hrs",
+        "rect": {
+          "x": 213,
+          "y": 425,
+          "width": 78,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/29-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 241,
+          "y": 453,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/30-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 246,
+          "y": 458,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/31-text-meera-5-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Meera · 5 hrs",
+        "rect": {
+          "x": 232,
+          "y": 425,
+          "width": 68,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/32-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 255,
+          "y": 453,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/33-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 260,
+          "y": 458,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/34-text-el.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "+",
+        "rect": {
+          "x": 280,
+          "y": 458,
+          "width": 6,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/35-text-3-friends-played-this-for-av.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "3 friends played this for avg. 8 hours",
+        "rect": {
+          "x": 295,
+          "y": 454,
+          "width": 204,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/36-text-one-button-a-thousand-monste.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "One button, a thousand monsters. Absurdly moreish bullet-heaven.",
+        "rect": {
+          "x": 241,
+          "y": 481,
+          "width": 623,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/37-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 889,
+          "y": 451,
+          "width": 18,
+          "height": 18
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 18,
+        "height": 18
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "social-proof-line",
+    "group": "03-friend-activity",
+    "note": "The social-proof line on its own — face stack + count, the atom the rows are built from.",
+    "capturedAt": "2026-08-14T00:04:00.141Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1728,
+      "height": 408,
+      "cssWidth": 576,
+      "cssHeight": 136
+    },
+    "layers": [
+      {
+        "file": "layers/01-text-yessenia-13-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Yessenia · 13 hrs",
+        "rect": {
+          "x": -7,
+          "y": -4,
+          "width": 84,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/02-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/03-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 29,
+          "y": 29,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/04-text-caleb-10-hrs.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb · 10 hrs",
+        "rect": {
+          "x": 14,
+          "y": -4,
+          "width": 70,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/05-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 38,
+          "y": 24,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 43,
+          "y": 29,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/07-text-el.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "+",
+        "rect": {
+          "x": 63,
+          "y": 29,
+          "width": 6,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/08-text-3-friends-played-this-for-av.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "3 friends played this for avg. 12 hours",
+        "rect": {
+          "x": 78,
+          "y": 25,
+          "width": 209,
+          "height": 20
+        }
+      }
+    ],
+    "vectors": []
+  },
+  {
+    "scene": "activity-feed",
+    "group": "03-friend-activity",
+    "note": "The friend-activity feed rows — who did what, to which game, how long ago.",
+    "capturedAt": "2026-08-14T00:04:01.576Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1728,
+      "height": 630,
+      "cssWidth": 576,
+      "cssHeight": 210
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 30,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/03-text-is-playing.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb is playing Sea of Thieves",
+        "rect": {
+          "x": 62,
+          "y": 24,
+          "width": 456,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/04-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 62,
+          "y": 24,
+          "width": 33,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/05-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 151,
+          "y": 24,
+          "width": 82,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/06-text-live.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "live",
+        "rect": {
+          "x": 528,
+          "y": 24,
+          "width": 16,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 66,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 30,
+          "y": 72,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/09-text-added-to-a-playlist.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sauhee added Overcooked! 2 to a PlayList",
+        "rect": {
+          "x": 62,
+          "y": 66,
+          "width": 457,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/10-text-sauhee.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sauhee",
+        "rect": {
+          "x": 62,
+          "y": 66,
+          "width": 42,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/11-text-overcooked-2.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "Overcooked! 2",
+        "rect": {
+          "x": 145,
+          "y": 66,
+          "width": 81,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/12-text-2m.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "2m",
+        "rect": {
+          "x": 529,
+          "y": 66,
+          "width": 15,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 108,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/14-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 30,
+          "y": 114,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/15-text-recommends.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Meera recommends Grounded",
+        "rect": {
+          "x": 62,
+          "y": 108,
+          "width": 462,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/16-text-meera.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Meera",
+        "rect": {
+          "x": 62,
+          "y": 108,
+          "width": 36,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/17-text-grounded.png",
+        "kind": "text",
+        "tag": "button",
+        "text": "Grounded",
+        "rect": {
+          "x": 176,
+          "y": 108,
+          "width": 56,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/18-text-1h.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "1h",
+        "rect": {
+          "x": 534,
+          "y": 108,
+          "width": 10,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/19-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 150,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/20-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 30,
+          "y": 156,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/21-text-joined-the-late-night-crew.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Yessenia joined The Late Night Crew",
+        "rect": {
+          "x": 62,
+          "y": 150,
+          "width": 460,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/22-text-yessenia.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Yessenia",
+        "rect": {
+          "x": 62,
+          "y": 150,
+          "width": 49,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/23-text-3h.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "3h",
+        "rect": {
+          "x": 532,
+          "y": 150,
+          "width": 12,
+          "height": 17
+        }
+      }
+    ],
+    "vectors": []
+  },
+  {
+    "scene": "member-stack",
+    "group": "03-friend-activity",
+    "note": "The member face stack used on PlayList cards, with the +N overflow chip.",
+    "capturedAt": "2026-08-14T00:04:02.639Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1188,
+      "height": 408,
+      "cssWidth": 396,
+      "cssHeight": 136
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 30,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/03-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 56,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/04-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 62,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/05-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 88,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 94,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 120,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 126,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/09-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 152,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/10-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 158,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/11-block-2.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "+2",
+        "rect": {
+          "x": 184,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      }
+    ],
+    "vectors": []
+  },
+  {
+    "scene": "member-stack-pending",
+    "group": "03-friend-activity",
+    "note": "Same stack with an invited-but-not-joined member dimmed — the \"invite lands\" state.",
+    "capturedAt": "2026-08-14T00:04:03.588Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1188,
+      "height": 408,
+      "cssWidth": 396,
+      "cssHeight": 136
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 30,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/03-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 56,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/04-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 62,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/05-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 88,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 94,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 120,
+          "y": 24,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 126,
+          "y": 30,
+          "width": 16,
+          "height": 16
+        }
+      }
+    ],
+    "vectors": []
+  },
+  {
+    "scene": "whos-in-list",
+    "group": "03-friend-activity",
+    "note": "In / out status rows — green check, red cross, undecided.",
+    "capturedAt": "2026-08-14T00:04:04.876Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1128,
+      "height": 720,
+      "cssWidth": 376,
+      "cssHeight": 240
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 34,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 31,
+          "y": 31,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/03-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 44,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/04-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 47,
+          "y": 47,
+          "width": 11,
+          "height": 11
+        }
+      },
+      {
+        "file": "layers/05-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 70,
+          "y": 29,
+          "width": 39,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/06-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 74,
+          "width": 34,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/07-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 31,
+          "y": 81,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/08-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 94,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/09-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 47,
+          "y": 97,
+          "width": 11,
+          "height": 11
+        }
+      },
+      {
+        "file": "layers/10-text-sauhee.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sauhee",
+        "rect": {
+          "x": 70,
+          "y": 79,
+          "width": 50,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 124,
+          "width": 34,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/12-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 31,
+          "y": 131,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 144,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/14-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 47,
+          "y": 147,
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "file": "layers/15-text-meera.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Meera",
+        "rect": {
+          "x": 70,
+          "y": 129,
+          "width": 43,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/16-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 174,
+          "width": 34,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/17-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 31,
+          "y": 181,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/18-text-yessenia.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Yessenia",
+        "rect": {
+          "x": 70,
+          "y": 179,
+          "width": 58,
+          "height": 24
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 11,
+        "height": 11
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 11,
+        "height": 11
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 10,
+        "height": 10
+      }
+    ]
+  },
+  {
+    "scene": "avatar-set",
+    "group": "03-friend-activity",
+    "note": "The five identity avatars as loose pieces, for building custom stacks.",
+    "capturedAt": "2026-08-14T00:04:05.890Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1428,
+      "height": 468,
+      "cssWidth": 476,
+      "cssHeight": 156
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 48,
+          "height": 48
+        }
+      },
+      {
+        "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 34,
+          "y": 34,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/03-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 86,
+          "y": 24,
+          "width": 48,
+          "height": 48
+        }
+      },
+      {
+        "file": "layers/04-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 96,
+          "y": 34,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/05-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 148,
+          "y": 24,
+          "width": 48,
+          "height": 48
+        }
+      },
+      {
+        "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 158,
+          "y": 34,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 210,
+          "y": 24,
+          "width": 48,
+          "height": 48
+        }
+      },
+      {
+        "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 220,
+          "y": 34,
+          "width": 28,
+          "height": 28
+        }
+      },
+      {
+        "file": "layers/09-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 272,
+          "y": 24,
+          "width": 48,
+          "height": 48
+        }
+      },
+      {
+        "file": "layers/10-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 282,
+          "y": 34,
+          "width": 28,
+          "height": 28
+        }
+      }
+    ],
+    "vectors": []
+  },
+  {
+    "scene": "wheel-idle",
+    "group": "04-spin-the-wheel",
+    "note": "The wheel at rest. The wheel body is one <svg> — rotate that node and leave the pointer + hub still.",
+    "capturedAt": "2026-08-14T00:04:07.554Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1608,
+      "height": 1608,
+      "cssWidth": 536,
+      "cssHeight": 536
+    },
+    "layers": [
+      {
+        "file": "layers/01-icon-pointer.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 220,
+          "y": 17,
+          "width": 29,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/02-icon-wheel.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 420,
+          "height": 420
+        }
+      },
+      {
+        "file": "layers/03-shape-hub.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "SpinMe",
+        "rect": {
+          "x": 175,
+          "y": 175,
+          "width": 118,
+          "height": 118
+        }
+      },
+      {
+        "file": "layers/04-text-spin-me.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "SpinMe",
+        "rect": {
+          "x": 206,
+          "y": 208,
+          "width": 57,
+          "height": 53
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-pointer.svg",
+        "width": 29,
+        "height": 34
+      },
+      {
+        "file": "vectors/02-wheel.svg",
+        "width": 420,
+        "height": 420
+      }
+    ]
+  },
+  {
+    "scene": "wheel-landed",
+    "group": "04-spin-the-wheel",
+    "note": "Landed on slice 3 — the pointer sits on the winning wedge.",
+    "capturedAt": "2026-08-14T00:04:09.327Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1608,
+      "height": 1608,
+      "cssWidth": 536,
+      "cssHeight": 536
+    },
+    "layers": [
+      {
+        "file": "layers/01-icon-pointer.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 220,
+          "y": 17,
+          "width": 29,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/02-icon-wheel.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": -53,
+          "y": -53,
+          "width": 574,
+          "height": 574
+        }
+      },
+      {
+        "file": "layers/03-shape-hub.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "SpinMe",
+        "rect": {
+          "x": 175,
+          "y": 175,
+          "width": 118,
+          "height": 118
+        }
+      },
+      {
+        "file": "layers/04-text-spin-me.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "SpinMe",
+        "rect": {
+          "x": 206,
+          "y": 208,
+          "width": 57,
+          "height": 53
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-pointer.svg",
+        "width": 29,
+        "height": 34
+      },
+      {
+        "file": "vectors/02-wheel.svg",
+        "width": 574,
+        "height": 574
+      }
+    ]
+  },
+  {
+    "scene": "wheel-twelve",
+    "group": "04-spin-the-wheel",
+    "note": "A twelve-slice wheel — the art has faded out, so the wedges are flat colour.",
+    "capturedAt": "2026-08-14T00:04:10.374Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1608,
+      "height": 1608,
+      "cssWidth": 536,
+      "cssHeight": 536
+    },
+    "layers": [
+      {
+        "file": "layers/01-icon-pointer.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 220,
+          "y": 17,
+          "width": 29,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/02-icon-wheel.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 420,
+          "height": 420
+        }
+      },
+      {
+        "file": "layers/03-shape-hub.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "SpinMe",
+        "rect": {
+          "x": 175,
+          "y": 175,
+          "width": 118,
+          "height": 118
+        }
+      },
+      {
+        "file": "layers/04-text-spin-me.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "SpinMe",
+        "rect": {
+          "x": 206,
+          "y": 208,
+          "width": 57,
+          "height": 53
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-pointer.svg",
+        "width": 29,
+        "height": 34
+      },
+      {
+        "file": "vectors/02-wheel.svg",
+        "width": 420,
+        "height": 420
+      }
+    ]
+  },
+  {
+    "scene": "wheel-nav-button",
+    "group": "04-spin-the-wheel",
+    "note": "The Wheel button in the top nav — resting state.",
+    "capturedAt": "2026-08-14T00:04:11.142Z",
+    "scale": 3,
+    "canvas": {
+      "width": 888,
+      "height": 408,
+      "cssWidth": 296,
+      "cssHeight": 136
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-spin-the-wheel.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "Wheel",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 93,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/02-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 38,
+          "y": 32,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/03-text-wheel.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Wheel",
+        "rect": {
+          "x": 65,
+          "y": 34,
+          "width": 38,
+          "height": 14
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "wheel-nav-button-count",
+    "group": "04-spin-the-wheel",
+    "note": "Wheel button with the games-added count badge.",
+    "capturedAt": "2026-08-14T00:04:11.906Z",
+    "scale": 3,
+    "canvas": {
+      "width": 888,
+      "height": 408,
+      "cssWidth": 296,
+      "cssHeight": 136
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-6-games-on-your-wheel.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "6Wheel",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 93,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/02-block-6.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "6",
+        "rect": {
+          "x": 106,
+          "y": 17,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/03-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 38,
+          "y": 32,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/04-text-wheel.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Wheel",
+        "rect": {
+          "x": 65,
+          "y": 34,
+          "width": 38,
+          "height": 14
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "wheel-nav-button-live",
+    "group": "04-spin-the-wheel",
+    "note": "Wheel button while a sync is live — green glow + pulsing LIVE pill.",
+    "capturedAt": "2026-08-14T00:04:12.780Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1068,
+      "height": 408,
+      "cssWidth": 356,
+      "cssHeight": 136
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-a-wheel-sync-is-live-on-the-.png",
+        "kind": "shape",
+        "tag": "button",
+        "text": "6WheelLive",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 156,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/02-block-6.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "6",
+        "rect": {
+          "x": 169,
+          "y": 17,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/03-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 38,
+          "y": 32,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/04-text-wheel.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Wheel",
+        "rect": {
+          "x": 65,
+          "y": 34,
+          "width": 38,
+          "height": 14
+        }
+      },
+      {
+        "file": "layers/05-block-live.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "Live",
+        "rect": {
+          "x": 113,
+          "y": 33,
+          "width": 52,
+          "height": 17
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "wheel-invite-popover",
+    "group": "04-spin-the-wheel",
+    "note": "The wheel-sync invitation, in its compact popover form (top-right anchored).",
+    "capturedAt": "2026-08-14T00:04:14.712Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1548,
+      "height": 2028,
+      "cssWidth": 516,
+      "cssHeight": 676
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Start a wheel syncInvite people to build the wheel and watch it spin with you — ",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 460,
+          "height": 620
+        }
+      },
+      {
+        "file": "layers/02-text-start-a-wheel-sync.png",
+        "kind": "text",
+        "tag": "h2",
+        "text": "Start a wheel sync",
+        "rect": {
+          "x": 45,
+          "y": 45,
+          "width": 418,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/03-text-invite-people-to-build-the-w.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Invite people to build the wheel and watch it spin with you — or copy a link to ",
+        "rect": {
+          "x": 45,
+          "y": 81,
+          "width": 418,
+          "height": 36
+        }
+      },
+      {
+        "file": "layers/04-button-copy-invite-link.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Copy invite link",
+        "rect": {
+          "x": 45,
+          "y": 135,
+          "width": 150,
+          "height": 41
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 61,
+          "y": 147,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/06-text-in-your-call.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "In your call",
+        "rect": {
+          "x": 45,
+          "y": 198,
+          "width": 418,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 45,
+          "y": 227,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 53,
+          "y": 235,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/09-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 95,
+          "y": 235,
+          "width": 332,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/10-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 439,
+          "y": 234,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/11-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 444,
+          "y": 239,
+          "width": 14,
+          "height": 14
+        }
+      },
+      {
+        "file": "layers/12-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 45,
+          "y": 281,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/13-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 53,
+          "y": 289,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/14-text-sauhee.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sauhee",
+        "rect": {
+          "x": 95,
+          "y": 289,
+          "width": 332,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/15-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 439,
+          "y": 288,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/16-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 444,
+          "y": 293,
+          "width": 14,
+          "height": 14
+        }
+      },
+      {
+        "file": "layers/17-text-invite-someone-else.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Invite someone else",
+        "rect": {
+          "x": 45,
+          "y": 499,
+          "width": 418,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/18-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 45,
+          "y": 527,
+          "width": 418,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/19-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 57,
+          "y": 539,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/20-button-cancel.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Cancel",
+        "rect": {
+          "x": 222,
+          "y": 582,
+          "width": 78,
+          "height": 41
+        }
+      },
+      {
+        "file": "layers/21-button-start-sync-invite-2.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Start sync · invite 2",
+        "rect": {
+          "x": 310,
+          "y": 582,
+          "width": 153,
+          "height": 41
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 14,
+        "height": 14
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 14,
+        "height": 14
+      },
+      {
+        "file": "vectors/04-icon.svg",
+        "width": 16,
+        "height": 16
+      }
+    ]
+  },
+  {
+    "scene": "wheel-invite-modal",
+    "group": "04-spin-the-wheel",
+    "note": "The same invitation at full modal size.",
+    "capturedAt": "2026-08-14T00:04:17.224Z",
+    "scale": 3,
+    "canvas": {
+      "width": 2028,
+      "height": 2328,
+      "cssWidth": 676,
+      "cssHeight": 776
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Start a wheel syncInvite people to build the wheel and watch it spin with you — ",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 620,
+          "height": 720
+        }
+      },
+      {
+        "file": "layers/02-text-start-a-wheel-sync.png",
+        "kind": "text",
+        "tag": "h2",
+        "text": "Start a wheel sync",
+        "rect": {
+          "x": 56,
+          "y": 56,
+          "width": 556,
+          "height": 42
+        }
+      },
+      {
+        "file": "layers/03-text-invite-people-to-build-the-w.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Invite people to build the wheel and watch it spin with you — or copy a link to ",
+        "rect": {
+          "x": 56,
+          "y": 104,
+          "width": 556,
+          "height": 21
+        }
+      },
+      {
+        "file": "layers/04-button-copy-invite-link.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Copy invite link",
+        "rect": {
+          "x": 56,
+          "y": 143,
+          "width": 150,
+          "height": 41
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 72,
+          "y": 155,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/06-text-in-your-call.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "In your call",
+        "rect": {
+          "x": 56,
+          "y": 206,
+          "width": 556,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 56,
+          "y": 235,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/08-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 64,
+          "y": 243,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/09-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 106,
+          "y": 243,
+          "width": 470,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/10-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 588,
+          "y": 242,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/11-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 593,
+          "y": 247,
+          "width": 14,
+          "height": 14
+        }
+      },
+      {
+        "file": "layers/12-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 56,
+          "y": 289,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/13-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 64,
+          "y": 297,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/14-text-sauhee.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Sauhee",
+        "rect": {
+          "x": 106,
+          "y": 297,
+          "width": 470,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/15-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 588,
+          "y": 296,
+          "width": 24,
+          "height": 24
+        }
+      },
+      {
+        "file": "layers/16-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 593,
+          "y": 301,
+          "width": 14,
+          "height": 14
+        }
+      },
+      {
+        "file": "layers/17-text-invite-someone-else.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Invite someone else",
+        "rect": {
+          "x": 56,
+          "y": 349,
+          "width": 556,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/18-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 56,
+          "y": 378,
+          "width": 556,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/19-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 68,
+          "y": 389,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/20-button-cancel.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Cancel",
+        "rect": {
+          "x": 371,
+          "y": 433,
+          "width": 78,
+          "height": 41
+        }
+      },
+      {
+        "file": "layers/21-button-start-sync-invite-2.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Start sync · invite 2",
+        "rect": {
+          "x": 459,
+          "y": 433,
+          "width": 153,
+          "height": 41
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 16,
+        "height": 16
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 14,
+        "height": 14
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 14,
+        "height": 14
+      },
+      {
+        "file": "vectors/04-icon.svg",
+        "width": 16,
+        "height": 16
+      }
+    ]
+  },
+  {
+    "scene": "wheel-jam-toast",
+    "group": "04-spin-the-wheel",
+    "note": "THE top-right wheel invitation — \"Caleb started a wheel on the call · Join\".",
+    "capturedAt": "2026-08-14T00:04:18.155Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1536,
+      "height": 249,
+      "cssWidth": 512,
+      "cssHeight": 83
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Caleb started a wheel on the call · 3 inJoin",
+        "rect": {
+          "x": 25,
+          "y": 8,
+          "width": 463,
+          "height": 67
+        }
+      },
+      {
+        "file": "layers/02-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 44,
+          "y": 25,
+          "width": 34,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/03-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 51,
+          "y": 32,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-text-started-a-wheel-on-the-call-.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb started a wheel on the call · 3 in",
+        "rect": {
+          "x": 92,
+          "y": 30,
+          "width": 243,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/05-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 92,
+          "y": 31,
+          "width": 38,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/06-button-join.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Join",
+        "rect": {
+          "x": 355,
+          "y": 22,
+          "width": 80,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/07-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 371,
+          "y": 34,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/08-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 451,
+          "y": 33,
+          "width": 18,
+          "height": 18
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 15,
+        "height": 15
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "spin-notification",
+    "group": "04-spin-the-wheel",
+    "note": "Top-right heads-up while the wheel is turning (the avatar has a ping ring).",
+    "capturedAt": "2026-08-14T00:04:19.089Z",
+    "scale": 3,
+    "canvas": {
+      "width": 2106,
+      "height": 252,
+      "cssWidth": 702,
+      "cssHeight": 84
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Caleb is spinning the wheel in The Late Night Crew — a game is about to be chose",
+        "rect": {
+          "x": 24,
+          "y": 11,
+          "width": 654,
+          "height": 62
+        }
+      },
+      {
+        "file": "layers/02-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 43,
+          "y": 25,
+          "width": 34,
+          "height": 34
+        }
+      },
+      {
+        "file": "layers/03-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 51,
+          "y": 32,
+          "width": 20,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-text-is-spinning-the-wheel-in-a-g.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb is spinning the wheel in The Late Night Crew — a game is about to be chose",
+        "rect": {
+          "x": 91,
+          "y": 31,
+          "width": 532,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/05-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 91,
+          "y": 32,
+          "width": 38,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/06-text-the-late-night-crew.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "The Late Night Crew",
+        "rect": {
+          "x": 283,
+          "y": 32,
+          "width": 134,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/07-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 641,
+          "y": 33,
+          "width": 18,
+          "height": 18
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      }
+    ]
+  },
+  {
+    "scene": "wheel-result-toast",
+    "group": "04-spin-the-wheel",
+    "note": "The result toast — cover art, \"The wheel picked\", and the three actions.",
+    "capturedAt": "2026-08-14T00:04:20.393Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1296,
+      "height": 678,
+      "cssWidth": 432,
+      "cssHeight": 226
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Caleb spun the wheelThe wheel pickedHuman: Fall FlatStart a partyGo to wheelRest",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 416,
+          "height": 210
+        }
+      },
+      {
+        "file": "layers/02-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 9,
+          "y": 9,
+          "width": 116,
+          "height": 208
+        }
+      },
+      {
+        "file": "layers/03-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 141,
+          "y": 25,
+          "width": 30,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/04-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 147,
+          "y": 31,
+          "width": 17,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/05-text-spun-the-wheel.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb spun the wheel",
+        "rect": {
+          "x": 180,
+          "y": 30,
+          "width": 128,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/06-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 180,
+          "y": 30,
+          "width": 35,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/07-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 389,
+          "y": 26,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/08-text-the-wheel-picked.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "The wheel picked",
+        "rect": {
+          "x": 141,
+          "y": 67,
+          "width": 266,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/09-text-human-fall-flat.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Human: Fall Flat",
+        "rect": {
+          "x": 141,
+          "y": 87,
+          "width": 266,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/10-button-start-a-party.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Start a party",
+        "rect": {
+          "x": 141,
+          "y": 122,
+          "width": 126,
+          "height": 36
+        }
+      },
+      {
+        "file": "layers/11-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 155,
+          "y": 132,
+          "width": 18,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/12-button-go-to-wheel.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Go to wheel",
+        "rect": {
+          "x": 275,
+          "y": 122,
+          "width": 96,
+          "height": 36
+        }
+      },
+      {
+        "file": "layers/13-button-restart.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Restart",
+        "rect": {
+          "x": 141,
+          "y": 165,
+          "width": 90,
+          "height": 36
+        }
+      },
+      {
+        "file": "layers/14-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 155,
+          "y": 176,
+          "width": 14,
+          "height": 14
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 18,
+        "height": 15
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 14,
+        "height": 14
+      }
+    ]
+  },
+  {
+    "scene": "wheel-spinning-toast",
+    "group": "04-spin-the-wheel",
+    "note": "The same toast mid-spin — \"Landing on a game…\" with the lime spinner.",
+    "capturedAt": "2026-08-14T00:04:21.323Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1296,
+      "height": 339,
+      "cssWidth": 432,
+      "cssHeight": 113
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Caleb is spinning the wheel…Landing on a game…",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 416,
+          "height": 97
+        }
+      },
+      {
+        "file": "layers/02-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 25,
+          "y": 25,
+          "width": 30,
+          "height": 30
+        }
+      },
+      {
+        "file": "layers/03-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 31,
+          "y": 31,
+          "width": 17,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/04-text-is-spinning-the-wheel.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb is spinning the wheel…",
+        "rect": {
+          "x": 64,
+          "y": 30,
+          "width": 172,
+          "height": 19
+        }
+      },
+      {
+        "file": "layers/05-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 64,
+          "y": 30,
+          "width": 35,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/06-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 389,
+          "y": 26,
+          "width": 18,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/07-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 23,
+          "y": 66,
+          "width": 23,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/08-text-landing-on-a-game.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Landing on a game…",
+        "rect": {
+          "x": 53,
+          "y": 67,
+          "width": 121,
+          "height": 21
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 18,
+        "height": 18
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 23,
+        "height": 23
+      }
+    ]
+  },
+  {
+    "scene": "ready-up-invite",
+    "group": "05-ready-up",
+    "note": "Screen 2 — the incoming invite you get when a game is selected. \"Ready Up\" / \"Not Now\".",
+    "capturedAt": "2026-08-14T00:04:22.476Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1296,
+      "height": 693,
+      "cssWidth": 432,
+      "cssHeight": 231
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Caleb invited you to playSea of Thieves1-4 playersReady up to join this session.",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 416,
+          "height": 215
+        }
+      },
+      {
+        "file": "layers/02-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 9,
+          "y": 9,
+          "width": 116,
+          "height": 213
+        }
+      },
+      {
+        "file": "layers/03-text-invited-you-to-play.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Caleb invited you to play",
+        "rect": {
+          "x": 141,
+          "y": 25,
+          "width": 266,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-text-caleb.png",
+        "kind": "text",
+        "tag": "span",
+        "text": "Caleb",
+        "rect": {
+          "x": 141,
+          "y": 26,
+          "width": 33,
+          "height": 17
+        }
+      },
+      {
+        "file": "layers/05-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 141,
+          "y": 51,
+          "width": 266,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/06-block-1-4-players.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "1-4 players",
+        "rect": {
+          "x": 141,
+          "y": 79,
+          "width": 98,
+          "height": 26
+        }
+      },
+      {
+        "file": "layers/07-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 152,
+          "y": 86,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/08-text-ready-up-to-join-this-sessio.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Ready up to join this session.",
+        "rect": {
+          "x": 141,
+          "y": 117,
+          "width": 266,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/09-text-respond-in-60-s.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Respond in 60s",
+        "rect": {
+          "x": 141,
+          "y": 137,
+          "width": 266,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/10-button-not-now.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Not Now",
+        "rect": {
+          "x": 141,
+          "y": 167,
+          "width": 129,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/11-button-ready-up.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Ready Up",
+        "rect": {
+          "x": 278,
+          "y": 167,
+          "width": 129,
+          "height": 39
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 13,
+        "height": 13
+      }
+    ]
+  },
+  {
+    "scene": "ready-up-confirmed",
+    "group": "05-ready-up",
+    "note": "Screen 4 — you readied up. Check badge + the party face stack.",
+    "capturedAt": "2026-08-14T00:04:23.927Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1296,
+      "height": 693,
+      "cssWidth": 432,
+      "cssHeight": 231
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "You’re readySea of Thieves1-4 playersUndo Ready Up",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 416,
+          "height": 215
+        }
+      },
+      {
+        "file": "layers/02-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 9,
+          "y": 9,
+          "width": 116,
+          "height": 213
+        }
+      },
+      {
+        "file": "layers/03-text-you-re-ready.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "You’re ready",
+        "rect": {
+          "x": 141,
+          "y": 25,
+          "width": 266,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 141,
+          "y": 27,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 144,
+          "y": 30,
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "file": "layers/06-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 141,
+          "y": 51,
+          "width": 266,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/07-block-1-4-players.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "1-4 players",
+        "rect": {
+          "x": 141,
+          "y": 79,
+          "width": 98,
+          "height": 26
+        }
+      },
+      {
+        "file": "layers/08-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 152,
+          "y": 86,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/09-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 141,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/10-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 149,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 165,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/12-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 168,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 171,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/14-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 179,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/15-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 195,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/16-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 198,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/17-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 201,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/18-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 209,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/19-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 231,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/20-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 239,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/21-button-undo-ready-up.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Undo Ready Up",
+        "rect": {
+          "x": 141,
+          "y": 167,
+          "width": 266,
+          "height": 39
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 10,
+        "height": 10
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 13,
+        "height": 13
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 9,
+        "height": 9
+      },
+      {
+        "file": "vectors/04-icon.svg",
+        "width": 9,
+        "height": 9
+      }
+    ]
+  },
+  {
+    "scene": "ready-up-host-waiting",
+    "group": "05-ready-up",
+    "note": "Screen 3 — you are the host, still waiting on people.",
+    "capturedAt": "2026-08-14T00:04:25.411Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1296,
+      "height": 783,
+      "cssWidth": 432,
+      "cssHeight": 261
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Getting the party readySea of Thieves1-4 playersWaiting for 2 members to respond",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 416,
+          "height": 245
+        }
+      },
+      {
+        "file": "layers/02-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 9,
+          "y": 9,
+          "width": 116,
+          "height": 243
+        }
+      },
+      {
+        "file": "layers/03-text-getting-the-party-ready.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Getting the party ready",
+        "rect": {
+          "x": 141,
+          "y": 25,
+          "width": 266,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 141,
+          "y": 51,
+          "width": 266,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/05-block-1-4-players.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "1-4 players",
+        "rect": {
+          "x": 141,
+          "y": 79,
+          "width": 98,
+          "height": 26
+        }
+      },
+      {
+        "file": "layers/06-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 152,
+          "y": 86,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 141,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/08-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 149,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/09-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 165,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/10-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 168,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 171,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/12-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 179,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 195,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/14-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 198,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/15-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 201,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/16-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 209,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/17-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 231,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/18-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 239,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/19-text-waiting-for-2-member-s-to-re.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Waiting for 2 members to respond…",
+        "rect": {
+          "x": 141,
+          "y": 167,
+          "width": 266,
+          "height": 18
+        }
+      },
+      {
+        "file": "layers/20-button-cancel.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Cancel",
+        "rect": {
+          "x": 141,
+          "y": 197,
+          "width": 74,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/21-button-launch-with-1-ready.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Launch with 1 Ready",
+        "rect": {
+          "x": 223,
+          "y": 197,
+          "width": 184,
+          "height": 39
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 13,
+        "height": 13
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 9,
+        "height": 9
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 9,
+        "height": 9
+      }
+    ]
+  },
+  {
+    "scene": "ready-up-party-ready",
+    "group": "05-ready-up",
+    "note": "Screen 5 — everyone is in. \"Launch Game\" is live.",
+    "capturedAt": "2026-08-14T00:04:27.078Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1296,
+      "height": 693,
+      "cssWidth": 432,
+      "cssHeight": 231
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-panel.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "Party is readySea of Thieves1-4 playersCancelLaunch Game",
+        "rect": {
+          "x": 8,
+          "y": 8,
+          "width": 416,
+          "height": 215
+        }
+      },
+      {
+        "file": "layers/02-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 9,
+          "y": 9,
+          "width": 116,
+          "height": 213
+        }
+      },
+      {
+        "file": "layers/03-text-party-is-ready.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Party is ready",
+        "rect": {
+          "x": 141,
+          "y": 25,
+          "width": 266,
+          "height": 20
+        }
+      },
+      {
+        "file": "layers/04-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 141,
+          "y": 27,
+          "width": 16,
+          "height": 16
+        }
+      },
+      {
+        "file": "layers/05-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 144,
+          "y": 30,
+          "width": 10,
+          "height": 10
+        }
+      },
+      {
+        "file": "layers/06-text-sea-of-thieves.png",
+        "kind": "text",
+        "tag": "p",
+        "text": "Sea of Thieves",
+        "rect": {
+          "x": 141,
+          "y": 51,
+          "width": 266,
+          "height": 23
+        }
+      },
+      {
+        "file": "layers/07-block-1-4-players.png",
+        "kind": "block",
+        "tag": "span",
+        "text": "1-4 players",
+        "rect": {
+          "x": 141,
+          "y": 79,
+          "width": 98,
+          "height": 26
+        }
+      },
+      {
+        "file": "layers/08-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 152,
+          "y": 86,
+          "width": 13,
+          "height": 13
+        }
+      },
+      {
+        "file": "layers/09-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 141,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/10-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 149,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 165,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/12-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 168,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 171,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/14-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 179,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/15-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 195,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/16-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 198,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/17-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 201,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/18-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 209,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/19-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 225,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/20-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 228,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/21-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 231,
+          "y": 117,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/22-img-cover-art.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 239,
+          "y": 125,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/23-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 255,
+          "y": 141,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/24-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 258,
+          "y": 144,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/25-button-cancel.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Cancel",
+        "rect": {
+          "x": 141,
+          "y": 167,
+          "width": 74,
+          "height": 39
+        }
+      },
+      {
+        "file": "layers/26-button-launch-game.png",
+        "kind": "button",
+        "tag": "button",
+        "text": "Launch Game",
+        "rect": {
+          "x": 223,
+          "y": 167,
+          "width": 184,
+          "height": 39
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 10,
+        "height": 10
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 13,
+        "height": 13
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 9,
+        "height": 9
+      },
+      {
+        "file": "vectors/04-icon.svg",
+        "width": 9,
+        "height": 9
+      },
+      {
+        "file": "vectors/05-icon.svg",
+        "width": 9,
+        "height": 9
+      },
+      {
+        "file": "vectors/06-icon.svg",
+        "width": 9,
+        "height": 9
+      }
+    ]
+  },
+  {
+    "scene": "party-avatars",
+    "group": "05-ready-up",
+    "note": "The party face stack on its own — ready (green check), declined (red cross), undecided (dim).",
+    "capturedAt": "2026-08-14T00:04:28.206Z",
+    "scale": 3,
+    "canvas": {
+      "width": 1068,
+      "height": 438,
+      "cssWidth": 356,
+      "cssHeight": 146
+    },
+    "layers": [
+      {
+        "file": "layers/01-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 24,
+          "y": 24,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/02-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 32,
+          "y": 32,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/03-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 48,
+          "y": 48,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/04-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 51,
+          "y": 51,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/05-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 54,
+          "y": 24,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/06-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 62,
+          "y": 32,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/07-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 78,
+          "y": 48,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/08-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 81,
+          "y": 51,
+          "width": 9,
+          "height": 9
+        }
+      },
+      {
+        "file": "layers/09-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 84,
+          "y": 24,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/10-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 92,
+          "y": 32,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/11-shape-box.png",
+        "kind": "shape",
+        "tag": "div",
+        "text": "",
+        "rect": {
+          "x": 114,
+          "y": 24,
+          "width": 38,
+          "height": 38
+        }
+      },
+      {
+        "file": "layers/12-img-2cc255a03f12e9620932efdedf23.png",
+        "kind": "img",
+        "tag": "img",
+        "text": "",
+        "rect": {
+          "x": 122,
+          "y": 32,
+          "width": 22,
+          "height": 22
+        }
+      },
+      {
+        "file": "layers/13-shape-box.png",
+        "kind": "shape",
+        "tag": "span",
+        "text": "",
+        "rect": {
+          "x": 138,
+          "y": 48,
+          "width": 15,
+          "height": 15
+        }
+      },
+      {
+        "file": "layers/14-icon-icon.png",
+        "kind": "icon",
+        "tag": "svg",
+        "text": "",
+        "rect": {
+          "x": 141,
+          "y": 51,
+          "width": 9,
+          "height": 9
+        }
+      }
+    ],
+    "vectors": [
+      {
+        "file": "vectors/01-icon.svg",
+        "width": 9,
+        "height": 9
+      },
+      {
+        "file": "vectors/02-icon.svg",
+        "width": 9,
+        "height": 9
+      },
+      {
+        "file": "vectors/03-icon.svg",
+        "width": 9,
+        "height": 9
+      }
+    ]
+  }
+]

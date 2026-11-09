@@ -1,0 +1,200 @@
+{
+  "scene": "wheel-result-toast",
+  "group": "04-spin-the-wheel",
+  "note": "The result toast — cover art, \"The wheel picked\", and the three actions.",
+  "capturedAt": "2026-08-14T00:04:20.393Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1296,
+    "height": 678,
+    "cssWidth": 432,
+    "cssHeight": 226
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-panel.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Caleb spun the wheelThe wheel pickedHuman: Fall FlatStart a partyGo to wheelRest",
+      "rect": {
+        "x": 8,
+        "y": 8,
+        "width": 416,
+        "height": 210
+      }
+    },
+    {
+      "file": "layers/02-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 9,
+        "y": 9,
+        "width": 116,
+        "height": 208
+      }
+    },
+    {
+      "file": "layers/03-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 141,
+        "y": 25,
+        "width": 30,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/04-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 147,
+        "y": 31,
+        "width": 17,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/05-text-spun-the-wheel.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Caleb spun the wheel",
+      "rect": {
+        "x": 180,
+        "y": 30,
+        "width": 128,
+        "height": 19
+      }
+    },
+    {
+      "file": "layers/06-text-caleb.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb",
+      "rect": {
+        "x": 180,
+        "y": 30,
+        "width": 35,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/07-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 389,
+        "y": 26,
+        "width": 18,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/08-text-the-wheel-picked.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "The wheel picked",
+      "rect": {
+        "x": 141,
+        "y": 67,
+        "width": 266,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/09-text-human-fall-flat.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Human: Fall Flat",
+      "rect": {
+        "x": 141,
+        "y": 87,
+        "width": 266,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/10-button-start-a-party.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Start a party",
+      "rect": {
+        "x": 141,
+        "y": 122,
+        "width": 126,
+        "height": 36
+      }
+    },
+    {
+      "file": "layers/11-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 155,
+        "y": 132,
+        "width": 18,
+        "height": 15
+      }
+    },
+    {
+      "file": "layers/12-button-go-to-wheel.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Go to wheel",
+      "rect": {
+        "x": 275,
+        "y": 122,
+        "width": 96,
+        "height": 36
+      }
+    },
+    {
+      "file": "layers/13-button-restart.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Restart",
+      "rect": {
+        "x": 141,
+        "y": 165,
+        "width": 90,
+        "height": 36
+      }
+    },
+    {
+      "file": "layers/14-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 155,
+        "y": 176,
+        "width": 14,
+        "height": 14
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 18,
+      "height": 18
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 18,
+      "height": 15
+    },
+    {
+      "file": "vectors/03-icon.svg",
+      "width": 14,
+      "height": 14
+    }
+  ]
+}

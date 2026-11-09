@@ -1,0 +1,638 @@
+{
+  "scene": "rank-modal-search",
+  "group": "02-mix-add-and-rank",
+  "note": "Same modal with a search query open — the add/remove checkbox rows.",
+  "capturedAt": "2026-08-14T00:03:52.560Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1848,
+    "height": 1650,
+    "cssWidth": 616,
+    "cssHeight": 550
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-your-playlist.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Your PlayListDrag to rankSearch your PlayListSea of Thieves1Sea of Thieves2Minec",
+      "rect": {
+        "x": 8,
+        "y": 8,
+        "width": 600,
+        "height": 534
+      }
+    },
+    {
+      "file": "layers/02-text-your-playlist.png",
+      "kind": "text",
+      "tag": "h3",
+      "text": "Your PlayList",
+      "rect": {
+        "x": 32,
+        "y": 30,
+        "width": 117,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/03-text-drag-to-rank.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Drag to rank",
+      "rect": {
+        "x": 32,
+        "y": 62,
+        "width": 117,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/04-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 562,
+        "y": 32,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/05-shape-panel.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Search your PlayListSea of Thieves",
+      "rect": {
+        "x": 8,
+        "y": 82,
+        "width": 600,
+        "height": 154
+      }
+    },
+    {
+      "file": "layers/06-text-search-your-playlist.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Search your PlayList",
+      "rect": {
+        "x": 32,
+        "y": 98,
+        "width": 552,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/07-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "",
+      "rect": {
+        "x": 32,
+        "y": 124,
+        "width": 552,
+        "height": 39
+      }
+    },
+    {
+      "file": "layers/08-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 44,
+        "y": 135,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/09-img-store-seaofthieves.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 38,
+        "y": 177,
+        "width": 64,
+        "height": 36
+      }
+    },
+    {
+      "file": "layers/10-text-sea-of-thieves.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Sea of Thieves",
+      "rect": {
+        "x": 112,
+        "y": 184,
+        "width": 434,
+        "height": 21
+      }
+    },
+    {
+      "file": "layers/11-shape-box.png",
+      "kind": "shape",
+      "tag": "span",
+      "text": "",
+      "rect": {
+        "x": 556,
+        "y": 184,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/12-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 561,
+        "y": 188,
+        "width": 13,
+        "height": 13
+      }
+    },
+    {
+      "file": "layers/13-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "1Sea of Thieves",
+      "rect": {
+        "x": 32,
+        "y": 254,
+        "width": 175,
+        "height": 128
+      }
+    },
+    {
+      "file": "layers/14-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "1",
+      "rect": {
+        "x": 32,
+        "y": 254,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/15-img-store-seaofthieves.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 32,
+        "y": 254,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/16-text-1.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "1",
+      "rect": {
+        "x": 38,
+        "y": 260,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/17-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 184,
+        "y": 265,
+        "width": 12,
+        "height": 12
+      }
+    },
+    {
+      "file": "layers/18-text-sea-of-thieves.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Sea of Thieves",
+      "rect": {
+        "x": 32,
+        "y": 352,
+        "width": 175,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/19-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "2Minecraft",
+      "rect": {
+        "x": 221,
+        "y": 254,
+        "width": 175,
+        "height": 128
+      }
+    },
+    {
+      "file": "layers/20-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "2",
+      "rect": {
+        "x": 221,
+        "y": 254,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/21-img-store-minecraft.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 221,
+        "y": 254,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/22-text-2.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "2",
+      "rect": {
+        "x": 227,
+        "y": 260,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/23-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 372,
+        "y": 265,
+        "width": 12,
+        "height": 12
+      }
+    },
+    {
+      "file": "layers/24-text-minecraft.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Minecraft",
+      "rect": {
+        "x": 221,
+        "y": 352,
+        "width": 175,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/25-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "3Overcooked! 2",
+      "rect": {
+        "x": 409,
+        "y": 254,
+        "width": 175,
+        "height": 128
+      }
+    },
+    {
+      "file": "layers/26-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "3",
+      "rect": {
+        "x": 409,
+        "y": 254,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/27-img-store-overcooked2.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 409,
+        "y": 254,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/28-text-3.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "3",
+      "rect": {
+        "x": 415,
+        "y": 260,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/29-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 561,
+        "y": 265,
+        "width": 12,
+        "height": 12
+      }
+    },
+    {
+      "file": "layers/30-text-overcooked-2.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Overcooked! 2",
+      "rect": {
+        "x": 409,
+        "y": 352,
+        "width": 175,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/31-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "4Human: Fall Flat",
+      "rect": {
+        "x": 32,
+        "y": 396,
+        "width": 175,
+        "height": 128
+      }
+    },
+    {
+      "file": "layers/32-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "4",
+      "rect": {
+        "x": 32,
+        "y": 396,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/33-img-store-humanfallflat.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 32,
+        "y": 396,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/34-text-4.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "4",
+      "rect": {
+        "x": 38,
+        "y": 402,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/35-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 184,
+        "y": 407,
+        "width": 12,
+        "height": 12
+      }
+    },
+    {
+      "file": "layers/36-text-human-fall-flat.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Human: Fall Flat",
+      "rect": {
+        "x": 32,
+        "y": 494,
+        "width": 175,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/37-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "5Grounded",
+      "rect": {
+        "x": 221,
+        "y": 396,
+        "width": 175,
+        "height": 128
+      }
+    },
+    {
+      "file": "layers/38-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "5",
+      "rect": {
+        "x": 221,
+        "y": 396,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/39-img-store-grounded.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 221,
+        "y": 396,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/40-text-5.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "5",
+      "rect": {
+        "x": 227,
+        "y": 402,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/41-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 372,
+        "y": 407,
+        "width": 12,
+        "height": 12
+      }
+    },
+    {
+      "file": "layers/42-text-grounded.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Grounded",
+      "rect": {
+        "x": 221,
+        "y": 494,
+        "width": 175,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/43-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "6Monster Hunter Rise",
+      "rect": {
+        "x": 409,
+        "y": 396,
+        "width": 175,
+        "height": 128
+      }
+    },
+    {
+      "file": "layers/44-shape-box.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "6",
+      "rect": {
+        "x": 409,
+        "y": 396,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/45-img-store-monsterhunterrise.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 409,
+        "y": 396,
+        "width": 175,
+        "height": 98
+      }
+    },
+    {
+      "file": "layers/46-text-6.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "6",
+      "rect": {
+        "x": 415,
+        "y": 402,
+        "width": 22,
+        "height": 22
+      }
+    },
+    {
+      "file": "layers/47-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 561,
+        "y": 407,
+        "width": 12,
+        "height": 12
+      }
+    },
+    {
+      "file": "layers/48-text-monster-hunter-rise.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Monster Hunter Rise",
+      "rect": {
+        "x": 409,
+        "y": 494,
+        "width": 175,
+        "height": 30
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 22,
+      "height": 22
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "file": "vectors/03-icon.svg",
+      "width": 13,
+      "height": 13
+    },
+    {
+      "file": "vectors/04-icon.svg",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "file": "vectors/05-icon.svg",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "file": "vectors/06-icon.svg",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "file": "vectors/07-icon.svg",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "file": "vectors/08-icon.svg",
+      "width": 12,
+      "height": 12
+    },
+    {
+      "file": "vectors/09-icon.svg",
+      "width": 12,
+      "height": 12
+    }
+  ]
+}

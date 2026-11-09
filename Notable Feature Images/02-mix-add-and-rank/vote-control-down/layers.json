@@ -1,0 +1,99 @@
+{
+  "scene": "vote-control-down",
+  "group": "02-mix-add-and-rank",
+  "note": "Downvote cast — the red fill state.",
+  "capturedAt": "2026-08-14T00:03:55.090Z",
+  "scale": 3,
+  "canvas": {
+    "width": 768,
+    "height": 348,
+    "cssWidth": 256,
+    "cssHeight": 116
+  },
+  "layers": [
+    {
+      "file": "layers/01-text-thumbs-up.png",
+      "kind": "text",
+      "tag": "button",
+      "text": "1",
+      "rect": {
+        "x": 24,
+        "y": 24,
+        "width": 42,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/02-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 32,
+        "y": 31,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/03-text-1-upvote.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "1 upvote",
+      "rect": {
+        "x": 23,
+        "y": -22,
+        "width": 43,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/04-text-thumbs-down.png",
+      "kind": "text",
+      "tag": "button",
+      "text": "2",
+      "rect": {
+        "x": 70,
+        "y": 24,
+        "width": 44,
+        "height": 30
+      }
+    },
+    {
+      "file": "layers/05-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 78,
+        "y": 31,
+        "width": 16,
+        "height": 16
+      }
+    },
+    {
+      "file": "layers/06-text-2-downvotes.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "2 downvotes",
+      "rect": {
+        "x": 59,
+        "y": -22,
+        "width": 66,
+        "height": 16
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 16,
+      "height": 16
+    },
+    {
+      "file": "vectors/02-icon.svg",
+      "width": 16,
+      "height": 16
+    }
+  ]
+}

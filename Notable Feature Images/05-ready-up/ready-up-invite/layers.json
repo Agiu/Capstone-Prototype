@@ -1,0 +1,154 @@
+{
+  "scene": "ready-up-invite",
+  "group": "05-ready-up",
+  "note": "Screen 2 — the incoming invite you get when a game is selected. \"Ready Up\" / \"Not Now\".",
+  "capturedAt": "2026-08-14T00:04:22.476Z",
+  "scale": 3,
+  "canvas": {
+    "width": 1296,
+    "height": 693,
+    "cssWidth": 432,
+    "cssHeight": 231
+  },
+  "layers": [
+    {
+      "file": "layers/01-shape-panel.png",
+      "kind": "shape",
+      "tag": "div",
+      "text": "Caleb invited you to playSea of Thieves1-4 playersReady up to join this session.",
+      "rect": {
+        "x": 8,
+        "y": 8,
+        "width": 416,
+        "height": 215
+      }
+    },
+    {
+      "file": "layers/02-img-cover-art.png",
+      "kind": "img",
+      "tag": "img",
+      "text": "",
+      "rect": {
+        "x": 9,
+        "y": 9,
+        "width": 116,
+        "height": 213
+      }
+    },
+    {
+      "file": "layers/03-text-invited-you-to-play.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Caleb invited you to play",
+      "rect": {
+        "x": 141,
+        "y": 25,
+        "width": 266,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/04-text-caleb.png",
+      "kind": "text",
+      "tag": "span",
+      "text": "Caleb",
+      "rect": {
+        "x": 141,
+        "y": 26,
+        "width": 33,
+        "height": 17
+      }
+    },
+    {
+      "file": "layers/05-text-sea-of-thieves.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Sea of Thieves",
+      "rect": {
+        "x": 141,
+        "y": 51,
+        "width": 266,
+        "height": 23
+      }
+    },
+    {
+      "file": "layers/06-block-1-4-players.png",
+      "kind": "block",
+      "tag": "span",
+      "text": "1-4 players",
+      "rect": {
+        "x": 141,
+        "y": 79,
+        "width": 98,
+        "height": 26
+      }
+    },
+    {
+      "file": "layers/07-icon-icon.png",
+      "kind": "icon",
+      "tag": "svg",
+      "text": "",
+      "rect": {
+        "x": 152,
+        "y": 86,
+        "width": 13,
+        "height": 13
+      }
+    },
+    {
+      "file": "layers/08-text-ready-up-to-join-this-sessio.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Ready up to join this session.",
+      "rect": {
+        "x": 141,
+        "y": 117,
+        "width": 266,
+        "height": 20
+      }
+    },
+    {
+      "file": "layers/09-text-respond-in-60-s.png",
+      "kind": "text",
+      "tag": "p",
+      "text": "Respond in 60s",
+      "rect": {
+        "x": 141,
+        "y": 137,
+        "width": 266,
+        "height": 18
+      }
+    },
+    {
+      "file": "layers/10-button-not-now.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Not Now",
+      "rect": {
+        "x": 141,
+        "y": 167,
+        "width": 129,
+        "height": 39
+      }
+    },
+    {
+      "file": "layers/11-button-ready-up.png",
+      "kind": "button",
+      "tag": "button",
+      "text": "Ready Up",
+      "rect": {
+        "x": 278,
+        "y": 167,
+        "width": 129,
+        "height": 39
+      }
+    }
+  ],
+  "vectors": [
+    {
+      "file": "vectors/01-icon.svg",
+      "width": 13,
+      "height": 13
+    }
+  ]
+}
